@@ -1,0 +1,257 @@
+﻿orte_id;orte;lat;lon;haeufigkeit;orte_unsicher;unsicherheit_anmerkung
+aalst_belgien;Aalst, Belgien;50,9397;4,0413;1;nein;
+absdorf;Absdorf;48,4001618;15,9803689;4;nein;
+admont;Admont;47,5752001;14,5254164;3;nein;
+aggsbach;Aggsbach;48,3020424;15,3894237;1;nein;
+aggstein;Aggstein;48,3101942;15,4258899;1;nein;
+altenburg_im_waldviertel;Altenburg im Waldviertel;48,7247;15,6792;1;nein;
+altled;Altled;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0716a).
+andrach;Andrach;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0714a).
+ankenwarth;Ankenwarth;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0337).
+asparn_an_der_zaya;Asparn an der Zaya;48,5860906;16,4970589;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0246).
+augsburg;Augsburg;48,3690341;10,8979522;1;nein;
+bacharach;Bacharach;50,0597943;7,7683997;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0501).
+bad_gastein;Bad Gastein;47,0871124;13,160853;1;nein;
+bad_hall;Bad Hall;48,0348017;14,2091385;1;nein;
+bamberg;Bamberg;49,8916044;10,8868478;1;nein;
+baumburg;Baumburg;47,9949653;12,5298891;1;nein;
+baumgarten_am_tullnerfeld;Baumgarten am Tullnerfeld;48,2831751;16,0317687;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0128).
+baumgartenberg;Baumgartenberg;48,2091891;14,7451588;5;nein;
+berchtesgaden;Berchtesgaden;47,6330221;13,0020051;6;nein;
+blumenau;Blumenau;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0227).
+bratislava;Bratislava;48,1516988;17,1093063;1;nein;
+bruck_an_der_mur;Bruck an der Mur;47,4121987;15,2721668;1;nein;
+brunn_im_felde;Brunn im Felde;48,4333;15,7167;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0570a).
+budapest;Budapest;47,4978789;19,0402383;1;nein;
+budweis_tschechien;Budweis, Tschechien;48,9747;14,4746;1;nein;
+burghausen;Burghausen;48,1588645;12,8329419;2;nein;
+chiemsee;Chiemsee;47,8811147;12,4744366;1;nein;
+czygesperg;Czygesperg;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0299).
+dorfen;Dorfen;48,272779;12,1505507;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0803).
+dross;Droß;48,4646006;15,5734538;4;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0425|StaAKr-0428).
+duernkrut;Dürnkrut;48,4717951;16,8499148;1;nein;
+duernstein;Dürnstein;48,3953879;15,5203111;15;nein;
+ebersberg_muenchen;Ebersberg, München;48,0768108;11,9616479;1;nein;
+eferding;Eferding;48,3082607;14,0203999;1;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0138|StaAKr-0360).
+eggenburg;Eggenburg;48,6432222;15,8162695;10;nein;
+eggendorf_am_walde;Eggendorf am Walde;48,5432112;15,7846489;1;nein;
+egglfing;Egglfing;48,3266697;13,3149285;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0716a).
+eiblingen;Eiblingen;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0581a).
+eisenerz;Eisenerz;47,5420788;14,8857099;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0198).
+els;Els;48,4428849;15,3732742;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0829).
+emmersdorf_an_der_donau;Emmersdorf an der Donau;48,2418775;15,3383505;1;nein;
+engelszell;Engelszell;48,5018326;13,7350805;2;nein;
+enns;Enns;47,5549145;14,2170959;5;nein;
+etsdorf_am_kamp;Etsdorf am Kamp;48,4439917;15,7417358;5;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0496).
+fladnitzbach;Fladnitzbach;47,2186783;15,6451128;1;nein;
+freising;Freising;48,4008273;11,7439565;5;nein;
+freistadt_im_muehlviertel;Freistadt im Mühlviertel;48,515919;14,3983755;7;nein;
+fritzelsdorf_bei_herzogenburg;Fritzelsdorf bei Herzogenburg;48,2683;15,7011;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0219).
+gaming;Gaming;47,9286915;15,0876554;2;nein;
+gars_am_kamp;Gars am Kamp;48,5951053;15,6594592;2;nein;
+garsten;Garsten;48,0222203;14,4077971;3;nein;
+gedersdorf;Gedersdorf;48,433264;15,6876068;2;nein;
+gent_belgien;Gent, Belgien;51,0543;3,7167;2;nein;
+geras;Geras;48,7974749;15,6724733;1;nein;
+gerersdorf;Gerersdorf;48,1992201;15,5538268;2;nein;
+gfoehl;Gföhl;48,516682;15,4905293;4;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0444).
+gleink;Gleink;48,0687171;14,4155839;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0098).
+gmunden;Gmunden;47,9185855;13,8003048;2;nein;
+gneixendorf;Gneixendorf;48,4381941;15,6184283;7;nein;
+gobelsburg;Gobelsburg;48,4615981;15,6975824;2;nein;
+grafendorf_bei_gobelsburg;Grafendorf bei Gobelsburg;48,4633;15,7011;1;nein;
+grafenegg;Grafenegg;48,4394645;15,7301541;5;nein;
+graz;Graz;47,0708678;15,4382786;18;nein;
+groningen;Groningen;51,9363717;11,2166312;1;nein;
+gross_enzersdorf;Groß-Enzersdorf;48,2018;16,5519598;1;nein;
+grossrust;Großrust;48,2738795;15,6138081;1;nein;
+gurk;Gurk;46,8618879;14,2515646;1;nein;
+gyoer;Györ;47,6835029;17,6342832;1;nein;
+goettweig;Göttweig;48,3646946;15,611327;11;nein;
+hadersdorf_am_kamp;Hadersdorf am Kamp;48,4586188;15,7205971;8;nein;
+haindorf_bei_langenlois;Haindorf bei Langenlois;48,475;15,665;1;nein;
+hall;Hall;47,6003519;14,459643;1;nein;
+hallein;Hallein;47,6821521;13,0956313;1;nein;
+hardegg;Hardegg;48,8536837;15,8585681;3;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0141).
+hardleithen;Hardleithen;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0242).
+hasendorf;Hasendorf;47,0774476;16,2977252;1;nein;
+herzogenburg;Herzogenburg;48,2843295;15,6946065;3;nein;
+hodonin;Hodonín;48,8563914;17,1234655;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0342).
+hofarnsdorf;Hofarnsdorf;48,445;15,52;2;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0740a).
+hohenberg;Hohenberg;47,9105417;15,6198852;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0365).
+hollenburg;Hollenburg;48,4433;15,6175;4;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0001b|StaAKr-0125).
+horn_im_waldviertel;Horn im Waldviertel;48,6617;15,6567;3;nein;
+imbach;Imbach;48,4391368;15,5772821;14;nein;
+innigen;Innigen;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0628b).
+innsbruck;Innsbruck;47,2654296;11,3927685;5;nein;
+jindrichuv_hradec_suedboehmen;Jindřichův Hradec, Südböhmen;49,1444;15,0031;1;nein;
+karlstadt;Karlstadt;49,9698176;9,7441397;2;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0715|StaAKr-0735b).
+karlstetten;Karlstetten;48,2586538;15,5656447;1;nein;
+keltsch_tschechien;Keltsch, Tschechien;49,4786;17,8158;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-866a).
+kempten;Kempten;47,7267063;10,3168835;1;nein;
+klosterneuburg;Klosterneuburg;48,30499;16,323756;9;nein;
+kollmitz;Kollmitz;48,3892181;15,4478834;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0307).
+korneuburg;Korneuburg;48,3451838;16,3215402;20;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StAK-UrkKr-0084).
+kottaun;Kottaun;48,8234399;15,6754423;1;nein;
+kottes;Kottes;48,4163185;15,3035193;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0804).
+krems;Krems;48,4094;15,6057;277;nein;
+kremsmuenster;Kremsmünster;48,0533652;14,128766;6;nein;
+kreuzenstein;Kreuzenstein;48,3575;16,3311;1;nein;
+laa_an_der_thaya;Laa an der Thaya;48,7210387;16,3853207;3;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0321).
+lambach;Lambach;48,0919647;13,8724131;2;nein;
+landshut;Landshut;48,536217;12,1516551;1;nein;
+langenlois;Langenlois;48,472601;15,676295;31;nein;
+laufen_an_der_salzach;Laufen an der Salzach;47,9354122;12,930309;2;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0104|StaAKr-0374).
+laxenburg;Laxenburg;48,0686831;16,3561206;1;nein;
+lechtenbach;Lechtenbach;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0738a).
+lengenfeld;Lengenfeld;48,4667;15,5833;3;nein;
+leuven_belgien;Leuven, Belgien;50,8798;4,7009;2;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0521).
+lichtenwoerth;Lichtenwörth;47,8353533;16,2939262;1;nein;
+liebnitz;Liebnitz;48,8520303;15,4513235;1;nein;
+lilienfeld;Lilienfeld;48,0149797;15,5966191;4;nein;
+limberg_maissau;Limberg, Maissau;48,5739;15,8453;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StAK_15451103_900_reg).
+lindberg;Lindberg;49,063098;13,3026953;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0273).
+linz;Linz;48,3059078;14,286198;19;nein;
+loket;Loket;49,6554898;15,1168908;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0499).
+lotapeunt;Lotapeunt;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0259).
+mailberg;Mailberg;48,6730424;16,1841711;3;ja;Ortsidentifikation in 3 Urkunden als unsicher markiert (Signatur(en): StaAKr-0302|StaAKr-0303|StaAKr-0304).
+mainberg;Mainberg;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0365).
+maissau;Maissau;48,5706932;15,8259176;2;nein;
+maribor_slowenien;Maribor, Slowenien;46,5547;15,6467;1;nein;
+marktschellenberg;Marktschellenberg;47,696036;13,0462546;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StAK-UrkKr-0084).
+mautern_an_der_donau;Mautern an der Donau;48,3937912;15,5788626;18;nein;
+melk;Melk;48,2272068;15,3369992;12;nein;
+memmingen;Memmingen;47,9816221;10,168735;1;nein;
+mollenburg;Mollenburg;48,2959917;15,2576405;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StAK_1647_909_reg).
+mondsee;Mondsee;47,8560014;13,3500658;1;nein;
+muehldorf_am_inn;Mühldorf am Inn;48,2405007;12,5250991;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0563b).
+neuburg_am_inn;Neuburg am Inn;48,5069513;13,4482764;2;nein;
+neulengbach;Neulengbach;48,1970124;15,907098;1;nein;
+neupoella;Neupölla;48,6427421;15,4472668;2;nein;
+niederlaufing;Niederlaufing;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0167).
+nuernberg;Nürnberg;49,453872;11,077298;6;nein;
+oberneukirchen_urfahr_umgebung;Oberneukirchen, Urfahr-Umgebung;48,4944;14,1481;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0673b).
+olomouc;Olomouc;49,5940567;17,251143;1;nein;
+osterhofen;Osterhofen;48,7019635;13,0201434;7;nein;
+ottenschlag;Ottenschlag;48,4234347;15,2212807;1;nein;
+otzesdorf;Otzesdorf;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0214).
+passau;Passau;48,5748229;13,4609744;48;nein;
+pauriss;Pauriß;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0696a).
+pavlice;Pavlice;48,9714933;15,898675;1;nein;
+persenbeug;Persenbeug;48,1864088;15,0858914;3;nein;
+pinkafeld;Pinkafeld;47,37254;16,1234157;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0096).
+plank;Plank;48,5487808;13,3536368;1;nein;
+pottendorf;Pottendorf;47,9100871;16,3875417;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0272).
+praha;Praha;50,0874654;14,4212535;4;nein;
+preinreichs;Preinreichs;48,6231799;14,9814532;1;nein;
+purgstall_an_der_erlauf;Purgstall an der Erlauf;48,0244;15,1011;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0155).
+pisek;Písek;49,3089887;14,147769;1;nein;
+poechlarn;Pöchlarn;48,2119885;15,2120099;1;nein;
+poeggstall;Pöggstall;48,3176183;15,1994013;3;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0352).
+raabs_an_der_thaya;Raabs an der Thaya;48,8474094;15,4934343;1;nein;
+rabenstein;Rabenstein;48,0657421;15,4687121;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0366).
+raitenhaslach;Raitenhaslach;48,128308;12,7869124;5;ja;Ortsidentifikation in 3 Urkunden als unsicher markiert (Signatur(en): StaAKr-0346|StaAKr-0349|StaAKr-0350).
+rappottenstein_niederoesterreich;Rappottenstein, Niederösterreich;48,5578;15,0006;1;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0176|StaAKr-0258).
+rastenberg;Rastenberg;48,5589;15,3281;1;nein;
+regensburg;Regensburg;49,0195333;12,0974869;1;nein;
+rehberg_bei_krems;Rehberg bei Krems;48,4467;15,5783;16;nein;
+reichersberg;Reichersberg;48,3355603;13,3609491;1;nein;
+reinprechtspoella;Reinprechtspölla;48,6121589;15,7595858;1;nein;
+retz;Retz;48,7569663;15,9511119;1;nein;
+roggendorf_roeschitz;Roggendorf, Röschitz;48,67;15,8167;2;nein;
+rohrendorf;Rohrendorf;48,4190155;15,6569002;3;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0184|StaAKr-0185).
+rom_italien;Rom, Italien;41,9028;12,4964;8;nein;
+rosenheim;Rosenheim;47,8557873;12,1272983;1;nein;
+rossatz;Rossatz;48,3975203;15,5049162;1;nein;
+rossatzbach;Rossatzbach;48,388567;15,5163565;1;nein;
+roeschitz;Röschitz;48,6661866;15,8859882;1;nein;
+sachsengang;Sachsengang;48,1741609;16,5853635;1;nein;
+saladorf;Saladorf;48,276393;15,8694325;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0800).
+salzburg;Salzburg;47,8095;13,055;9;nein;
+sankt_poelten;Sankt Pölten;48,2043985;15,6229118;4;nein;
+sarmingstein;Sarmingstein;48,2310638;14,9419026;2;nein;
+schaunberg_eferding;Schaunberg, Eferding;48,3397;13,9789;2;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0355|StaAKr-0356).
+scheibbs;Scheibbs;48,0053866;15,1674871;1;nein;
+schiltern;Schiltern;48,5169282;15,6215655;1;nein;
+schlickendorf_krems;Schlickendorf, Krems;48,4089;15,62;1;nein;
+schollach;Schollach;48,1893136;15,3599339;1;nein;
+schrattental;Schrattental;47,7754653;15,8507721;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0357).
+schrattenthal;Schrattenthal;48,7167804;15,9089336;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0368).
+schwertberg;Schwertberg;48,2741408;14,5817826;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0717a).
+schaerding;Schärding;48,4569975;13,4318;1;nein;
+schoenberg_am_kamp;Schönberg am Kamp;48,5199338;15,6964473;2;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0276).
+seefeld;Seefeld;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0627a).
+seisenegg;Seisenegg;48,1411663;14,9174711;1;nein;
+senftenberg;Senftenberg;48,45;15,5544;8;nein;
+siena_italien;Siena, Italien;43,3186;11,3308;1;nein;
+spitz_an_der_donau;Spitz an der Donau;48,3650322;15,4174633;3;nein;
+statzendorf;Statzendorf;48,307679;15,6414443;6;nein;
+stetteldorf_am_wagram;Stetteldorf am Wagram;48,4087806;16,0165889;2;nein;
+steyr;Steyr;48,0390046;14,4191276;4;nein;
+stift_garsten;Stift Garsten;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0138).
+stinkenbrunn;Stinkenbrunn;47,8358338;16,4146427;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0360).
+stockerau;Stockerau;48,3846124;16,2076303;1;nein;
+stratzing_bei_krems;Stratzing bei Krems;48,4167;15,585;6;nein;
+strass_im_strassertale;Straß im Straßertale;48,471718;15,7367004;2;nein;
+struden;Struden;48,2301562;14,8945058;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0513).
+stuttgart;Stuttgart;48,7784485;9,1800132;1;nein;
+saeusenstein;Säusenstein;47,6540935;14,9962972;1;nein;
+ternberg;Ternberg;47,9458416;14,357251;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0717a).
+thallern;Thallern;48,385613;15,6456825;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0812).
+thaya;Thaya;48,8554;15,2873;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0229).
+topping_bei_langenlois;Topping bei Langenlois;48,465;15,69;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0572b).
+trauttmansdorf;Trauttmansdorf;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0834).
+trebic_tschechien;Trebic, Tschechien;49,2144;15,8796;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0236).
+tulln;Tulln;48,3311702;16,05179;5;nein;
+tabor;Tábor;49,4141533;14,6587234;1;nein;
+ulrichskirchen;Ulrichskirchen;48,4008321;16,492071;1;nein;
+venezia;Venezia;45,4046171;12,3105232;2;nein;
+viessling;Vießling;48,3585799;15,3661739;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0816).
+visegrad;Visegrád;47,7845811;18,9703373;1;nein;
+vitis;Vitis;48,7589848;15,1819733;1;nein;
+wagram;Wagram;48,2959872;16,5568452;1;nein;
+waidhofen_an_der_ybbs;Waidhofen an der Ybbs;47,9512695;14,7445188;1;nein;
+waldhausen_im_strudengau;Waldhausen im Strudengau;48,2731478;14,9479997;1;nein;
+wallsee;Wallsee;48,1672231;14,7156931;4;nein;
+weidling;Weidling;48,2966552;15,647216;1;nein;
+weinzierl;Weinzierl;48,4317076;15,4339408;18;nein;
+weiten;Weiten;48,2911987;15,265677;1;nein;
+weitenegg;Weitenegg;48,2285241;15,289382;3;nein;
+weitra;Weitra;48,7007937;14,8941385;5;nein;
+weissenkirchen_in_der_wachau;Weißenkirchen in der Wachau;48,3972511;15,4695702;2;nein;
+weissenstein;Weißenstein;49,4362416;15,508833;1;nein;
+wels;Wels;48,1565472;14,0243752;3;nein;
+werfenstein;Werfenstein;48,2298204;14,8922189;1;nein;
+wetzmannsthal;Wetzmannsthal;48,3144788;15,6611225;1;nein;
+weystenberg;Weystenberg;;;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0707a).
+wien;Wien;48,2083537;16,3725042;296;nein;
+wiener_neustadt;Wiener Neustadt;47,8131847;16,2441166;30;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0192).
+wilhering;Wilhering;48,3235801;14,1921444;1;nein;
+wolfpassing_bei_tulln;Wolfpassing bei Tulln;48,312831;16,1796506;1;nein;
+worms;Worms;49,6302618;8,3620898;3;nein;
+wullersdorf;Wullersdorf;48,6274252;16,1013122;3;ja;Ortsidentifikation in 3 Urkunden als unsicher markiert (Signatur(en): StaAKr-0303|StaAKr-0304|StaAKr-0716b).
+woesendorf_in_der_wachau;Wösendorf in der Wachau;48,3808723;15,4536887;3;nein;
+ybbs_an_der_donau;Ybbs an der Donau;48,1772445;15,0852856;11;nein;
+zeiselberg_bei_gobelsburg;Zeiselberg bei Gobelsburg;48,4583;15,6983;1;nein;
+zeiselmauer;Zeiselmauer;48,3275396;16,1762909;1;nein;
+zelking;Zelking;48,1839363;15,2572856;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0144).
+zell_am_see;Zell am See;47,3239636;12,7963165;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0570a).
+zlata_koruna;Zlatá Koruna;48,8548698;14,3694134;2;ja;Ortsidentifikation in 2 Urkunden als unsicher markiert (Signatur(en): StaAKr-0759|StaAKr-0760).
+znojmo;Znojmo;48,8554341;16,0489457;2;nein;
+zwettl;Zwettl;48,602082;14,9851629;12;nein;
+zoebing;Zöbing;48,4897078;15,6924909;3;nein;
+sommerleiten_mistelbach;Sommerleiten, Mistelbach;48,5317;16,7453;1;ja;Ortsidentifikation in 1 Urkunde als unsicher markiert (Signatur(en): StaAKr-0559).
+stein;Stein;48,40233;15,5817;58;nein;
+blindenberg;Blindenberg;48,402473;15,581943;2;nein;
+brixen;Brixen;46,7164;11,6558;1;nein;
+muenchen;München;48,1351;11,582;1;nein;
+bierbaum_am_kleebuehel;Bierbaum am Kleebühel;48,391;15,935;2;nein;
+steinakirchen_am_forst;Steinakirchen am Forst;48,06667;15,04722;2;nein;
+wieselburg;Wieselburg;48,129888;15,137659;2;nein;
+bogget_belgien;Bógget, Belgien;;;1;ja;Koordinaten noch nicht ermittelt (Bocholt, belgisch Limburg).
+neunkirchen_noe;Neunkirchen;;;1;ja;"Koordinaten nicht verifiziert. Zuordnung selbst als Vermutung markiert (StaAKr-0765): Regest nennt nur ""Neunkirchen"" ohne Zusatz, vermutlich Neunkirchen in Niederösterreich, nicht Oberneukirchen bei Urfahr."
+markt_ascha;Markt Ascha;;;1;ja;"Koordinaten nicht verifiziert (Markt Ascha, Bayern, bei Bogen). Zuordnung selbst als Vermutung markiert (StaAKr-0914): Regest nennt ""von Markt Ascha"", vermutlich das bayerische Ascha, nicht Aschach an der Donau (Oberösterreich)."
+ingolstadt;Ingolstadt;48,7665;11,4257;1;nein;
+maigen;Maigen (Gemeinde Weinzierl am Walde);;;1;ja;Koordinaten noch nicht ermittelt.
+marquartsurfar;Marquartsurfar;;;1;ja;Historischer Flurname/Insel bei Mautern, Koordinaten und exakte Lage nicht ermittelt.
+st_georgen_an_der_traisen;St. Georgen an der Traisen;48,2039;15,6919;1;nein;
