@@ -1,0 +1,116 @@
+/* css/components.css
+   Einheitliches Erscheinungsbild für die bereits gebauten Bauteile.
+   Zwei Gruppen:
+   (1) Bauteile ohne eigenes injiziertes Styling (tooltip.js,
+       unsicherheitsButton.js, teilweise ansichtWechseln.js) - werden
+       vollständig hier gestylt, über die Klassen/IDs, die diese Module
+       bereits selbst setzen.
+   (2) Bauteile mit eigenem injiziertem <style> (bereichsLeiste.js,
+       visualisierungsGalerie.js, regestenKachelraster.js, visualisierungsTabs.js)
+       - deren Werte wurden direkt in der jeweiligen Datei auf dieselben
+       Variablen aus base.css umgestellt (reine CSS-Wert-Änderung, keine
+       Logik/Struktur betroffen), damit hier keine Spezifitäts-Duelle nötig
+       sind. Siehe Zusammenfassung an den Nutzer für die genaue Liste der
+       betroffenen Zeilen. Ausnahme: der INHALT des von visualisierungsTabs.js
+       nur befüllten (nicht selbst gestylten) Tab-Tooltips gehört fachlich zu
+       Gruppe (1) (#geteilter-tooltip ist tooltip.js' Bauteil) und wird daher
+       hier mitgestylt, nicht in visualisierungsTabs.js. */
+
+/* Kleiner-Bildschirm-Hinweis (Abschnitt 4.2) - bewusst ein Warnton, klar
+   textuell und nicht nur farblich erkennbar (hat eigenen Text + role="status"). */
+.kleiner-bildschirm-hinweis {
+  background: #fff3cd;
+  border: 1px solid #c9a227;
+  color: #6b5600;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.kleiner-bildschirm-hinweis[hidden] { display: none; }
+
+/* Platzhalterseiten (Führungen/Literatur/Über) - bewusst als "hier fehlt noch
+   etwas" erkennbar (gestrichelter Rand), nicht wie ein regulärer Inhalt. */
+.platzhalter-seite {
+  border: 1px dashed var(--border);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.platzhalter-hinweis { color: var(--text-muted); margin: 0; }
+
+/* Visualisierungen-Tab ohne gewählten Archivalientyp (Vertrag: app.js'
+   renderVisualisierungenTab(), Punkt 1) - schlichter Hinweistext unterhalb
+   der Bereichs-Leiste, analog zu .platzhalter-hinweis. */
+.visualisierungen-hinweis { color: var(--text-muted); margin: var(--space-2) 0 0 0; }
+
+/* Tooltip (Vertrag: js/utils/tooltip.js, Abschnitt 5b) - tooltip.js selbst
+   setzt nur Positionierung (position/left/top/opacity) inline, keine
+   Optik - das komplette visuelle Erscheinungsbild kommt von hier. */
+#geteilter-tooltip {
+  max-width: 280px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--text);
+  color: var(--surface);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: opacity .12s ease;
+}
+
+/* FOLGEAUFTRAG "Visualisierungs-Tab-Leiste...", Punkt 3: Layout für den
+   Icon+Name-Inhalt des Tab-Tooltips (visualisierungsTabs.js baut nur den
+   Knoten, das Aussehen kommt - wie beim Tooltip selbst - von hier). Das Icon
+   übernimmt automatisch die helle Schriftfarbe des Tooltips (currentColor,
+   siehe vizIcons.js). */
+.visualisierungs-tab-tooltip-inhalt { display: inline-flex; align-items: center; gap: var(--space-2); }
+.visualisierungs-tab-tooltip-inhalt svg { width: 40px; height: 28px; flex: none; }
+
+/* Unsicherheits-Button (Vertrag: js/core/unsicherheitsButton.js, Abschnitt 11)
+   - das Modul setzt nur min-height/min-width inline und togglet
+   aria-pressed; das gesamte Aussehen inkl. gedrückter Zustand kommt von hier. */
+.werkzeugleiste-unsicherheit button {
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.werkzeugleiste-unsicherheit button:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.werkzeugleiste-unsicherheit button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+/* Ansicht-wechseln-Dropdown (Vertrag: js/core/ansichtWechseln.js, Abschnitt 4.1/4.2)
+   - das Modul setzt nur min-height/font/padding inline; Rahmen/Hintergrund
+   kommen von hier. */
+.ansicht-wechseln label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ansicht-wechseln select {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.ansicht-wechseln select:hover { border-color: var(--accent); }

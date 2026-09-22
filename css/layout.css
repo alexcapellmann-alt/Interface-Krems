@@ -1,0 +1,198 @@
+/* css/layout.css
+   Seitenraster (Header/Nav/Main/Footer), mobile-first, einheitliche
+   Abstands-Skala aus base.css (--space-*) statt Zufallswerten. Abschnitt 10:
+   Header trägt Logo + Hauptnavigation, Footer trägt Impressum/rechtliche
+   Hinweise/Metanavigation - hier nur die Gestaltung des jeweiligen Bereichs,
+   kein neuer Inhalt (reine CSS-Politur, siehe Zusammenfassung an den Nutzer).
+
+   VOLLBILD-KORREKTUR (siehe CHANGELOG): body wird zur Flex-Spalte, #app-content
+   (<main>) ist darin der einzige wachsende Bereich (flex:1) - füllt dadurch
+   die komplette verbleibende Viewport-Höhe unabhängig von der tatsächlichen
+   Header-/Footer-Höhe. Bewusst KEIN fester calc(100vh - Xpx)-Wert: Header und
+   Footer können durch flex-wrap (siehe .app-header-inner, schmale Fenster)
+   ihre Höhe ändern, ein fixer Pixel-Abzug wäre dann falsch. */
+
+html, body { height: 100%; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header, .app-footer { flex: 0 0 auto; }
+
+.app-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.app-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Schritt 6: zweizeilige Wortmarke statt reinem Textschriftzug - "krems"
+   (gelbes "k", Rest schwarz) als SVG, "STADTARCHIV" als kleinere Unterzeile
+   darunter (Großschreibung per CSS, Markup bleibt "Stadtarchiv" lesbarer).
+   Dieselbe SVG wie im alten Single-File-Prototyp (Desktop/GitHub/
+   Interface-Krems/index.html, dort #logo-link/.logo-mark) - reale, bereits
+   für dieses Projekt genutzte Wortmarke, keine neu erfundene Grafik. Verlinkt
+   auf die neue Startseite (leerer Hash), wie bei einem Logo/einer Wortmarke
+   allgemein üblich. */
+.app-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-1) 0;
+  text-decoration: none;
+}
+.app-logo-svg { height: 28px; width: auto; display: block; }
+.app-logo-sub {
+  font-size: .65rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-left: 1px;
+}
+
+.haupt-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* Fitts'sches Gesetz (Abschnitt 9): Klickflächen mindestens 44x44px. */
+.haupt-navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--space-2) var(--space-3);
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+  border-radius: var(--radius);
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.haupt-navigation a:hover { background: var(--bg); }
+
+.haupt-navigation a[aria-current="page"] {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+/* #app-content war zuvor auf max-width:1100px begrenzt und damit unabhängig
+   vom Viewport gedeckelt (Root Cause der "nutzt weniger Bildschirmfläche als
+   das alte Single-File-Interface"-Meldung) - jetzt volle verfügbare Breite.
+   Grid statt Flex-Spalte, damit die beiden Werkzeugleisten-Elemente
+   (.werkzeugleiste-unsicherheit/.werkzeugleiste-wechseln, zwei GESCHWISTER
+   ohne gemeinsamen Wrapper im DOM, siehe app.js) weiterhin in EINER Zeile
+   nebeneinander stehen bleiben, während .viz-inhalt darunter die gesamte
+   restliche Höhe bekommt - mit reiner Flexbox wäre das ohne einen
+   zusätzlichen Wrapper-Div in app.js nicht lösbar (Nicht-Ziel: keine weitere
+   Änderung an renderBestandTab()/renderVisualisierungenTab()).
+   BEWUSST KEIN min-height:0 hier (Randfall-Test ergab das Gegenteil des
+   Beabsichtigten): ohne min-height:0 erzwingt der Flex-Algorithmus in body
+   automatisch mind. die Inhaltsgröße von #app-content (Standard
+   min-height:auto für Flex-Items) - genau das wird für Schritt 3 gebraucht:
+   reicht die Viewport-Höhe nicht für .viz-inhalts 480px-Mindesthöhe, WÄCHST
+   #app-content (und damit body) über den Viewport hinaus und schiebt den
+   Footer korrekt nach unten (Seiten-Scroll). Mit min-height:0 (per Reflex
+   ergänzt, dann am 1024×700-Testfall widerlegt) hätte sich #app-content
+   stattdessen unter seine Inhaltsgröße pressen lassen, wodurch der
+   überlaufende Inhalt sichtbar in den Footer hineinragte statt ihn zu
+   verschieben - das genaue Gegenteil von "kein Abschneiden/Überlappen". */
+#app-content {
+  flex: 1 1 auto;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-4);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+}
+
+/* AUFTRAG "Navigation – Permanente Bereichs-Leiste & Visualisierungs-Galerie
+   (Pilot: Urkunden)", Punkt 1: neue erste Zeile für bereichsLeiste.js - alle
+   bisherigen Zeilen (Werkzeugleisten/Hinweis/Inhalt) um eine Zeile nach unten
+   verschoben. Auf Seiten ohne .bereichs-leiste-bereich (z.B. Bestand-Tab)
+   bleibt Zeile 1 einfach leer (kein Inhalt = keine `auto`-Höhe = kein
+   sichtbarer Effekt). */
+.bereichs-leiste-bereich { grid-column: 1 / -1; grid-row: 1; }
+
+/* FOLGEAUFTRAG "Visualisierungs-Tab-Leiste als Hover/Klick-Flyout + Galerie-
+   Muster für Bestand": die in (41) hier eingeführte eigene Grid-Zeile für
+   visualisierungsTabs.js (damals "Zeile 2", .visualisierungs-tabs-bereich)
+   ist ERSATZLOS entfernt - die Tab-Leiste ist jetzt ein `position:fixed`-
+   Flyout (siehe visualisierungsTabs.js' verankereFlyout()), braucht also
+   gar keinen eigenen Platz mehr im Grid, sondern überlappt .viz-inhalt bei
+   Bedarf. #app-content ist dadurch wieder auf vier Zeilen (Stand vor (41)),
+   .viz-inhalt bekommt dadurch wieder dieselbe volle Höhe wie vor Einführung
+   der dritten Ebene (Akzeptanzkriterium, wörtlich). */
+.werkzeugleiste-unsicherheit { grid-column: 1; grid-row: 2; }
+.werkzeugleiste-wechseln { grid-column: 2; grid-row: 2; }
+.kleiner-bildschirm-hinweis { grid-column: 1 / -1; grid-row: 3; }
+
+/* Randfall (Schritt 3): 480px war bereits treemap.js' eigener, etablierter
+   Wert für die alte, feste .treemap-svg-bereich-Mindesthöhe - hier als
+   gemeinsamer Boden für ALLE Module übernommen. Reicht die tatsächlich
+   verfügbare Höhe nicht aus (sehr niedriges Browserfenster), wächst diese
+   Grid-Zeile über den von body/#app-content zugeteilten Platz hinaus - die
+   SEITE scrollt dann (kein Stauchen/Abschneiden), siehe Zusammenfassung an
+   den Nutzer für die konkret getesteten Schwellenwerte. */
+.viz-inhalt { grid-column: 1 / -1; grid-row: 4; min-height: 480px; }
+
+/* Visualisierungen-Hinweis (kein Archivalientyp gewählt) und Galerie-Bereich
+   stehen NEBEN der Bereichs-Leiste (Zeile 1), nehmen aber die gesamte übrige
+   Fläche ein. FOLGEAUFTRAG "...Galerie-Muster für Bestand", Punkt 2: die
+   Bestand-Galerie nutzt denselben Grid-Bereich/dieselbe Klasse wie die
+   Urkunden-Galerie (app.js' zeigeGalerie() ist jetzt für beide gemeinsam
+   - Bestand hat nur keine eigene Bereichs-Leiste, Zeile 1 bleibt für Bestand
+   daher immer leer, genau wie bisher). */
+.visualisierungen-hinweis-bereich,
+.galerie-bereich {
+  grid-column: 1 / -1;
+  grid-row: 2 / -1;
+}
+
+/* Platzhalter-Seiten (Führungen/Literatur/Über) haben KEINE Bereichs-Leiste
+   (nur im Visualisierungen-Tab vorhanden) - bleiben daher weiterhin das
+   EINZIGE Kind von #app-content und nehmen die komplette Grid-Fläche ein. */
+.platzhalter-seite {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
+/* Platzhalter-Seiten sind reiner Fließtext (noch keine echten Inhalte, siehe
+   renderPlatzhalterTab()) - eigene, kleinere max-width für lesbare
+   Zeilenlänge, unabhängig von #app-content's jetzt vollem Breitenumfang. */
+.platzhalter-seite { max-width: 700px; }
+
+.app-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.app-footer p { margin: 0; max-width: 1100px; margin-inline: auto; }
+
+@media (max-width: 700px) {
+  .app-header-inner { flex-direction: column; align-items: flex-start; }
+}

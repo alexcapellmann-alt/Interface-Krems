@@ -1,0 +1,315 @@
+/* css/startseite.css
+   Startseite (Landingpage): Hero-Karussell, Einleitungstext, Drei-Spalten-
+   Kachelbereich, Footer. Strukturell/gestalterisch am alten Single-File-
+   Prototyp orientiert (Desktop/GitHub/Interface-Krems/index.html), Inhalte
+   angepasst an das neue Interface (siehe js/core/startseite.js). Nutzt die
+   bestehenden Design-Tokens aus base.css (--accent/--border/--space-* etc.)
+   statt einer eigenen Farbpalette - nur die Hero-CTA-Farbe ist neu (siehe
+   dortiger Kommentar).
+
+   VOLLBREITE (Schritt 2 "vollbreites Hero-Karussell"): #app-content hat
+   ringsum var(--space-4) Padding (siehe layout.css, VOLLBILD-KORREKTUR) -
+   .startseite-wurzel hebt das über einen exakt passenden negativen Margin
+   auf, damit der Hero-Bereich bildschirmbreit statt eingerückt erscheint.
+   Alle anderen Startseiten-Abschnitte tragen dafür ihr eigenes Innen-Padding
+   (wie schon im alten Prototyp: #hero-slider randlos, Geschwister-Bereiche
+   mit eigenem Innenabstand). */
+
+.startseite-wurzel {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  margin: calc(-1 * var(--space-4));
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Hero-Karussell ─────────────────────────────────────────── */
+.startseite-hero {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.startseite-hero:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+
+.startseite-slides-wrapper { position: absolute; inset: 0; }
+
+.startseite-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity .6s ease;
+  pointer-events: none;
+}
+.startseite-slide.aktiv { opacity: 1; pointer-events: auto; }
+
+/* Platzhalter-Verlaufsflächen (Schritt 2: noch keine echten Fotos) - vier
+   unterschiedliche, gedeckte Verläufe in archivtypischen Farbtönen (Tinte/
+   Pergament/Wein/Gold), damit die vier Slides sich optisch unterscheiden,
+   ohne echte Bildinhalte vorzutäuschen. */
+.startseite-slide-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+.startseite-slide-bg--1 { background: linear-gradient(135deg, #1b2f45 0%, #2c4a6e 55%, #3d6f6e 100%); }
+.startseite-slide-bg--2 { background: linear-gradient(135deg, #3b2a1d 0%, #6b4a30 55%, #8a6a3f 100%); }
+.startseite-slide-bg--3 { background: linear-gradient(135deg, #2a1520 0%, #5c1f2e 55%, #3a2436 100%); }
+.startseite-slide-bg--4 { background: linear-gradient(135deg, #2c4a6e 0%, #7a5a2e 65%, #c99a3a 100%); }
+
+.startseite-platzhalter-hinweis {
+  margin: var(--space-3);
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, .38);
+  color: rgba(255, 255, 255, .8);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+
+.startseite-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(20, 35, 55, .82) 0%, rgba(20, 35, 55, .45) 60%, rgba(20, 35, 55, .15) 100%);
+}
+
+.startseite-slide-inhalt {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-6) var(--space-6);
+  max-width: 640px;
+}
+
+.startseite-slide-kicker {
+  font-size: .8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .75);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.startseite-slide-inhalt h2 {
+  color: #fff;
+  font-size: 1.9rem;
+  line-height: 1.25;
+  margin: 0 0 var(--space-4) 0;
+}
+
+/* Bewusst eine eigene, warme Goldfarbe statt var(--accent) für den Hero-CTA:
+   var(--accent) (dunkles Blau) hätte auf dem ohnehin dunklen Verlauf/Overlay
+   zu wenig Kontrast/Signalwirkung - dieselbe Kontrast-Überlegung wie im alten
+   Prototyp (dort ebenfalls ein separates Gold für Hero-CTAs, Blau nur auf
+   hellem Kartenhintergrund). Farbton an das Gelb der "krems"-Wortmarke
+   angelehnt, etwas gedeckter für die archivtypische Farbstimmung. */
+.startseite-slide-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  background: #e0b429;
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: .92rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background-color .15s ease, transform .15s ease;
+}
+.startseite-slide-cta:hover { background: #f0c650; }
+.startseite-slide-cta:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.startseite-slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .5);
+  background: rgba(255, 255, 255, .15);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.startseite-slider-btn:hover { background: rgba(255, 255, 255, .3); border-color: rgba(255, 255, 255, .9); }
+.startseite-slider-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.startseite-slider-btn--prev { left: var(--space-4); }
+.startseite-slider-btn--next { right: var(--space-4); }
+
+.startseite-slider-dots {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-2);
+  z-index: 2;
+}
+
+/* Fitts'sches Gesetz: 44x44px Klickfläche, sichtbarer Punkt bewusst kleiner
+   (::after) - derselbe Trick wie an vielen Stellen der Visualisierungsmodule
+   (unsichtbare/übergroße Trefferfläche um ein kleines sichtbares Symbol). */
+.startseite-slider-dot {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.startseite-slider-dot::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .6);
+  background: transparent;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.startseite-slider-dot.aktiv::after { background: #fff; border-color: #fff; }
+.startseite-slider-dot:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ── Einleitungstext ────────────────────────────────────────── */
+.startseite-einleitung {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-6) var(--space-5);
+  flex-shrink: 0;
+}
+.startseite-einleitung p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* ── Drei-Spalten-Kachelbereich ─────────────────────────────── */
+.startseite-kachelbereich {
+  padding: var(--space-6) var(--space-5);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.startseite-kacheln {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 900px) {
+  .startseite-kacheln { grid-template-columns: 1fr; }
+}
+.startseite-kachel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.5);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.startseite-kachel h3 {
+  color: var(--accent);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: var(--space-2);
+  margin: 0;
+}
+.startseite-kachel p { color: var(--text-muted); margin: 0; font-size: var(--fs-sm); line-height: 1.6; }
+.startseite-kachel-cta {
+  margin-top: auto;
+  align-self: flex-start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.startseite-kachel-cta:hover { border-bottom-color: var(--accent); }
+.startseite-kachel-cta:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.startseite-footer {
+  background: var(--accent);
+  color: rgba(255, 255, 255, .85);
+  padding: var(--space-6) var(--space-5);
+  flex-shrink: 0;
+  margin-top: auto;
+}
+.startseite-footer-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 680px) {
+  .startseite-footer-inner { grid-template-columns: 1fr; }
+}
+.startseite-footer h3 {
+  font-size: .8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: rgba(255, 255, 255, .6);
+  margin: 0 0 var(--space-3) 0;
+}
+.startseite-footer address {
+  font-style: normal;
+  font-size: var(--fs-sm);
+  line-height: 1.8;
+}
+.startseite-footer address a,
+.startseite-footer-links a {
+  color: rgba(255, 255, 255, .85);
+  text-decoration: none;
+}
+.startseite-footer address a:hover,
+.startseite-footer-links a:hover { color: #fff; text-decoration: underline; }
+.startseite-footer address a:focus-visible,
+.startseite-footer-links a:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .8);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.startseite-footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.startseite-footer-links a { font-size: var(--fs-sm); display: inline-flex; align-items: center; gap: var(--space-1); }
+.startseite-footer-links a::before { content: '↓'; font-size: .75rem; }
+.startseite-footer-copy {
+  grid-column: 1 / -1;
+  margin: var(--space-5) 0 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, .15);
+  font-size: 12px;
+  color: rgba(255, 255, 255, .5);
+  text-align: center;
+}
+
+/* ── Schritt 7: Responsivität auf schmalen Viewports ─────────── */
+@media (max-width: 700px) {
+  .startseite-hero { height: 340px; }
+  .startseite-slide-inhalt { padding: var(--space-4) var(--space-4); max-width: 100%; }
+  .startseite-slide-inhalt h2 { font-size: 1.4rem; }
+  .startseite-slider-btn { width: 38px; height: 38px; font-size: 1.25rem; }
+  .startseite-einleitung,
+  .startseite-kachelbereich,
+  .startseite-footer { padding: var(--space-5) var(--space-3); }
+}

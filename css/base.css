@@ -1,0 +1,91 @@
+/* css/base.css
+   Design-Grundlage: CSS-Variablen (Farben/Typografie/Abstände), Reset,
+   Fokus-Zustand. Farbpalette exakt aus dem alten Single-File-Projekt
+   übernommen (Desktop/GitHub/Interface-Krems/index.html, :root-Block) -
+   Kontrastwerte gegen base/surface geprüft (Nutzer-Zusammenfassung).
+   Schriften laut Auftrag: Inter (Fließtext/UI), Playfair Display
+   (Überschriften) - werden per <link> in index.html geladen (Abschnitt 2:
+   kein Build-Step). --unsicher (#c0392b) ist die in allen 31
+   Visualisierungsmodulen etablierte Unsicherheits-Kennzeichnung
+   (Abschnitt 11) und wird hier bewusst nur referenziert, nie verändert. */
+
+:root {
+  /* Farben */
+  --bg:           #f7f5f0;
+  --surface:      #ffffff;
+  --border:       #ddd8cf;
+  --text:         #1a1a1a;
+  --text-muted:   #595959;
+  --accent:       #2c4a6e;
+  --accent-hover: #3d6591;
+  --unsicher:     #c0392b;
+
+  /* Typografie */
+  --font-ui:      'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --fs-sm:  0.875rem;  /* 14px – nur für Nebentext (z.B. Footer), nie Fließtext */
+  --fs-md:  1rem;      /* 16px – Abschnitt 10: Mindestschriftgröße Fließtext */
+  --fs-lg:  1.125rem;  /* 18px */
+  --fs-xl:  1.375rem;  /* 22px */
+  --fs-h1:  2rem;      /* 32px */
+  --fs-h2:  1.5rem;    /* 24px */
+  --fs-h3:  1.125rem;  /* 18px */
+  --lh-body:    1.5;
+  --lh-heading: 1.25;
+
+  /* Abstände (einheitliche Skala statt Zufallswerten) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius: 6px;
+  --shadow: 0 2px 12px rgba(0, 0, 0, .10);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--fs-md); /* Abschnitt 10: Mindestschriftgröße 16px für Fließtext */
+  line-height: var(--lh-body);
+  color: var(--text);
+  background: var(--bg);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  line-height: var(--lh-heading);
+  font-weight: 600;
+  margin: 0 0 var(--space-3) 0;
+}
+
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3, h4 { font-size: var(--fs-h3); }
+
+p { margin: 0 0 var(--space-3) 0; }
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+}
+
+img { max-width: 100%; }
+
+/* Abschnitt 10: sichtbarer Fokus-Zustand für alle interaktiven Elemente -
+   bewusst kräftig (3px, deutlicher Abstand), damit die Design-Politur den
+   Fokus-Ring nicht unauffälliger macht als vorher. */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
