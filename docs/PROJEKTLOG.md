@@ -5,6 +5,113 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-24 (35) – Führungen, Teil 2d, Punkt 2+3: Umwandlung und vollständiger Prüfbericht
+
+**Auftrag (Kurzfassung):** Nach Freigabe der Zuordnung aus Eintrag 34
+(einschließlich der beiden zusätzlichen Beschreibungen) `vertiefung` auf
+alle 105 Stationen umwandeln, danach alle 25 Führungen/105 Stationen
+programmatisch gegen die Prüfregeln aus 2a/2b/2c prüfen.
+
+### Punkt 2 - Umwandlung
+
+Python-Skript (`csv.reader`/`csv.writer`, `utf-8-sig`, `QUOTE_ALL`,
+`lineterminator='\r\n'`) ersetzt jede der zwölf freigegebenen
+Beschreibungen 1:1 durch ihren Routerpfad, alle anderen Spalten
+unverändert durchgereicht. 105 von 105 `vertiefung`-Werten ersetzt, keine
+unbekannte Beschreibung übrig.
+
+**Spaltenweiser Nachweis** (zweites Skript, vergleicht Alt- gegen
+Neu-Datei je Spalte):
+
+```
+fuehrung_id: 0 Abweichungen
+status: 0 Abweichungen
+fuehrung_titel: 0 Abweichungen
+leitfrage: 0 Abweichungen
+kurzbeschreibung: 0 Abweichungen
+themenbereich: 0 Abweichungen
+zeitraum: 0 Abweichungen
+weiterlesen: 0 Abweichungen
+station_nr: 0 Abweichungen
+station_titel: 0 Abweichungen
+station_zeitraum: 0 Abweichungen
+beleg: 0 Abweichungen
+bild_text: 0 Abweichungen
+text: 0 Abweichungen
+unsicherheit_hinweis: 0 Abweichungen
+vertiefung: 105 Abweichungen
+quellen_intern: 0 Abweichungen
+```
+
+Format geprüft und erhalten: BOM (`ef bb bf`) vorhanden, 106 CRLF-Zeilen-
+enden (keine bloßen LF), alle Felder weiterhin in Anführungszeichen.
+
+### Punkt 3 - Vollständiger Prüfbericht
+
+Programmatisch über alle 25 Führungen/105 Stationen (`fuehrungenDaten.js`s
+bereits geprüfte Datenstruktur direkt ausgewertet, zusätzlich mehrere
+Stichproben live im Browser nachvollzogen).
+
+**Verbleibende Fehlerhinweise:** **keine.** Geprüft: `kopfFehler`
+(doppelte/fehlende `station_nr`), `kurzbeschreibungZuLang`, `weiterlesen`-
+Auflösung gegen `literatur.csv`, `stationWarnungen` (abweichend befüllte
+Führungsangaben auf Nicht-Erstzeilen), `beleg`-Auflösung, `vertiefung`-
+Auflösung (nach der Umwandlung aus Punkt 2). Alle 105 Stationen liefern 0
+Fehler.
+
+**Beleglinks, die nicht zum richtigen Datensatz führen:** **keine.** Alle
+105 Belege (je 1 pro Station - die echten Daten enthalten keine
+Vergleichsstationen und keine `bild`-Belege) liefern einen gültigen,
+korrekten `href` (`js/utils/datensatzAufruf.js`s `baueDatensatzLink()`
+direkt ausgewertet: `typ:id` in jedem Href korrekt enthalten). Vier
+Stichproben je Typ live nachvollzogen (Urkunde `StaAKr-0050` →
+„StaAKr-0050"; Bestand `1.1.1.5.` → „Testamentsbücher"; Bürgerbuch
+`BB-0001`/`personen_id=leonhard_hartman` → „Leonhart Hartman" in der
+Personenliste; Verlassenschaftsinventar `VI-0001` → „Zacharias
+Hauerwassen*") - alle öffneten den erwarteten Datensatz. Kein
+`person`-Beleg in den echten Daten vorhanden (nicht testbar, aber auch
+nicht Teil der 105 realen Belege).
+
+**Galerie:** acht Themengruppen, alle mit korrekter Kachelanzahl und
+Entwurf-Kennzeichnung (per DOM-Auswertung UND Datenstruktur
+gegengeprüft):
+
+| Themengruppe | Führungen | Kacheln im DOM | Entwurf-Badges |
+|---|---|---|---|
+| Bürgergemeinde und Fürsorge | 2 | 2 | 2 |
+| Stadt und Herrschaft | 6 | 6 | 6 |
+| Handel und Donau | 4 | 4 | 4 |
+| Weinbau | 2 | 2 | 2 |
+| Glaube und Bildung | 3 | 3 | 3 |
+| Handwerk und Versorgung | 4 | 4 | 4 |
+| Frauen in Krems | 2 | 2 | 2 |
+| Recht | 2 | 2 | 2 |
+
+Summe 25, entspricht der Gesamtzahl der Führungen exakt.
+
+**Stationen ohne Seitenscrollen bei 1366×768:** alle 105 - **kein
+Überschuss gefunden** (`document.documentElement.scrollHeight -
+window.innerHeight` für jede Station einzeln gemessen, `resize()`
+zwischen jedem Wechsel angestoßen). Auch die textlich längste Station
+(„steuern-stadt", Station 5, 664 Zeichen Erzähltext) passt ohne
+Seitenscrollen - der längere Text scrollt stattdessen wie vorgesehen
+INNERHALB von `.fuehrung-beleg-scroll`/`.fuehrung-erzaehltext` (am
+Belegbereich derselben Station z. B. `scrollHeight:732` gegen
+`clientHeight:485` gemessen - die interne Scroll-Begrenzung aus 2a-K
+greift also tatsächlich, nicht nur zufällig). Die im Auftrag erwartete
+Möglichkeit "Stationen, die nicht passen" trat bei den echten,
+deutlich längeren Texten nicht ein.
+
+**Nebenbefund:** `data/literatur.csv` enthält weiterhin nur die
+Kopfzeile, keine der 25 Führungen befüllt `weiterlesen` - der
+„Zum Weiterlesen"-Block erscheint dadurch aktuell auf keinem
+Abschlussbildschirm. Kein Fehler, nur zur Kenntnis.
+
+Keine neuen Konsolenfehler während der gesamten Prüfung (alle 105
+Stationen durchlaufen, Galerie, mehrere Abschlussbildschirme).
+
+---
+
 ## 2026-09-23 (34) – Führungen, Teil 2d, Punkt 1: Zuordnungstabelle vertiefung → Routerpfad (Pause)
 
 **Auftrag (Kurzfassung):** Die Demo-Führung ist durch 25 echte Führungen
