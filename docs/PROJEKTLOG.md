@@ -5,6 +5,205 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-23 (32) – Führungen, Teil 2b: Belege öffnen, Vertiefungslinks
+
+**Auftrag (Kurzfassung):** Freigabe nach 3a-2 - Punkt 3 (Bürgerbuch-Detailansicht)
+entfällt vollständig, `buergerbuch`-Belege verlinken stattdessen auf die
+Personenliste über die `personen_id` des Eintrags. Punkt 4-7 umgesetzt:
+zentraler, typbasierter Datensatzaufruf per URL, Archiv-Links in der
+Führung, Vertiefungslinks, Dokumentation.
+
+### Abdeckung `buergerbuch` → Personenliste
+
+Geprüft (Python-Skript gegen `data/buergerbuch.csv`/`data/personenliste.csv`):
+**alle 2791 Bürgerbucheinträge** haben eine `personen_id`, die in
+`personenliste.csv` auffindbar ist (0 fehlend, 0 nicht auffindbar) - jeder
+Bürgerbuch-Beleg in einer Führung bekommt daher ausnahmslos einen Link,
+keine Sonderbehandlung für fehlende Zuordnung nötig.
+
+### Zentrale Konfiguration (`js/utils/datensatzAufruf.js`)
+
+`ZUORDNUNG` (eine Stelle) verknüpft Typ → Router-Segmente → Öffnen-Funktion,
+zur Laufzeit gegen `archivalienRegistry.js` geprüft (fehlt die Ansicht dort,
+sichtbarer Hinweis statt Fehler - "Führungen hängen nicht an einzelnen
+Ansichten", Auftrag wörtlich). Live getestet: ein testweise auf
+`ansichtId: 'nichtVorhandeneAnsicht'` gesetzter Eintrag erzeugte
+zuverlässig den Hinweis „Datensatztyp „urkunde" wird nicht unterstützt.",
+kein Konsolenfehler - danach zurückgesetzt (siehe `git diff --stat` unten,
+0 Zeilen Differenz in dieser Datei).
+
+**Öffnen-Funktionen je Zielmodul** (alle < 20 Zeilen, rufen ausschließlich
+bestehende interne Funktionen auf, keine duplizierte Logik):
+
+| Modul | `oeffneDatensatz(id)` ruft auf |
+|---|---|
+| `zeitachse.js` | `oeffneSidebar(record)` - derselbe Wrapper wie der Punkt-Klick-Handler |
+| `parallelKoordinaten.js` | `schalteAuswahl(record)` - Sidebar UND Linien-Hervorhebung in einem Aufruf |
+| `treemap.js` | `wechsleZuKategorie(kategorie)` dann `waehleBestandAus(knoten)` - dieselben zwei Funktionen wie ein Nutzer-Doppelklick (erst Kategorie, dann Bestand) |
+| `personenliste.js` | dieselbe Suchfeld-Filterung (`zeichneTabelle()`) plus `zeigePersonenNennungen()` - identisch zum Zeilen-Klick |
+
+**Gefundener und behobener Fehler während der Entwicklung:** `ermittleZielFuerTyp()`
+reichte für `bestand` zunächst `eintrag.typArchivalien` (immer `undefined`,
+da `bestand` kein solches Feld hat) an derselben Positions-Stelle weiter,
+an der `ermittleAnsicht()` für den `'bestand'`-Zweig die `ansichtId`
+erwartet - dadurch schlug JEDER `bestand`-Aufruf fehl ("nicht
+unterstützt"). Live beim Testen gefunden (Treemap zeigte den
+Nicht-unterstützt-Hinweis statt zu öffnen), behoben durch einen eigenen
+Aufrufzweig für `tab==='bestand'` in `ermittleZielFuerTyp()`.
+
+### Punkt 5+6: Führungen-Integration
+
+`belegDarstellung.js`s Quellenzeile bekommt ein eigenes `<a>` (NICHT der
+ganze Belegbereich klickbar - Urkundenfoto-Klick öffnet weiterhin die
+Lightbox, live geprüft). `fuehrungenDaten.js`s neue `parseVertiefung()`
+nutzt `datensatzAufruf.js`s `ermittleVertiefungsLink()` als neue Prüfregel
+(Pfad nicht in der Registry → `fuehrung-fehler`-Hinweis statt Link) -
+dieselbe Stelle, die auch den Datensatzaufruf validiert, fängt dadurch auch
+später entfernte Vertiefungsziele ab.
+
+### Offene Punkte (bestätigt/ergänzt)
+
+- `filter.entity` wird vom Router gesetzt, aber von keinem Modul
+  ausgelesen (Eintrag 29) - unverändert, nicht Teil dieses Auftrags.
+- `zielSignatur` bleibt stillgelegt, nicht wiederbelebt.
+- Bürgerbuch-Personennetzwerk wird voraussichtlich entfernt - bis dahin
+  nicht angepasst (Auftrag wörtlich).
+- Eigenständige Bürgerbuch-Liste (Option 2 aus Eintrag 30) bleibt ein
+  möglicher späterer Auftrag, mit `js/viz/regestenKachelraster.js` als
+  strukturellem Vorbild (durchsuchbares Kachelraster/Liste einzelner
+  Einträge einer Quelle).
+- Sieben lokale `WARN_SYMBOL`-Kopien (siehe Eintrag zu
+  `unsicherheitHinweis.js`) weiterhin nicht auf eine gemeinsame Utility
+  zusammengeführt - unverändert, nicht Teil dieses Auftrags.
+
+---
+
+## 2026-09-23 (31) – Führungen, Teil 2b, Punkt 3a-2: Abdeckungsprüfung Personennetzwerk (Pause)
+
+**Auftrag (Kurzfassung):** Nach der Freigabe von Option 1 (Ego-Ansicht des
+Personennetzwerks um eine Bürgerbuch-Eintragsliste erweitern) zunächst
+prüfen, wie viele Bürgerbucheinträge über ihre `personen_id` überhaupt
+einen Knoten mit Ego-Ansicht im Personennetzwerk haben. **Keine
+Codeänderung in diesem Eintrag.**
+
+### Methode
+
+`js/utils/buergerbuchZeit.js`' `baueBuergschaftsNetzwerk()` (Zeile 223-257)
+gelesen: ein Knoten entsteht NUR für eine `personen_id`, wenn entweder (a)
+ihr eigener Eintrag ein nicht-leeres `buergen_id` hat (Zeile 238-239: `if
+(ids.length === 0) return;` - Einträge ganz ohne Bürgen werden komplett
+übersprungen, bekommen für sich selbst KEINEN Knoten), oder (b) die
+`personen_id` irgendwo in einem `buergen_id`-Feld eines ANDEREN Eintrags
+als Bürge auftaucht. Gegen `data/buergerbuch.csv` (2791 Zeilen) exakt
+nachgebaut und ausgezählt (`buergen_id` pipe-getrennt, wie in Punkt 3b
+beschrieben).
+
+### Ergebnis
+
+| Gruppe | Erreichbar (Knoten mit Ego-Ansicht vorhanden) | Anteil |
+|---|---|---|
+| Alle Einträge (2791) | 630 | 22,6 % |
+| mit `buergen_id` (330) | 330 | **100 %** |
+| ohne `buergen_id` (2461) | 300 | 12,2 % |
+
+**Nicht alle Einträge sind erreichbar** - genau der im Auftrag vorgesehene
+Pausen-Fall. Jeder Eintrag MIT Bürgen ist erreichbar (seine eigene
+`personen_id` erzeugt ja selbst den Knoten). Der überwältigende Rest - die
+2461 Einträge ohne Bürgen, 87,8 % davon (2161 Einträge) - hat **keinen**
+Knoten im Personennetzwerk und wäre über eine reine Ego-Ansichts-Anbindung
+nicht erreichbar; die einzigen erreichbaren „bürgenlosen" Einträge (300)
+sind zufällige Treffer, deren Person zusätzlich bei einem ANDEREN Eintrag
+als Bürge auftritt.
+
+**Einordnung:** Das Personennetzwerk zeigt naturgemäß nur das
+Bürgschafts-Beziehungsgeflecht - die meisten Bürgerbucheinträge haben aber
+gar keinen dokumentierten Bürgen und liegen damit strukturell außerhalb
+dessen, was diese Visualisierung abbildet. Das ist kein Fehler des Moduls,
+sondern eine Diskrepanz zwischen „Bürgerbuch als vollständige Liste" und
+„Personennetzwerk als Beziehungsausschnitt".
+
+### Pause
+
+Damit wartet diese Sitzung auf eine erneute Entscheidung, bevor mit 3b
+fortgefahren wird - z. B.: Option 1 dennoch wie geplant umsetzen (deckt dann
+nur die 22,6 % mit Bürgen-Bezug ab, für den Rest bliebe `buergerbuch`
+vorerst nur per direktem `?datensatz=`-Aufruf ohne Einstieg aus einer
+Visualisierung erreichbar - konsistent mit der bereits im PROJEKTLOG
+vermerkten Option 3), Option 1 mit Option 2 (eigenständige Liste) kombinieren,
+oder ein anderes Vorgehen.
+
+---
+
+## 2026-09-23 (30) – Führungen, Teil 2b, Punkt 2+3a: alter Ordner geprüft, Bürgerbuch-Zielansicht blockiert (Pause)
+
+**Auftrag (Kurzfassung):** Vor der Umsetzung von Teil 2b Punkt 2 (alten
+Arbeitsordner auf verlorene `CLAUDE.md`/Anweisungsdateien prüfen) und
+Punkt 3a (welche der vier Bürgerbuch-Ansichten stellen Einzeleinträge dar)
+klären. **Keine Codeänderung in diesem Eintrag.**
+
+### Punkt 2 - alter Arbeitsordner (`C:\Users\ali\Desktop\GI_2.0`)
+
+Keine `CLAUDE.md` gefunden (`ls` → „No such file or directory"). Kein
+`AGENTS.md`, kein `README.md`. Einziger Treffer: `.claude\launch.json`
+(205 Bytes) - reine Dev-Server-Konfiguration (`gi2-test-server`, `python -m
+http.server 8834`), inhaltsgleich mit dem bereits bekannten, alten Server-
+Start (jetzt durch den Testserver aus `CLAUDE.md` abgelöst) - **keine
+Projektregeln, kein Anweisungstext**. Nichts zusammenzuführen, direkt mit
+Punkt 3 fortgefahren (Akzeptanzkriterium: "falls nichts gefunden wird,
+direkt mit Punkt 3 fortfahren").
+
+### Punkt 3a - stellt eine der vier Bürgerbuch-Ansichten Einzeleinträge dar?
+
+Geprüft per Quellcode-Lektüre (D3-`.data()`-Bindung: bindet die Ansicht an
+einzelne `records` oder an aggregierte Bins/Gruppen?) und `grep` auf jeden
+`.on('click', ...)`-Handler:
+
+| Ansicht | Woran ist ein visuelles Element gebunden? | Klick öffnet | Einzeleintrag? |
+|---|---|---|---|
+| `trellis.js` | `bins` (Jahrzehnt × Wirtschaftssektor, `zelle.eintraege` ist eine interne Liste, nirgends einzeln angeklickt) | kein Klick-Handler vorhanden (nur Hover-Tooltip) | **Nein** |
+| `bumpChart.js` | `bins`/Rang je Sektor und Jahrzehnt | Klick auf eine Serie friert/hebt den ganzen **Wirtschaftssektor** hervor (`schalteHervorhebung(d.sektor)`, Zeile 310) | **Nein** |
+| `streamgraph.js` | `bins`/gestapelte Fläche je Sektor | Klick friert/hebt den ganzen **Wirtschaftssektor** hervor (`schalteHervorhebung(d.key)`, Zeile 214) | **Nein** |
+| `personennetzwerk.js` | Knoten = **Personen** (aggregiert über `baueBuergschaftsNetzwerk()`, `js/utils/buergerbuchZeit.js`), Kanten = aggregierte Bürgschafts-Paare (können mehrere Bürgerbuch-Zeilen zusammenfassen) | Klick wählt eine **Person** aus (`waehlePerson(d.id)`, Zeile 109/132) - Ego-Ansicht um diese Person, kein einzelner Bürgerbuch-Eintrag | **Nein** |
+
+**Ergebnis: Keine der vier bestehenden Bürgerbuch-Ansichten stellt einen
+einzelnen Bürgerbuch-Eintrag als eigenes, anklickbares Element dar** - alle
+vier operieren ausschließlich auf Aggregat-Ebene (Jahrzehnt×Sektor-Bins
+oder Personen-Knoten/-Kanten). Damit ist die von Punkt 3c geforderte
+Auswahl „die Ansicht, in der ein einzelner Eintrag am klarsten erkennbar
+ist" **nicht möglich** - es gibt keinen Kandidaten.
+
+Genau der im Auftrag selbst vorgesehene Fall: „Falls keine der vier
+Ansichten einzelne Einträge darstellt: melden und pausieren. Dann gibt es
+keine sinnvolle Zielansicht, und ich entscheide über das weitere Vorgehen."
+
+**Optionen, unpräjudiziert zur Entscheidung vorgelegt** (keine davon
+umgesetzt):
+1. Eine der vier bestehenden Ansichten um eine Einzeleintrag-Ebene
+   erweitern (z. B. `personennetzwerk.js`s Ego-Ansicht um eine Liste der
+   zugrunde liegenden Bürgerbuch-Zeilen dieser Person ergänzen - ähnlich
+   `vermoegensschichtung.js`s `oeffneDetailliste()`-Muster, dort aber ohne
+   Weiterklick auf Einzeldetail).
+2. Eine neue, eigenständige Bürgerbuch-Ansicht (Liste/Kachelraster nach dem
+   Muster von `regestenKachelraster.js`) als fünfte Ansicht ergänzen - über
+   den heutigen Auftrag hinausgehend.
+3. Die neue Sidebar aus Punkt 3b trotzdem bauen (eigenständig sinnvoll,
+   schließt die Lücke "kein Bürgerbucheintrag ist einzeln aufrufbar"), aber
+   OHNE Anbindung an eine bestehende Visualisierung - nur über
+   `?datensatz=buergerbuch:<id>` direkt erreichbar (Punkt 4), ohne
+   Einstiegspunkt aus einer Übersichts-Visualisierung heraus. Damit wäre
+   Punkt 3c (Anbindung) für `buergerbuch` ersatzlos entfallen, bis eine der
+   Optionen 1/2 umgesetzt ist.
+
+### Pause
+
+Punkt 2 und 3a sind abgeschlossen, keine Codeänderung vorgenommen. Diese
+Sitzung wartet jetzt auf die Entscheidung des Auftraggebers zur
+Bürgerbuch-Zielansicht (eine der drei Optionen oben oder eine andere),
+bevor mit Punkt 3b fortgefahren wird. Punkt 4-7 hängen an dieser
+Entscheidung (URL-Zuordnung für `typ:'buergerbuch'`, Anbindung in Punkt 5).
+
+---
+
 ## 2026-09-23 (29) – Führungen, Teil 2b, Punkt 1: Erhebung und Zuordnung (Pause bis Freigabe)
 
 **Auftrag (Kurzfassung):** Vor der eigentlichen Umsetzung von Teil 2b (Belege

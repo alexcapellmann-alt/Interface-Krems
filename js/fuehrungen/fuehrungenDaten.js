@@ -14,6 +14,7 @@
 // Quell-CSVs selbst nicht kennen.
 
 import { ladeCSV } from '../core/dataLoader.js';
+import { ermittleVertiefungsLink } from '../utils/datensatzAufruf.js';
 
 // Präfixtabelle aus docs/SCHEMA.md Abschnitt 10 - gegen die tatsächlichen
 // Spaltennamen der Quell-CSVs geprüft (siehe PROJEKTLOG).
@@ -80,6 +81,17 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
   });
 }
 
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 6: vertiefung an `|` trennen, jeder
+// Eintrag ein roher Hash-Pfad ("#visualisierungen/urkunden/zeitachse").
+// Neue Pruefregel (Stil 2a): Pfad existiert nicht in der Registry -> sicht-
+// barer Fehlerhinweis statt Link (js/utils/datensatzAufruf.js'
+// ermittleVertiefungsLink() ist dieselbe Stelle, die auch spaeter entfernte
+// Ansichten erkennt - "Fuehrungen haengen nicht an einzelnen Ansichten").
+function parseVertiefung(rohVertiefung) {
+  const eintraege = (Array.isArray(rohVertiefung) ? rohVertiefung : (rohVertiefung ? [rohVertiefung] : []));
+  return eintraege.map((pfad) => ermittleVertiefungsLink(pfad));
+}
+
 // Baut eine einzelne Station aus ihrer Rohzeile. `istErsteStation` steuert,
 // ob Führungsangaben aus dieser Zeile gelten (Punkt 2: "aus der Zeile mit
 // der niedrigsten station_nr").
@@ -101,6 +113,7 @@ function baueStation(zeile, quellKarten, ersteZeile) {
     belege: parseBeleg(zeile.beleg, quellKarten, zeile.bild_text),
     bild_text: zeile.bild_text || '',
     unsicherheit_hinweis: zeile.unsicherheit_hinweis || '',
+    vertiefung: parseVertiefung(zeile.vertiefung),
     stationWarnungen
   };
 }

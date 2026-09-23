@@ -197,6 +197,36 @@ function baueErzaehlbereich(station) {
   if (station.unsicherheit_hinweis) {
     erzeugeUnsicherheitHinweis(bereich, station.unsicherheit_hinweis);
   }
+  if (station.vertiefung.length > 0) {
+    bereich.appendChild(baueVertiefungsBereich(station.vertiefung));
+  }
+  return bereich;
+}
+
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 6: optisch abgesetzter Block "unter
+// dem Erzaehltext" - als letztes Kind von .fuehrung-erzaehltext (dieselbe
+// scrollbare Spalte, siehe components.css), nicht als eigener, weiterer
+// Flex-Bereich, damit Punkt 1 aus 2a-K (Hoehenverteilung) unangetastet
+// bleibt. Ein ungueltiger Pfad (fehler gesetzt, siehe fuehrungenDaten.js'
+// parseVertiefung()) zeigt denselben .fuehrung-fehler-Hinweis wie andere
+// Pruefregel-Verstoesse statt eines Links.
+function baueVertiefungsBereich(vertiefung) {
+  const bereich = document.createElement('div');
+  bereich.className = 'fuehrung-vertiefung';
+  vertiefung.forEach(({ href, beschriftung, fehler }) => {
+    if (fehler) {
+      const box = document.createElement('p');
+      box.className = 'fuehrung-fehler';
+      box.textContent = fehler;
+      bereich.appendChild(box);
+      return;
+    }
+    const link = document.createElement('a');
+    link.className = 'fuehrung-vertiefung-link';
+    link.href = href;
+    link.textContent = beschriftung;
+    bereich.appendChild(link);
+  });
   return bereich;
 }
 

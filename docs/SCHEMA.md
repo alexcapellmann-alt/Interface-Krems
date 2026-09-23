@@ -297,6 +297,24 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 
 Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (siehe CHANGELOG/PROJEKTLOG).
 
+## 11. Datensatzaufruf per URL (Auftrag "Führungen, Teil 2b", 2026-09-23)
+
+**Format:** `?datensatz=<typ>:<id>`, z. B. `#visualisierungen/urkunden/zeitachse?datensatz=urkunde:StaAKr-0022`. Eigener Query-Parameter, unabhängig von `entity_typ`/`entity_wert` (`router.js:33-46`) - beide können nebeneinander in derselben URL stehen. `<typ>` sind dieselben vier Präfixe wie in Abschnitt 10 (`urkunde`/`inventar`/`bestand`/`person` - `buergerbuch` ist bewusst KEIN eigener Typ, siehe unten), `<id>` dieselben ID-Spalten.
+
+**Zentrale Zuordnung:** `js/utils/datensatzAufruf.js`s `ZUORDNUNG`-Konstante (eine Stelle, siehe dortiger Dateikopf-Kommentar) verknüpft Typ → Zielansicht (Router-Segmente) → die schmale, vom Zielmodul exportierte `oeffneDatensatz(id)`-Funktion. Jede Zuordnung wird zur Laufzeit gegen `archivalienRegistry.js` geprüft - fehlt die referenzierte Ansicht dort, erscheint ein sichtbarer Hinweis statt eines Fehlers (Führungen hängen dadurch nicht an einzelnen Ansichten, siehe PROJEKTLOG Eintrag 32).
+
+| Typ | Zielansicht | Öffnen-Funktion ruft auf |
+|---|---|---|
+| `urkunde` | `#visualisierungen/urkunden/zeitachse` | bestehendes `oeffneSidebar()` (Klick-Handler-Funktion) |
+| `inventar` | `#visualisierungen/verlassenschaften/parallelKoordinaten` | bestehendes `schalteAuswahl()` (inkl. Linien-Hervorhebung) |
+| `bestand` | `#bestand/treemap` | bestehendes `wechsleZuKategorie()` + `waehleBestandAus()` (inkl. Kategorie-Vorauswahl und Hervorhebung) |
+| `person` | `#visualisierungen/personen/personenliste` | bestehende Suchfeld-Logik + `zeigePersonenNennungen()` |
+| `buergerbuch` (Führungs-Belegtyp) | verlinkt NICHT sich selbst, sondern `person:<personen_id des Eintrags>` | s. o. (`person`) |
+
+**Erweiterung um Zustandsparameter (Stufe 3, NICHT Teil dieses Auftrags):** weitere Query-Parameter (z. B. `zeitraum=1500-1550`, `filter=kategorie:Kauf`) können künftig neben `datensatz` in derselben URL stehen, ohne dieses Format zu ändern - `router.js`' `parseHash()` bräuchte dafür nur weitere `params.get(...)`-Zeilen.
+
+**Offener Punkt:** `filter.entity` (`entity_typ`/`entity_wert`) wird vom Router gesetzt, aber von keinem Modul ausgelesen (siehe PROJEKTLOG Eintrag 29) - unverändert, nicht Teil dieses Auftrags.
+
 ---
 
 ## Zusammenfassung: offene Punkte über alle Tabellen hinweg

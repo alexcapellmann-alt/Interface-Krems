@@ -37,6 +37,32 @@
 
 import { baueUrkundenDetailInhalt } from '../utils/sidebar.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
+import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
+
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Linkbeschriftung/Typ-Anzeige je
+// Belegtyp aus der Freigabe (buergerbuch verlinkt wie person, siehe
+// baueArchivLink() unten - eigener Anzeigename hier trotzdem, damit die
+// Quellenzeile weiterhin "buergerbuch" statt "person" zeigt).
+const TYP_ANZEIGE = { urkunde: 'Urkunde', buergerbuch: 'Bürgerbuch-Eintrag', inventar: 'Verlassenschaftsinventar', bestand: 'Bestand', person: 'Person' };
+const LINKTEXT = { person: 'Alle Einträge zu dieser Person', buergerbuch: 'Alle Einträge zu dieser Person' };
+
+// bild bekommt keinen Link (Auftrag woertlich). buergerbuch verlinkt NICHT
+// sich selbst (kein eigener Datensatz-Typ, siehe datensatzAufruf.js' Kopf-
+// kommentar), sondern die Personenliste ueber die personen_id des Eintrags.
+function baueArchivLink(beleg) {
+  if (beleg.typ === 'bild' || !beleg.record) return null;
+  const typ = beleg.typ === 'buergerbuch' ? 'person' : beleg.typ;
+  const id = beleg.typ === 'buergerbuch' ? beleg.record.personen_id : beleg.id;
+  if (!id) return null;
+  const href = baueDatensatzLink(typ, id);
+  if (!href) return null;
+  const link = document.createElement('a');
+  link.className = 'fuehrung-beleg-archivlink';
+  link.href = href;
+  link.textContent = LINKTEXT[beleg.typ] || 'Im Archiv ansehen';
+  link.setAttribute('aria-label', `${TYP_ANZEIGE[beleg.typ] || beleg.typ} ${beleg.id}: ${link.textContent}`);
+  return link;
+}
 
 function feld(label, wert) {
   const el = document.createElement('div');
@@ -73,12 +99,20 @@ function baueFehlerBox(fehlertext) {
   return box;
 }
 
-// Quellenzeile: Typ, ID, Datum/Zeitraum (Punkt 4, Auftrag wörtlich).
+// Quellenzeile: Typ, ID, Datum/Zeitraum (Punkt 4, Auftrag wörtlich), dazu
+// (Teil 2b, Punkt 5) ein eigenes <a> statt textContent - NICHT der ganze
+// Belegbereich klickbar, damit ein Klick auf ein Urkundenfoto weiterhin die
+// Lightbox oeffnet (siehe baueBildInhalt() unten).
 function baueQuellenzeile(beleg, datumWert) {
   const zeile = document.createElement('p');
   zeile.className = 'fuehrung-beleg-quellenzeile';
   const teile = [beleg.typ, beleg.id, datumWert].filter(Boolean);
-  zeile.textContent = teile.join(' · ');
+  zeile.appendChild(document.createTextNode(teile.join(' · ')));
+  const link = baueArchivLink(beleg);
+  if (link) {
+    zeile.appendChild(document.createTextNode(' · '));
+    zeile.appendChild(link);
+  }
   return zeile;
 }
 

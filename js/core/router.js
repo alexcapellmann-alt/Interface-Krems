@@ -31,7 +31,14 @@ export function parseHash(hash) {
     tab: segmente[0] || null,
     segmente: segmente.slice(1),
     entityTyp: params.get('entity_typ'),
-    entityWert: params.get('entity_wert')
+    entityWert: params.get('entity_wert'),
+    // AUFTRAG "Führungen, Teil 2b": Datensatzaufruf (Stufe 2, siehe
+    // js/utils/datensatzAufruf.js), Format "<typ>:<id>" - bewusst NICHT über
+    // state.js gespiegelt (nur diese Route soll die Quelle sein, siehe
+    // PROJEKTLOG). baueHash() bleibt unverändert (kein Aufrufer davon baut
+    // aktuell einen datensatz-Link - datensatzAufruf.js baut seine Links
+    // selbst, siehe dortiger Kommentar), daher hier nur die Lesehälfte nötig.
+    datensatz: params.get('datensatz')
   };
 }
 

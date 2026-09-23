@@ -7,6 +7,36 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-23 (82) – Führungen, Teil 2b: Belege öffnen, Vertiefungslinks
+
+Dateien: neu `js/utils/datensatzAufruf.js` (zentrale, typbasierte
+Zuordnung Typ → Zielansicht → Öffnen-Funktion, gegen die Registry
+validiert); `js/viz/zeitachse.js`, `js/viz/parallelKoordinaten.js`,
+`js/viz/treemap.js`, `js/viz/personenliste.js` (je eine neue, schmale
+exportierte `oeffneDatensatz(id)`, ruft ausschließlich bestehende interne
+Funktionen auf); `js/core/router.js` (liest `?datensatz=<typ>:<id>`),
+`js/core/app.js` (ruft den zentralen Mechanismus nach jedem Ansichtswechsel
+auf); `js/fuehrungen/belegDarstellung.js` (Archiv-Link in der
+Quellenzeile), `js/fuehrungen/fuehrungenDaten.js` (neue Prüfregel für
+`vertiefung`), `js/fuehrungen/fuehrungStation.js` (Vertiefungslinks unter
+dem Erzähltext), `css/components.css`. Details, Abdeckungsprüfung und ein
+während der Entwicklung gefundener und behobener Fehler (Treemap-Zuordnung):
+`docs/PROJEKTLOG.md` (32).
+
+Jeder datenbasierte Beleg einer Führung führt jetzt per Link zum Datensatz
+im Interface (Urkunde → Zeitachse, Verlassenschaftsinventar →
+Parallelkoordinaten, Bestand → Treemap mit automatischer
+Kategorie-Vorauswahl, Person/Bürgerbuch → Personenliste). Direkt
+eingegebene `?datensatz=`-URLs funktionieren unabhängig von den Führungen;
+unbekannte IDs/Typen und nicht mehr in der Registry vorhandene Zielansichten
+erzeugen einen sichtbaren, schließbaren Hinweis statt eines Fehlers.
+Vertiefungslinks (`vertiefung`-Spalte) erscheinen unter dem Erzähltext,
+Beschriftung aus dem Ansichtsnamen der Registry generiert. Eine geplante
+Bürgerbuch-Detailansicht (ursprünglich Teil dieses Auftrags) entfällt -
+siehe PROJEKTLOG für die Begründung (Abdeckungslücke im Personennetzwerk).
+
+---
+
 ## 2026-09-23 (81) – Führungen, Teil 2a-K: Bildschirmfüllendes Layout und Präsentationsnavigation
 
 Dateien: `js/fuehrungen/fuehrungStation.js` (überarbeitet: gemessene
