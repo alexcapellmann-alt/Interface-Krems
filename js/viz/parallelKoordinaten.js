@@ -605,3 +605,16 @@ export function destroy() {
   instanz.container.innerHTML = '';
   instanz = null;
 }
+
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: schmale, von js/utils/
+// datensatzAufruf.js aufgerufene Oeffnen-Funktion - findet den Record per
+// id und ruft denselben schalteAuswahl() auf wie der bestehende
+// Klick-Handler (Zeile 551), inklusive der dort bereits eingebauten
+// Linien-Hervorhebung - keine eigene Sidebar-/Hervorhebungslogik hier.
+export function oeffneDatensatz(id) {
+  if (!instanz) return false;
+  const record = instanz.records.find((r) => r.id === id);
+  if (!record) return false;
+  if (instanz.auswahl !== record) schalteAuswahl(record);
+  return true;
+}

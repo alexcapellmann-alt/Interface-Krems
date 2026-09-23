@@ -765,3 +765,26 @@ export function destroy() {
   instanz = null;
   sidebarListenZustand = null;
 }
+
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: schmale, von js/utils/
+// datensatzAufruf.js aufgerufene Oeffnen-Funktion - setzt dieselbe Suche wie
+// das Sucheingabefeld (Zeile 704-708) auf die personen_id, zeichnet die
+// gefilterte Tabelle neu und ruft dieselben Funktionen wie der bestehende
+// Zeilen-Klick-Handler (Zeile 639-643) auf - keine eigene Sidebar-Logik
+// hier. Auch der Aufruf fuer buergerbuch-Belege (typ:'person', siehe
+// belegDarstellung.js) laeuft hierueber.
+export function oeffneDatensatz(personenId) {
+  if (!instanz) return false;
+  const record = instanz.records.find((r) => r.personen_id === personenId);
+  if (!record) return false;
+  instanz.suchbegriff = personenId;
+  instanz.aktuelleSeite = 1;
+  const sucheInput = instanz.container.querySelector('.pl-suche');
+  if (sucheInput) sucheInput.value = personenId;
+  zeichneTabelle();
+  const anzeigeName = SPALTEN.find((s) => s.schluessel === 'name').wertFn(record);
+  const urkundenRecords = ermittleUrkundenFuerPerson(record, instanz.urkundenNachSignatur);
+  const buergerbuchRecords = ermittleBuergerbuchFuerPerson(record, instanz.buergerbuchNachId);
+  zeigePersonenNennungen(instanz.sidebar, anzeigeName, urkundenRecords, buergerbuchRecords);
+  return true;
+}

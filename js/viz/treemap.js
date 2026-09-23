@@ -725,3 +725,26 @@ export function destroy() {
   instanz.container.innerHTML = '';
   instanz = null;
 }
+
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: schmale, von js/utils/
+// datensatzAufruf.js aufgerufene Oeffnen-Funktion - sucht den Bestand per
+// kuerzel in der Hierarchie und ruft dieselben zwei bestehenden
+// Klick-Handler wie ein Nutzer auf: wechsleZuKategorie() (Zeile 477, wie ein
+// Klick auf die Kategorie-Kachel) faehrt automatisch in die passende
+// Kategorie hinein, danach waehleBestandAus() (Zeile 368, wie ein Klick auf
+// die Bestand-Kachel) oeffnet Sidebar + Hervorhebung - keine eigene
+// Sidebar-/Hervorhebungslogik hier.
+export function oeffneDatensatz(kuerzel) {
+  if (!instanz) return false;
+  for (const kategorie of instanz.hierarchieDaten.children) {
+    for (const unterkategorie of kategorie.children) {
+      const knoten = unterkategorie.children.find((b) => b.record.kuerzel === kuerzel);
+      if (knoten) {
+        wechsleZuKategorie(kategorie);
+        waehleBestandAus(knoten);
+        return true;
+      }
+    }
+  }
+  return false;
+}

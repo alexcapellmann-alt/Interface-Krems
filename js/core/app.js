@@ -145,6 +145,7 @@ import { erzeugeBereichsLeiste, erzeugeBereichsLeistenVorschau } from './bereich
 import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
 import { erzeugeFlyoutPanel, verankereFlyout, verankereVorschauFlyout, verankereIconFlyout, fuegeFlyoutStyleEin } from './visualisierungsTabs.js';
 import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegistry.js';
+import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 
 // Abschnitt 4.2: Personennetzwerk/Gantt-Diagramm werden auch auf kleinen
 // Bildschirmen geladen, aber mit sichtbarem Hinweis versehen. Schwellenwert ist
@@ -629,6 +630,15 @@ async function aktualisiereGalerieFlyoutAnsicht(kontext) {
   }
   stelleVizFlyoutSicher(kontext);
   await wechsleZuAnsicht(kontext, eintrag);
+  // AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: einziger Aufrufort fuer JEDE
+  // Route zu einer Galerie/Flyout-Ansicht (Bestand UND alle hatGalerie-
+  // Archivalientypen, siehe Dateikopf-Kommentar) - deckt damit sowohl den
+  // Erstaufbau als auch einen Wechsel INNERHALB derselben Ansicht ab (bei
+  // dem wechsleZuAnsicht() oben wegen `kontext.ansichtId === eintrag.id`
+  // frueh zurueckkehrt, kontext.aktuellesVizModul aber unveraendert auf dem
+  // weiterhin aktiven Modul steht) - ein zweiter datensatz-Link auf
+  // dieselbe Ansicht wirkt dadurch trotzdem.
+  verarbeiteDatensatzAufruf(kontext.aktuellesVizModul, route);
 }
 
 // Führungen/Literatur/Über: klar gekennzeichnete Platzhalter statt stillschweigend

@@ -890,3 +890,17 @@ export function destroy() {
   instanz.container.innerHTML = '';
   instanz = null;
 }
+
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: schmale, von js/utils/
+// datensatzAufruf.js aufgerufene Oeffnen-Funktion - findet den Record per
+// signatur und ruft denselben oeffneSidebar() auf wie der bestehende
+// Klick-Handler (Zeile 268) - keine eigene Sidebar-Logik hier. Keine
+// Hervorhebung (siehe PROJEKTLOG: fuer Zeitachse-Punkte heute nicht
+// implementiert, hier nicht neu gebaut).
+export function oeffneDatensatz(signatur) {
+  if (!instanz) return false;
+  const record = instanz.records.find((r) => r.signatur === signatur);
+  if (!record) return false;
+  oeffneSidebar(record);
+  return true;
+}
