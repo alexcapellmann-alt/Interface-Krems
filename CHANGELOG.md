@@ -7,6 +7,39 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-23 (83) – Führungen, Teil 2c: Korrekturen, „Führung fortsetzen", Abschlussbildschirm
+
+Dateien: `js/fuehrungen/belegDarstellung.js` (K1 lesbare Typbezeichnungen,
+K2 lesbares Datumsformat, K3 Unsicherheit/Fehler-Unterscheidung),
+`js/fuehrungen/fuehrungStation.js` (letzte Station → Abschlussbildschirm
+statt „Zur Übersicht", Fortsetzen-Zustand bei Belegs-/Vertiefungslink-Klick),
+`js/fuehrungen/fuehrungenDaten.js` (`weiterlesen` gegen `literatur.csv`
+aufgelöst, neue Prüfregel); neu `js/fuehrungen/fuehrungFortsetzen.js`
+(schwebender Button, sessionStorage), neu
+`js/fuehrungen/fuehrungAbschluss.js` (`#fuehrungen/<id>/ende`);
+`js/utils/datensatzAufruf.js` (zentrale `TYP_ANZEIGE`, Argument-Bug in der
+`bestand`-Zuordnung behoben); `js/core/app.js` (Fortsetzen-Button app-weit
+verankert, `/ende`-Route); `js/fuehrungen/fuehrungenGalerie.js` (nicht in
+„Betroffene Dateien", aber vom Auftrag selbst verlangt: „Fortsetzen bei
+Station N"-Hinweis auf der Galerie-Kachel); `css/components.css`;
+`.claude/launch.json` (K4, Cache-freier Testserver). Details, zwei live
+gefundene und behobene Fehler (Fortsetzen-Zustand löschte sich selbst;
+CSS-Spezifität verhinderte das Ausblenden), Abdeckungsprüfungen und
+Screenshots: `docs/PROJEKTLOG.md` (33).
+
+Quellenzeile zeigt jetzt lesbare Typbezeichnungen und Datumsangaben
+("23. Oktober 1544" statt "1544-10-23"). Unsicherheit im Belegbereich ist
+jetzt ein eingeklappter, ruhig eingefärbter ⚠-Button statt eines fett-roten
+Absatzes - klar von Prüfregel-Fehlern unterschieden. Ein schwebender
+"Führung fortsetzen"-Button (ziehbar, per Tastatur in die vier Ecken
+verschiebbar, sessionStorage-persistent) erscheint, sobald eine Führung
+über einen Belegs- oder Vertiefungslink verlassen wird. Jede Führung endet
+jetzt auf einem eigenen Abschlussbildschirm (`#fuehrungen/<id>/ende`) mit
+Leitfrage, gesammelten Vertiefungslinks alle Stationen und optional
+aufgelöster Literaturliste.
+
+---
+
 ## 2026-09-23 (82) – Führungen, Teil 2b: Belege öffnen, Vertiefungslinks
 
 Dateien: neu `js/utils/datensatzAufruf.js` (zentrale, typbasierte

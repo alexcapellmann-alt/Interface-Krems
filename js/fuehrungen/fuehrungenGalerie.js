@@ -10,6 +10,7 @@
 import { navigiereZu } from '../core/router.js';
 import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
 import { ladeFotos } from '../utils/fotoOrdner.js';
+import { ermittlePausierteFuehrung } from './fuehrungFortsetzen.js';
 
 async function ermittleKachelBild(fuehrung) {
   const ersterBeleg = fuehrung.stationen[0]?.belege[0];
@@ -61,6 +62,30 @@ function baueKachel(fuehrung, bildUrl) {
     hinweis.className = 'fuehrung-fehler';
     hinweis.textContent = 'kurzbeschreibung ist länger als 300 Zeichen.';
     kachel.appendChild(hinweis);
+  }
+
+  // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: dezenter Hinweis auf eine
+  // pausierte Fuehrung, nur fuer die eine betroffene Kachel - eigener,
+  // verschachtelter Button statt textContent, damit er unabhaengig vom
+  // Kachel-Klick (der immer zu Station 1 fuehrt) zur pausierten Station
+  // springen kann. stopPropagation, sonst wuerde der Kachel-eigene
+  // Klick-Handler zusaetzlich zu Station 1 navigieren.
+  const pausiert = ermittlePausierteFuehrung();
+  if (pausiert && pausiert.fuehrungId === fuehrung.fuehrung_id) {
+    const fortsetzenBtn = document.createElement('span');
+    fortsetzenBtn.className = 'fuehrung-kachel-fortsetzen';
+    fortsetzenBtn.setAttribute('role', 'button');
+    fortsetzenBtn.tabIndex = 0;
+    fortsetzenBtn.textContent = `Fortsetzen bei Station ${pausiert.stationNr}`;
+    const springe = (event) => {
+      event.stopPropagation();
+      navigiereZu(['fuehrungen', fuehrung.fuehrung_id, String(pausiert.stationNr)]);
+    };
+    fortsetzenBtn.addEventListener('click', springe);
+    fortsetzenBtn.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); springe(event); }
+    });
+    kachel.appendChild(fortsetzenBtn);
   }
 
   kachel.addEventListener('click', () => navigiereZu(['fuehrungen', fuehrung.fuehrung_id, '1']));

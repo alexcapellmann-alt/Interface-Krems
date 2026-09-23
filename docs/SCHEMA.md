@@ -317,6 +317,16 @@ Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (si
 
 ---
 
+## 12. Abschlussbildschirm und weiterlesen-Auflösung (Auftrag "Führungen, Teil 2c", 2026-09-23)
+
+**URL-Format:** `#fuehrungen/<fuehrung_id>/ende` - drittes Routensegment `ende` statt einer `station_nr`, von `js/core/app.js`' `aktualisiereFuehrungenAnsicht()` VOR der `station_nr`-Auflösung abgezweigt (sonst würde `Number('ende')` zu `NaN` und fälschlich "nicht gefunden" auslösen). Neuladen erhält die Ansicht (kein Sonderfall - derselbe Mechanismus wie jede andere Route).
+
+**Auflösung von `weiterlesen`:** `js/fuehrungen/fuehrungenDaten.js`s `parseWeiterlesen()` löst jede `literatur_id` aus der (nur auf der ersten Stationszeile gültigen, siehe Abschnitt 10) `weiterlesen`-Spalte gegen `literatur.csv` auf (`ladeFuehrungenDaten()` lädt diese Datei zusätzlich zu den fünf Beleg-Quell-CSVs). Anzeige (Abschlussbildschirm, Block "Zum Weiterlesen"): `autor, titel, jahr`, bei vorhandenem `link` als externer Link (`target="_blank"`, `rel="noopener"`, mit Symbol gekennzeichnet).
+
+**Neue Prüfregel (Stil Abschnitt 10/2a):** `literatur_id` nicht in `literatur.csv` gefunden → sichtbarer Fehlerhinweis an der Stelle des Eintrags, statt eines stillen Auslassens oder Abbruchs. Mit einer temporären Testkopie verifiziert (zwei echte Einträge + eine unbekannte ID), siehe PROJEKTLOG Eintrag 33 - `data/literatur.csv` selbst bleibt weiterhin ohne echte Dateninhalte (nur Kopfzeile).
+
+---
+
 ## Zusammenfassung: offene Punkte über alle Tabellen hinweg
 
 1. `ratsprotokolle.csv`: `kategorien_unsicher` fehlt weiterhin, Entscheidung offen

@@ -118,8 +118,21 @@ function baueStation(zeile, quellKarten, ersteZeile) {
   };
 }
 
+// AUFTRAG "Fuehrungen, Teil 2c", Punkt 2: weiterlesen an "|" trennen (siehe
+// dataLoader.js, automatisches Pipe-Splitting), jeder Eintrag ein
+// literatur_id - neue Pruefregel im Stil von 2a: ID nicht in literatur.csv
+// gefunden -> fehler statt record (fuehrungAbschluss.js zeigt dann den
+// Fehlerhinweis an dieser Stelle).
+function parseWeiterlesen(rohWeiterlesen, literaturKarte) {
+  const eintraege = (Array.isArray(rohWeiterlesen) ? rohWeiterlesen : (rohWeiterlesen ? [rohWeiterlesen] : []));
+  return eintraege.map((id) => {
+    const record = literaturKarte.get(id);
+    return record ? { record, fehler: null } : { record: null, fehler: `weiterlesen: literatur_id „${id}" nicht in literatur.csv gefunden` };
+  });
+}
+
 // Baut eine Führung aus all ihren Rohzeilen (bereits in Datei-Reihenfolge).
-function baueFuehrung(fuehrungId, zeilen, quellKarten) {
+function baueFuehrung(fuehrungId, zeilen, quellKarten, literaturKarte) {
   const kopfFehler = [];
   const nummern = zeilen.map((z) => z.station_nr);
   const doppelte = nummern.filter((n, i) => nummern.indexOf(n) !== i);
@@ -140,6 +153,7 @@ function baueFuehrung(fuehrungId, zeilen, quellKarten) {
     status: ersteZeile.status || 'entwurf',
     kopfFehler,
     kurzbeschreibungZuLang: kurzbeschreibung.length > 300,
+    weiterlesen: parseWeiterlesen(ersteZeile.weiterlesen, literaturKarte),
     stationen: sortiert.map((zeile) => baueStation(zeile, quellKarten, ersteZeile))
   };
 }
@@ -159,12 +173,14 @@ function gruppiereNachFuehrung(zeilen) {
 export function ladeFuehrungenDaten() {
   if (!datenPromise) {
     datenPromise = (async () => {
-      const [{ records: fuehrungenZeilen }, quellKarten] = await Promise.all([
+      const [{ records: fuehrungenZeilen }, quellKarten, { records: literaturZeilen }] = await Promise.all([
         ladeCSV('data/fuehrungen.csv'),
-        ladeQuellKarten()
+        ladeQuellKarten(),
+        ladeCSV('data/literatur.csv')
       ]);
+      const literaturKarte = new Map(literaturZeilen.map((r) => [r.literatur_id, r]));
       const gruppen = gruppiereNachFuehrung(fuehrungenZeilen);
-      const fuehrungen = gruppen.map(([id, zeilen]) => baueFuehrung(id, zeilen, quellKarten));
+      const fuehrungen = gruppen.map(([id, zeilen]) => baueFuehrung(id, zeilen, quellKarten, literaturKarte));
       return { fuehrungen };
     })();
   }

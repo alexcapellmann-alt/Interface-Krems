@@ -146,6 +146,7 @@ import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
 import { erzeugeFlyoutPanel, verankereFlyout, verankereVorschauFlyout, verankereIconFlyout, fuegeFlyoutStyleEin } from './visualisierungsTabs.js';
 import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegistry.js';
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
+import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
 
 // Abschnitt 4.2: Personennetzwerk/Gantt-Diagramm werden auch auf kleinen
 // Bildschirmen geladen, aber mit sichtbarem Hinweis versehen. Schwellenwert ist
@@ -677,10 +678,11 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
   // Visualisierungsmodul (siehe Dateikopf-Kommentar "LAZY LOADING"), hier nur
   // manuell nachgebaut, weil Führungen (anders als die Visualisierungen)
   // nicht über archivalienRegistry.js/ladeModulUndRender() läuft.
-  const [{ ladeFuehrungenDaten }, galerieModul, stationModul] = await Promise.all([
+  const [{ ladeFuehrungenDaten }, galerieModul, stationModul, abschlussModul] = await Promise.all([
     import('../fuehrungen/fuehrungenDaten.js'),
     import('../fuehrungen/fuehrungenGalerie.js'),
-    import('../fuehrungen/fuehrungStation.js')
+    import('../fuehrungen/fuehrungStation.js'),
+    import('../fuehrungen/fuehrungAbschluss.js')
   ]);
   if (meineGeneration !== generation) return; // Tab während des Ladens bereits gewechselt
 
@@ -696,6 +698,17 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
   const { fuehrungen } = await ladeFuehrungenDaten();
   if (meineGeneration !== generation) return;
   const fuehrung = fuehrungen.find((f) => f.fuehrung_id === fuehrungId);
+
+  // AUFTRAG "Fuehrungen, Teil 2c", Punkt 2: #fuehrungen/<id>/ende - eigene
+  // Ansicht statt einer Stationsnummer, VOR der stationNr-Aufloesung
+  // abgezweigt (sonst wuerde Number('ende') zu NaN und faelschlich "nicht
+  // gefunden" ausloesen).
+  if (fuehrung && stationNrRoh === 'ende') {
+    kontext.modul = abschlussModul.render(kontext.container, fuehrung);
+    kontext.aktuellesVizModul = kontext.modul;
+    return;
+  }
+
   const stationNr = Number(stationNrRoh || '1');
   const station = fuehrung?.stationen.find((s) => s.station_nr === stationNr);
 
@@ -907,6 +920,12 @@ verankereHauptnavFlyouts();
 // nicht das tatsächliche Rendering - siehe dortiger Vertrag, hier bewusst
 // unverändert gelassen (Nicht-Ziel: keine Änderung an router.js).
 starteRouter();
+
+// AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: einmalig app-weit verankert (nicht
+// an einen einzelnen Tab-Kontext gebunden), siehe fuehrungFortsetzen.js'
+// Dateikopf-Kommentar - bleibt dadurch ueber jeden Tab-/Ansichtswechsel
+// bestehen.
+initialisiereFortsetzenButton();
 window.addEventListener('hashchange', handleRouteChange);
 window.addEventListener('resize', planeResizeVerarbeitung);
 handleRouteChange();
