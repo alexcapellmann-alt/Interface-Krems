@@ -5,6 +5,149 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-23 (29) – Führungen, Teil 2b, Punkt 1: Erhebung und Zuordnung (Pause bis Freigabe)
+
+**Auftrag (Kurzfassung):** Vor der eigentlichen Umsetzung von Teil 2b (Belege
+öffnen/Vertiefungslinks) klären: warum `zielSignatur` stillgelegt wurde, in
+welcher bestehenden Ansicht jeder Belegtyp geöffnet werden soll, ein
+URL-Format vorschlagen, nötige Eingriffe benennen. **Keine Codeänderung in
+diesem Punkt** - danach Pause bis zur Freigabe der Zuordnung.
+
+### Warum ist `zielSignatur` stillgelegt?
+
+Kein Bug, keine unerwünschte Nebenwirkung (kein Beleg für "unerwartetes
+Scrollen" oder "Konflikte mit Filtern" in CHANGELOG/PROJEKTLOG gefunden,
+gezielt gesucht) - reine **architektonische Ablösung**: `state.js`'
+`zielSignatur` (`js/core/state.js:78-84`) + `router.js`' `navigiereZu()`
+wurden ursprünglich von `kalenderHeatmap.js`' `navigiereZuKachel()`
+verwendet, um beim Klick auf eine Urkunde in einer Kalendertag-Liste zum
+Regesten-Kachelraster zu navigieren und dort die Zielurkunde zu isolieren
+(Suchbegriff setzen → filtern → `karte.click()` → `scrollIntoView()`,
+`js/viz/regestenKachelraster.js:762-800`). Der Auftrag „Sidebar-Liste –
+Regest-Vorschauzeile & Inline-Detailansicht" (CHANGELOG Zeile 4027-4036)
+hat diesen Navigationsweg **ersatzlos** entfernt, weil Klick auf einen
+Listeneintrag seither die volle Detailansicht **innerhalb derselben
+Sidebar** öffnet (keine Navigation mehr nötig) - eigener Kommentar dazu in
+`js/viz/kalenderHeatmap.js:124-136`: „entfällt ersatzlos … wird von hier
+aus schlicht nicht mehr befüllt". Der `zielSignatur`-Mechanismus selbst war
+zum Zeitpunkt seiner letzten Nutzung „live verifiziert" funktionsfähig
+(CHANGELOG Zeile 5169-5177) - er wurde nicht wegen eines Problems
+abgeschaltet, sondern weil sein einziger Aufrufer wegfiel.
+
+**Strukturelle Einschränkung, die für Teil 2b tatsächlich relevant ist**
+(bereits in Eintrag 24, Punkt 0.3 vermerkt): `zielSignatur` ist rein
+In-Memory, nicht in der URL gespiegelt, und als Einmal-Kanal konzipiert
+(`clearZielSignatur()` beim ersten Konsum) - für eine direkt eingegebene
+oder geteilte URL (Akzeptanzkriterium aus Punkt 2 des aktuellen Auftrags)
+von vornherein ungeeignet. Kein Übernahme-Risiko, weil Teil 2b ohnehin
+einen neuen, URL-basierten Mechanismus braucht.
+
+### Zielansicht je Belegtyp
+
+Ermittelt per `grep` auf alle Aufrufer von `baueSidebarGeruest()`/
+`oeffneSidebar()`/`zeigeUrkundenSidebar()`/`zeigeUrkundenDetail()` in
+`js/viz/*.js` und Sichtung, ob der jeweilige Klick-Handler eine Detailansicht
+**eines einzelnen Datensatzes** öffnet (nicht nur eine gruppierte Liste).
+
+| Typ | Vorgeschlagene Zielansicht (Routerpfad) | Was dort geöffnet wird | Hervorhebung möglich? | Begründung |
+|---|---|---|---|---|
+| `urkunde` | `#visualisierungen/urkunden/zeitachse` | Urkunden-Sidebar mit Fotogalerie (`zeigeUrkundenDetail()` → `baueUrkundenDetailInhalt()`, dieselbe Funktion, die `belegDarstellung.js` für den `urkunde`-Belegtyp bereits wiederverwendet) | Nein (heute nicht implementiert - `instanz.ausgewaehltesRecord` wird nur nachgeführt, keine visuelle Markierung des Punkts selbst) | Jeder Punkt trägt bereits das volle Record inkl. `signatur` und ein `aria-label` „Urkunde ‹signatur›, …" (`zeitachse.js:268,752`) - direktester Ein-Datensatz-zu-ein-Element-Bezug aller Kandidaten. Alternative: `dotPlot.js` (dieselbe Funktion, dieselbe Eignung) - Zeitachse bevorzugt, weil sie bereits die Referenzimplementierung für `baueUrkundenDetailInhalt()` ist und in dieser Sitzung bereits ausführlich regressionsgeprüft wurde. |
+| `buergerbuch` | **keine vorhanden** | - | - | Grep auf `baueSidebarGeruest`/`oeffneSidebar`/`Sidebar` in allen vier Bürgerbuch-Ansichten (`trellis.js`, `bumpChart.js`, `personennetzwerk.js`, `streamgraph.js`) ergibt **null Treffer** - keine öffnet heute irgendeine Detailansicht für einen einzelnen Bürgerbucheintrag. Die Regel „Ansicht, in der die Sidebar heute schon per Klick geöffnet werden kann" ist für diesen Typ **nicht erfüllbar**, ohne eine der vier Ansichten zu erweitern. Rückmeldung nötig, siehe unten. |
+| `inventar` | `#visualisierungen/verlassenschaften/parallelKoordinaten` | Sidebar mit synthetischem Detail-Record (Name/Beruf/Ort/Jahr + Achsenwerte, `oeffneDetail()` → `oeffneSidebar()`, `js/viz/parallelKoordinaten.js:291-293`) | Ja - Klick fixiert zusätzlich die Linien-Hervorhebung (`schalteAuswahl()`, Dateikopf-Kommentar Zeile 35-37) | Einzige der vier Verlassenschaften-Ansichten, die einen EINZELNEN Datensatz öffnet. `vermoegensschichtung.js` öffnet nur gruppierte Listen (Vermögensgruppe×Jahrzehnt, `oeffneDetailliste()`, geprüft: die Listeneinträge selbst sind nicht anklickbar) - ungeeignet. `korrelationsmatrix.js`/`marimekkoVerlassenschaften.js` haben keinen Sidebar-Aufruf. |
+| `bestand` | `#bestand/treemap` | Bestand-Sidebar (`oeffneSidebar()` → `baueSidebarInhalt()`, `js/viz/treemap.js:283-286`) | Ja - Klick markiert den Knoten zusätzlich per Rahmenfarbe (`istAusgewaehlt`/`AUSWAHL_FARBE`, `treemap.js:505-516`) | Primäransicht für Bestand, unter den fünf Kandidaten (treemap/sunburst/icicle/circlePacking/ganttDiagramm - alle fünf öffnen laut Grep dieselbe generische Bestand-Sidebar) die mit zusätzlicher Hervorhebung UND geringstem Navigationsaufwand (kein vorheriges Hineinzoomen in eine Kategorie nötig für die Kategorie-Ebene - **Einschränkung**: ein einzelner Bestand-Knoten ist laut Code erst nach Klick auf seine Kategorie sichtbar/anklickbar, d. h. das Öffnen eines bestimmten Bestands per ID bräuchte einen zusätzlichen, automatischen Kategoriewechsel vor dem eigentlichen Klick - siehe Eingriffe unten). |
+| `person` | `#visualisierungen/personen/personenliste` | Sidebar „Alle Einträge zu dieser Person" (Urkunden-/Bürgerbuch-Nennungen, `zeigePersonenNennungen()`, `js/viz/personenliste.js:639-644`) | Nein (keine Zeilen-Hervorhebung implementiert) | Einzige Personen-Ansicht mit Klick-zu-Detail für einen einzelnen Personen-Datensatz; Liste durchsucht bereits heute auch nach `personen_id` (`personenliste.js:504`) - dieselbe Isolieren-dann-Klicken-Struktur wie beim `zielSignatur`-Vorbild. |
+
+**Wichtiger Befund zur Auftrags-Prämisse „Personenfilter über
+entity_typ/entity_wert":** Das im Auftrag selbst schon vorausgesetzte
+„Personenfilter"-Ziel existiert in dieser Form **nicht**. `router.js` parst
+`entity_typ`/`entity_wert` zwar generisch und ruft `state.js`'
+`setFilterEntity()` auf (`router.js:56-57`) - aber **kein einziges Modul in
+`js/viz/` liest `getZustand().filter.entity` je wieder aus** (grep über
+alle `js/viz/*.js`: null Treffer). Der einzige heutige Schreiber ist
+`regestenKachelraster.js`' `baueEntityButtons()` (Klick auf einen
+Personen-/Ortsnamen INNERHALB eines Urkunden-Datensatzes setzt den Filter),
+aber niemand konsumiert ihn. `filter.entity` ist also selbst momentan
+**toter, aber verdrahteter Zustand** - das strukturelle Gegenstück zu
+`zielSignatur` (dort: verdrahtet und tot durch Wegfall des Aufrufers; hier:
+verdrahtet und tot, weil nie ein Verbraucher gebaut wurde). Für `person`
+schlage ich stattdessen `personenliste.js`s **eigenen, lokalen**
+Suchmechanismus (`instanz.suchbegriff`, oben in der Tabelle) vor - dieser
+filtert bereits nachweislich nach `personen_id` und ist funktional näher am
+gesuchten Verhalten. Bitte im Rahmen der Freigabe entscheiden, ob (a)
+`personenliste.js`s lokaler Suchmechanismus verwendet wird (kleinerer
+Eingriff, s.u.) oder (b) `filter.entity` für `typ:'person'` erstmals
+tatsächlich verdrahtet werden soll (größerer Eingriff, würde zusätzlich
+`personenliste.js` betreffen und faktisch entscheiden, `filter.entity`
+erstmals produktiv zu nutzen - über den heutigen Auftrag hinausgehend).
+
+### URL-Format (Vorschlag)
+
+Neuer Query-Parameter `datensatz`, Format `<typ>:<id>` - dieselbe
+Typ-Bezeichnung wie in `fuehrungenDaten.js`' `BELEG_QUELLEN` (`urkunde`/
+`buergerbuch`/`inventar`/`bestand`/`person`) und dieselben ID-Felder, die
+dort bereits als `idFeld` hinterlegt sind (`signatur`/`id`/`id`/`kuerzel`/
+`personen_id`):
+
+```
+#visualisierungen/urkunden/zeitachse?datensatz=urkunde:StaAKr-0022
+#bestand/treemap?datensatz=bestand:StaAKr-B12
+#visualisierungen/personen/personenliste?datensatz=person:P-0451
+```
+
+Begründung:
+- Eigener Parametername (nicht `entity_typ`/`entity_wert`) - unterscheidet
+  sich bewusst vom (heute unbenutzten) dauerhaften Kontext-Filter, ist aber
+  strukturell gleich einfach zu erweitern; beide können nebeneinander in
+  derselben URL stehen (`router.js`' `URLSearchParams`-Parsing ist bereits
+  parameter-agnostisch, liest nur die ihm bekannten Schlüssel heraus).
+- `<typ>:<id>` statt zwei separaten Parametern (`datensatz_typ`/
+  `datensatz_id`) - kürzer, und die ID selbst kann laut Datenlage in keinem
+  der fünf Typen einen `:` enthalten (stichprobenartig gegen die
+  tatsächlichen ID-Spalten geprüft).
+- Für Stufe 3 (Zustandsübergabe) erweiterbar, ohne dieses Format zu ändern:
+  weitere Parameter (z. B. `zeitraum=1500-1550`, `filter=kategorie:Kauf`)
+  würden als zusätzliche, eigene Query-Parameter neben `datensatz` stehen -
+  `router.js`' `parseHash()` bräuchte dafür nur weitere `params.get(...)`-
+  Zeilen, keine Änderung am `datensatz`-Format selbst.
+
+### Eingriffe (Dateien außerhalb der Führungen-Dateien)
+
+| Datei | Nötige Änderung | Begründung |
+|---|---|---|
+| `js/core/router.js` | `parseHash()`: `datensatz` aus den Query-Parametern lesen und in `route` aufnehmen; `baueHash()`: optionalen `datensatz`-Parameter mit ausgeben | Zentrale Stelle, die JEDE URL parst/baut - ohne diese Änderung ist der neue Parameter für keine Ansicht erreichbar |
+| `js/core/state.js` | Keine zwingende Änderung, wenn `datensatzAufruf.js` den Parameter direkt aus `router.js`' `aktuelleRoute()` liest statt ihn im globalen Zustand zu spiegeln (analog dazu, dass auch `zielSignatur` bewusst NICHT in der URL stand - hier ist es umgekehrt: der Parameter soll NUR in der URL stehen, nicht zusätzlich im flüchtigen `zustand`-Objekt landen, sonst entsteht zwei-Quellen-Unklarheit) | reine Leseinfrastruktur, kein neuer State nötig |
+| `js/utils/sidebar.js` | Keine Änderung nötig für `urkunde`/`bestand`/`inventar` (bestehende `oeffneSidebar()`/`zeigeUrkundenDetail()` werden nur von außen mit einem per ID gefundenen Record aufgerufen, nicht verändert) | bestehende exportierte Funktionen reichen aus |
+| `js/viz/zeitachse.js` | Neue schmale, exportierte Funktion (z. B. `oeffneUrkundeNachSignatur(signatur)`), die den passenden `d.record` in den bereits geladenen `records` sucht und denselben Codepfad wie der bestehende Klick-Handler auslöst | heute öffnet ausschließlich der interne DOM-Klick-Handler die Sidebar - kein Aufruf von außen möglich |
+| `js/viz/parallelKoordinaten.js` | Analog: neue exportierte Funktion, die per `id` den Record findet und `oeffneDetail()` aufruft | dito |
+| `js/viz/treemap.js` | Analog, ZUSÄTZLICH: falls der Ziel-Bestand nicht in der aktuell sichtbaren obersten Ebene liegt, muss die Funktion zuerst programmatisch `wechsleZuKategorie()` der richtigen Kategorie auslösen, bevor `waehleBestandAus()` aufgerufen werden kann (zweistufige Navigation, dasselbe Prinzip wie `regestenKachelraster.js`' Suchbegriff-vor-Klick beim `zielSignatur`-Vorbild) | Bestand-Knoten sind erst nach Kategorie-Wahl im DOM vorhanden |
+| `js/viz/personenliste.js` (falls Option a, lokaler Suchmechanismus) | Neue exportierte Funktion analog `filterleiste.js`' `setzeSuchbegriff()` - z. B. `oeffnePersonNachId(id)`, setzt `instanz.suchbegriff`, filtert, klickt die passende Zeile | heute nur intern über das Sucheingabefeld erreichbar |
+| `js/viz/personenliste.js` (falls Option b, `filter.entity` erstmals verdrahten) | Zusätzlich: `render()` müsste `getZustand().filter.entity` lesen und bei `typ==='person'` denselben Isolier-Mechanismus auslösen | erstmalige Verdrahtung eines bisher folgenlosen Zustandsfelds |
+| Neu: `js/utils/datensatzAufruf.js` | ID-Lookup (typbasiert gegen die jeweils bereits geladenen Daten der Zielansicht) + Aufruf der jeweiligen neuen `oeffne...`-Funktion; unbekannte ID → sichtbarer, schließbarer Hinweis | zentraler, typbasierter Mechanismus laut Auftrag, statt Einzelimplementierung pro Modul |
+| `js/core/app.js` | Ruft nach dem Laden der jeweiligen Zielansicht `datensatzAufruf.js`' zentrale Öffnen-Funktion auf, falls die Route einen `datensatz`-Parameter trägt | einzige Stelle, die weiß, wann eine Ansicht fertig geladen/gerendert ist |
+| `docs/SCHEMA.md` | URL-Format, Typ→Zielansicht-Tabelle, Hinweis auf spätere Stufe-3-Erweiterung dokumentieren | laut Betroffene Dateien/Punkt 5 |
+
+**Zusätzlich, unabhängig von der obigen Tabelle:** `js/utils/sidebar.js`
+könnte OHNE die obigen modul-eigenen `oeffne...`-Funktionen auskommen, wenn
+stattdessen jedes Modul stattdessen eine bereits offene Sidebar-Instanz
+direkt von `datensatzAufruf.js` aus ansteuern ließe - das wurde hier bewusst
+NICHT vorgeschlagen, weil es `sidebar.js`s dokumentiertes Prinzip
+verletzen würde ("kennt bewusst nur einen Container, keine
+Interaktionslogik des aufrufenden Moduls", `vermoegensschichtung.js:36-38`
+zitiert dasselbe Prinzip) - die schmale, modul-eigene Funktion ist der
+konsistentere Bruch mit dem geringsten Risiko für bestehende Aufrufer.
+
+---
+
+## Pause
+
+Punkt 1 ist abgeschlossen, keine Codeänderung vorgenommen. Diese Sitzung
+wartet jetzt auf die Freigabe der Zuordnung (insbesondere: Entscheidung zu
+`buergerbuch` ohne bestehende Zielansicht, Entscheidung zu `person`
+Option a/b, Bestätigung der übrigen Zielansichten/Eingriffe) und der
+Eingriffe, bevor Punkt 2-5 begonnen werden.
+
+---
+
 ## 2026-09-23 (28) – Rückfragen zu 2a-K und Umzug ins Repository
 
 **Auftrag (Kurzfassung):** Vier Klärungspunkte vor der Freigabe von 2a-K,
