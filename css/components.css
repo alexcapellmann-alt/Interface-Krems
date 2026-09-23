@@ -114,3 +114,178 @@
 }
 
 .ansicht-wechseln select:hover { border-color: var(--accent); }
+
+/* AUFTRAG "Führungen, Teil 2a" (js/fuehrungen/*.js, js/utils/unsicherheitHinweis.js).
+   Breiten/Umbruchpunkt als eigene Variablen (Punkt 4, Auftrag wörtlich:
+   "nicht verstreut im Code") statt hartcodierter Werte in den Modulen. */
+:root {
+  --fuehrung-beleg-breite: 60%;
+  --fuehrung-text-breite: 40%;
+  --fuehrung-umbruch: 800px;
+  --fuehrung-text-min-ch: 45ch;
+  --fuehrung-text-max-ch: 85ch;
+  --fuehrung-fehler: #b45309;
+  --fuehrung-fehler-bg: #fff7ed;
+  /* KORREKTURAUFTRAG "Führungen, Teil 2a-K", Punkt 2: eigene Variablen für
+     die Navigationssäule (Breite/Buttongröße) - dieselbe Begründung wie
+     oben ("nicht verstreut im Code"). */
+  --fuehrung-nav-breite: 92px;
+  --fuehrung-nav-btn-groesse: 48px;
+}
+
+/* Galerie (Punkt 3) - dieselbe Kachel-/Raster-Optik wie
+   visualisierungsGalerie.js' .visualisierungs-galerie (siehe dortige
+   fuegeStyleEin()), hier nicht importiert (eigenständiges zweites
+   Navigationsziel, siehe fuehrungenGalerie.js' Dateikopf-Kommentar), aber
+   bewusst auf dieselben Werte gebracht. */
+.fuehrungen-galerie-gruppentitel { margin: var(--space-5) 0 var(--space-3) 0; }
+.fuehrungen-galerie-hinweis { margin-bottom: var(--space-4); }
+.fuehrungen-galerie-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
+.fuehrung-kachel { position: relative; display: flex; flex-direction: column; gap: var(--space-2); width: 100%;
+  padding: var(--space-3); font: inherit; text-align: left; cursor: pointer;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.fuehrung-kachel:hover { border-color: var(--accent); background: var(--bg); }
+.fuehrung-kachel:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.fuehrung-kachel h3 { margin: 0; }
+.fuehrung-kachel p { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); }
+.fuehrung-kachel-zeitraum { font-weight: 600; }
+.fuehrung-kachel-bild { width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius); }
+.fuehrung-kachel-bild-neutral { background: var(--bg); border: 1px dashed var(--border); }
+.fuehrung-kachel-entwurf { align-self: flex-start; padding: 2px 10px; border-radius: 99px; font-size: var(--fs-sm);
+  font-weight: 700; background: var(--accent); color: #fff; }
+
+/* Fehlermarkierung (Punkt 2, Auftrag wörtlich: "muss sich optisch klar von
+   der Unsicherheitskennzeichnung unterscheiden") - eigene Amber-Farbe/
+   gestrichelter Rahmen statt der roten Unsicherheits-Konvention
+   (`--unsicher`, siehe sidebar.js' `.bestand-sidebar-unsicher`). */
+.fuehrung-fehler { margin: 0 0 var(--space-2) 0; padding: var(--space-2) var(--space-3);
+  border: 2px dashed var(--fuehrung-fehler); border-radius: var(--radius);
+  background: var(--fuehrung-fehler-bg); color: var(--fuehrung-fehler); font-size: var(--fs-sm); }
+.fuehrung-fehler::before { content: "Fehler: "; font-weight: 700; }
+
+/* Stationsansicht (Punkt 4, überarbeitet in Teil 2a-K Punkt 1/2 für
+   bildschirmfüllendes Layout - siehe fuehrungStation.js' Dateikopf-
+   Kommentar für die volle Begründung der Flex-Höhenverteilung). Diese
+   Regeln betreffen AUSSCHLIESSLICH `.fuehrung-*`-Klassen, keine anderen Tabs. */
+.fuehrung-station { display: flex; flex: 1 1 auto; min-height: 0; gap: var(--space-3); }
+.fuehrung-station-haupt { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+
+.fuehrung-station-kopf { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: var(--space-3); row-gap: var(--space-1); margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
+.fuehrung-station-zurueck { color: var(--accent); font-size: var(--fs-sm); }
+.fuehrung-station-fuehrungstitel { font-size: var(--fs-sm); color: var(--text-muted); }
+.fuehrung-station-titel { margin: 0; font-size: var(--fs-lg); }
+.fuehrung-station-titel:focus { outline: none; }
+.fuehrung-station-titel:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.fuehrung-station-meta { color: var(--text-muted); font-size: var(--fs-sm); }
+.fuehrung-station-kopf .fuehrung-fehler { flex-basis: 100%; margin: var(--space-1) 0 0 0; }
+
+.fuehrung-station-inhalt { flex: 1 1 auto; min-height: 0; display: grid;
+  grid-template-columns: var(--fuehrung-beleg-breite) var(--fuehrung-text-breite);
+  gap: var(--space-4); align-items: stretch; }
+.fuehrung-station-inhalt.vergleich { grid-template-columns: 1fr 1fr 1fr; }
+
+/* Quelle klar vom Erzähltext abgesetzt (Punkt 4, Auftrag wörtlich): eigener
+   Hintergrund/Rahmen, Beschriftung über ::before - dieselbe Konvention wie
+   .fuehrung-fehler oben (Pseudo-Element-Label statt zusätzlichem DOM-Knoten).
+   Punkt 1 (Teil 2a-K): `.fuehrung-beleg` selbst ist jetzt eine Flex-Spalte -
+   Quellenzeile/Fehlerbox bleiben fest sichtbar, NUR `.fuehrung-beleg-scroll`
+   (der eigentliche, potenziell lange Inhalt) bekommt die Höhenbegrenzung
+   und scrollt bei Bedarf intern. */
+.fuehrung-beleg { display: flex; flex-direction: column; min-height: 0; padding: var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+.fuehrung-beleg::before { content: "Quelle"; flex: 0 0 auto; display: block; font-size: var(--fs-sm); font-weight: 700;
+  color: var(--text-muted); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: .04em; }
+.fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--text-muted); }
+.fuehrung-beleg-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.fuehrung-beleg-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+/* Punkt 1: Urkundenfoto (aus sidebar.js' baueUrkundenDetailInhalt()
+   wiederverwendet, KEINE Änderung an sidebar.js) skaliert unverzerrt/
+   vollständig auf die verfügbare Fläche statt `width:100%` unbegrenzt in
+   die Höhe zu wachsen - spezifischerer Selektor überschreibt sidebar.js'
+   eigene `.bestand-sidebar-foto-haupt`-Regel, ohne sie zu ändern. */
+.fuehrung-beleg-scroll .bestand-sidebar-foto-haupt { width: auto; max-width: 100%; max-height: 42vh;
+  object-fit: contain; display: block; margin: 0 auto var(--space-2) auto; }
+
+.fuehrung-beleg-bild-rahmen { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; min-height: 0; }
+.fuehrung-beleg-bild { flex: 1 1 auto; min-height: 0; max-width: 100%; max-height: 100%; width: auto; height: auto;
+  object-fit: contain; border-radius: var(--radius); cursor: pointer; }
+.fuehrung-beleg-bild:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.fuehrung-beleg-bildunterschrift { flex: 0 0 auto; margin: var(--space-2) 0 0 0; font-size: var(--fs-sm); color: var(--text-muted); }
+
+/* Punkt 1: derselbe Scroll-Rückfall wie `.fuehrung-beleg-scroll` oben, für
+   einen ausnahmsweise zu langen Erzähltext. */
+.fuehrung-erzaehltext { min-height: 0; overflow-y: auto; max-width: var(--fuehrung-text-max-ch);
+  min-width: min(100%, var(--fuehrung-text-min-ch)); }
+.fuehrung-erzaehltext:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.fuehrung-erzaehltext p { margin: 0 0 var(--space-3) 0; }
+.fuehrung-erzaehltext ul { margin: 0 0 var(--space-3) 0; padding-left: 1.25em; }
+
+/* Navigation (Punkt 2, Teil 2a-K): vertikale Säule am rechten Rand der
+   GESAMTEN Station (echtes Flex-Geschwister von `.fuehrung-station-haupt`,
+   kein `position:fixed/absolute` - überlagert dadurch nichts und braucht
+   keine gesonderte Platzreservierung). Füllt automatisch die volle
+   Stationshöhe -> Pfeil-hoch/Fortschritt/Pfeil-runter stehen dadurch auf
+   JEDER Station an derselben Pixel-Position (Folge von Punkt 1, siehe
+   fuehrungStation.js). Gefüllte Akzentfarbe + 48px Mindestgröße (Auftrag
+   wörtlich) statt der vorherigen, schwer erkennbaren Rahmen-Buttons. */
+.fuehrung-nav { flex: 0 0 var(--fuehrung-nav-breite); display: flex; flex-direction: column;
+  align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) 0; }
+.fuehrung-nav-pfeil { flex: 0 0 auto; width: var(--fuehrung-nav-btn-groesse); height: var(--fuehrung-nav-btn-groesse);
+  display: flex; align-items: center; justify-content: center; border: none; border-radius: var(--radius);
+  background: var(--accent); color: #fff; font-size: var(--fs-xl); line-height: 1; cursor: pointer; text-decoration: none; }
+.fuehrung-nav-pfeil:hover:not(:disabled) { background: var(--accent-hover); }
+.fuehrung-nav-pfeil:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+/* Deaktiviert (Punkt 2, Auftrag wörtlich "klar unterscheidbar, aber
+   sichtbar"): heller Fond statt Akzentfarbe, aber weiterhin ein deutlich
+   sichtbarer Rahmen (>=3:1 Kontrast zum umgebenden Seitenhintergrund,
+   WCAG 1.4.11) statt reiner Opazitätsreduktion, die auf dem hellen
+   Seitenhintergrund kaum noch erkennbar gewesen wäre. */
+.fuehrung-nav-pfeil:disabled { background: var(--surface); color: var(--text-muted); border: 1.5px solid var(--text-muted); cursor: default; }
+.fuehrung-nav-fortschritt { flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; color: var(--text-muted); font-size: var(--fs-sm); text-align: center; }
+.fuehrung-nav-uebersicht { width: var(--fuehrung-nav-breite); height: auto; min-height: var(--fuehrung-nav-btn-groesse);
+  padding: var(--space-1); font-size: var(--fs-sm); line-height: 1.15; text-align: center; }
+
+/* Mobil hochkant (Punkt 1/2, Auftrag wörtlich "kein Zwang zur
+   Bildschirmfüllung, Station scrollt wie bisher normal"): hebt die
+   Höhenbegrenzung aus `css/layout.css`s `.fuehrungen-bereich`-Regel wieder
+   auf (spätere Regel gleicher Spezifität in derselben Kaskade gewinnt,
+   `components.css` wird nach `layout.css` geladen, siehe index.html) und
+   schaltet die interne Scroll-Falle in `.fuehrung-beleg-scroll`/
+   `.fuehrung-erzaehltext` ab (verschachtelte Scroll-Bereiche innerhalb
+   einer ohnehin scrollenden Seite wären auf Touch-Geräten schlechte UX) -
+   Navigationssäule wird zur festen, schmalen Leiste am unteren Rand
+   (`position:sticky`, bleibt beim Scrollen sichtbar, braucht anders als
+   `position:fixed` keine manuelle Platzreservierung). */
+@media (max-width: 800px) {
+  .fuehrung-station { flex-direction: column; }
+  .fuehrung-station-haupt { min-height: auto; }
+  .fuehrung-station-inhalt, .fuehrung-station-inhalt.vergleich { grid-template-columns: 1fr; min-height: auto; }
+  .fuehrung-beleg { min-height: auto; }
+  .fuehrung-beleg-scroll { overflow-y: visible; }
+  .fuehrung-erzaehltext { overflow-y: visible; }
+  .fuehrung-nav { flex: 0 0 auto; flex-direction: row; width: 100%;
+    position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--border);
+    padding: var(--space-2) var(--space-3); margin-top: var(--space-3); }
+  .fuehrung-nav-uebersicht { width: auto; flex: 1 1 auto; margin: 0 var(--space-2); }
+}
+
+/* Unsicherheitshinweis (Punkt 5) - bewusst optisch vom blauen Info-Button
+   unterschieden (eigene Farbe/Icon-Text statt "i"-Kreis). */
+.unsicherheit-hinweis-wrapper { position: relative; display: inline-block; margin-top: var(--space-2); }
+.unsicherheit-hinweis-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px;
+  padding: var(--space-1) var(--space-3); border: 1.5px solid var(--unsicher, #c0392b); border-radius: var(--radius);
+  background: var(--surface); color: var(--unsicher, #c0392b); font-weight: 600; cursor: pointer; }
+.unsicherheit-hinweis-btn:hover { background: var(--bg); }
+.unsicherheit-hinweis-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.unsicherheit-hinweis-panel { position: absolute; z-index: 20; top: 100%; left: 0; margin-top: var(--space-1);
+  width: min(360px, 90vw); padding: var(--space-3); border: 1.5px solid var(--unsicher, #c0392b); border-radius: var(--radius);
+  background: var(--surface); box-shadow: var(--shadow); }
+.unsicherheit-hinweis-panel p { margin: 0; padding-right: var(--space-4); }
+.unsicherheit-hinweis-panel:focus { outline: none; }
+.unsicherheit-hinweis-schliessen { position: absolute; top: var(--space-1); right: var(--space-1); min-width: 32px;
+  min-height: 32px; border: none; background: none; font-size: 1.25rem; line-height: 1; cursor: pointer; }
+.unsicherheit-hinweis-schliessen:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
