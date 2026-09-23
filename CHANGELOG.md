@@ -7,6 +7,21 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-24 (84) – Führungen, Teil 2d: echte Führungsdaten, vertiefung umgewandelt
+
+Dateien: `data/fuehrungen.csv` (ausschließlich Spalte `vertiefung`,
+skriptgestützt spaltenweise gegen 0 Abweichungen in allen anderen Spalten
+geprüft). Die Demo-Führung ist durch 25 echte Führungen (105 Stationen,
+alle `entwurf`) ersetzt; `vertiefung` enthielt zunächst zwölf
+Klartext-Beschreibungen statt Routerpfaden (Zuordnung: PROJEKTLOG
+Eintrag 34, freigegeben) - jetzt durchgängig echte Pfade. Vollständiger
+Prüfbericht (alle 105 Stationen, alle Prüfregeln aus 2a/2b/2c, Galerie,
+1366×768-Seitenscrollen): keine verbleibenden Fehlerhinweise, keine
+falsch führenden Beleglinks, keine Station mit Seitenscroll-Überschuss -
+siehe PROJEKTLOG Eintrag 35 für Details.
+
+---
+
 ## 2026-09-23 (83) – Führungen, Teil 2c: Korrekturen, „Führung fortsetzen", Abschlussbildschirm
 
 Dateien: `js/fuehrungen/belegDarstellung.js` (K1 lesbare Typbezeichnungen,
