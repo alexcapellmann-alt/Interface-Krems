@@ -5,6 +5,70 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-23 (34) – Führungen, Teil 2d, Punkt 1: Zuordnungstabelle vertiefung → Routerpfad (Pause)
+
+**Auftrag (Kurzfassung):** Die Demo-Führung ist durch 25 echte Führungen
+(105 Stationen, alle `entwurf`) ersetzt. `vertiefung` enthält noch
+Klartext-Beschreibungen statt Routerpfaden. Vor jeder Umwandlung: Tabelle
+mit dem vorgeschlagenen Pfad je Beschreibung, gegen `js/config/
+archivalienRegistry.js` geprüft. **Keine Codeänderung, keine
+CSV-Änderung in diesem Punkt.**
+
+### Methode
+
+`vertiefung`-Spalte aller 105 Zeilen programmatisch ausgelesen (Python,
+`csv.DictReader`, `utf-8-sig`) und nach `|` aufgeteilt (Format laut
+Abschnitt 10, obwohl hier - anders als `beleg`/`text` - kein einziger
+Eintrag mehr als einen `|`-getrennten Wert hat: alle 105 Stationen haben
+genau EINE `vertiefung`-Beschreibung, keine leer). Jede Beschreibung dann
+gegen Label/Beschreibung/Typ jeder Ansicht in `archivalienRegistry.js`
+abgeglichen.
+
+### Zuordnungstabelle
+
+| Beschreibung | Anzahl (geprüft) | Vorgeschlagener Pfad | Eindeutig? |
+|---|---|---|---|
+| Urkundenkachelansicht | 56 | `#visualisierungen/urkunden/regestenKachelraster` | Ja - Label „Regesten-Kachelraster", Beschreibung „Durchsuchbare Kurzfassungen (Regesten) ... mit Foto, Kategorie und Volltextsuche" passt exakt zu „Kachelansicht" |
+| Bestandsverzeichnis – Treemap | 12 | `#bestand/treemap` | Ja - Label „Treemap" wörtlich enthalten, einziger Treemap-Eintrag im gesamten Projekt |
+| Zeitleiste der Urkunden | 9 | `#visualisierungen/urkunden/zeitachse` | Ja - Label „Zeitachse", Beschreibung „Jede Urkunde als Punkt auf der Zeitachse" |
+| Trellis des Bürgerbuchs | 6 | `#visualisierungen/buergerbuch/trellis` | Ja - Label „Trellis" wörtlich, einziger Trellis-Eintrag |
+| Personenliste | 4 | `#visualisierungen/personen/personenliste` | Ja - Label wörtlich identisch |
+| Balkendiagramme der Verlassenschaftsinventare nach Vermögensgruppen | 4 | `#visualisierungen/verlassenschaften/vermoegensschichtung` | Ja - Beschreibung „Verteilung der Verlassenschaften auf die Vermögensgruppen A bis E je Jahrzehnt" - einziger Verlassenschaften-Eintrag mit „Vermögensgruppen" |
+| Marimekko der Vermögenszusammensetzung der Verlassenschaftsinventare | 4 | `#visualisierungen/verlassenschaften/marimekkoVerlassenschaften` | Ja - Beschreibung „Zusammensetzung des Realvermögens" der Verlassenschaftsinventare, „Marimekko" wörtlich im Label. **Achtung bei Punkt 2:** nicht mit `urkunden/marimekko` verwechseln (andere ID, anderes Diagramm - siehe eigener Dateikopf-Kommentar von `marimekkoVerlassenschaften.js` zur bewussten Trennung) |
+| Ortskarte | 3 | `#visualisierungen/orte/karte` | Ja - Label „Karte", Beschreibung „Alle in den Urkunden genannten Orte auf einer Karte" - die beiden anderen Orte-Ansichten (Verbindungskarte, Bipartite Flow Map) sind Beziehungsdiagramme, keine reinen Karten |
+| Dot Plot der Urkunden nach Kategorien | 2 | `#visualisierungen/urkunden/dotPlot` | Ja - Label „Dot Plot", Beschreibung „Verteilung der Urkunden nach Kategorie ... jede Urkunde ein Punkt" |
+| Trellis des Bürgerbuchs nach Wirtschaftssektoren | 2 | `#visualisierungen/buergerbuch/trellis` | Ja - `trellis.js`s eigene Registry-Beschreibung lautet bereits „Ein kleines Diagramm pro Wirtschaftssektor..." - „nach Wirtschaftssektoren" beschreibt denselben, einzigen Trellis-Eintrag, keine andere Ansicht |
+
+### Zwei zusätzliche Beschreibungen (nicht in der Auftragstabelle)
+
+Die Auszählung ergab **zwölf**, nicht zehn verschiedene Beschreibungen -
+zwei weitere kommen vor, die im Auftrag nicht aufgeführt sind:
+
+| Beschreibung | Anzahl | Vorgeschlagener Pfad | Eindeutig? |
+|---|---|---|---|
+| Bürgerbuch: Trellis nach Wirtschaftssektoren | 2 | `#visualisierungen/buergerbuch/trellis` | Ja - andere Formulierung (Doppelpunkt-Präfix „Bürgerbuch:" statt „Trellis des Bürgerbuchs"), aber inhaltlich dieselbe Ansicht wie die beiden Trellis-Zeilen oben - vermutlich uneinheitliche Redaktion derselben Absicht, nicht selbst vereinheitlicht/geraten |
+| Zeitleisten-Stammbaum der Habsburger | 1 | `#visualisierungen/personen/familienbaum` | Ja - Registry-Label lautet wörtlich „Habsburg-Zeitleistenbaum" (siehe `archivalienRegistry.js`, dort umbenannt in Teil „Galerie+Flyout für Bürgerbuch und Personen") |
+
+Summe geprüft: 56+12+9+6+4+4+4+3+2+2+2+1 = **105**, entspricht der
+Zeilenzahl exakt.
+
+### Befund
+
+Alle zwölf Beschreibungen sind eindeutig genau einer Ansicht zuordenbar -
+keine Beschreibung ohne Kandidat, keine mit mehreren gleich guten
+Kandidaten. Trotzdem: die beiden zusätzlichen Beschreibungen wurden vom
+Auftrag nicht genannt und sind hier zur ausdrücklichen Freigabe vorgelegt,
+nicht eigenständig übernommen.
+
+### Pause
+
+Punkt 1 ist abgeschlossen, keine Datei außer `docs/PROJEKTLOG.md` wurde
+geändert. Diese Sitzung wartet jetzt auf die Freigabe der Zuordnung
+(einschließlich der beiden zusätzlichen Beschreibungen), bevor mit Punkt 2
+(Umwandlung) begonnen wird.
+
+---
+
 ## 2026-09-23 (33) – Führungen, Teil 2c: Korrekturen, „Führung fortsetzen", Abschlussbildschirm
 
 **Auftrag (Kurzfassung):** Korrekturblock (K1-K4) aus der Browserprüfung von
