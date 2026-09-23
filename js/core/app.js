@@ -647,6 +647,74 @@ function renderPlatzhalterTab(tab, ueberschrift, hinweistext) {
   aktuellerKontext = { tab, destroy() {} };
 }
 
+// AUFTRAG "Führungen, Teil 2a", Punkt 1: eigener, schlanker Tab-Kontext statt
+// der generischen Galerie/Flyout-Maschinerie oben (die ist für "Galerie ->
+// eine von mehreren VISUALISIERUNGEN" gebaut - Führungen brauchen "Galerie
+// -> genau EINE Station", ein anderes zweites Navigationsziel, siehe
+// Selbstauskunft im Chat). `kontext.modul` hält die jeweils aktive
+// Untermodul-Instanz (Galerie ODER Station), `aktualisiereFuehrungenAnsicht()`
+// entscheidet anhand der Route, welche davon gebraucht wird - Lazy Loading
+// (Punkt 1, Auftrag wörtlich): `fuehrungenDaten.js`/die fünf Quell-CSVs
+// werden dadurch erst beim ersten Aufruf dieser Funktion geladen, nie beim
+// App-Start.
+async function aktualisiereFuehrungenAnsicht(kontext) {
+  const meineGeneration = generation;
+  const route = aktuelleRoute();
+  const [fuehrungId, stationNrRoh] = route.segmente;
+
+  // Lazy Loading (Punkt 1, Auftrag wörtlich): dynamischer import() statt
+  // statischem Top-of-File-Import - dieselbe Konvention wie bei jedem
+  // Visualisierungsmodul (siehe Dateikopf-Kommentar "LAZY LOADING"), hier nur
+  // manuell nachgebaut, weil Führungen (anders als die Visualisierungen)
+  // nicht über archivalienRegistry.js/ladeModulUndRender() läuft.
+  const [{ ladeFuehrungenDaten }, galerieModul, stationModul] = await Promise.all([
+    import('../fuehrungen/fuehrungenDaten.js'),
+    import('../fuehrungen/fuehrungenGalerie.js'),
+    import('../fuehrungen/fuehrungStation.js')
+  ]);
+  if (meineGeneration !== generation) return; // Tab während des Ladens bereits gewechselt
+
+  kontext.modul?.destroy();
+  kontext.container.innerHTML = '';
+  kontext.aktuellesVizModul = null; // vor jedem Neuaufbau zurücksetzen, s.u.
+
+  if (!fuehrungId) {
+    kontext.modul = await galerieModul.render(kontext.container);
+    return;
+  }
+
+  const { fuehrungen } = await ladeFuehrungenDaten();
+  if (meineGeneration !== generation) return;
+  const fuehrung = fuehrungen.find((f) => f.fuehrung_id === fuehrungId);
+  const stationNr = Number(stationNrRoh || '1');
+  const station = fuehrung?.stationen.find((s) => s.station_nr === stationNr);
+
+  if (!fuehrung || !station) {
+    const hinweis = `Führung „${fuehrungId}"${stationNrRoh ? `, Station ${stationNrRoh}` : ''} wurde nicht gefunden.`;
+    kontext.modul = await galerieModul.render(kontext.container, { hinweis });
+    return;
+  }
+  kontext.modul = stationModul.render(kontext.container, fuehrung, stationNr);
+  // KORREKTURAUFTRAG "Führungen, Teil 2a-K": nur die Stationsansicht braucht
+  // die zentrale, 200ms-debouncte resize()-Verdrahtung (fuehrungStation.js
+  // misst darüber ihre bildschirmfüllende Höhe neu) - die Galerie oben
+  // (kontext.aktuellesVizModul bleibt dort unverändert null) nicht.
+  kontext.aktuellesVizModul = kontext.modul;
+}
+
+function renderFuehrungenTab() {
+  const container = erzeugeUnterContainer('fuehrungen-bereich');
+  const kontext = {
+    tab: 'fuehrungen',
+    container,
+    modul: null,
+    aktuellesVizModul: null,
+    destroy: () => kontext.modul?.destroy()
+  };
+  aktuellerKontext = kontext;
+  aktualisiereFuehrungenAnsicht(kontext);
+}
+
 // Startseite (Landingpage, siehe startseite.js): erscheint bei leerem Hash
 // (Root-URL) - KEIN sechster Nav-Tab (Nicht-Ziel: Hauptnavigation bleibt bei
 // den fünf bestehenden Einträgen unverändert), sondern die Ansicht, die vor
@@ -667,9 +735,7 @@ function renderTab(tab) {
   if (!tab) return renderStartTab();
   if (tab === 'bestand') return renderBestandTab();
   if (tab === 'visualisierungen') return renderVisualisierungenTab();
-  if (tab === 'fuehrungen') {
-    return renderPlatzhalterTab('fuehrungen', 'Führungen', 'Für diesen Bereich liegt noch keine Datentabelle vor (data/fuehrungen.csv). Er erscheint hier, sobald sie vorbereitet ist.');
-  }
+  if (tab === 'fuehrungen') return renderFuehrungenTab();
   if (tab === 'literatur') {
     return renderPlatzhalterTab('literatur', 'Literatur', 'Die Datentabelle data/literatur.csv ist vorhanden, aber es existiert noch kein Anzeige-Modul dafür (Abschnitt 2: Content-driven, mit Einschränkung). Erscheint hier, sobald eines gebaut ist.');
   }
@@ -715,6 +781,13 @@ function handleRouteChange() {
     // evtl. offene Flyout mitten in einer Interaktion zerstört).
     if (route.tab === 'bestand') {
       aktualisiereGalerieFlyoutAnsicht(aktuellerKontext);
+      contentRoot.focus();
+      return;
+    }
+    // Punkt 1 (siehe aktualisiereFuehrungenAnsicht()): derselbe leichte
+    // Update-Pfad wie beim Bestand-Fall oben, statt vollem Tab-Neuaufbau.
+    if (route.tab === 'fuehrungen') {
+      aktualisiereFuehrungenAnsicht(aktuellerKontext);
       contentRoot.focus();
       return;
     }

@@ -7,6 +7,137 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-23 (81) – Führungen, Teil 2a-K: Bildschirmfüllendes Layout und Präsentationsnavigation
+
+Dateien: `js/fuehrungen/fuehrungStation.js` (überarbeitet: gemessene
+Stationshöhe über `js/utils/viewportGroesse.js` - nur verwendet, nicht
+geändert -, vertikale Navigationssäule statt horizontaler Pfeile),
+`js/fuehrungen/belegDarstellung.js` (neuer `.fuehrung-beleg-scroll`-Wrapper,
+Bilder mit `object-fit:contain`), `css/components.css` (neue Höhen-
+Verteilungs-/Navigationssäulen-Regeln, mobiler Umbruch), `css/layout.css`
+(`.fuehrungen-bereich` bekommt erstmals eine eigene Grid-Platzierung, analog
+zu `.viz-inhalt`/`.platzhalter-seite`/`.galerie-bereich`), `js/core/app.js`
+(Führungen-Kontext an die zentrale `resize()`-Verdrahtung gehängt). Details,
+Messtabelle und Begründung der `viewportGroesse.js`-Entscheidung:
+`docs/PROJEKTLOG.md` (27).
+
+Stationen füllen jetzt bei Desktop/Tablet-quer den verfügbaren Bildschirm
+ohne Seitenscrollen (geprüft: 1366×768, 1440×900, 1920×1080, alle vier
+Demo-Stationen, 0 px Überschuss). Mobil (≤800px) unverändert normal
+scrollend. Navigation: feste vertikale Pfeilsäule rechts (▲/Fortschritt/▼,
+letzte Station: "Zur Übersicht" statt ▼), mobil eine `position:sticky`-Leiste
+unten. Pfeiltasten/Bild-auf-ab wechseln die Station, außer der Fokus liegt in
+einem scrollbaren Bereich/Eingabefeld/dem ⚠-Fenster. Galerie, Datenlogik,
+Prüfregeln unverändert.
+
+---
+
+## 2026-09-23 (80) – Führungen, Teil 2a: Galerie, Stationslayout, Navigation
+
+Dateien: `js/core/app.js` (Führungen-Tab), neu `js/fuehrungen/fuehrungenDaten.js`,
+`js/fuehrungen/fuehrungenGalerie.js`, `js/fuehrungen/fuehrungStation.js`,
+`js/fuehrungen/belegDarstellung.js`, neu `js/utils/unsicherheitHinweis.js`,
+`css/components.css`. `js/core/router.js`/`js/utils/sidebar.js` NICHT
+geändert (beide vom Auftrag zur Rückmeldung vorgesehen, falls nötig - war es
+nicht, siehe Selbstauskunft im Chat für die Begründung).
+
+**Punkt 1 (Routing/Laden):** `#fuehrungen` → Galerie, `#fuehrungen/<id>` →
+Station 1, `#fuehrungen/<id>/<nr>` → Station `nr`. Stationswechsel per Pfeil/
+Pfeiltaste nutzt `history.replaceState()` statt `router.js`' `navigiereZu()`
+(kein neuer Verlaufseintrag) - deshalb keine Router-Änderung nötig. Lazy
+Loading über dynamische `import()` in `app.js` (dieselbe Konvention wie bei
+jedem Visualisierungsmodul), `fuehrungenDaten.js` lädt `fuehrungen.csv` + alle
+fünf Beleg-Quell-CSVs memoisiert erst bei Tab-Öffnung. Unbekannte
+`fuehrung_id`/`station_nr` zeigen die Galerie mit Hinweistext statt leerem
+Bildschirm.
+
+**Punkt 2 (`fuehrungenDaten.js`):** Gruppierung/Sortierung/Text-/Beleg-Parsing
+wie vorgegeben. Alle 6 Prüfregeln umgesetzt und mit einer temporären
+Testkopie der CSV einzeln nachgewiesen (Details/Screenshots: Selbstauskunft
+im Chat) - Fehlermarkierung (`.fuehrung-fehler`, Amber/gestrichelt) optisch
+klar von der roten Unsicherheits-Konvention (`.bestand-sidebar-unsicher`)
+getrennt.
+
+**Punkt 3 (Galerie):** eigene, schlanke Kachel-Komponente (kein
+Wiederverwenden der generischen Galerie/Flyout-Maschinerie - die ist für
+"Galerie -> eine von mehreren Visualisierungen" gebaut, Führungen brauchen
+"Galerie -> eine Station", siehe Dateikopf-Kommentar in
+`fuehrungenGalerie.js`), optisch an `visualisierungsGalerie.js` angelehnt.
+Gruppierung nach `themenbereich`, Bild aus dem ersten Beleg der ersten
+Station (`urkunde` → `foto_ordner` über `ladeFotos()`, `bild` → direkter
+Pfad, sonst neutrale Kachel), `Entwurf`-Kennzeichnung bei `status=entwurf`.
+
+**Punkt 4 (Stationslayout):** `baueUrkundenDetailInhalt()` aus `sidebar.js`
+für `urkunde` direkt wiederverwendet (bereits exportiert). Für
+`bestand`/`buergerbuch`/`inventar`/`person`/`bild` eigene, aber optisch
+identische Felder (dieselben `.bestand-sidebar-feld*`-Klassen) - `bestand`
+NICHT über `baueSidebarInhalt()`, weil dessen Kategorie-Badges ohne
+`kategorieFarbe` abstürzen (live gefunden, siehe Selbstauskunft). Breiten/
+Umbruchpunkt als CSS-Variablen (`--fuehrung-beleg-breite` etc.) in
+`components.css`. Vergleichsstation: Beleg/Text/Beleg, Einzelstation:
+Beleg/Text - beide Reihenfolgen bleiben mobil erhalten.
+
+**Punkt 5 (`unsicherheitHinweis.js`):** neue, wiederverwendbare Utility -
+Escape/Klick-außerhalb/Fokus-Rückgabe/`aria-expanded` wie gefordert. Bewusst
+NICHT die sieben bestehenden `WARN_SYMBOL`-Duplikate zusammengeführt
+(Nicht-Ziel) - als offener Punkt im PROJEKTLOG vermerkt.
+
+**Punkt 6 (Navigation):** `<button>`-Pfeile mit `aria-label`/Tooltip/44px
+Mindestgröße, Station 1 Zurück deaktiviert, letzte Station "Zur Übersicht",
+Pfeiltasten mit Sperre bei Eingabefeld/offenem ⚠-Fenster, Fokus nach
+Stationswechsel auf der Überschrift.
+
+**Verifikation:** grep gegen die vom Testserver (`localhost:8834` - Testumgebung
+nutzt Port 8834, nicht 8000) ausgelieferten Dateien, nicht nur die
+Arbeitskopie. Live durchgetestet (Klick, Tastatur, Desktop 1440px/Mobil
+375px) inkl. aller 6 Prüfregeln über eine temporäre Testkopie von
+`fuehrungen.csv` (danach exakt wiederhergestellt, byte-geprüft). Regression:
+alle Tabs, Bestand-Treemap, Urkunden-Zeitachse, Bürgerbuch-Trellis - keine
+neuen Konsolenfehler. Zwei Bugs beim Testen selbst gefunden und behoben
+(Details: Selbstauskunft im Chat).
+
+---
+
+## 2026-09-23 (79) – Führungen, Teil 1: Datenbereinigung, literatur_id, fuehrungen.csv, Schema
+
+Dateien: `data/literatur.csv`, `data/ratsprotokolle.csv`, `data/fuehrungen.csv`
+(neu), `docs/SCHEMA.md`, `docs/PROJEKTLOG.md`.
+
+Punkt 0 (Architektur-Recherche, keine Codeänderung) im Chat zurückgemeldet
+und vom Auftraggeber bestätigt, danach Punkt 1-4 umgesetzt. Voller
+strukturierter Befund inkl. Zeilenangaben: siehe PROJEKTLOG Eintrag 24.
+
+**Punkt 1:** `literatur.csv`/`ratsprotokolle.csv` hatten dieselbe fälschliche
+Platzhalter-Kopfzeile (`Column1;Column2;…`) wie zuvor `buergerbuch.csv`
+(Eintrag 77) - entfernt, keine Umgehung im Code gefunden
+(`dataLoader.js` liest immer Zeile 1 als Header), daher direkt umgesetzt.
+Beide Dateien hatten und haben 0 Datenzeilen, keine Registry-Einbindung
+(`archivalienRegistry.js`) - Korrektur ohne sichtbare Auswirkung auf die
+aktuelle App, Voraussetzung für Teil 2.
+
+**Punkt 2:** neue erste Spalte `literatur_id` in `literatur.csv` (Zotero-
+Zitierkey, Werte bewusst leer - werden manuell nachgetragen).
+
+**Punkt 3:** neue Datei `data/fuehrungen.csv`, 17 Spalten, Demo-Führung
+(`fuehrung_id = demo`, `status = entwurf`, 4 Stationen: Urkunde
+`StaAKr-0001`, Bürgerbuch `BB-0148` mit Aufzählungstext + Unsicherheits-
+Hinweis, Vergleichsslide `StaAKr-0798`+`VI-0002`, Bestand `1.1.1.1.1.` mit
+~113 Wörtern Platzhaltertext und `vertiefung`-Pfad
+`#visualisierungen/urkunden/zeitachse`). Alle Beleg-IDs per grep gegen die
+jeweilige Quell-CSV verifiziert (Details/Begründung je Beleg: PROJEKTLOG).
+
+**Punkt 4:** `docs/SCHEMA.md` um Abschnitt 10 (`fuehrungen.csv`, alle 17
+Spalten, Zeilenlogik, `beleg`-Präfixtabelle) ergänzt, Abschnitte 2/9 um die
+Platzhalterzeilen-Korrektur nachgetragen.
+
+**Verifikation:** byte-/zeilenend-geprüft (BOM erhalten, durchgängig CRLF,
+0 verirrte LF) für alle drei geänderten/neuen CSVs. Grep-Verifikation gegen
+die vom Testserver ausgelieferten Dateien (nicht nur die Arbeitskopie) und
+Regressionsprüfung (alle Tabs, Bürgerbuch-/Literaturansicht, Konsolenfehler)
+siehe Selbstauskunft im Chat.
+
+---
+
 ## 2026-09-21 (78) – Chord-Diagramm: Fokus-Rahmen entfernen, horizontale Beschriftung; SCHEMA.md aktualisiert
 
 Datei: `js/viz/chordDiagramm.js`; zusätzlich `docs/SCHEMA.md` (Auftrag

@@ -61,6 +61,8 @@ Unverändert gegenüber letzter Prüfung.
 
 **Weiterhin offen:** `kategorien_unsicher` fehlt, Entscheidung noch offen.
 
+**Korrektur (Auftrag "Führungen, Teil 1", Punkt 1, 2026-09-23):** die Datei trug eine fälschliche Platzhalter-Kopfzeile (`Column1;Column2;…`) VOR der echten Kopfzeile (derselbe Fund/dieselbe Ursache wie zuvor bei `buergerbuch.csv`, siehe CHANGELOG Eintrag 77) - entfernt, die echte Kopfzeile steht jetzt in Zeile 1. Es gab dafür keinen Umgehungs-Code (`js/core/dataLoader.js` liest immer Zeile 1 als Header), betraf aber bislang nichts Sichtbares: die Datei ist in `js/config/archivalienRegistry.js` nicht registriert und enthält weiterhin keine Datenzeilen.
+
 ---
 
 ## 3. bestand.csv (aus bestandsverzeichnis.xlsx, Sheet LookupListe_Becker15)
@@ -227,11 +229,11 @@ Unverändert gegenüber letzter Prüfung.
 
 ## 9. literatur.csv
 
-Bisher nur im Masterprompt (Abschnitt 4.4, Ordnerstruktur) erwähnt, hier erstmals als eigene Tabellenstruktur festgehalten. Speist den Literatur-Tab; neue Zeile = neuer Eintrag im Interface, automatisch, ohne Code-Änderung (Content-driven-Prinzip).
+Bisher nur im Masterprompt (Abschnitt 4.4, Ordnerstruktur) erwähnt, hier erstmals als eigene Tabellenstruktur festgehalten. Speist (künftig) den Literatur-Tab; neue Zeile = neuer Eintrag im Interface, automatisch, ohne Code-Änderung (Content-driven-Prinzip). **Aktuell nur die Kopfzeile, keine Datenzeilen** - der Literatur-Tab zeigt bislang ohnehin nur einen Platzhaltertext (`js/core/app.js:673-674`), lädt die Datei noch nicht.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `id` | Text | ja | eindeutiger Schlüssel |
+| `literatur_id` | Text | ja | neu (Auftrag "Führungen, Teil 1", Punkt 2, 2026-09-23) - vorgesehen ist der Zotero-Zitierkey, Werte werden manuell nachgetragen, hier bewusst leer gelassen (keine abgeleiteten/erfundenen Keys). Referenzziel für `fuehrungen.csv`' `weiterlesen`-Spalte (siehe Abschnitt 10). |
 | `titel` | Text | ja | |
 | `autor` | Text | nein | |
 | `jahr` | Zahl | nein | |
@@ -240,6 +242,60 @@ Bisher nur im Masterprompt (Abschnitt 4.4, Ordnerstruktur) erwähnt, hier erstma
 | `link` | Text (URL) | nein | |
 
 **Kein `_unsicher`-Feld vorgesehen:** Diese Tabelle beschreibt veröffentlichte, extern verifizierbare Literatur, keine archivarische Unsicherheit im bisherigen Sinn – daher keine Unsicherheits-Kennzeichnung nötig. Falls sich das ändert (z. B. bei unklaren bibliografischen Angaben), kann `unsicherheit_anmerkung` bei Bedarf nachträglich ergänzt werden, wie bei jeder anderen Tabelle auch.
+
+**Korrektur (Auftrag "Führungen, Teil 1", Punkt 1, 2026-09-23):** dieselbe fälschliche Platzhalter-Kopfzeile wie bei `ratsprotokolle.csv` (siehe Abschnitt 2) entfernt - betraf ebenfalls nichts Sichtbares (Tab lädt die Datei noch nicht, s. o.).
+
+---
+
+## 10. fuehrungen.csv (neu, Auftrag "Führungen, Teil 1", 2026-09-23)
+
+Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigation folgen in Teil 2). UTF-8, Semikolon-getrennt, Pipe für Listen - dieselben Konventionen wie alle übrigen Tabellen.
+
+**Zeilenlogik:** eine Zeile pro STATION, nicht pro Führung. `fuehrung_id` steht in jeder Zeile. Die führungsweiten Angaben (`fuehrung_titel` bis `weiterlesen`) stehen NUR in der Zeile der ersten Station dieser Führung, in allen weiteren Stationen-Zeilen derselben Führung bleiben sie leer. Führungen erscheinen im Interface in der Reihenfolge ihres ERSTEN Auftretens in der Datei (keine separate Sortierspalte).
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `fuehrung_id` | Text | ja | eindeutiger Schlüssel, in jeder Zeile befüllt |
+| `fuehrung_titel` | Text | nur 1. Station | |
+| `leitfrage` | Text | nur 1. Station | die übergeordnete Frage, die die Führung beantwortet |
+| `kurzbeschreibung` | Text | nur 1. Station | für eine künftige Führungs-Übersicht/Kachel |
+| `themenbereich` | Text | nur 1. Station | |
+| `zeitraum` | Text | nur 1. Station | der von der Führung abgedeckte Gesamtzeitraum |
+| `status` | Text (Enum) | nur 1. Station | `entwurf` (sichtbar, aber gekennzeichnet) oder `veroeffentlicht` |
+| `weiterlesen` | Liste (Pipe-getrennt) | nur 1. Station | `literatur_id`-Werte (siehe Abschnitt 9), bleibt bis zur manuellen Zotero-Key-Pflege leer |
+| `station_nr` | Zahl | ja | Reihenfolge der Stationen innerhalb einer Führung |
+| `station_titel` | Text | ja | |
+| `station_zeitraum` | Text | nein | |
+| `text` | Liste (Pipe-getrennt) | ja | ein Absatz pro Listenelement; ein Absatz, der mit `- ` beginnt, ist ein Aufzählungspunkt - mehrere AUFEINANDERFOLGENDE `- `-Absätze bilden gemeinsam eine Liste |
+| `beleg` | Liste (Pipe-getrennt, 1-2 Einträge) | ja | Format `typ:id`, Trennung am ERSTEN Doppelpunkt (IDs selbst enthalten keinen). Zwei Einträge ergeben eine Vergleichsslide. Präfixtabelle: |
+| `bild_text` | Text | nur bei `beleg`-Typ `bild` | Bildunterschrift UND Alt-Text zugleich - muss beschreiben, was zu sehen ist |
+| `unsicherheit_hinweis` | Text | nein | zusätzlicher, REDAKTIONELLER Text - kein Ersatz für die aus der Quell-CSV übernommenen `_unsicher`-Felder/`unsicherheit_anmerkung` (siehe unten) |
+| `vertiefung` | Liste (Pipe-getrennt) | nein | interne Pfade im Router-Format aus Punkt 0.2 (z. B. `#visualisierungen/urkunden/zeitachse`, siehe `js/core/router.js:1-9`) - Format muss erweiterbar bleiben, da Zustandsparameter (Stufe 3, `?entity_typ=…&entity_wert=…` nach demselben Muster wie `router.js:41-46`) später an denselben Pfad angehängt werden |
+| `quellen_intern` | Text | nein | wird im Interface NIE angezeigt (interne Redaktionsnotiz) |
+
+**`beleg`-Präfixtabelle** (gegen die tatsächlichen Spaltennamen der Quell-CSVs geprüft):
+
+| Präfix | Datei | ID-Spalte |
+|---|---|---|
+| `urkunde` | `urkunden.csv` | `signatur` |
+| `buergerbuch` | `buergerbuch.csv` | `id` |
+| `inventar` | `verlassenschaftsinventare.csv` | `id` |
+| `bestand` | `bestandsverzeichnis.csv` | `kuerzel` |
+| `person` | `personenliste.csv` | `personen_id` |
+| `bild` | Bildpfad | – |
+
+**Unsicherheit:** bei datenbasierten Belegen (alle Präfixe außer `bild`) übernimmt die künftige Darstellung (Teil 2) die `_unsicher`-Felder/`unsicherheit_anmerkung` DIREKT aus der jeweiligen Quell-CSV der referenzierten ID - `unsicherheit_hinweis` in `fuehrungen.csv` ist ein davon UNABHÄNGIGER, zusätzlicher redaktioneller Text (z. B. eine Einordnung, warum eine Station gerade wegen der Unsicherheit erzählenswert ist), kein Ersatz.
+
+**Demo-Führung (`fuehrung_id = demo`, `status = entwurf`, vier Stationen, alle Texte als `[Platzhalter: …]` erkennbar):**
+
+| Station | Beleg | Zweck |
+|---|---|---|
+| 1 | `urkunde:StaAKr-0001` | Einzelfall (älteste Urkunde, 1108), Führungsangaben ausgefüllt |
+| 2 | `buergerbuch:BB-0148` | Bürgerbucheintrag mit Aufzählungs-Text (`- `-Absätze) und befülltem `unsicherheit_hinweis` |
+| 3 | `urkunde:StaAKr-0798\|inventar:VI-0002` | Vergleichsslide (Erbschaftssache 1547 vs. Verlassenschaftsinventar 1671) |
+| 4 | `bestand:1.1.1.1.1.` | längerer Text (113 Wörter Platzhalter), `vertiefung` = `#visualisierungen/urkunden/zeitachse` |
+
+Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (siehe CHANGELOG/PROJEKTLOG).
 
 ---
 
@@ -257,4 +313,6 @@ Bisher nur im Masterprompt (Abschnitt 4.4, Ordnerstruktur) erwähnt, hier erstma
 10. `literatur.csv` war bisher nur im Masterprompt erwähnt, jetzt erstmals als eigene Struktur dokumentiert (Abschnitt 9) – noch keine echten Daten erfasst
 11. `urkunden.csv`: `foto_ordner` erfolgreich befüllt (1068/1068, automatischer Abgleich über `id`/`signatur`), erledigt
 12. Ordner `StaAKr-0892` existiert unter `fotos/thumbs/`, hat aber keine entsprechende Zeile in `urkunden.csv` – zu klären, ob eine Urkunde in der CSV fehlt oder der Ordner veraltet ist
-13. **Datenintegrität/externe Datei-Operationen (neu, 2026-09-21):** `familien.csv` verlor zwischenzeitlich `hrr_status`/`herrschaft_von`/`herrschaft_bis` durch eine externe Datei-Operation (Dateizeitstempel lag vor deren ursprünglicher Einführung – kein CLI-Edit, sonst gäbe es einen CHANGELOG-Eintrag) und wurde wiederhergestellt; `buergerbuch.csv` hatte zusätzlich kurzzeitig eine fälschliche Platzhalter-Kopfzeile (`Column1;Column2;…`) vor dem echten Header, ebenfalls behoben. `orte.csv`/`verlassenschaftsinventare.csv` tragen denselben alten Dateizeitstempel wie `familien.csv` vor der Korrektur, wurden aber inhaltlich nie separat als beschädigt festgestellt – bei künftigen Aufträgen an diesen beiden Dateien vorsichtshalber Spalten-/Zeilenzahl gegen die hier dokumentierten Werte gegenprüfen. Siehe CHANGELOG Eintrag 77 für die volle Diagnose.
+13. **Datenintegrität/externe Datei-Operationen (2026-09-21):** `familien.csv` verlor zwischenzeitlich `hrr_status`/`herrschaft_von`/`herrschaft_bis` durch eine externe Datei-Operation (Dateizeitstempel lag vor deren ursprünglicher Einführung – kein CLI-Edit, sonst gäbe es einen CHANGELOG-Eintrag) und wurde wiederhergestellt; `buergerbuch.csv` hatte zusätzlich kurzzeitig eine fälschliche Platzhalter-Kopfzeile (`Column1;Column2;…`) vor dem echten Header, ebenfalls behoben. `orte.csv`/`verlassenschaftsinventare.csv` tragen denselben alten Dateizeitstempel wie `familien.csv` vor der Korrektur, wurden aber inhaltlich nie separat als beschädigt festgestellt – bei künftigen Aufträgen an diesen beiden Dateien vorsichtshalber Spalten-/Zeilenzahl gegen die hier dokumentierten Werte gegenprüfen. Siehe CHANGELOG Eintrag 77 für die volle Diagnose.
+14. **Dieselbe Platzhalter-Kopfzeilen-Korruption, zwei weitere Fälle (Auftrag "Führungen, Teil 1", 2026-09-23):** `literatur.csv` und `ratsprotokolle.csv` hatten dieselbe fälschliche `Column1;Column2;…`-Zeile wie zuvor `buergerbuch.csv` (Punkt 13) - behoben (siehe Abschnitte 2/9). Root-Cause-Bestätigung: `js/core/dataLoader.js` (Zeile 143-144) hat KEINEN Zeilen-Skip, liest immer Zeile 1 als Kopfzeile - eine solche Platzhalterzeile ist daher IMMER ein Fehler, nie eine absichtliche Umgehung. Bei künftigen Datei-Operationen an beliebigen `data/*.csv` vorsorglich Zeile 1 gegen die hier dokumentierte Kopfzeile prüfen.
+15. **`fuehrungen.csv` (neu, Abschnitt 10):** aktuell nur die Demo-Führung, `status = entwurf` - Darstellung/Navigation/Zustands-URL (Stufe 3) sind ausdrücklich NICHT Teil dieses Auftrags, folgen in "Führungen, Teil 2". Vorbedingung für Teil 2, bereits im PROJEKTLOG vermerkt: `state.js`' `zielSignatur`-Mechanismus (einziger bisheriger Ansatz für "Datensatz per ID öffnen") ist aktuell bewusst stillgelegt (`setZielSignatur()` wird im gesamten Code nirgends mehr aufgerufen, siehe `js/viz/kalenderHeatmap.js:124-136`) - Teil 2 braucht dafür einen neuen, URL-fähigen Mechanismus.

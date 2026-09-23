@@ -5,6 +5,376 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-23 (27) – Führungen, Teil 2a-K: Bildschirmfüllendes Layout und Präsentationsnavigation
+
+**Auftrag (Kurzfassung):** Stationen sollen wie eine Präsentation wirken -
+eine Station füllt den verfügbaren Bildschirm (kein Seitenscrollen), die
+Navigation wird zu einer festen vertikalen Pfeilsäule am rechten Rand
+(mobil: feste untere Leiste). Galerie, Datenlogik, Prüfregeln unverändert.
+
+### Punkt 0 - Ist-Zustand (gemessen, vor jeder Änderung)
+
+| Station | Belegtyp(en) | Überschuss 1366×768 | Überschuss 1440×900 | Hauptursache |
+|---|---|---|---|---|
+| 1 | urkunde | 908 px | 821 px | unskaliertes Urkundenfoto (`sidebar.js`s `.bestand-sidebar-foto-haupt`, keine Höhenbegrenzung) + zusätzlich fehlende Grid-Platzierung von `.fuehrungen-bereich` (wuchs mit dem Inhalt statt die Grid-Fläche zu füllen) |
+| 2 | buergerbuch | 0 px | 0 px | passt bereits (keine Bilddarstellung, kurze Felder) |
+| 3 | urkunde + inventar (Vergleich) | 571 px | 456 px | wie Station 1, aber nur EIN Belegfoto von zweien betroffen |
+| 4 | bestand | 0 px | 0 px | passt bereits |
+
+Gemeinsame Grundursache (nicht pro Station verschieden): `.fuehrungen-bereich`
+(Container aus `app.js`s `renderFuehrungenTab()`) hatte keine eigene
+Grid-Platzierung in `#app-content` (anders als `.viz-inhalt`/
+`.platzhalter-seite`/`.galerie-bereich`) und wuchs deshalb ungebremst mit
+seinem Inhalt; `.fuehrung-station-inhalt`/`.fuehrung-beleg` hatten zusätzlich
+keinerlei eigene Höhenbegrenzung. Das unskalierte Urkundenfoto war dort, wo
+vorhanden, der mit Abstand größte Einzelbeitrag zum Überschuss.
+
+### Punkt 1 - Lösung: Flexbox-Höhenverteilung + gemessene Stationshöhe
+
+Erster Ansatz (reines CSS, wie im Projekt etabliert): `.fuehrungen-bereich`
+bekommt `grid-column:1/-1; grid-row:1/-1; min-height:0` (füllt jetzt die
+Grid-Fläche von `#app-content`, analog zu den bereits bestehenden
+Geschwister-Regeln), darunter eine durchgehende `min-height:0`-Kette über
+`.fuehrung-station` → `.fuehrung-station-haupt` → `.fuehrung-station-inhalt`
+→ `.fuehrung-beleg` → `.fuehrung-beleg-scroll`/`.fuehrung-erzaehltext`
+(`overflow-y:auto` an den beiden letzten Stellen).
+
+Das allein reichte NICHT bis auf 0 px Überschuss: `#app-content` selbst
+(body-Flex-Ebene, `css/layout.css`s "VOLLBILD-KORREKTUR") hat laut
+dortigem, bereits bestehendem Kommentar BEWUSST kein eigenes
+`min-height:0` - andere Tabs sollen bei Bedarf über den Viewport
+hinauswachsen dürfen, das durfte dieser Auftrag laut Nicht-Ziel
+("Keine Änderung an Layoutregeln, die andere Tabs betreffen") nicht
+anfassen. Reines Flex-Shrinking blieb dadurch eine Ebene zu weit oben
+hängen (`#app-content` maß bei einem Zwischenstand z. B. 957 px bei nur
+768 px Viewporthöhe). Lösung: `.fuehrung-station` bekommt stattdessen eine
+EXPLIZITE, gemessene Höhe über das bereits vorhandene
+`js/utils/viewportGroesse.js` (nur verwendet, nicht geändert - Nicht-Ziel
+eingehalten), reserviert zusätzlich Platz für die tatsächlich gemessene
+Fußzeilenhöhe. Das entspricht genau der im Auftrag offen gelassenen
+Alternative ("`dvh`-basiert ODER über `viewportGroesse.js`, je nachdem, was
+im Projekt üblich ist") - hier war sie nötig, weil die reine CSS-Variante an
+einer bewussten, bestehenden Projektentscheidung eine Ebene höher scheiterte.
+Verankert per `resize()`-Rückgabe aus `fuehrungStation.js`, in `app.js` an
+`kontext.aktuellesVizModul` gehängt (bislang nur für Bestand/Visualisierungen
+genutzt) - dieselbe zentrale, 200ms-debouncte Verdrahtung. Unter der
+800px-Schwelle (`--fuehrung-umbruch`, dieselbe wie für die Beleg/Text-Spalten
+aus Teil 2a) wird KEINE feste Höhe gesetzt - Station scrollt mobil normal
+(Soll-Zustand, Auftrag wörtlich).
+
+Ergebnis nach Fix: 0 px Überschuss auf allen vier Stationen bei 1366×768,
+1440×900 UND zusätzlich 1920×1080 geprüft. Rückfall bei sehr geringer
+Fensterhöhe/200%-Zoom geprüft (683×384 und 1366×300 simuliert): Inhalt wird
+NICHT abgeschnitten, `viewportGroesse.js`s eigene `mindestHoehe`-Untergrenze
+(320 px) greift, die Seite scrollt dann wie vor diesem Auftrag normal weiter
+(WCAG 1.4.4/1.4.10) - kein `overflow:hidden` irgendwo gesetzt.
+
+### Punkt 2 - Vertikale Navigationssäule
+
+Echtes Flex-Geschwister neben Kopf+Inhalt (kein `position:fixed`/`absolute`) -
+dadurch automatisch dieselbe Höhe wie die (jetzt fixierte) Station und somit
+pixelgleiche Position auf jeder Station, ohne eigenen
+Positionierungs-Mechanismus. Pfeile 48×48 px, gefüllte Akzentfarbe,
+Fortschrittsanzeige mittig, deaktivierter Zustand über `border` (nicht nur
+Deckkraft) für WCAG-1.4.11-Kontrast (≥3:1, manuell nachgerechnet). Letzte
+Station: an Stelle des unteren Pfeils ein gleich großer Button
+"Zur Übersicht". Mobil wird dieselbe Säule zu einer `position:sticky`-Leiste
+am unteren Rand. Pfeiltasten/Bild-auf-ab wechseln die Station, wirken aber
+NICHT, solange der Fokus in `.fuehrung-beleg-scroll`/`.fuehrung-erzaehltext`/
+dem ⚠-Fenster/einem Eingabefeld liegt (dort weiterhin normales Scrollen).
+
+---
+
+## 2026-09-23 (26) – Latenter Fehler in `baueSidebarInhalt()` (nicht behoben)
+
+**Kontext:** Beim Testen von Führungen-Station 4 (siehe Eintrag 25, „Gefundene
+Bugs") stürzte `js/utils/sidebar.js`' `baueSidebarInhalt(record, {
+kategorieName, kategorieFarbe, felder })` ab, wenn `kategorieFarbe`
+`undefined` bleibt UND `record.bkk_unterkategorie` einen echten Wert trägt:
+`baueSidebarBadges()` (Zeile 105) baut dann trotzdem ein Badge (für
+`bkk_unterkategorie`, da `[kategorieName, record.bkk_unterkategorie]
+.filter(Boolean)` den `kategorieName`-Leerwert herausfiltert, den
+`bkk_unterkategorie`-Wert aber behält) und ruft dafür
+`passendeTextfarbe(kategorieFarbe)` → `wcagKontrast()` →
+`relativeLuminanz()` auf - dort schlägt `.slice()` auf dem `undefined`-Hex-
+Wert fehl (`TypeError: Cannot read properties of undefined (reading
+'slice')`).
+
+**Auf Wunsch des Auftraggebers NICHT behoben** - hier nur dokumentiert, mit
+Angabe, welche bestehenden Aufrufer heute welche Parameter übergeben (Stand
+dieser Sitzung, per `grep` auf alle Importe von `baueSidebarInhalt`/
+`oeffneSidebar` aus `sidebar.js` ermittelt):
+
+| Aufrufer | Übergibt `kategorieFarbe`? | Betroffen? |
+|---|---|---|
+| `js/viz/parallelKoordinaten.js:293` (einziger externer Aufrufer von `sidebar.js`s exportiertem `oeffneSidebar()`/`baueSidebarInhalt()`) | Nein - übergibt nur `{ felder: detailFelderFuerAchsen(achsen) }` | **Aktuell NICHT** - `baueDetailRecord()` (Zeile 208) baut einen synthetischen Detail-Datensatz (`name`/`beruf`/`ort`/`jahr`/Achsen-Werte) OHNE `bkk_unterkategorie`-Feld, wodurch `baueSidebarBadges()`s Badge-Liste leer bleibt und `passendeTextfarbe()` gar nicht erst aufgerufen wird. Reine Zufälligkeit der Datensatz-Form, keine bewusste Absicherung im Aufrufer. |
+| `js/viz/treemap.js:283` / `js/viz/zeitachse.js:251` | – | Nicht betroffen, aber nur weil beide eine GLEICHNAMIGE, aber eigene LOKALE `oeffneSidebar()`-Funktion haben (nicht aus `sidebar.js` importiert) - rufen den betroffenen Code-Pfad gar nicht auf. |
+| Sonst niemand | – | `sidebar.js`' `baueSidebarInhalt()` selbst wird laut `grep` nur an dieser einen Stelle (Zeile 533, innerhalb von `oeffneSidebar()`) aufgerufen. |
+
+**Fazit:** Die Funktion ist heute nur deshalb unauffällig, weil ihr einziger
+echter Aufrufer zufällig ein Datensatz-Schema ohne `bkk_unterkategorie`
+verwendet - kein bewusster Schutz. Jeder künftige Aufrufer, der einen
+echten Bestandsverzeichnis-Datensatz (mit befülltem `bkk_unterkategorie`)
+ohne `kategorieFarbe` übergibt, würde denselben Absturz auslösen. Sinnvoller
+Fix für einen künftigen, dafür vorgesehenen Auftrag: `kategorieFarbe`
+default-Wert (z. B. ein neutraler Farbton) in `baueSidebarBadges()`, oder
+das Badge für `bkk_unterkategorie` nur bauen, wenn tatsächlich beide Werte
+(`kategorieName` UND `kategorieFarbe`) vorliegen.
+
+---
+
+## 2026-09-23 (25) – Führungen, Teil 2a: Galerie, Stationslayout, Navigation
+
+**Auftrag (Kurzfassung):** Führungen sichtbar/navigierbar machen (Galerie,
+Einzel-/Vergleichsstation, Pfeil-/Tastaturnavigation, ⚠-Hinweisfenster).
+Belege in 2a nur Anzeige, nicht klickbar - Datensatzaufruf/Vertiefung/
+Fortsetzen/Abschluss folgen in 2b/2c.
+
+### Architektur-Entscheidung: eigener Tab-Kontext statt Galerie/Flyout-Muster
+
+`app.js`s bestehendes `erzeugeGalerieFlyoutKontext()`/
+`aktualisiereGalerieFlyoutAnsicht()` (für Bestand/`hatGalerie`-Archivalientypen)
+ist für "Galerie → eine von MEHREREN Visualisierungen, per Flyout-Tab-Leiste
+gewechselt" gebaut. Führungen brauchen "Galerie → GENAU EINE Station,
+linear vor/zurück navigiert" - ein strukturell anderes zweites
+Navigationsziel, kein Sonderfall des ersten. Deshalb ein eigener, schlanker
+`renderFuehrungenTab()`/`aktualisiereFuehrungenAnsicht()`-Kontext in
+`app.js` (nach demselben `kontext.destroy()`-Vertrag wie alle anderen Tabs),
+der intern zwischen `fuehrungenGalerie.render()` und `fuehrungStation.render()`
+umschaltet - keine Kopie/Verbiegung der bestehenden Maschinerie.
+
+### Punkt 1: `history.replaceState()` statt Router-Änderung
+
+Die Anforderung "Stationswechsel per Pfeil aktualisiert den Hash ersetzend"
+ließ sich ohne jede Änderung an `router.js` lösen:
+`history.replaceState(null, '', baueHash([...]))` ändert die URL, ohne ein
+`hashchange`-Ereignis auszulösen (`router.js`s `navigiereZu()` würde das
+immer tun, siehe dessen eigener Kommentar "erzeugt automatisch einen
+Browser-History-Eintrag") - `fuehrungStation.js` zeichnet sich danach selbst
+neu (eigene `geheZu()`/`zeichne()`-Closure). Nur der Ersteinstieg
+(Galerie-Kachel-Klick) und "Zurück zur Übersicht" bleiben normale
+`navigiereZu()`/`<a href>`-Navigation. Damit war die im Auftrag vorgesehene
+Rückmeldepflicht ("falls für ersetzende Hash-Updates... eine Änderung an
+router.js nötig ist") gegenstandslos - `router.js` wurde nicht angefasst.
+
+### Punkt 4: `sidebar.js`-Wiederverwendung, wo möglich
+
+`baueUrkundenDetailInhalt()` (für `urkunde`) ist bereits exportiert und
+wurde direkt übernommen. `baueSidebarInhalt()` (für `bestand`) wäre
+naheliegend gewesen, baut aber IMMER Kategorie-Badges
+(`baueSidebarBadges()`) - ohne eine `kategorieFarbe` (die für einen
+Führungs-Beleg fachlich keinen Sinn ergibt) stürzt deren
+Kontrastfarben-Berechnung (`passendeTextfarbe()` → `wcagKontrast()` →
+`relativeLuminanz()`) mit `TypeError: Cannot read properties of undefined
+(reading 'slice')` ab - live beim ersten Test von Station 4 gefunden (siehe
+"Gefundene Bugs" unten). Für `bestand` (und die drei weiteren Typen ohne
+passenden Sidebar-Baustein) daher eigene, aber optisch identische Felder in
+`belegDarstellung.js` (dieselben `.bestand-sidebar-feld*`-Klassen). Damit
+war auch hier keine `sidebar.js`-Änderung nötig - die im Auftrag vorgesehene
+Rückmeldepflicht dafür ebenfalls gegenstandslos.
+
+### Gefundene Bugs (beide selbst behoben, siehe oben/unten)
+
+1. `baueSidebarInhalt()` ohne `kategorieFarbe` stürzt ab (s. o.) - Fix: eigene
+   Feldliste statt dieses Bausteins für `bestand`.
+2. `istTastaturZielGesperrt()` rief `event.target.closest()` auf - bricht,
+   wenn `target` kein Element ist (z. B. `document` selbst bei bestimmten
+   synthetisch dispatchten Events). Defensiv abgesichert
+   (`typeof target.closest !== 'function'`).
+
+### Prüfregeln (Punkt 2) - Nachweis über temporäre Testkopie
+
+Alle 6 Prüfregeln aus der Auftragstabelle wurden mit einer temporären
+Testkopie von `data/fuehrungen.csv` (zwei Zusatz-Führungen `testfaelle`/
+`langebeschreibung`) einzeln verifiziert, danach exakt aus einer vorherigen
+Sicherung wiederhergestellt (byte-geprüft: BOM/CRLF erhalten, 4
+Datenzeilen, ausschließlich `demo`):
+
+1. Beleg-ID nicht gefunden: `urkunde:StaAKr-9999` → „urkunde:StaAKr-9999 - ID
+   nicht in data/urkunden.csv gefunden" im Belegbereich.
+2. Unbekanntes Präfix: `foo:bar` → „Unbekannter Belegtyp „foo" (Eintrag
+   „foo:bar")".
+3. `bild` ohne `bild_text`: Bild wird trotzdem angezeigt, zusätzlich
+   Fehlerbox „Bild „…" ohne bild_text (Bildunterschrift/Alt-Text)".
+4. Führungsangaben in späteren Zeilen abweichend befüllt: Hinweis „Feld
+   „fuehrung_titel" ist hier abweichend befüllt - nur die erste Station
+   gilt." auf der betroffenen Station.
+5. Doppelte/fehlende `station_nr`: „Doppelte station_nr: 3" bzw.
+   „Mindestens eine Zeile hat keine station_nr." in der Stations-Kopfzeile.
+   Nebenbefund: eine leere `station_nr` sortiert numerisch (`Number('')===0`)
+   vor `station_nr=1` und kann dadurch fälschlich zur „ersten Station" für
+   die Führungsangaben werden, wenn sie mit echten Stationen gemischt ist -
+   in der Praxis unkritisch (die Warnung macht das Problem sofort sichtbar),
+   aber für Teil 2b/2c als Bekannte Einschränkung festgehalten.
+6. `kurzbeschreibung` > 300 Zeichen: Text wird ungekürzt auf der Kachel
+   gezeigt, zusätzlich „Fehler: kurzbeschreibung ist länger als 300
+   Zeichen.".
+
+### Offener Punkt (PROJEKTLOG, wie vom Auftraggeber verlangt)
+
+**⚠-Zentralisierung:** `js/utils/unsicherheitHinweis.js` ist eine neue,
+eigenständige Utility (Button + verankertes Popup-Fenster) für die
+Führungen. Die sieben bestehenden lokalen `WARN_SYMBOL = '⚠'`-Kopien
+(`circlePacking.js`, `familienbaum.js`, `ganttDiagramm.js`, `icicle.js`,
+`regestenKachelraster.js`, `sunburst.js`, `treemap.js` - dort jeweils ein
+reines Text-Icon mit Tooltip, kein Popup-Fenster, andere Interaktion) wurden
+NICHT auf diese Utility migriert (Nicht-Ziel dieses Auftrags). Eine
+künftige Zusammenführung müsste zuerst klären, ob deren einfacheres
+Tooltip-Muster und `unsicherheitHinweis.js`s Popup-mit-Fokus-Management
+überhaupt vereinheitlicht werden sollen, oder ob zwei verschiedene
+Unsicherheits-UI-Muster (Kurzinfo vs. redaktioneller Zusatztext)
+gerechtfertigt bleiben.
+
+### Testumgebung/Caching (Hinweis für künftige Aufträge an diesem Projekt)
+
+Der lokale Testserver (`localhost:8834`, Python `http.server`) läuft hinter
+einer aggressiv cachenden Vorschau-Infrastruktur dieser Sitzung: bereits
+einmal abgerufene URLs (auch `index.html` selbst) werden auch nach
+Dateiänderungen und Server-Neustart teils unverändert weiter ausgeliefert.
+Wirksame Abhilfe in dieser Sitzung: Cache-Busting-Query an der
+NAVIGATIONS-URL (`index.html?bust=…`) UND an jedem betroffenen
+`<script src>`/`<link href>`/dynamischen `import()`-Pfad gleichzeitig (ein
+gemeinsamer, bei jeder Dateiänderung neu hochgezählter Query-Wert über die
+gesamte Importkette) - alle diese Marker wurden nach Abschluss der
+Verifikation wieder vollständig entfernt (grep-geprüft: 0 Treffer in den
+ausgelieferten Dateien). Für künftige Aufträge: bei "die App zeigt trotz
+Codeänderung noch den alten Stand" zuerst diesen Cache-Verdacht prüfen,
+bevor eine vermeintliche Code-Regression gesucht wird.
+
+---
+
+## 2026-09-23 (24) – Führungen, Teil 1: Architektur-Recherche (Punkt 0), Datenbereinigung, Schema
+
+**Auftrag (Kurzfassung):** Datengrundlage für künftige Storytelling-Führungen
+schaffen - Punkt 0 reine Recherche (keine Änderungen), Punkt 1 Platzhalter-
+Kopfzeilen entfernen, Punkt 2 `literatur_id`-Spalte, Punkt 3 neue
+`fuehrungen.csv` mit Demo-Führung, Punkt 4 Schema-Dokumentation. Punkt 0
+wurde vor jeder Code-Änderung im Chat zurückgemeldet und vom Auftraggeber
+bestätigt ("Befund zu Punkt 0 bestätigt. Bitte Punkt 1–4 wie beauftragt
+umsetzen.").
+
+### Punkt 0 - Architektur-Recherche (strukturierter Befund)
+
+**0.1 CSV-Laden/Platzhalterzeile:** `js/core/dataLoader.js:143-144` -
+`d3.dsvFormat(';').parse(rohtext)`, `spaltennamen = rohdaten.columns` - liest
+IMMER Zeile 1 als Kopfzeile, kein Zeilen-Skip (zusätzlich `js/core/app.js`
+nach `slice(1)`/„skip"/„Column1" durchsucht - 0 Treffer). Betroffen waren
+`data/literatur.csv` und `data/ratsprotokolle.csv` (beide: Zeile 1
+`Column1;Column2;…`, echte Kopfzeile in Zeile 2, danach jeweils 0
+Datenzeilen). `data/buergerbuch.csv` hatte dasselbe Problem, bereits in
+einer früheren Sitzung behoben (CHANGELOG Eintrag 77). Alle übrigen
+`data/*.csv` einzeln geprüft (Zeile 0 vs. 1) - keine weiteren Treffer.
+Weder `literatur.csv` noch `ratsprotokolle.csv` sind in
+`js/config/archivalienRegistry.js` registriert (grep: 0 Treffer) - der
+Literatur-Tab zeigt laut `js/core/app.js:673-674` bislang nur einen
+Platzhaltertext, lädt die Datei also noch gar nicht. Die Korruption hatte
+damit vor der Korrektur keine sichtbare Auswirkung.
+
+**0.2 Router-Pfadformat:** `js/core/router.js:1-49`, Hash-basiert:
+`#<tab>/<segment1>/<segment2>?entity_typ=…&entity_wert=…`. Beispiele (gegen
+`archivalienRegistry.js` geprüft): Bestand-Galerie `#bestand`
+(`app.js:668`, eigener Tab-Zweig ohne Sub-Pfad), Urkunden-Visualisierung
+`#visualisierungen/urkunden/zeitachse` (`archivalienRegistry.js:161`),
+Bürgerbuch-Visualisierung `#visualisierungen/buergerbuch/trellis`
+(`archivalienRegistry.js:223`). Der Router-Dateikopf nennt selbst bereits
+`#fuehrungen/ns-zeit` als Beispiel (`router.js:9`).
+
+**0.3 Datensatz-Aufruf über ID (Stufe 2):** für keinen der fünf Typen
+(Urkunde/Bürgerbuch/Verlassenschaftsinventar/Bestand/Person) existiert
+heute eine URL-/ID-adressierbare Detailansicht. Alle Sidebars öffnen
+ausschließlich über Klick auf ein bereits geladenes Record-Objekt
+(`zeigeUrkundenSidebar()`, `js/utils/sidebar.js:469`, nimmt fertige Records
+entgegen, keine ID-Lookup-Funktion). Ein früherer Ansatz existiert als
+Vorbild, ist aber **bewusst stillgelegt**: `state.js`' `zielSignatur` +
+`router.js`' `navigiereZu()` (`js/core/state.js:78-84`, konsumiert von
+`js/viz/regestenKachelraster.js:762-800`) ist rein In-Memory (nicht in der
+URL gespiegelt) und wird im gesamten Code aktuell **nirgends mehr
+aufgerufen** (`setZielSignatur()` grep: einziger Treffer ist die eigene
+Definition) - eigener Kommentar dazu in
+`js/viz/kalenderHeatmap.js:124-136`: „entfällt ersatzlos … wird von hier
+aus schlicht nicht mehr befüllt". Für Bestand (`kuerzel`)/Person
+(`personen_id`) gibt es keinen vergleichbaren Mechanismus überhaupt (grep
+auf `kuerzel` findet nur interne Sortier-/Lookup-Verwendungen in
+`dotPlot.js`, `ganttDiagramm.js`, `bestandsHierarchie.js`, `sidebar.js`).
+**Vorbedingung für Teil 2** (auf ausdrücklichen Wunsch des Auftraggebers
+hier vermerkt): Teil 2 muss für "Datensatz per ID/URL öffnen" einen NEUEN,
+URL-fähigen Mechanismus bauen - der `zielSignatur`-Pfad taugt bestenfalls
+als strukturelles Vorbild, ist selbst aber tot und nicht URL-adressierbar.
+
+**0.4 Zustände (Stufe 3):** `state.js:8-29` hält `aktiverTab`,
+`aktiveAnsicht`, `unsicherheitModusAktiv`, `filter.entity{typ,wert}`,
+`filter.zeitraum`, `filter.suchbegriff`, `datenCache`, `zielSignatur`. Kein
+`sessionStorage`/`localStorage` im gesamten Projekt (grep: 0 Treffer) -
+reines, flüchtiges Modul-Objekt. In der URL stehen NUR Tab/Ansicht
+(`router.js:31-32`) und der Entity-Filter (`entity_typ`/`entity_wert`,
+`router.js:33-34,41-46`). Unsicherheiten-Modus resettet bei jedem
+Ansichtswechsel (`app.js:603`), Zeitraum-/Suchbegriff-Filter sowie
+sämtliche modulinternen Zustände (Zoom/Pan, eingefrorene Hervorhebungen,
+Paginierung, lokale Suche - jeweils lokal in den `instanz`-Objekten der
+~30 `js/viz/*.js`-Module) haben KEINEN Router-Bezug. Auf Wunsch des
+Auftraggebers keine vollständige Modultabelle - das Muster (nur
+Tab/Ansicht/Entity-Filter URL-persistent, alles andere flüchtig) gilt
+durchgängig und war die eigentlich gesuchte Aussage.
+
+**0.5 Wiederverwendbare Bausteine:** Galerie/Flyout -
+`erzeugeGalerieFlyoutKontext()` (`app.js:459`), `hatGalerie`-Flag in der
+Registry, aktuell für `urkunden`/`buergerbuch`/`personen` + strukturell
+verwandt für `bestand` (`renderBestandTab()`, `app.js:250`).
+Unsicherheits-Kennzeichnung - kein zentraler Import, `WARN_SYMBOL = '⚠'`
+lokal dupliziert in `circlePacking.js:58`, `familienbaum.js:352`,
+`ganttDiagramm.js:71`, `icicle.js:66`, `regestenKachelraster.js:113`,
+`sunburst.js:120`, `treemap.js:68`, kombiniert mit
+`.bestand-sidebar-unsicher` (`sidebar.js:578`). Lightbox -
+`js/utils/lightbox.js`, `oeffneLightbox()`/`schliesseLightbox()` (Zeilen
+168/186), fertig wiederverwendbar. Mehrquellen-Laden -
+`archivalienRegistry.js`' `datenDatei`-Objekt-Muster (Beispiel Zeile 324),
+direkt für eine mehrere Quell-CSVs kombinierende Führungen-Ansicht nutzbar.
+
+### Punkt 1 - Platzhalterzeile entfernen
+
+Keine Umgehung im Code gefunden (0.1) - direkt umgesetzt, wie vom
+Auftraggeber nach Bestätigung des Befunds freigegeben. `data/literatur.csv`
+und `data/ratsprotokolle.csv`: erste Zeile (`Column1;Column2;…`) per
+byte-level Edit entfernt, BOM/CRLF erhalten. Beide Dateien hatten und haben
+weiterhin 0 Datenzeilen (nur Kopfzeile) - keine Regression durch fehlende
+Testdaten möglich, da nichts davon abhing (0.1).
+
+### Punkt 2 - `literatur_id` in literatur.csv
+
+Neue erste Spalte `literatur_id`, Werte bewusst leer gelassen (Zotero-
+Zitierkeys werden vom Auftraggeber selbst nachgetragen, keine Ableitung/
+Erfindung). Kopfzeile jetzt exakt
+`literatur_id;titel;autor;jahr;kurzbeschreibung;kategorie;link`.
+
+### Punkt 3 - fuehrungen.csv, Demo-Führung
+
+Neue Datei `data/fuehrungen.csv`, 17 Spalten wie vorgegeben, UTF-8 mit BOM,
+CRLF, Semikolon-getrennt. Demo-Führung `fuehrung_id = demo`,
+`status = entwurf`, vier Stationen. **Verwendete Beleg-IDs** (alle per grep
+gegen die jeweilige Quell-CSV verifiziert):
+
+| Station | Beleg | Quelle/Kontext |
+|---|---|---|
+| 1 | `urkunde:StaAKr-0001` | älteste Urkunde des Bestands, 1108 IX 6, Schenkung an Stift Göttweig |
+| 2 | `buergerbuch:BB-0148` | Steffan Pranntner, 1544-10-23 - hat befülltes `unsicherheit_anmerkung`-Feld in der Quelle (mögliche Identität mit einer Urkunden-Person), daher bewusst für die `unsicherheit_hinweis`-Demonstration gewählt |
+| 3 | `urkunde:StaAKr-0798` \| `inventar:VI-0002` | Vergleichsslide: Erbschaftssache 1547 (Philipp Schwartzer u. a.) vs. Verlassenschaftsinventar 1671 (Matthias Schmidt, Schmied) - thematisch passendes Paar (beide Erbschaft/Vermögen), keine belegte Identität zwischen den Personen |
+| 4 | `bestand:1.1.1.1.1.` | "Ratsprotokolle im Justiz- und Politikfach", `vertiefung = #visualisierungen/urkunden/zeitachse` (Pfadformat aus Punkt 0.2), Text ca. 113 Wörter Platzhalter |
+
+Station 2 nutzt `text` mit vier pipe-getrennten Absätzen, davon drei
+aufeinanderfolgende `- `-Aufzählungspunkte. Alle Texte tragen
+`[Platzhalter: …]`-Markierung, keine erfundenen Inhalte. `weiterlesen`/
+`quellen_intern` bleiben wie vorgegeben leer.
+
+### Punkt 4 - Schema-Dokumentation
+
+`docs/SCHEMA.md`: neuer Abschnitt 10 (`fuehrungen.csv`, alle 17 Spalten,
+Zeilenlogik, `beleg`-Präfixtabelle, Unsicherheits-Regel), Abschnitte 2
+(`ratsprotokolle.csv`)/9 (`literatur.csv`) um die Platzhalterzeilen-Korrektur
+ergänzt, neue Punkte 14/15 in der Zusammenfassung offener Punkte (Root-
+Cause-Bestätigung + `fuehrungen.csv`/`zielSignatur`-Vorbedingung für Teil 2).
+
+---
+
 ## 2026-09-11 (23) – Familienbaum → Habsburg-Zeitleistenbaum (kompletter Ersatz)
 
 **Auftrag (Kurzfassung):** die vier bisherigen Baumansichten werden durch

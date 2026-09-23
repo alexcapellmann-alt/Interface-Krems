@@ -170,6 +170,41 @@ body {
   grid-row: 2 / -1;
 }
 
+/* KORREKTURAUFTRAG "Führungen, Teil 2a-K – Bildschirmfüllendes Layout":
+   `.fuehrungen-bereich` (js/core/app.js' renderFuehrungenTab()) nahm bisher
+   KEINE eigene Grid-Platzierung ein (Default-Grid-Auto-Placement landete in
+   Zeile 1, ohne die volle Höhe zu bekommen) - dieselbe Behandlung wie
+   `.platzhalter-seite`/`.galerie-bereich` oben (volle Grid-Fläche), PLUS
+   `min-height:0` (Punkt 1, Auftrag): erzwingt, dass dieser Grid-Bereich sich
+   NICHT automatisch auf seine Inhaltsgröße aufbläht (Standard-Verhalten von
+   Grid-/Flex-Items ist `min-height:auto`) - erst dadurch kann
+   `fuehrungStation.js`s eigene Flex-Höhenverteilung (siehe dortiger
+   Dateikopf-Kommentar) tatsächlich greifen, statt dass die Seite bei zu
+   hohem Inhalt einfach wächst. Betrifft AUSSCHLIESSLICH diese eine Klasse -
+   keine Auswirkung auf `.viz-inhalt`/`.galerie-bereich`/andere Tabs (Nicht-
+   Ziel: keine Änderung an deren Layoutregeln). Die Galerie
+   (`fuehrungenGalerie.js`) bekommt dieselbe Grid-Fläche, behält aber ihr
+   bisheriges Scroll-Verhalten bei - `min-height:0` allein erzwingt keine
+   Höhenbegrenzung auf Kind-Elemente ohne eigenes `flex:1`, nur
+   `fuehrungStation.js`s Wurzel-Element nutzt das aktiv (siehe dortiger
+   Kommentar/components.css). */
+.fuehrungen-bereich {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* KORREKTURAUFTRAG "Führungen, Teil 2a-K", Punkt 1 (Auftrag wörtlich: "Kein
+   Zwang zur Bildschirmfüllung" auf Mobil hochkant) - siehe css/components.css'
+   gleichlautende Media Query für die zugehörigen Innenregeln der Station
+   selbst; diese Regel hier hebt nur die `min-height:0`-Erzwingung wieder
+   auf, damit `#app-content`/`body` bei Bedarf wie gewohnt seitenscrollen
+   können. */
+@media (max-width: 800px) {
+  .fuehrungen-bereich { min-height: auto; }
+}
+
 /* Platzhalter-Seiten (Führungen/Literatur/Über) haben KEINE Bereichs-Leiste
    (nur im Visualisierungen-Tab vorhanden) - bleiben daher weiterhin das
    EINZIGE Kind von #app-content und nehmen die komplette Grid-Fläche ein. */

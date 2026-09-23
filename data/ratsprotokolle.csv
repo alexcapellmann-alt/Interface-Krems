@@ -1,2 +1,1 @@
-﻿Column1;Column2;Column3;Column4;Column5;Column6;Column7;Column8;Column9;Column10;Column11;Column12;Column13;Column14;Column15;Column16
-id;signatur;datum;datum_unsicher;orte;orte_unsicher;regest;personen;personen_unsicher;kategorien;sitzungsort;sitzungsnummer;top_nummer;quelltyp;personen_rollen;unsicherheit_anmerkung
+﻿id;signatur;datum;datum_unsicher;orte;orte_unsicher;regest;personen;personen_unsicher;kategorien;sitzungsort;sitzungsnummer;top_nummer;quelltyp;personen_rollen;unsicherheit_anmerkung
