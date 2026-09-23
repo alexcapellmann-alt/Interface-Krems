@@ -5,6 +5,209 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-23 (28) – Rückfragen zu 2a-K und Umzug ins Repository
+
+**Auftrag (Kurzfassung):** Vier Klärungspunkte vor der Freigabe von 2a-K,
+reine Erhebung/Vorschlag, keine Codeänderung. Ab sofort wird ausschließlich
+in `C:\Users\ali\Desktop\GitHub\Interface-Krems` (Zweig `main`) gearbeitet,
+der bisherige Ordner `GI_2.0` wird nicht mehr verwendet.
+
+### Nachtrag (wichtig, erst gegen Ende der Sitzung bemerkt)
+
+Der unten dokumentierte Befund zu Punkt 1 (uncommitteter Arbeitsstand,
+`HEAD` = „Alpha durch Beta ersetzt") war zum Zeitpunkt der Prüfung (Beginn
+dieser Sitzung) wörtlich korrekt. **Im Verlauf dieser Sitzung** ist jedoch
+- vermutlich durch den Auftraggeber selbst, außerhalb dieser Sitzung - ein
+neuer Commit `f7a4799` „führungen" entstanden, der genau die zuvor als
+uncommittet gemeldeten Dateien enthält (`git show --stat f7a4799`: 15
+Dateien, u. a. `js/fuehrungen/*`, `css/components.css`, `css/layout.css`,
+`js/core/app.js`, `data/fuehrungen.csv`) - **und bereits nach `origin/main`
+gepusht** (`git log origin/main -1` zeigt ebenfalls `f7a4799`). Die
+Commit-Nachricht lautet „führungen", nicht wie im Auftrag erwartet
+„Beta-Stand nach Führungen 2a-K (Freigabe ausstehend)". Da dieser Auftrag
+ausdrücklich keine Commits/Pushes durch Claude Code vorsieht und keiner
+gemacht wurden, muss dieser Commit von anderer Seite erfolgt sein. Bitte
+insbesondere prüfen, ob mit diesem Push bereits ein **nicht wie vorgesehen
+freigegebener** 2a-K-Stand live auf GitHub Pages steht.
+
+Der `git status`/`git diff --stat` am Ende dieser Sitzung (siehe
+Abschluss-Anforderung) zeigt dementsprechend nur noch `docs/PROJEKTLOG.md`
+als Änderung - nicht, weil sich am Punkt-1-Befund etwas relativiert hätte,
+sondern weil der Zwischenstand durch diesen externen Commit committet
+wurde, bevor diese Sitzung endete.
+
+### Punkt 1 – Repository-Prüfung (Befund bei Sitzungsbeginn)
+
+**Abweichung vom erwarteten Zustand** - wörtliche Ausgaben:
+
+```
+$ git branch
+* main
+
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+	modified:   CHANGELOG.md
+	modified:   css/components.css
+	modified:   css/layout.css
+	modified:   data/literatur.csv
+	modified:   data/ratsprotokolle.csv
+	modified:   docs/PROJEKTLOG.md
+	modified:   docs/SCHEMA.md
+	modified:   js/core/app.js
+
+Untracked files:
+	data/fuehrungen.csv
+	js/fuehrungen/
+	js/utils/unsicherheitHinweis.js
+	server_starten.bat
+
+$ git log -1
+commit 243aae607671b776163e138f4aef83e18ef8c1fb
+Author: alexcapellmann-alt <alex.capellmann@gmail.com>
+Date:   Tue Sep 22 09:04:12 2026 +0200
+
+    Alpha durch Beta ersetzt
+```
+
+Erwartet war ein sauberer Arbeitsstand mit dem Commit „Beta-Stand nach
+Führungen 2a-K (Freigabe ausstehend)" als `HEAD`. Tatsächlich ist der letzte
+Commit „Alpha durch Beta ersetzt" - der komplette 2a-K-Stand (und, laut
+Dateiliste, auch die Etappen davor: Führungen Teil 1/2a, SCHEMA.md-
+Aktualisierung, `literatur.csv`/`ratsprotokolle.csv`) liegt hier nur als
+**uncommitteter Arbeitsstand** vor, nicht als Commit. `server_starten.bat`
+(untracked) verweist zudem noch auf den alten Ordner `GI_2.0` und Port 8000
+(`cd /d C:\Users\ali\Desktop\GI_2.0` / `python -m http.server 8000`) - passt
+nicht mehr zum neuen Arbeitsort, wurde aber wie angewiesen nicht angefasst.
+
+Weisungsgemäß **nichts nachkopiert oder committet** - nur gemeldet, Abgleich
+erfolgt durch den Auftraggeber.
+
+**Stichproben (alle erfüllt, trotz des oben genannten Commit-Stands - die
+Dateien selbst sind inhaltlich vollständig vorhanden):**
+
+| Stichprobe | Ergebnis |
+|---|---|
+| `fuehrungStation.js`: Navigationssäule + `resize()`-Export | ✅ `resize: () => passeGroesseAn(wurzel)` (Zeile 307), `.fuehrung-nav`-Aufbau vorhanden |
+| `layout.css`: Grid-Platzierung `.fuehrungen-bereich` | ✅ `grid-column:1/-1; grid-row:1/-1; min-height:0` (Zeile 191ff.) |
+| `app.js`: `kontext.aktuellesVizModul = kontext.modul` für Stationsansicht | ✅ Zeile 702 |
+| `data/fuehrungen.csv` mit Demo-Führung (4 Stationen) | ✅ vorhanden, 5 Zeilen (Kopf + 4 Stationen) |
+| Keine `?v=`-Reste in `index.html`/`import()`-Zeilen | ✅ `grep` auf `index.html`, `app.js`, `js/fuehrungen/*.js` liefert 0 Treffer |
+
+### Punkt 2 – Auswirkung von `aktuellesVizModul`
+
+Vollständige, per `grep -n "aktuellesVizModul" js/**/*.js` belegte Liste
+(Treffer ausschließlich in `js/core/app.js` - keine andere Datei liest/
+schreibt diese Variable):
+
+| Zeile | Was dort passiert | Vor 2a-K | Jetzt | Unbedenklich? |
+|---|---|---|---|---|
+| 160 | Typ-Kommentar auf `aktuellerKontext` | - | - | ja (kein Code) |
+| 390, 421 | `renderVisualisierungenTab()`s eigener Kontext (Archivalientypen ohne Galerie): init `null`, nach Laden `kontext.aktuellesVizModul = mod` (rohes Modul-Namespace-Objekt aus `import()`) | unverändert | unverändert - eigener `kontext`, von Führungen nie berührt | ja |
+| 399 | Unsicherheits-Button-Callback ruft `kontext.aktuellesVizModul?.resize({showUncertainty})` | unverändert | unverändert - selber, Führungen-fremder `kontext` | ja |
+| 496, 498–499 | `erzeugeGalerieFlyoutKontext()` (Bestand + Archivalientypen mit Galerie): init `null`, eigenes `destroy()` zerstört `aktuellesVizModul` | unverändert | unverändert - Fabrik wird von Führungen nicht verwendet (Führungen hat einen eigenen, handgebauten `kontext`) | ja |
+| 546 | dieselbe Fabrik: Unsicherheits-Button-Callback | unverändert | unverändert | ja |
+| 569–570 | `raeumeVizAnsichtAuf()`: zerstört `aktuellesVizModul` beim Verlassen einer Ansicht | unverändert | unverändert - Funktion wird von Führungen nie aufgerufen | ja |
+| 600–601 | `wechsleZuAnsicht()`: zerstört das alte `aktuellesVizModul` vor dem Wechsel | unverändert | unverändert - Funktion wird von Führungen nie aufgerufen | ja |
+| **603** | `wechsleZuAnsicht()`: `setUnsicherheitModus(false)` bei jedem Ansichtswechsel | unverändert | unverändert - liegt in derselben, für Führungen unerreichbaren Funktion wie die Zeilen davor; Führungen hat ohnehin keinen Unsicherheits-Button/-Modus | **ja** - explizit geprüft, keine Interaktion möglich |
+| 612 | `wechsleZuAnsicht()`: `kontext.aktuellesVizModul = mod` (rohes Modul-Namespace-Objekt) | unverändert | unverändert | ja |
+| 679 | `aktualisiereFuehrungenAnsicht()`: `kontext.aktuellesVizModul = null` vor jedem Neuaufbau | **existierte nicht** (Feld gab es 2a nicht) | **neu (2a-K)** | ja |
+| **702** | `aktualisiereFuehrungenAnsicht()`: `kontext.aktuellesVizModul = kontext.modul` (Stations-**Instanz** aus `fuehrungStation.js`s `render()`, NICHT das rohe Modul-Namespace-Objekt wie bei den anderen Kontexten) | **existierte nicht** | **neu (2a-K)**, Kernstelle dieses Auftrags | ja, s. Anmerkung unten |
+| 711 | `renderFuehrungenTab()`: init `aktuellesVizModul: null` | existierte nicht | neu (2a-K) | ja |
+| 768 | `verarbeiteResize()`: zentraler, 200ms-debouncter Aufruf `aktuellerKontext.aktuellesVizModul?.resize()` (ohne Argumente) | rief bei Führungen nie etwas auf (`aktuellesVizModul` war dort immer `undefined`/nicht gesetzt) | ruft jetzt bei aktiver Station `fuehrungStation.js`s `resize()` auf | ja - einzige tatsächlich neue Laufzeit-Auswirkung, genau wie in 2a-K beabsichtigt |
+| 765–767 | `verarbeiteResize()`: `if (aktuellerKontext.kleinerBildschirmHinweis) {...}` | Führungen-Kontext hat dieses Feld nie gesetzt | unverändert - weiterhin `undefined`, Zweig wird übersprungen | ja |
+
+**Anmerkung zu Zeile 702 (kein Bug, aber Struktur-Hinweis):** Bei
+Bestand/Visualisierungen ist `aktuellesVizModul` immer das **rohe
+ES-Modul-Namespace-Objekt** aus `import()` (Top-Level-Exporte `render`/
+`resize`/`destroy`). Bei Führungen ist es stattdessen die **Instanz**, die
+`fuehrungStation.js`s `render()` zurückgibt (Closure-gebundenes
+`{destroy, resize}`). Beide Formen erfüllen zufällig genau die beiden
+tatsächlich aufgerufenen Methoden (`resize()`, `destroy()`) - an keiner
+Stelle wird `aktuellesVizModul.render(...)` aufgerufen oder die Objektform
+sonst geprüft, daher aktuell **funktional unbedenklich**. Für künftige
+Wartbarkeit dennoch ein **Vorschlag** (nicht umgesetzt): entweder die
+Variable in `aktuellerKontext`s Typkommentar (Zeile 160) auf die
+tatsächlich gemeinsame, schmale Schnittstelle `{resize(), destroy()}` statt
+"Viz-Modul" präzisieren, oder Führungen einen eigenen, schmaleren Hook
+(z. B. `kontext.aufResizeHoeren`) geben, den `verarbeiteResize()` zusätzlich
+zu `aktuellesVizModul?.resize()` prüft - würde die semantische Überladung
+("ist eigentlich kein Viz-Modul") auflösen, ohne Verhalten zu ändern.
+
+### Punkt 3 – Hinweis „größerer Bildschirm nötig" bei der Zeitachse
+
+Beobachtet wurde der Hinweis während der Regressionsprüfung in 2a-K bei
+einer **Browser-Pane-Darstellungsbreite von ca. 785 px** (Screenshot-Beweis
+damals: 785×455 px) - das liegt unterhalb BEIDER Schwellen aus
+`js/utils/bildschirmHinweis.js` (`MINDEST_BREITE = 900`, `MINDEST_HOEHE =
+500`), unabhängig von jeder Führungen-Änderung. Kein Zusammenhang mit
+`viewportGroesse.js`/`aktuellesVizModul`.
+
+Erneute Prüfung (Server neu aus dem neuen Arbeitsort gestartet, Port 8834,
+`window.innerWidth/innerHeight` per JS bestätigt):
+
+| Fenstergröße | Direkt geladen | Nach vorherigem Besuch einer Führungsstation |
+|---|---|---|
+| 1366×768 | kein Hinweis | kein Hinweis |
+| 1440×900 | kein Hinweis | kein Hinweis |
+| 1920×1080 | kein Hinweis | kein Hinweis |
+
+Akzeptanzkriterium erfüllt - kein Nachwirken der gemessenen Stationshöhe
+oder der `resize()`-Verdrahtung auf die Zeitachse.
+
+### Punkt 4 – Vorschlag: dauerhafte Cache-Lösung ohne Projektdateien
+
+**Vorschlag:** eigener, kleiner Python-Testserver (Standardbibliothek,
+keine Abhängigkeit), der auf JEDE Antwort `Cache-Control: no-store,
+no-cache, must-revalidate, max-age=0` sowie `Pragma: no-cache` setzt -
+liegt **außerhalb des Repositorys** (z. B. im Scratchpad-/Werkzeug-
+Verzeichnis der jeweiligen Sitzung), keine Repository-Datei ist dafür
+nötig.
+
+**Start:**
+```
+python nocache_server.py <repo-pfad> <port>
+# Beispiel:
+python nocache_server.py "C:\Users\ali\Desktop\GitHub\Interface-Krems" 8845
+```
+
+**Port:** frei wählbar, in dieser Sitzung mit 8845 getestet (nicht 8834,
+um den regulären Vorschau-Server aus `.claude/launch.json` nicht zu
+kollidieren).
+
+**Nachweis (in dieser Sitzung tatsächlich getestet, nicht nur behauptet):**
+- `curl -D -` auf `/index.html` zeigt den gesetzten Header:
+  `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`.
+- Externe Probe (Datei außerhalb des Repositorys, über eine zweite Instanz
+  desselben Servers ausgeliefert): Datei dreimal in Folge geändert
+  (`VERSION-A` → `VERSION-B` → `VERSION-C`), jedes Mal per Browser-
+  Navigation **zur exakt selben URL ohne jede Query-String-Änderung**
+  abgerufen - jedes Mal wurde sofort der aktuelle Inhalt angezeigt, ohne
+  Verzögerung, ohne Neustart des Servers. Genau das war in den drei
+  vorherigen Durchgängen (Führungen 2a, Zwischenstände, 2a-K) NICHT der
+  Fall - dort blieb dieselbe URL auch nach Dateiänderung teils minutenlang
+  auf dem alten Stand, bis eine neue Query-String-Kennung (`?v=k2` o. Ä.)
+  verwendet wurde.
+- Damit ist das Problem nachweislich ein reines HTTP-Caching-Verhalten
+  (fehlende/zu freizügige Cache-Control-Header von `python -m http.server`
+  ohne Zusatz, das `.claude/launch.json`s bisherige `gi2-test-server`-
+  Konfiguration verwendet), nicht ein Verhalten des Codes selbst.
+
+**Repository-Dateien nötig?** Nein. Das Skript kann vollständig außerhalb
+des Repositorys liegen (in dieser Sitzung: Scratchpad-Verzeichnis) und
+braucht dafür keine Änderung an `.claude/launch.json` oder irgendeiner
+anderen Projektdatei - es ersetzt lediglich den Start-Befehl für den
+lokalen Testserver.
+
+**Nicht umgesetzt** (Auftrag wörtlich: nur Vorschlag) - `.claude/
+launch.json` wurde nicht geändert, die Testserver dieser Sitzung (Port
+8845/8846) wurden nach dem Nachweis wieder gestoppt, die Probe-Datei
+gelöscht.
+
+---
+
 ## 2026-09-23 (27) – Führungen, Teil 2a-K: Bildschirmfüllendes Layout und Präsentationsnavigation
 
 **Auftrag (Kurzfassung):** Stationen sollen wie eine Präsentation wirken -
