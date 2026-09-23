@@ -37,14 +37,33 @@
 
 import { baueUrkundenDetailInhalt } from '../utils/sidebar.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
-import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
+import { baueDatensatzLink, TYP_ANZEIGE } from '../utils/datensatzAufruf.js';
 
-// AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Linkbeschriftung/Typ-Anzeige je
-// Belegtyp aus der Freigabe (buergerbuch verlinkt wie person, siehe
-// baueArchivLink() unten - eigener Anzeigename hier trotzdem, damit die
-// Quellenzeile weiterhin "buergerbuch" statt "person" zeigt).
-const TYP_ANZEIGE = { urkunde: 'Urkunde', buergerbuch: 'Bürgerbuch-Eintrag', inventar: 'Verlassenschaftsinventar', bestand: 'Bestand', person: 'Person' };
+// AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Linkbeschriftung je Belegtyp aus
+// der Freigabe (buergerbuch verlinkt wie person, siehe baueArchivLink()
+// unten). TYP_ANZEIGE (K1, Teil 2c) kommt zentral aus datensatzAufruf.js -
+// dieselbe Quelle wie die Quellenzeile unten, keine zweite Beschriftungs-
+// Stelle im Code.
 const LINKTEXT = { person: 'Alle Einträge zu dieser Person', buergerbuch: 'Alle Einträge zu dieser Person' };
+
+// K2 (Teil 2c): "JJJJ_MM_TT" (urkunde) oder "JJJJ-MM-TT" (buergerbuch) bzw.
+// ein reines Jahr (inventar/person) - MM/TT "00" oder fehlend heisst
+// unbekannt, wird NICHT ergaenzt/geraten. Nur hier verwendet (Nicht-Ziel:
+// Darstellung in anderen Modulen bleibt unveraendert) - im Projekt existiert
+// keine bereits geteilte, wiederverwendbare Hilfsfunktion fuer diesen
+// Zweck (kalenderHeatmap.js' MONATSNAMEN_VOLL ist lokal/nicht exportiert
+// und arbeitet auf bereits geparsten {jahr,monat,tag}, nicht auf rohen
+// Datumstexten unterschiedlicher Quell-Formate).
+const MONATSNAMEN = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+function formatiereDatum(rohwert) {
+  const teile = (rohwert || '').split(/[_-]/).map(Number);
+  const [jahr, monat, tag] = teile;
+  if (!jahr) return rohwert || '';
+  if (monat > 0 && tag > 0) return `${tag}. ${MONATSNAMEN[monat - 1]} ${jahr}`;
+  if (monat > 0) return `${MONATSNAMEN[monat - 1]} ${jahr}`;
+  return String(jahr);
+}
 
 // bild bekommt keinen Link (Auftrag woertlich). buergerbuch verlinkt NICHT
 // sich selbst (kein eigener Datensatz-Typ, siehe datensatzAufruf.js' Kopf-
@@ -80,16 +99,37 @@ function alsText(wert) {
   return Array.isArray(wert) ? wert.join('; ') : (wert || '');
 }
 
-// Punkt 4 (Unsicherheitsfelder wie in den Sidebars): `_unsicher`-Flags ODER
-// befüllte unsicherheit_anmerkung -> derselbe Hinweis-Absatz wie sidebar.js.
+// K3 (Teil 2c): NICHT mehr sidebar.js' rote `.bestand-sidebar-unsicher`
+// (wirkte neben den amber `.fuehrung-fehler`-Pruefregel-Hinweisen wie ein
+// zweiter Fehler) - eigene, ruhige Darstellung NUR hier im Belegbereich der
+// Fuehrungen (Nicht-Ziel: Unsicherheitsdarstellung anderer Module
+// unveraendert, sidebar.js selbst nicht angefasst): eingeklappter ⚠-Button
+// statt fett/rot, Text erst nach Aufklappen sichtbar. Eigene, gedeckte
+// Warnfarbe (`--fuehrung-unsicher`, components.css) statt `--unsicher`
+// (rot, Fehlerkonvention) oder `--fuehrung-fehler` (amber, Pruefregeln) -
+// Unterscheidung zusaetzlich ueber Symbol (⚠ vs. "Fehler:") und
+// Beschriftung ("Angaben unsicher" vs. "Fehler: ...").
 function baueUnsicherheitAbsatz(record, unsicherFelder) {
   const istUnsicher = unsicherFelder.some((f) => record[f]) || Boolean(alsText(record.unsicherheit_anmerkung).trim());
   if (!istUnsicher) return null;
-  const p = document.createElement('p');
-  p.className = 'bestand-sidebar-unsicher';
-  const anmerkung = alsText(record.unsicherheit_anmerkung);
-  p.textContent = `Achtung: Angaben unsicher${anmerkung ? ` – ${anmerkung}` : ''}`;
-  return p;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'fuehrung-beleg-unsicher';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'fuehrung-beleg-unsicher-btn';
+  btn.textContent = '⚠ Angaben unsicher';
+  btn.setAttribute('aria-expanded', 'false');
+  const text = document.createElement('p');
+  text.className = 'fuehrung-beleg-unsicher-text';
+  text.hidden = true;
+  text.textContent = alsText(record.unsicherheit_anmerkung) || 'Keine weitere Angabe.';
+  btn.addEventListener('click', () => {
+    const offen = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!offen));
+    text.hidden = offen;
+  });
+  wrapper.append(btn, text);
+  return wrapper;
 }
 
 function baueFehlerBox(fehlertext) {
@@ -106,7 +146,7 @@ function baueFehlerBox(fehlertext) {
 function baueQuellenzeile(beleg, datumWert) {
   const zeile = document.createElement('p');
   zeile.className = 'fuehrung-beleg-quellenzeile';
-  const teile = [beleg.typ, beleg.id, datumWert].filter(Boolean);
+  const teile = [TYP_ANZEIGE[beleg.typ] || beleg.typ, beleg.id, datumWert].filter(Boolean);
   zeile.appendChild(document.createTextNode(teile.join(' · ')));
   const link = baueArchivLink(beleg);
   if (link) {
@@ -120,7 +160,7 @@ function baueBuergerbuchInhalt(r) {
   const wrapper = document.createElement('div');
   wrapper.append(
     feld('Name', r.Name),
-    feld('Datum', r.Datum || '(ohne Datum)')
+    feld('Datum', r.Datum ? formatiereDatum(r.Datum) : '(ohne Datum)')
   );
   if (r.Beruf) wrapper.appendChild(feld('Beruf', r.Beruf));
   if (r.Ort) wrapper.appendChild(feld('Ort', r.Ort));
@@ -132,7 +172,7 @@ function baueBuergerbuchInhalt(r) {
 
 function baueInventarInhalt(r) {
   const wrapper = document.createElement('div');
-  wrapper.append(feld('Name', r.Name), feld('Jahr', r.Jahr));
+  wrapper.append(feld('Name', r.Name), feld('Jahr', formatiereDatum(r.Jahr)));
   if (r['Beruf/Funktion/Stand']) wrapper.appendChild(feld('Beruf/Funktion/Stand', r['Beruf/Funktion/Stand']));
   if (r.Vermoegensgruppe) wrapper.appendChild(feld('Vermögensgruppe', r.Vermoegensgruppe));
   const hinweis = baueUnsicherheitAbsatz(r, []);
@@ -165,8 +205,8 @@ function bauePersonInhalt(r) {
   const wrapper = document.createElement('div');
   wrapper.append(
     feld('Schreibweisen', alsText(r.schreibweisen)),
-    feld('Erste Nennung', r.erste_nennung),
-    feld('Letzte Nennung', r.letzte_nennung),
+    feld('Erste Nennung', formatiereDatum(r.erste_nennung)),
+    feld('Letzte Nennung', formatiereDatum(r.letzte_nennung)),
     feld('Anzahl Nennungen', r.anzahl_nennungen)
   );
   const hinweis = baueUnsicherheitAbsatz(r, []);
@@ -226,7 +266,17 @@ export function baueBelegBereich(beleg, bildText) {
   if (!beleg.record) return bereich; // unbekannter Typ/ID nicht gefunden - nur die Fehlerbox oben
 
   const r = beleg.record;
-  const datumFelder = { urkunde: r.datum, buergerbuch: r.Datum, inventar: r.Jahr, bestand: r.zeitraum_text, person: r.erste_nennung };
+  // K2 (Teil 2c): urkunde nutzt datum_normiert ("JJJJ_MM_TT", Tag/Monat "00"
+  // bei Unbekannt) statt des rohen `datum`-Textfelds (dort historische
+  // Schreibweisen wie roemische Monatszahlen) - genau fuer diesen Zweck
+  // angelegt, siehe docs/SCHEMA.md.
+  const datumFelder = {
+    urkunde: formatiereDatum(r.datum_normiert),
+    buergerbuch: formatiereDatum(r.Datum),
+    inventar: formatiereDatum(r.Jahr),
+    bestand: r.zeitraum_text,
+    person: formatiereDatum(r.erste_nennung)
+  };
   bereich.appendChild(baueQuellenzeile(beleg, datumFelder[beleg.typ]));
 
   const scroll = baueScrollWrapper();

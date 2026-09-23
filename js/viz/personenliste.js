@@ -662,7 +662,15 @@ function zeichneTabelle() {
   if (bestehendeTabelle) bestehendeTabelle.remove();
   container.querySelectorAll('.pl-paginierung').forEach((el) => el.remove());
 
-  const gefiltert = filtereRecords(records, suchbegriff);
+  // AUFTRAG "Fuehrungen, Teil 2b", Rueckfrage: instanz.exaktId (nur von
+  // oeffneDatensatz() unten gesetzt) filtert auf EXAKTE personen_id statt
+  // der normalen Teilstring-Suche - sonst zeigte z.B. "adam" auch
+  // "adam_eissler" mit an. filtereRecords() selbst bleibt fuer die normale,
+  // getippte Suche unveraendert; das Sucheingabefeld setzt exaktId beim
+  // naechsten Tippen selbst wieder zurueck (siehe zeichnePersonenliste()).
+  const gefiltert = instanz.exaktId
+    ? records.filter((r) => r.personen_id === instanz.exaktId)
+    : filtereRecords(records, suchbegriff);
   const sortiert = sortiereRecords(gefiltert, sortierung);
 
   const gesamtSeiten = Math.max(1, Math.ceil(sortiert.length / SEITENGROESSE));
@@ -703,6 +711,7 @@ function zeichnePersonenliste() {
   sucheInput.setAttribute('aria-label', 'Personenliste durchsuchen');
   sucheInput.addEventListener('input', (event) => {
     instanz.suchbegriff = event.target.value;
+    instanz.exaktId = null; // normales Tippen beendet einen exakten Datensatzaufruf wieder
     instanz.aktuelleSeite = 1; // neue Trefferzahl, alte Seitenzahl kann ungültig geworden sein
     zeichneTabelle();
   });
@@ -747,6 +756,7 @@ export function render(container, data, options = {}) {
     options: { showUncertainty: true, width: null, height: null, ...options },
     sortierung: { schluessel: 'anzahl_nennungen', richtung: 'ab' },
     suchbegriff: '',
+    exaktId: null,
     aktuelleSeite: 1,
     infoButton: null,
     sidebar: null
@@ -767,17 +777,20 @@ export function destroy() {
 }
 
 // AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: schmale, von js/utils/
-// datensatzAufruf.js aufgerufene Oeffnen-Funktion - setzt dieselbe Suche wie
-// das Sucheingabefeld (Zeile 704-708) auf die personen_id, zeichnet die
-// gefilterte Tabelle neu und ruft dieselben Funktionen wie der bestehende
-// Zeilen-Klick-Handler (Zeile 639-643) auf - keine eigene Sidebar-Logik
-// hier. Auch der Aufruf fuer buergerbuch-Belege (typ:'person', siehe
-// belegDarstellung.js) laeuft hierueber.
+// datensatzAufruf.js aufgerufene Oeffnen-Funktion - setzt exaktId (siehe
+// zeichneTabelle() oben) statt sich auf die normale Teilstring-Suche zu
+// verlassen, damit z.B. "adam" nicht auch "adam_eissler" mit anzeigt -
+// dieselbe personen_id kann sonst Praefix einer anderen sein (live
+// gefunden, siehe Selbstauskunft/PROJEKTLOG). Ruft danach dieselben
+// Funktionen wie der bestehende Zeilen-Klick-Handler (Zeile 639-643) auf -
+// keine eigene Sidebar-Logik hier. Auch der Aufruf fuer buergerbuch-Belege
+// (typ:'person', siehe belegDarstellung.js) laeuft hierueber.
 export function oeffneDatensatz(personenId) {
   if (!instanz) return false;
   const record = instanz.records.find((r) => r.personen_id === personenId);
   if (!record) return false;
   instanz.suchbegriff = personenId;
+  instanz.exaktId = personenId;
   instanz.aktuelleSeite = 1;
   const sucheInput = instanz.container.querySelector('.pl-suche');
   if (sucheInput) sucheInput.value = personenId;

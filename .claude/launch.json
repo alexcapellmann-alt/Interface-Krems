@@ -4,8 +4,8 @@
     {
       "name": "gi2-test-server",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8834"],
-      "port": 8834
+      "runtimeArgs": ["C:\\Users\\ali\\Desktop\\GitHub\\Interface-Krems-Testserver\\nocache_server.py", "C:\\Users\\ali\\Desktop\\GitHub\\Interface-Krems", "8845"],
+      "port": 8845
     }
   ]
 }

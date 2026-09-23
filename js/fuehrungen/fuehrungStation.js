@@ -70,6 +70,7 @@ import { fuegeSidebarStyleEin } from '../utils/sidebar.js';
 import { baueBelegBereich } from './belegDarstellung.js';
 import { erzeugeUnsicherheitHinweis } from '../utils/unsicherheitHinweis.js';
 import { ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
+import { speichereZustand } from './fuehrungFortsetzen.js';
 
 // NACHTRAG zu Punkt 1 (nach Diagnose einer verbliebenen Bildschirm-
 // Überschreitung): reines Flex-Shrinking über `#app-content` funktioniert
@@ -260,11 +261,14 @@ function baueNavigation(fuehrung, aktuelleNr, geheZu) {
   nav.appendChild(fortschritt);
 
   if (aktuelleNr >= letzteNr) {
-    const uebersicht = document.createElement('a');
-    uebersicht.href = baueHash(['fuehrungen']);
-    uebersicht.className = 'fuehrung-nav-pfeil fuehrung-nav-uebersicht';
-    uebersicht.textContent = 'Zur Übersicht';
-    nav.appendChild(uebersicht);
+    // AUFTRAG "Fuehrungen, Teil 2c", Punkt 2: letzte Station -> ▼ fuehrt
+    // jetzt zum Abschlussbildschirm statt direkt zur Uebersicht (der hat
+    // dort selbst einen "Zur Uebersicht"-Weg, siehe fuehrungAbschluss.js).
+    const abschluss = document.createElement('a');
+    abschluss.href = baueHash(['fuehrungen', fuehrung.fuehrung_id, 'ende']);
+    abschluss.className = 'fuehrung-nav-pfeil fuehrung-nav-uebersicht';
+    abschluss.textContent = 'Ende der Führung';
+    nav.appendChild(abschluss);
   } else {
     nav.appendChild(baueNavPfeil('Nächste Station', '▼', true, () => geheZu(aktuelleNr + 1, { ersetzeVerlauf: true })));
   }
@@ -299,6 +303,24 @@ export function render(container, fuehrung, initialeNr) {
     aktuelleNr = neueNr;
     zeichne();
   }
+
+  // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: NUR ein Klick auf einen Belegs-
+  // oder Vertiefungslink speichert den Fortsetzen-Zustand (Auftrag
+  // woertlich) - normale Stationsnavigation (Pfeile/Tastatur) tut es
+  // bewusst nicht. Ein delegierter Listener auf `haupt` deckt beide
+  // Linkarten ab, ohne belegDarstellung.js' Funktionssignaturen zu aendern.
+  function merkeVerlassenBeiLinkKlick(event) {
+    const link = event.target.closest('.fuehrung-beleg-archivlink, .fuehrung-vertiefung-link');
+    if (!link) return;
+    const station = fuehrung.stationen.find((s) => s.station_nr === aktuelleNr);
+    speichereZustand({
+      fuehrungId: fuehrung.fuehrung_id,
+      stationNr: aktuelleNr,
+      fuehrungTitel: fuehrung.fuehrung_titel,
+      stationTitel: station.station_titel
+    });
+  }
+  haupt.addEventListener('click', merkeVerlassenBeiLinkKlick);
 
   function zeichne() {
     haupt.innerHTML = '';

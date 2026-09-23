@@ -5,6 +5,137 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-23 (33) – Führungen, Teil 2c: Korrekturen, „Führung fortsetzen", Abschlussbildschirm
+
+**Auftrag (Kurzfassung):** Korrekturblock (K1-K4) aus der Browserprüfung von
+2b, danach „Führung fortsetzen" (schwebender Button, sessionStorage) und
+der Abschlussbildschirm. `CLAUDE.md` gelesen und bestätigt vor Beginn.
+
+### Korrekturblock
+
+**K1 (lesbare Typbezeichnungen):** `js/utils/datensatzAufruf.js`s neu
+exportierte `TYP_ANZEIGE`-Konstante (Urkunde/Bürgerbuch/
+Verlassenschaftsinventar/Bestand/Person/Abbildung) - EINE Stelle, von
+`belegDarstellung.js`s Quellenzeile UND den Archiv-Link-Aria-Labels
+gemeinsam genutzt (vorher: zwei getrennte, inhaltsgleiche Konstanten in
+verschiedenen Dateien - jetzt konsolidiert).
+
+**K2 (lesbares Datumsformat):** `belegDarstellung.js`s neue lokale
+`formatiereDatum()` - im Projekt existierte keine wiederverwendbare
+Hilfsfunktion dafür (`kalenderHeatmap.js`' `MONATSNAMEN_VOLL` ist lokal/
+nicht exportiert und arbeitet auf bereits geparsten Werten, nicht auf
+rohen Datumstexten). `urkunde` nutzt jetzt `datum_normiert`
+("JJJJ_MM_TT", extra für diesen Zweck angelegt, siehe SCHEMA.md Abschnitt
+1) statt des rohen `datum`-Feldes (historische Schreibweisen wie römische
+Monatszahlen). Getestet mit `StAK_162408_908_reg`/`datum_normiert=1624_08_00`
+(Monat bekannt, Tag unbekannt) → "August 1624", keine Ergänzung/Ratung des
+fehlenden Tages.
+
+**K3 (Unsicherheit vs. Fehler):** `belegDarstellung.js`s
+`baueUnsicherheitAbsatz()` baut jetzt einen eingeklappten ⚠-Button
+("Angaben unsicher") statt eines fett-roten Absatzes - Text erst nach
+Aufklappen sichtbar (`aria-expanded`, nativer `<button>` daher automatisch
+per Maus/Touch/Tastatur bedienbar). Eigene, neue Warnfarbe
+`--fuehrung-unsicher`/`--fuehrung-unsicher-bg` (components.css) - bewusst
+weder `--unsicher` (rot, App-weite Fehlerkonvention) noch
+`--fuehrung-fehler` (amber, Prüfregel-Konvention) wiederverwendet, sonst
+wäre die geforderte Unterscheidung nicht mehr gegeben. Mit einer
+temporären zweiten (defekten) Beleg-ID an Station 2 nebeneinander getestet
+(Screenshot in der Selbstauskunft) - eindeutig unterscheidbar (Farbe,
+Symbol, Beschriftung, Form). sidebar.js selbst nicht angefasst (Nicht-Ziel)
+- Unsicherheitsdarstellung anderer Module unverändert.
+
+**K4 (`launch.json`):** startet jetzt den Cache-freien Testserver aus
+`CLAUDE.md` (Skript weiterhin außerhalb des Repositorys). Per direktem
+Ausführen des in `launch.json` hinterlegten Befehls UND `curl` verifiziert
+(`Cache-Control: no-store` bestätigt) - die session-eigene
+`preview_start`-Verdrahtung zeigte dabei noch einen zwischengespeicherten
+Stand von Port 8834 aus einer früheren Sitzung (reines Werkzeug-Caching
+dieser Sitzung, kein Fehler in `launch.json` selbst).
+
+### Punkt 1: „Führung fortsetzen" (`js/fuehrungen/fuehrungFortsetzen.js`)
+
+App-weit einmalig an `document.body` verankert (`js/core/app.js`, nach
+`starteRouter()`), Zustand in `sessionStorage` (ein Schlüssel je Sitzung -
+eine neue Führung ersetzt automatisch eine vorherige pausierte). Nur ein
+Klick auf einen Belegs-/Vertiefungslink löst das Speichern aus (delegierter
+Listener in `fuehrungStation.js`, Auftrag wörtlich - normale
+Pfeilnavigation tut es bewusst nicht).
+
+**Zwei live gefundene und behobene Fehler:**
+1. `speichereZustand()` rief synchron `aktualisiere()` auf - dessen
+   „stehen wir schon auf der pausierten Station?"-Prüfung griff dabei noch
+   gegen die ALTE Route (`<a href>`s Hashwechsel läuft erst NACH allen
+   click-Handlern), der frisch gespeicherte Zustand löschte sich dadurch
+   sofort wieder selbst. Behoben: kein Aufruf mehr dort, der bereits
+   registrierte `hashchange`-Listener übernimmt das mit der dann aktuellen
+   Route ohnehin.
+2. CSS-Spezifitätsproblem: `.fuehrung-fortsetzen { display: flex; ... }`
+   (Autoren-Regel) gewann gegen des Browsers eigene `[hidden]{display:none}`
+   -Regel (gleiche Spezifität, Autoren-Regeln schlagen UA-Regeln im
+   Cascade unabhängig von Spezifität) - `wurzel.hidden = true` (JS) blieb
+   dadurch wirkungslos sichtbar. Behoben mit einer expliziten
+   `.fuehrung-fortsetzen[hidden] { display: none; }`-Regel.
+
+Eckenwechsel-Button (WCAG-2.5.7-Alternative zum Ziehen) UND Ziehen per
+Pointer Events (deckt Maus UND Touch gleichermaßen ab) beide implementiert
+und einzeln live getestet (Tastatur: Fokus + Enter). Position
+(Ecke ODER freie Pixel-Koordinaten) in einem zweiten sessionStorage-
+Schlüssel, überlebt Neuladen. Vollständiger Ablauf (Station 1 verlassen →
+Button erscheint → Tab-Wechsel, bleibt → Ziehen ohne Auslösen → Eckenwechsel
+→ Neuladen, Position bleibt → Klick führt zu Station 1 → Schließen → Galerie
+zeigt „Fortsetzen bei Station 1") live durchgespielt, siehe Selbstauskunft.
+
+**Beobachtung, kein Widerspruch zum Auftrag:** Auf Mobil deckt eine
+vollbildbreite offene Sidebar (`z-index:500`) den Fortsetzen-Button
+(`z-index:60`) ab - die Sidebar-eigenen Bedienelemente (u. a. „×") bleiben
+dabei uneingeschränkt bedienbar (der Button verdeckt also KEINE
+Bedienelemente, wie im Auftrag gefordert), der Fortsetzen-Button selbst ist
+in diesem einen Moment aber nicht erreichbar, bis die Sidebar geschlossen
+wird - danach unverändert an seiner Position wieder da. Ein höherer
+z-index für den Button hätte das Problem umgekehrt (er würde dann seinerseits
+die Sidebar-Schaltflächen verdecken) - deshalb bewusst nicht geändert,
+hier nur vermerkt.
+
+Rechts unten als Ausgangsposition kollidierte in keiner geprüften Ansicht
+mit bestehenden Bedienelementen (Desktop: Zeitachse/Parallelkoordinaten/
+Treemap/Personenliste/Bestand-Galerie/Führungsstation-eigene Navigationssäule
+- letztere mit knappem, aber nachweislich freiem Abstand bei 1366×768
+geprüft) - keine Rückmeldung nötig.
+
+### Punkt 2: Abschlussbildschirm (`js/fuehrungen/fuehrungAbschluss.js`)
+
+Route `#fuehrungen/<id>/ende`, in `app.js`' `aktualisiereFuehrungenAnsicht()`
+vor der `station_nr`-Auflösung abgezweigt. Kopfbereich/Navigationssäule/
+bildschirmfüllendes Verhalten bewusst EIGENSTÄNDIG nachgebaut (dieselben
+CSS-Klassen wie die Stationsansicht, aber `fuehrungStation.js`s
+`baueKopf()`/`passeGroesseAn()` sind dort nicht exportiert und fest auf
+eine echte `station` zugeschnitten - keine Änderung an bestehenden
+Funktionssignaturen, Nicht-Ziel). „Selbst erkunden" dedupliziert über alle
+Stationen hinweg (nach aufgelöstem `href`), „Zum Weiterlesen" löst
+`weiterlesen` gegen `literatur.csv` auf (siehe SCHEMA.md Abschnitt 12) -
+mit temporärer Testkopie (zwei Einträge + eine unbekannte ID) vollständig
+verifiziert, siehe Selbstauskunft für Screenshots. Erreichen des
+Abschlussbildschirms löscht den Fortsetzen-Zustand (`loescheZustand()` in
+`render()`).
+
+**Kein Block „Mitmachen"** (Nicht-Ziel). Vorgesehene Stelle für einen
+späteren Auftrag: zwischen „Selbst erkunden" und „Zum Weiterlesen" in
+`fuehrungAbschluss.js`s `render()` (zwischen den beiden `if (…) inhalt.
+appendChild(…)`-Aufrufen) - inhaltlich eigener Block, keine der beiden
+bestehenden Funktionen wiederverwenden (andere Interaktionsart als reine
+Links).
+
+### Redaktioneller Hinweis (Auftrag wörtlich vermerkt)
+
+Die Texte in `unsicherheit_anmerkung` (mehrere Quell-CSVs) enthalten teils
+interne Arbeitsvermerke (Dateinamen wie „urkunden_gesamt.xlsx", IDs, der
+Vermerk „Nicht zusammengeführt") - für eine öffentliche Anzeige müssten
+diese Texte redaktionell überarbeitet werden. Die Texte selbst wurden dafür
+NICHT geändert (Nicht-Ziel).
+
+---
+
 ## 2026-09-23 (32) – Führungen, Teil 2b: Belege öffnen, Vertiefungslinks
 
 **Auftrag (Kurzfassung):** Freigabe nach 3a-2 - Punkt 3 (Bürgerbuch-Detailansicht)

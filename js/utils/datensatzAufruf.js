@@ -18,11 +18,32 @@
 
 import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN } from '../config/archivalienRegistry.js';
 
+// Router-Pfadsegmente direkt (dasselbe Format wie ein Hash-Pfad ohne "#") -
+// EINE gemeinsame Form fuer "bestand" (2 Segmente) UND "visualisierungen"
+// (3 Segmente), dieselbe Form, die ermittleAnsicht()/ermittleVertiefungsLink()
+// unten ohnehin schon brauchen. Vermeidet die vormals nötige Fallunter-
+// scheidung nach Tab beim Aufloesen (siehe PROJEKTLOG: dort schlug die
+// Zuordnung für "bestand" fehl, weil eine positionsabhängige Kurzform
+// dieser Segmente an der falschen Stelle erwartet wurde).
 const ZUORDNUNG = {
-  urkunde: { tab: 'visualisierungen', typArchivalien: 'urkunden', ansichtId: 'zeitachse' },
-  inventar: { tab: 'visualisierungen', typArchivalien: 'verlassenschaften', ansichtId: 'parallelKoordinaten' },
-  bestand: { tab: 'bestand', ansichtId: 'treemap' },
-  person: { tab: 'visualisierungen', typArchivalien: 'personen', ansichtId: 'personenliste' }
+  urkunde: { segmente: ['visualisierungen', 'urkunden', 'zeitachse'] },
+  inventar: { segmente: ['visualisierungen', 'verlassenschaften', 'parallelKoordinaten'] },
+  bestand: { segmente: ['bestand', 'treemap'] },
+  person: { segmente: ['visualisierungen', 'personen', 'personenliste'] }
+};
+
+// K1 (Teil 2c): lesbare Typbezeichnungen an EINER Stelle - fuer die
+// Quellenzeile UND die Screenreader-Beschriftung der Archiv-Links
+// (js/fuehrungen/belegDarstellung.js), statt interner Typnamen wie
+// "buergerbuch". "bild" (Fuehrungs-eigener Belegtyp, kein ZUORDNUNG-
+// Eintrag, siehe oben) ist hier trotzdem mit aufgenommen.
+export const TYP_ANZEIGE = {
+  urkunde: 'Urkunde',
+  buergerbuch: 'Bürgerbuch',
+  inventar: 'Verlassenschaftsinventar',
+  bestand: 'Bestand',
+  person: 'Person',
+  bild: 'Abbildung'
 };
 
 // Deklinationshilfe nur fuer die Bereichs-Haelfte der Vertiefungslink-
@@ -43,9 +64,12 @@ function genitiv(label, schluessel) {
 }
 
 // Loest ["visualisierungen","urkunden","zeitachse"] bzw. ["bestand","treemap"]
-// gegen die Registry auf. Gibt null zurueck, wenn der Pfad dort nicht (mehr)
-// existiert - der einzige Ort, an dem "existiert nicht" erkannt wird.
-function ermittleAnsicht(tab, a, b) {
+// gegen die Registry auf - EIN Parameter (Pfadsegmente-Array), EIN Aufrufweg
+// fuer beide ZUORDNUNG-Eintraege UND ermittleVertiefungsLink() unten. Gibt
+// null zurueck, wenn der Pfad dort nicht (mehr) existiert - der einzige Ort,
+// an dem "existiert nicht" erkannt wird.
+function ermittleAnsicht(segmente) {
+  const [tab, a, b] = segmente || [];
   if (tab === 'bestand') {
     const ansicht = BESTAND_ANSICHTEN.find((x) => x.id === a);
     return ansicht ? { segmente: ['bestand', ansicht.id], label: ansicht.label, bereichLabel: null, bereichSchluessel: 'bestand' } : null;
@@ -61,14 +85,7 @@ function ermittleAnsicht(tab, a, b) {
 }
 
 function ermittleZielFuerTyp(typ) {
-  const eintrag = ZUORDNUNG[typ];
-  if (!eintrag) return null;
-  // "bestand" hat kein typArchivalien-Segment (2-teiliger Pfad, siehe
-  // ermittleAnsicht()) - anders als die "visualisierungen"-Eintraege, die
-  // typArchivalien als zweites Pfadsegment brauchen.
-  return eintrag.tab === 'bestand'
-    ? ermittleAnsicht('bestand', eintrag.ansichtId)
-    : ermittleAnsicht(eintrag.tab, eintrag.typArchivalien, eintrag.ansichtId);
+  return ermittleAnsicht(ZUORDNUNG[typ]?.segmente);
 }
 
 // Punkt 5: baut den Link-Href fuer einen Beleg. null, wenn der Typ nicht
@@ -86,7 +103,7 @@ export function baueDatensatzLink(typ, id) {
 // Pruefregel, fuehrungenDaten.js zeigt fehler dann als sichtbaren Hinweis).
 export function ermittleVertiefungsLink(rohPfad) {
   const segmente = (rohPfad || '').replace(/^#\/?/, '').split('/').filter(Boolean);
-  const ziel = ermittleAnsicht(segmente[0], segmente[1], segmente[2]);
+  const ziel = ermittleAnsicht(segmente);
   if (!ziel) return { href: null, beschriftung: null, fehler: `Vertiefungslink „${rohPfad}" verweist auf keine vorhandene Ansicht.` };
   const beschriftung = ziel.bereichLabel
     ? `In der ${ziel.label} ${genitiv(ziel.bereichLabel, ziel.bereichSchluessel)} erkunden`

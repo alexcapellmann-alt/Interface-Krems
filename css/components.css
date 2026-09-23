@@ -131,6 +131,13 @@
      oben ("nicht verstreut im Code"). */
   --fuehrung-nav-breite: 92px;
   --fuehrung-nav-btn-groesse: 48px;
+  /* KORREKTURAUFTRAG "Führungen, Teil 2c", K3: eigene, ruhige Warnfarbe für
+     Unsicherheit im Belegbereich - bewusst weder `--unsicher` (rot, die
+     app-weite FEHLER-Konvention) noch `--fuehrung-fehler` (amber, die
+     Prüfregel-Konvention aus 2a) wiederverwendet, sonst wäre die geforderte
+     Unterscheidung nicht mehr gegeben. */
+  --fuehrung-unsicher: #8a6d1f;
+  --fuehrung-unsicher-bg: #fdf6e3;
 }
 
 /* Galerie (Punkt 3) - dieselbe Kachel-/Raster-Optik wie
@@ -290,6 +297,19 @@
   min-height: 32px; border: none; background: none; font-size: 1.25rem; line-height: 1; cursor: pointer; }
 .unsicherheit-hinweis-schliessen:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+/* KORREKTURAUFTRAG "Fuehrungen, Teil 2c", K3: Unsicherheit im Belegbereich -
+   eingeklappter ⚠-Button statt fett/rotem Absatz, eigene, ruhige Warnfarbe
+   (nicht `--unsicher`/`--fuehrung-fehler`, siehe :root-Kommentar oben). */
+.fuehrung-beleg-unsicher { margin-top: var(--space-2); }
+.fuehrung-beleg-unsicher-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px;
+  padding: var(--space-1) var(--space-3); border: 1.5px solid var(--fuehrung-unsicher); border-radius: var(--radius);
+  background: var(--fuehrung-unsicher-bg); color: var(--fuehrung-unsicher); font-weight: 600; cursor: pointer; }
+.fuehrung-beleg-unsicher-btn:hover { background: var(--surface); }
+.fuehrung-beleg-unsicher-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.fuehrung-beleg-unsicher-text { margin: var(--space-2) 0 0 0; padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--fuehrung-unsicher); border-radius: var(--radius); background: var(--fuehrung-unsicher-bg);
+  color: var(--text); font-size: var(--fs-sm); }
+
 /* AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Archiv-Link in der Quellenzeile -
    eigenes <a>, NICHT der ganze .fuehrung-beleg (siehe belegDarstellung.js'
    Dateikopf-Kommentar zu baueQuellenzeile()). */
@@ -315,3 +335,50 @@
 .datensatz-hinweis-schliessen { flex: 0 0 auto; min-width: 32px; min-height: 32px; border: none; background: none;
   font-size: 1.25rem; line-height: 1; cursor: pointer; color: inherit; }
 .datensatz-hinweis-schliessen:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: schwebender "Fuehrung fortsetzen"-
+   Button, app-weit an document.body verankert (js/fuehrungen/
+   fuehrungFortsetzen.js). Ecken-Klassen setzen right/bottom bzw. left/top -
+   waehrend des Ziehens ueberschreibt JS diese per Inline-Style (siehe
+   dortiger Kommentar), deshalb hier `right`/`bottom` NICHT auf `auto`
+   erzwingen, JS uebernimmt das gezielt. Mindestgroesse 44x44px (Auftrag,
+   Touch-Ziele) gilt fuer alle vier Buttons/Griff zusammen ueber die
+   Gesamthoehe der Leiste. */
+/* [hidden] zuerst: als eigene Regel noetig, weil "display:flex" unten
+   sonst dieselbe Spezifitaet wie des Browsers eigenes "[hidden]{display:none}"
+   hat und als Autoren-Regel gewinnen wuerde - .wurzel.hidden=true (JS) bliebe
+   sonst sichtbar (live gefunden, siehe PROJEKTLOG). */
+.fuehrung-fortsetzen[hidden] { display: none; }
+.fuehrung-fortsetzen { position: fixed; z-index: 60; display: flex; align-items: stretch; gap: 2px;
+  max-width: min(360px, 92vw); padding: 4px; border-radius: var(--radius); background: var(--accent);
+  color: #fff; box-shadow: var(--shadow); }
+.fuehrung-fortsetzen.ecke-unten-rechts { right: var(--space-4); bottom: var(--space-4); }
+.fuehrung-fortsetzen.ecke-unten-links { left: var(--space-4); bottom: var(--space-4); }
+.fuehrung-fortsetzen.ecke-oben-links { left: var(--space-4); top: var(--space-4); }
+.fuehrung-fortsetzen.ecke-oben-rechts { right: var(--space-4); top: var(--space-4); }
+.fuehrung-fortsetzen-griff { flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  width: 32px; min-height: 44px; cursor: grab; touch-action: none; font-size: 1.1rem; color: #fff; opacity: .85; }
+.fuehrung-fortsetzen-griff:active { cursor: grabbing; }
+.fuehrung-fortsetzen-link { display: flex; align-items: center; flex: 1 1 auto; min-height: 44px;
+  padding: 0 var(--space-2); color: #fff; font-weight: 600; text-decoration: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fuehrung-fortsetzen-link:hover { text-decoration: underline; }
+.fuehrung-fortsetzen-ecke, .fuehrung-fortsetzen-schliessen { flex: 0 0 auto; min-width: 44px; min-height: 44px;
+  border: none; background: none; color: #fff; font-size: 1.1rem; line-height: 1; cursor: pointer; }
+.fuehrung-fortsetzen-link:focus-visible, .fuehrung-fortsetzen-ecke:focus-visible,
+.fuehrung-fortsetzen-schliessen:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+
+/* AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: dezenter Hinweis auf der Galerie-
+   Kachel der pausierten Fuehrung (js/fuehrungen/fuehrungenGalerie.js). */
+.fuehrung-kachel-fortsetzen { align-self: flex-start; padding: 2px 10px; border-radius: 99px;
+  font-size: var(--fs-sm); font-weight: 600; background: var(--accent-hover); color: #fff; cursor: pointer; }
+.fuehrung-kachel-fortsetzen:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* AUFTRAG "Fuehrungen, Teil 2c", Punkt 2: Abschlussbildschirm - nutzt
+   .fuehrung-station/.fuehrung-station-haupt/.fuehrung-erzaehltext/
+   .fuehrung-nav unveraendert mit (identisches Bildschirmfuellendes
+   Verhalten, siehe fuehrungAbschluss.js), nur der Inhalt braucht zwei
+   eigene Regeln. */
+.fuehrung-abschluss-inhalt { flex: 1 1 auto; max-width: var(--fuehrung-text-max-ch); }
+.fuehrung-abschluss-inhalt:focus { outline: none; }
+.fuehrung-abschluss-leitfrage { font-style: italic; color: var(--text-muted); }
