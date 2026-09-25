@@ -72,6 +72,7 @@ import {
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 // Auftrag "Sunburst – Rückkehr zur 3-Ebenen-Ansicht": Text aktualisiert, um
 // den jetzt sichtbaren dritten (Unterkategorie-)Ring zu beschreiben - reine
@@ -117,7 +118,9 @@ const INNERER_RADIUS = 40; // Zentrum-Hub (Klickfläche "zurück" in der Kategor
 // siehe dortiger Kommentar) - derselbe Parameter, dieselbe Datengrundlage,
 // bereits gegen 3 Ebenen verifiziert.
 const MINDESTGROESSE_ROH_SUNBURST = 0.05;
-const WARN_SYMBOL = '⚠';
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 const AUSWAHL_FARBE = '#e07820'; // dieselbe Farbe wie treemap.js' Auswahl-Hervorhebung
 const FOKUS_STROKE_BREITE = 3;
 

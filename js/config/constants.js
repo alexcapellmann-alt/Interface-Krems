@@ -74,6 +74,30 @@
 // eingesetzt) - bleibt dabei eine einzige Änderungsstelle für beide Fälle.
 export const ACHSEN_SCHRIFTGROESSE = 14;
 
+// AUFTRAG "Teil 2f", Punkt 1: EINE zentrale Konstante für das
+// Unsicherheitssymbol, ersetzt sowohl die sieben bisherigen lokalen
+// `WARN_SYMBOL = '⚠'`-Kopien (circlePacking.js/familienbaum.js/
+// ganttDiagramm.js/icicle.js/regestenKachelraster.js/sunburst.js/
+// treemap.js) als auch die wörtlichen '⚠'-Vorkommen in
+// js/utils/sidebar.js, js/utils/unsicherheitHinweis.js,
+// js/fuehrungen/belegDarstellung.js und js/core/unsicherheitsButton.js -
+// jedes betroffene Modul importiert ab jetzt ausschließlich von hier.
+// σ (U+03C3, GRIECHISCHES KLEINES SIGMA) statt ⚠: bewusst nicht
+// wiederverwendet für die ANDERE Bedeutung "Fehler"/Prüfregel-Verstoß
+// (siehe js/fuehrungen/belegDarstellung.js' `baueFehlerBox()`/
+// `.fuehrung-fehler` in css/components.css - die verwenden weiterhin den
+// Text "Fehler: " ohne Icon, kein ⚠/σ-Konflikt vorhanden, live geprüft).
+// `UNSICHERHEIT_SYMBOL_LABEL`: gemeinsamer zugänglicher Name für Stellen,
+// an denen σ ohne begleitenden sichtbaren Text steht (z. B. die reinen
+// SVG-Icon-Marker in den sieben Viz-Modulen, dort `aria-hidden="true"` +
+// Bedeutung über das umgebende Element/Tooltip vermittelt, unverändert
+// aus der bisherigen ⚠-Konvention) - an Stellen mit sichtbarem
+// Begleittext (z. B. "σ Unsicherheiten anzeigen") liefert bereits der
+// Text selbst eine zugängliche Bezeichnung, dort wird diese Konstante
+// nicht zusätzlich gebraucht.
+export const UNSICHERHEIT_SYMBOL = 'σ';
+export const UNSICHERHEIT_SYMBOL_LABEL = 'Unsicherheit';
+
 export const CAT_COLORS = {
   'Bevölkerung': '#952323',
   'Bildung und Erziehung': '#da8f62',

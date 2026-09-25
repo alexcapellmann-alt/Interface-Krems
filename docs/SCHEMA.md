@@ -282,6 +282,7 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `inventar` | `verlassenschaftsinventare.csv` | `id` |
 | `bestand` | `bestandsverzeichnis.csv` | `kuerzel` |
 | `person` | `personenliste.csv` | `personen_id` |
+| `familie` | `familien.csv` (Habsburg-Stammbaum) | `id` |
 | `bild` | Bildpfad | – |
 
 **Unsicherheit:** bei datenbasierten Belegen (alle Präfixe außer `bild`) übernimmt die künftige Darstellung (Teil 2) die `_unsicher`-Felder/`unsicherheit_anmerkung` DIREKT aus der jeweiligen Quell-CSV der referenzierten ID - `unsicherheit_hinweis` in `fuehrungen.csv` ist ein davon UNABHÄNGIGER, zusätzlicher redaktioneller Text (z. B. eine Einordnung, warum eine Station gerade wegen der Unsicherheit erzählenswert ist), kein Ersatz.

@@ -17,6 +17,7 @@
 // zugehörigen Handgriffe zurück.
 
 import { toggleUnsicherheitModus, getZustand } from './state.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 export function erzeugeUnsicherheitsButton(container, { onToggle } = {}) {
   container.innerHTML = '';
@@ -27,9 +28,13 @@ export function erzeugeUnsicherheitsButton(container, { onToggle } = {}) {
   button.style.minWidth = '44px';
   button.setAttribute('aria-pressed', 'false');
 
+  // AUFTRAG "Teil 2f", Punkt 1: σ-Präfix ergänzt (Auftrag wörtlich: "Alle
+  // Buttons 'Unsicherheiten anzeigen' erhalten σ vor der Beschriftung") -
+  // der sichtbare Begleittext liefert bereits die zugängliche Bezeichnung,
+  // keine zusätzliche aria-label nötig.
   function aktualisiereBeschriftung(aktiv) {
     button.setAttribute('aria-pressed', String(aktiv));
-    button.textContent = aktiv ? 'Unsicherheiten ausblenden' : 'Unsicherheiten anzeigen';
+    button.textContent = `${UNSICHERHEIT_SYMBOL} ${aktiv ? 'Unsicherheiten ausblenden' : 'Unsicherheiten anzeigen'}`;
   }
   aktualisiereBeschriftung(false);
 

@@ -38,13 +38,19 @@
 import { baueUrkundenDetailInhalt } from '../utils/sidebar.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { baueDatensatzLink, TYP_ANZEIGE } from '../utils/datensatzAufruf.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 // AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Linkbeschriftung je Belegtyp aus
 // der Freigabe (buergerbuch verlinkt wie person, siehe baueArchivLink()
 // unten). TYP_ANZEIGE (K1, Teil 2c) kommt zentral aus datensatzAufruf.js -
 // dieselbe Quelle wie die Quellenzeile unten, keine zweite Beschriftungs-
 // Stelle im Code.
-const LINKTEXT = { person: 'Alle Einträge zu dieser Person', buergerbuch: 'Alle Einträge zu dieser Person' };
+// AUFTRAG "Teil 2f", Punkt 2: "Im Stammbaum ansehen" (Auftrag wörtlich).
+const LINKTEXT = {
+  person: 'Alle Einträge zu dieser Person',
+  buergerbuch: 'Alle Einträge zu dieser Person',
+  familie: 'Im Stammbaum ansehen'
+};
 
 // K2 (Teil 2c): "JJJJ_MM_TT" (urkunde) oder "JJJJ-MM-TT" (buergerbuch) bzw.
 // ein reines Jahr (inventar/person) - MM/TT "00" oder fehlend heisst
@@ -103,11 +109,12 @@ function alsText(wert) {
 // (wirkte neben den amber `.fuehrung-fehler`-Pruefregel-Hinweisen wie ein
 // zweiter Fehler) - eigene, ruhige Darstellung NUR hier im Belegbereich der
 // Fuehrungen (Nicht-Ziel: Unsicherheitsdarstellung anderer Module
-// unveraendert, sidebar.js selbst nicht angefasst): eingeklappter ⚠-Button
-// statt fett/rot, Text erst nach Aufklappen sichtbar. Eigene, gedeckte
-// Warnfarbe (`--fuehrung-unsicher`, components.css) statt `--unsicher`
-// (rot, Fehlerkonvention) oder `--fuehrung-fehler` (amber, Pruefregeln) -
-// Unterscheidung zusaetzlich ueber Symbol (⚠ vs. "Fehler:") und
+// unveraendert, sidebar.js selbst nicht angefasst): eingeklappter σ-Button
+// (AUFTRAG "Teil 2f", Punkt 1: vormals ⚠, zentrale Konstante) statt
+// fett/rot, Text erst nach Aufklappen sichtbar. Eigene, gedeckte Warnfarbe
+// (`--fuehrung-unsicher`, components.css) statt `--unsicher` (rot,
+// Fehlerkonvention) oder `--fuehrung-fehler` (amber, Pruefregeln) -
+// Unterscheidung zusaetzlich ueber Symbol (σ vs. "Fehler:") und
 // Beschriftung ("Angaben unsicher" vs. "Fehler: ...").
 function baueUnsicherheitAbsatz(record, unsicherFelder) {
   const istUnsicher = unsicherFelder.some((f) => record[f]) || Boolean(alsText(record.unsicherheit_anmerkung).trim());
@@ -117,7 +124,10 @@ function baueUnsicherheitAbsatz(record, unsicherFelder) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'fuehrung-beleg-unsicher-btn';
-  btn.textContent = '⚠ Angaben unsicher';
+  // AUFTRAG "Teil 2f", Punkt 1: σ statt ⚠ (zentrale Konstante), sichtbarer
+  // Begleittext bleibt unverändert - liefert bereits die zugängliche
+  // Bezeichnung, keine zusätzliche aria-label nötig.
+  btn.textContent = `${UNSICHERHEIT_SYMBOL} Angaben unsicher`;
   btn.setAttribute('aria-expanded', 'false');
   const text = document.createElement('p');
   text.className = 'fuehrung-beleg-unsicher-text';
@@ -214,6 +224,36 @@ function bauePersonInhalt(r) {
   return wrapper;
 }
 
+// AUFTRAG "Teil 2f", Punkt 2: `familie`-Beleg (data/familien.csv, der
+// Habsburg-Stammbaum) - Name, Titel, Geburts-/Sterbedatum (bereits als
+// lesbarer Text in familien.csv hinterlegt, z. B. "9. September 1349 oder
+// 1350" - KEIN formatiereDatum() anwendbar, anderes Format als
+// urkunde/buergerbuch/inventar/person), Eltern und Ehepartner ALS NAMEN
+// (über die IDs aufgelöst, `familienKarte` kommt von fuehrungenDaten.js'
+// parseBeleg(), siehe dortiger Kommentar), Anmerkung.
+function ermittleFamilienNamen(rohIds, familienKarte) {
+  const ids = Array.isArray(rohIds) ? rohIds : (rohIds ? [rohIds] : []);
+  return ids.map((id) => familienKarte.get(id)?.name || id);
+}
+
+function baueFamilieInhalt(r, familienKarte) {
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(feld('Name', r.name));
+  if (r.titel) wrapper.appendChild(feld('Titel', r.titel));
+  if (r.geburtsdatum) wrapper.appendChild(feld('Geburtsdatum', r.geburtsdatum));
+  if (r.sterbedatum) wrapper.appendChild(feld('Sterbedatum', r.sterbedatum));
+  const eltern = ermittleFamilienNamen([r.vater_id, r.mutter_id].filter(Boolean), familienKarte);
+  if (eltern.length > 0) wrapper.appendChild(feld('Eltern', eltern.join('; ')));
+  const ehepartner = ermittleFamilienNamen(r.ehepartner_id, familienKarte);
+  if (ehepartner.length > 0) wrapper.appendChild(feld('Ehepartner', ehepartner.join('; ')));
+  if (r.anmerkung) wrapper.appendChild(feld('Anmerkung', r.anmerkung));
+  const hinweis = baueUnsicherheitAbsatz(r, [
+    'geburtsdatum_unsicher', 'sterbedatum_unsicher', 'ehepartner_id_unsicher', 'vater_id_unsicher', 'mutter_id_unsicher'
+  ]);
+  if (hinweis) wrapper.appendChild(hinweis);
+  return wrapper;
+}
+
 // Punkt 1 (siehe Dateikopf-Kommentar): eigener Flex-Wrapper um das <img> -
 // zentriert es innerhalb der verfügbaren Fläche, `object-fit:contain`
 // (components.css) sorgt für unverzerrte, vollständige Darstellung.
@@ -276,6 +316,9 @@ export function baueBelegBereich(beleg, bildText) {
     inventar: formatiereDatum(r.Jahr),
     bestand: r.zeitraum_text,
     person: formatiereDatum(r.erste_nennung)
+    // familie: bewusst kein Eintrag - Geburts-/Sterbedatum stehen als
+    // eigene Felder im Belegbereich (s.u.), nicht redundant in der
+    // Quellenzeile (Auftrag nennt dort nur "Stammbaum" als Bezeichnung).
   };
   bereich.appendChild(baueQuellenzeile(beleg, datumFelder[beleg.typ]));
 
@@ -285,6 +328,7 @@ export function baueBelegBereich(beleg, bildText) {
   else if (beleg.typ === 'inventar') scroll.appendChild(baueInventarInhalt(r));
   else if (beleg.typ === 'bestand') scroll.appendChild(baueBestandInhalt(r));
   else if (beleg.typ === 'person') scroll.appendChild(bauePersonInhalt(r));
+  else if (beleg.typ === 'familie') scroll.appendChild(baueFamilieInhalt(r, beleg.familienKarte));
   bereich.appendChild(scroll);
   return bereich;
 }

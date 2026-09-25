@@ -81,7 +81,7 @@ import { ladeFotos } from '../utils/fotoOrdner.js';
 import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
 import { setFilterEntity, getZustand, clearZielSignatur } from '../core/state.js';
-import { CAT_COLORS } from '../config/constants.js';
+import { CAT_COLORS, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { erzeugeFilterleiste } from '../utils/filterleiste.js';
@@ -110,7 +110,9 @@ const PRAEZISIONS_LABEL = {
   undatiert: 'kein Datum überliefert'
 };
 
-const WARN_SYMBOL = '⚠'; // dieselbe Konvention wie treemap.js/sunburst.js/icicle.js/circlePacking.js/ganttDiagramm.js
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 
 const SUCH_PLACEHOLDER = 'Suche in Signatur, Regest, Orten, Personen, Kategorien …';
 

@@ -342,6 +342,7 @@ import {
   baueBildschirmHinweis,
   fuegeBildschirmHinweisStyleEin
 } from '../utils/bildschirmHinweis.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 // Punkt 1 (4. Folgeauftrag): 20→13 (moderat verringert, siehe Dateikopf-
 // Kommentar - Gegengewicht zur nochmals größeren Schrift, Kästchen wirken
@@ -349,7 +350,9 @@ import {
 // (3. Folgeauftrag).
 const PIXEL_PRO_JAHR = 13;
 const RAND = { oben: 30, unten: 30, links: 56, rechts: 30 };
-const WARN_SYMBOL = '⚠';
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 const MAX_TIEFE = 25; // Sicherheitsgrenze gegen Datenfehler-Zyklen (Kreis hat 75 Personen, weit weniger Generationen).
 // Punkt 2 (4. Folgeauftrag): 11→24 (mehr als verdoppelt, Auftrag wörtlich
 // "mindestens verdoppeln") - ermittleTextbreite()/berechneKastenbreite()
@@ -954,10 +957,16 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
     .attr('fill', GOLD_FARBE)
     .attr('pointer-events', 'none');
 
+  // AUFTRAG "Teil 2f", Punkt 1: `aria-hidden` ergänzt (fehlte bisher, im
+  // Unterschied zu den sechs anderen Modulen mit demselben Icon-Muster) -
+  // reine Konsistenz-Ergänzung, keine Verhaltensänderung: `knotenGruppen`
+  // selbst trägt bereits ein eigenes `aria-label` (s.o.), das überschreibt
+  // die Vorlesereihenfolge ohnehin vollständig.
   knotenGruppen.filter((d) => unsicher(d)).append('text')
     .attr('class', 'familienbaum-warn-icon')
     .attr('x', kastenBreite / 2 - 10).attr('y', (d) => boxYTop(d) + 11)
     .attr('font-size', 11)
+    .attr('aria-hidden', 'true')
     .text(WARN_SYMBOL);
 
   // Kronen-Symbol - gefüllt für "aus eigenem Recht" (am Beginn des
@@ -993,6 +1002,15 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
   // aktualisiert, OHNE einen kompletten Neuaufbau auszulösen - siehe
   // Dateikopf-Kommentar.
   instanz.selektionen = { knoten: knotenGruppen, elternKindLinien: elternKindLinienSel, eheLinien: eheLinienSel };
+
+  // AUFTRAG "Teil 2f", Punkt 2: eine waehrend eines noch laufenden Aufbaus
+  // eingegangene oeffneDatensatz()-Anfrage (siehe dortiger Kommentar) jetzt
+  // nachholen - `instanz.selektionen` ist ab dieser Zeile gesetzt.
+  if (instanz.ausstehenderDatensatz) {
+    const ausstehendeId = instanz.ausstehenderDatensatz;
+    instanz.ausstehenderDatensatz = null;
+    oeffnePersonImBaum(ausstehendeId);
+  }
 
   knotenGruppen
     .on('mouseenter focus', function (event, d) {
@@ -1449,7 +1467,9 @@ export function render(container, data, options = {}) {
     // Punkt 3 (3. Folgeauftrag): siehe Dateikopf-Kommentar/aktualisiereHervorhebung().
     hoverFokusId: null,
     eingefrorenerFokusId: null,
-    selektionen: null
+    selektionen: null,
+    // AUFTRAG "Teil 2f", Punkt 2: siehe oeffneDatensatz()/oeffnePersonImBaum().
+    ausstehenderDatensatz: null
   };
 
   const wurzel = document.createElement('div');
@@ -1533,6 +1553,49 @@ export function destroy() {
   instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
+}
+
+// AUFTRAG "Teil 2f", Punkt 2: Kern der Oeffnen-Logik - nutzt EXAKT dieselbe
+// Logik wie ein Klick auf die Person (Auftrag woertlich): setzt
+// `eingefrorenerFokusId`, aktualisiert die Hervorhebung, oeffnet dasselbe
+// Popover - kein separater Hervorhebungs-Mechanismus. `instanz.selektionen.knoten`
+// ist dieselbe D3-Selektion, die auch der Klick-Handler oben durchsucht
+// (Datum je Knoten traegt `.id`/`.person`, siehe zeichneFamilienbaum()).
+function oeffnePersonImBaum(id) {
+  if (!instanz || !instanz.selektionen) return false;
+  const gefunden = instanz.selektionen.knoten.filter((d) => d.id === id);
+  if (gefunden.empty()) return false;
+  const d = gefunden.datum();
+  versteckeTooltip();
+  instanz.eingefrorenerFokusId = d.id;
+  aktualisiereHervorhebung();
+  zeigePersonenPopover(d.person, gefunden.node());
+  return true;
+}
+
+// Schmale Oeffnen-Funktion fuer den `familie`-Datensatzaufruf
+// (js/utils/datensatzAufruf.js' verarbeiteDatensatzAufruf()) - dasselbe
+// etablierte Muster wie zeitachse.js/parallelKoordinaten.js/treemap.js/
+// personenliste.js aus Teil 2b.
+//
+// SONDERFALL (live gefunden, siehe Selbstauskunft im Chat): bei einem
+// GANZ FRISCHEN Seitenaufruf direkt auf `?datensatz=familie:...` kann
+// `render()` seinen Aufbau gerade per `requestAnimationFrame` verzoegert
+// haben (Korrekturauftrag "Vier unabhaengige Korrekturen", Punkt 3 - dort
+// derselbe, absichtlich enge Zeitraum, in dem `window.innerWidth`/
+// `innerHeight` noch nicht bereitstehen). `verarbeiteDatensatzAufruf()`
+// ruft `oeffneDatensatz()` aber synchron GENAU EINMAL auf, ohne erneuten
+// Versuch - `instanz.selektionen` existiert in diesem engen Zeitfenster
+// noch nicht. Statt dann faelschlich "nicht gefunden" zu melden, merkt
+// sich diese Funktion die Anfrage auf `instanz.ausstehenderDatensatz` und
+// gibt optimistisch `true` zurueck - `zeichneFamilienbaum()` holt die
+// Anfrage oben (s.o.) nach, sobald `instanz.selektionen` steht.
+export function oeffneDatensatz(id) {
+  if (instanz && !instanz.selektionen) {
+    instanz.ausstehenderDatensatz = id;
+    return true;
+  }
+  return oeffnePersonImBaum(id);
 }
 
 // --- Styles ---

@@ -312,8 +312,9 @@
 .unsicherheit-hinweis-schliessen:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* KORREKTURAUFTRAG "Fuehrungen, Teil 2c", K3: Unsicherheit im Belegbereich -
-   eingeklappter ⚠-Button statt fett/rotem Absatz, eigene, ruhige Warnfarbe
-   (nicht `--unsicher`/`--fuehrung-fehler`, siehe :root-Kommentar oben). */
+   eingeklappter σ-Button (AUFTRAG "Teil 2f": vormals ⚠) statt fett/rotem
+   Absatz, eigene, ruhige Warnfarbe (nicht `--unsicher`/`--fuehrung-fehler`,
+   siehe :root-Kommentar oben). */
 .fuehrung-beleg-unsicher { margin-top: var(--space-2); }
 .fuehrung-beleg-unsicher-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px;
   padding: var(--space-1) var(--space-3); border: 1.5px solid var(--fuehrung-unsicher); border-radius: var(--radius);

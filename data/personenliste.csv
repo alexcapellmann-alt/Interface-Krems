@@ -2953,7 +2953,6 @@ paul_breuer;Paul Prewer;Bürgerbuch;1;1592;1592;0;;BB-2221;;buerger;;
 paul_brunn;Paul Brunn;Urkunden;1;1471;1471;0;StaAKr-0420;;;buerger;;
 paul_burger;Paul Burger;Urkunden;1;1486;1486;0;StaAKr-0500;;;buerger;;
 paul_dannrer;Paull Dannrer;Bürgerbuch;1;1565;1565;0;;BB-1076;;buerger;Hauer;
-paul_der_krautwurm;Paul der Krautwurm;Urkunden;1;1382;1382;0;StaAKr-0053;;;buerger;;
 paul_diendorffer;Pauln Diendorffer;Bürgerbuch;1;1568;1568;0;;BB-1226;;buerger;;
 paul_doernl;Paul Dörndl|Paul Dörnl;Urkunden;2;1516;1516;0;StaAKr-0586|StaAKr-0586a;;;buerger;;
 paul_eberwein;Paull Eberwein;Bürgerbuch;1;1565;1565;0;;BB-1063;;buerger;;
@@ -2968,7 +2967,7 @@ paul_holnhueber;Paul Holnhueber;Bürgerbuch;1;1584;1584;0;;BB-2021;;buerger;;
 paul_kampp_von_lengenfeld;Paul Kampp von Lengenfeld;Urkunden;1;1511;1511;0;StaAKr-0579;;;buerger;;
 paul_kochel;Paul Köchel;Bürgerbuch;1;1578;1578;0;;BB-1756;;buerger;;
 paul_kraudt;Paul Kraudt|Paul Kraut;Bürgerbuch;2;1574;1575;1;;BB-1487|BB-1574;;buerger;Schneider;
-paul_krautwurm;Paul Krautwurm;Urkunden;5;1359;1366;7;StaAKr-0033|StaAKr-0034|StaAKr-0037|StaAKr-0040|StaAKr-0042;;;buerger;;
+paul_krautwurm;Paul Krautwurm|Paul der Krautwurm;Urkunden;6;1359;1382;23;StaAKr-0033|StaAKr-0034|StaAKr-0037|StaAKr-0040|StaAKr-0042|StaAKr-0053;;;buerger;;Die Nennung von 1382 (StaAKr-0053) wird trotz eines Abstands von sechzehn Jahren zur vorherigen Nennung (1366) als dieselbe Person gewertet.
 paul_lauber;Paull Lauber;Bürgerbuch;1;1587;1587;0;;BB-2079;;buerger;Bäcker;
 paul_leittner;Paull Leittner;Bürgerbuch;1;1582;1582;0;;BB-1934;;buerger;;
 paul_lucas;Paul Lucas;Bürgerbuch;1;1551;1551;0;;BB-0428;;buerger;Ziegler;
