@@ -153,9 +153,11 @@ Unverändert gegenüber letzter Prüfung.
 | `Anteil Wertgegenstaende am RV (%)` | Zahl | nein | |
 | `Beruflicher Sonderbestand` | Text | nein | |
 | `Anteil Sonderbestand am RV (%)` | Zahl | nein | |
-| `unsicherheit_anmerkung` | Text | nein | neu ergänzt |
+| `personen_id` | Text | nein | neu (Auftrag "Teil 2h", Punkt 4b, 2026-09-25) – Verweis auf `personenliste.csv` (Abschnitt 8), für alle 68 Zeilen befüllt. Zwei Zeilenpaare teilen sich dieselbe `personen_id` (`VI-0024`/`VI-0028` = `bartholomaeus_eggartner`, `VI-0032`/`VI-0033` = `anna_catharina_schoenthanin_hievor_leutmanslehnerin`) – bestätigte Zweitinventarisierungen derselben Person (Dietrich 2025), siehe `unsicherheit_anmerkung` unten und PROJEKTLOG. |
+| `personen_id_unsicher` | ja/nein | – | neu (2026-09-25), analog zu `buergerbuch.csv`s Muster – aktuell für alle 68 Zeilen `nein`, auch für die beiden Zweitinventarisierungs-Paare (die Zuordnung selbst ist gesichert, nicht die Unsicherheit). |
+| `unsicherheit_anmerkung` | Text | nein | neu ergänzt (Spalte), inhaltlich seit 2026-09-25 für vier Zeilen befüllt (die beiden Zweitinventarisierungs-Paare) – Hinweistext dort unabhängig von `personen_id_unsicher` (s. o.), löst trotzdem `baueUnsicherheitAbsatz()`s generische "Angaben unsicher"-Anzeige aus (die Komponente kennzeichnet jede befüllte `unsicherheit_anmerkung` so, unabhängig vom Grund - bewusst in Kauf genommen statt eines Sonderfalls im Code, siehe PROJEKTLOG). |
 
-**Weiterhin offen:** Spaltennamen mit Leerzeichen/Klammern/Prozentzeichen noch nicht bereinigt. Kein `_unsicher`-Flag vorhanden (nur die Anmerkungs-Spalte) – nach der gelockerten Mindestfelder-Regel (v3.8) kein Muss mehr, aber zu prüfen, ob ein Flag trotzdem sinnvoll wäre.
+**Weiterhin offen:** Spaltennamen mit Leerzeichen/Klammern/Prozentzeichen noch nicht bereinigt.
 
 ---
 
@@ -204,7 +206,7 @@ Unverändert gegenüber letzter Prüfung.
 
 ## 8. personenliste.csv (neu, aus personenliste.xlsx, Sheet Personenliste)
 
-4179 Einträge (4111 aus Urkunden/Bürgerbuch + 68 aus `verlassenschaftsinventare.csv`, seit Auftrag "Familienbaum-Regression beheben + Personenliste umfassend erweitern", 2026-09-21). Zusammengeführtes Personenregister – verknüpft Nennungen aus Urkunden, Bürgerbuch UND Verlassenschaftsinventaren über eine gemeinsame, normierte `personen_id`. Löst das Problem mehrdeutiger Namensschreibweisen (vgl. die früher besprochenen 8 Namensüberschneidungen). **Wichtig:** Namensgleichheit über die drei Quellen hinweg wird NICHT automatisch verschmolzen – unabhängige Quellen ohne geprüfte Identität bekommen eigene Zeilen (z. B. gibt es sowohl `matthias_schmidt` als auch `matthias_schmidt_2`).
+4176 Einträge (4110 aus Urkunden/Bürgerbuch + 66 aus `verlassenschaftsinventare.csv`, seit Auftrag "Familienbaum-Regression beheben + Personenliste umfassend erweitern", 2026-09-21 - ursprünglich 68 Verlassenschaftsinventar-Zeilen, davon zwei Paare am 2026-09-25 zu je einer Zeile zusammengelegt, siehe `nennung_in_verlassenschaften` unten und PROJEKTLOG "Teil 2h", Punkt 4b). Zusammengeführtes Personenregister – verknüpft Nennungen aus Urkunden, Bürgerbuch UND Verlassenschaftsinventaren über eine gemeinsame, normierte `personen_id`. Löst das Problem mehrdeutiger Namensschreibweisen (vgl. die früher besprochenen 8 Namensüberschneidungen). **Wichtig:** Namensgleichheit über die drei Quellen hinweg wird weiterhin NICHT automatisch verschmolzen – unabhängige Quellen ohne geprüfte Identität bekommen eigene Zeilen (z. B. gibt es sowohl `matthias_schmidt` als auch `matthias_schmidt_2`). Eine Zusammenlegung erfolgt nur bei geprüfter Identität INNERHALB derselben Quelle (die beiden Zweitinventarisierungs-Paare, s. o.).
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
@@ -216,7 +218,7 @@ Unverändert gegenüber letzter Prüfung.
 | `nennungsspanne_jahre` | Zahl | nein | berechenbar aus erste/letzte Nennung – zu prüfen, ob Rohwert oder Ableitung im DataLoader sinnvoller ist (DRY) |
 | `nennung_in_urkunden` | Text/Liste (Pipe-getrennt) | nein | Signatur(en) aus `urkunden.csv` – Format geklärt: leer bei `quelle` ≠ Urkunden |
 | `nennung_in_buergerbuch` | Text/Liste (Pipe-getrennt) | nein | `id`(s) aus `buergerbuch.csv` – Format geklärt: leer bei `quelle` ≠ Bürgerbuch |
-| `nennung_in_verlassenschaften` | Text | nein | neu (2026-09-21): `id` aus `verlassenschaftsinventare.csv` (z. B. `VI-0004`), analog zu den beiden Feldern oben – leer bei `quelle` ≠ Verlassenschaftsinventare |
+| `nennung_in_verlassenschaften` | Text/Liste (Pipe-getrennt) | nein | neu (2026-09-21): `id`(s) aus `verlassenschaftsinventare.csv` (z. B. `VI-0004`), analog zu den beiden Feldern oben – leer bei `quelle` ≠ Verlassenschaftsinventare. Seit 2026-09-25 bei den beiden zusammengelegten Zweitinventarisierungs-Personen eine Pipe-Liste (`VI-0024\|VI-0028`, `VI-0032\|VI-0033`), sonst weiterhin genau eine ID. |
 | `soziale_gruppe` | Text (Enum) | nein | neu (2026-09-21): `dynastie`/`adel`/`klerus`/`buerger`, dieselbe Klassifikationslogik wie `chordDiagramm.js`' `ermittleGruppe()` (Priorität Dynastie→Klerus→Adel→Bürgertum, über `personen_id`/`schreibweisen` angewandt) – als Klartext-Spalte materialisiert, nicht nur Laufzeit-Berechnung. Keine belegte historische Klassifikation, sondern eine Näherung (siehe Chord-Diagramm-Info-Text). |
 | `beruf` | Text | nein | neu (2026-09-21): bei `quelle`=Bürgerbuch direkter Pull aus `buergerbuch.Beruf` (über `nennung_in_buergerbuch` aufgelöst, bei mehreren verknüpften Einträgen der erste mit befülltem Wert), bei `quelle`=Verlassenschaftsinventare direkter Pull aus `verlassenschaftsinventare.Beruf`, bei `quelle`=Urkunden durchgehend leer (keine systematisch extrahierbaren Berufsangaben im Personenfeld) |
 | `unsicherheit_anmerkung` | Text | nein | |

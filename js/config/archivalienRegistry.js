@@ -321,7 +321,10 @@ export const ARCHIVALIENTYPEN = [
     // tatsächlichen Urkunden/Bürgerbuch-Einträgen") - personenliste.js löst
     // `nennung_in_buergerbuch` jetzt gegen `buergerbuch.csv`s `id` auf,
     // braucht dafür diese vierte Quelle.
-    datenDatei: { familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv' },
+    // `verlassenschaften` NEU (AUFTRAG "Teil 2h", Punkt 4b) - personenliste.js
+    // löst `nennung_in_verlassenschaften` jetzt ebenso gegen
+    // `verlassenschaftsinventare.csv`s `id` auf, fünfte Quelle.
+    datenDatei: { familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv' },
     primaeransicht: 'personenliste',
     // FOLGEAUFTRAG "Galerie+Flyout für Bürgerbuch und Personen": `hatGalerie`
     // + `beschreibung` wie bei buergerbuch oben. Zwei Abweichungen vom

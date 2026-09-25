@@ -39,7 +39,7 @@ import { baueUrkundenDetailInhalt } from '../utils/sidebar.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { baueDatensatzLink, TYP_ANZEIGE } from '../utils/datensatzAufruf.js';
 import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
-import { baueVerlinkteNamen, baueGenanntePersonenZeile } from '../utils/genanntePersonen.js';
+import { baueVerlinkteNamen } from '../utils/genanntePersonen.js';
 
 // AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Linkbeschriftung je Belegtyp aus
 // der Freigabe (buergerbuch verlinkt wie person, siehe baueArchivLink()
@@ -190,9 +190,18 @@ function baueBuergerbuchInhalt(r, personenKarte) {
   return wrapper;
 }
 
+// AUFTRAG "Teil 2h", Punkt 4b: Name verlinkt zur Personenliste, sobald
+// `personen_id` vorliegt - analog zu baueBuergerbuchInhalt()'s Name-Feld.
+// personen_id_unsicher wird hier NICHT extra angezeigt (kein `_unsicher`-
+// Symbol neben dem Namen wie bei urkunde/buergerbuch): aktuell (Stand
+// Punkt 4b) ist bei allen 68 Inventaren personen_id_unsicher "nein", ein
+// eigenes Unsicher-Symbol für dieses Feld wäre unbelegter Vorgriff.
 function baueInventarInhalt(r) {
   const wrapper = document.createElement('div');
-  wrapper.append(feld('Name', r.Name), feld('Jahr', formatiereDatum(r.Jahr)));
+  wrapper.append(
+    feldMitKnoten('Name', baueVerlinkteNamen([{ name: r.Name, id: r.personen_id }])),
+    feld('Jahr', formatiereDatum(r.Jahr))
+  );
   if (r['Beruf/Funktion/Stand']) wrapper.appendChild(feld('Beruf/Funktion/Stand', r['Beruf/Funktion/Stand']));
   if (r.Vermoegensgruppe) wrapper.appendChild(feld('Vermögensgruppe', r.Vermoegensgruppe));
   const hinweis = baueUnsicherheitAbsatz(r, []);
@@ -334,19 +343,12 @@ export function baueBelegBereich(beleg, bildText) {
 
   const scroll = baueScrollWrapper();
   if (beleg.typ === 'urkunde') {
+    // AUFTRAG "Teil 2i": die vormals hier zusätzlich gebaute "Genannte
+    // Personen"-Zeile entfernt - baueUrkundenDetailInhalt() (sidebar.js)
+    // liefert die verlinkte Personenzeile seit Teil 2h bereits selbst, eine
+    // zweite Zeile daneben war redundant (Auftrag "Teil 2g", Punkt 4, ging
+    // noch von einer unveränderten sidebar.js ohne eigene Verlinkung aus).
     scroll.appendChild(baueUrkundenDetailInhalt(r));
-    // AUFTRAG "Teil 2g", Punkt 4: "Genannte Personen" als EIGENE Zeile UNTER
-    // dem von sidebar.js wiederverwendeten Regest-Block (Nicht-Ziel: sidebar.js
-    // selbst bleibt unveraendert, siehe dessen eigenes "Personen"-Feld dort) -
-    // `personen`/`personen_id` sind index-parallele Listen (SCHEMA.md), anders
-    // als bei buergerbuch's `Buergen`/`buergen_id` (siehe dort) direkt zippbar.
-    const namen = Array.isArray(r.personen) ? r.personen : (r.personen ? [r.personen] : []);
-    const ids = Array.isArray(r.personen_id) ? r.personen_id : (r.personen_id ? [r.personen_id] : []);
-    const personenZeile = baueGenanntePersonenZeile(
-      namen.map((name, i) => ({ name, id: ids[i] || null })),
-      { unsicher: !!r.personen_unsicher }
-    );
-    if (personenZeile) scroll.appendChild(personenZeile);
   } else if (beleg.typ === 'buergerbuch') scroll.appendChild(baueBuergerbuchInhalt(r, beleg.personenKarte));
   else if (beleg.typ === 'inventar') scroll.appendChild(baueInventarInhalt(r));
   else if (beleg.typ === 'bestand') scroll.appendChild(baueBestandInhalt(r));
