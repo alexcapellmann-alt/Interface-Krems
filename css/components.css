@@ -138,6 +138,43 @@
      Unterscheidung nicht mehr gegeben. */
   --fuehrung-unsicher: #8a6d1f;
   --fuehrung-unsicher-bg: #fdf6e3;
+
+  /* AUFTRAG "Teil 2g", Punkt 2: eigene "Bühnen"-Farbpalette für die
+     Präsentationsgestaltung der Führungen (Stationen + Abschlussbildschirm,
+     NICHT die Galerie/Hauptnavigation - beide bleiben unverändert, siehe
+     .fuehrung-station-Regel unten für den genauen Geltungsbereich). Alle
+     Kontrastwerte gegen --fuehrung-buehne-bg per WCAG-Formel geprüft (siehe
+     PROJEKTLOG für die vollständige Tabelle) - Text/Icon-Paare ≥4,5:1
+     (WCAG 1.4.3), Bedienelement-Paare ≥3:1 (WCAG 1.4.11):
+       Text (--fuehrung-buehne-text)              14,41:1
+       Text, gedämpft (--fuehrung-buehne-text-muted) 10,57:1
+       Akzent/Button-Fläche (--fuehrung-buehne-akzent) 7,06:1
+       Button-Text auf Akzent-Fläche                8,11:1
+       Akzent hell/Hover                             9,30:1
+       Unsicher-Text (σ, gedeckt)                    9,26:1
+       Prüfhinweis-Text (Fehler, amber)              9,47:1
+       Entwurf-Kennzeichnung (Fläche)                 5,91:1
+       Entwurf-Kennzeichnung (Text auf Fläche)        6,89:1
+       "Was wir nicht wissen"-Rot (aufgehellt)        8,13:1
+     Randlinie (--fuehrung-buehne-border, 1,80:1) und die reguläre
+     Entwurf-Kennzeichnung der GALERIE (--accent, dort unverändert, nur zur
+     Referenz 1,78:1 gegen die NEUE Bühnenfarbe - kommt dort aber gar nicht
+     vor) sind rein dekorativ/nicht die einzige Information (Trennlinie
+     bzw. zusätzlich beschrifteter Text) und deshalb ohne WCAG-Pflichtwert. */
+  --fuehrung-buehne-bg: #17222c;
+  --fuehrung-buehne-text: #f4f2ec;
+  --fuehrung-buehne-text-muted: #cbd2d9;
+  --fuehrung-buehne-border: #4a5c6e;
+  --fuehrung-buehne-akzent: #7fb0e0;
+  --fuehrung-buehne-akzent-hover: #a3c9ea;
+  --fuehrung-buehne-akzent-text: #0d141b;
+  --fuehrung-buehne-unsicher: #e3c15c;
+  --fuehrung-buehne-unsicher-bg: rgba(227, 193, 92, .14);
+  --fuehrung-buehne-fehler: #ffb86b;
+  --fuehrung-buehne-fehler-bg: rgba(255, 184, 107, .14);
+  --fuehrung-buehne-entwurf-bg: #c9932f;
+  --fuehrung-buehne-entwurf-text: #191006;
+  --fuehrung-buehne-hinweis: #ff9e95;
 }
 
 /* Galerie (Punkt 3) - dieselbe Kachel-/Raster-Optik wie
@@ -163,30 +200,51 @@
 
 /* Fehlermarkierung (Punkt 2, Auftrag wörtlich: "muss sich optisch klar von
    der Unsicherheitskennzeichnung unterscheiden") - eigene Amber-Farbe/
-   gestrichelter Rahmen statt der roten Unsicherheits-Konvention
-   (`--unsicher`, siehe sidebar.js' `.bestand-sidebar-unsicher`). */
+   gestrichelter Rahmen statt der roten Unsicherheits-Konvention. AUFTRAG
+   "Teil 2g", Punkt 2: die Basis-Regel gilt jetzt fuer die (haeufigeren)
+   Vorkommen auf der dunklen Buehne (Kopfbereich/Erzaehltext/Vertiefung,
+   siehe fuehrungStation.js/fuehrungAbschluss.js) - der EINE verbleibende
+   Fall INNERHALB des hellen Belegbereichs (ungueltiger Beleg) bekommt weiter
+   unten eine eigene, hellere Ueberschreibung (`.fuehrung-beleg .fuehrung-fehler`). */
 .fuehrung-fehler { margin: 0 0 var(--space-2) 0; padding: var(--space-2) var(--space-3);
-  border: 2px dashed var(--fuehrung-fehler); border-radius: var(--radius);
-  background: var(--fuehrung-fehler-bg); color: var(--fuehrung-fehler); font-size: var(--fs-sm); }
+  border: 2px dashed var(--fuehrung-buehne-fehler); border-radius: var(--radius);
+  background: var(--fuehrung-buehne-fehler-bg); color: var(--fuehrung-buehne-fehler); font-size: var(--fs-sm); }
 .fuehrung-fehler::before { content: "Fehler: "; font-weight: 700; }
+/* Heller Belegbereich (s.u.) bleibt bei der urspruenglichen, helltauglichen
+   Amber-Variante - einzige verbleibende Stelle, an der ein Beleg selbst
+   ungueltig ist (ID nicht gefunden). */
+.fuehrung-beleg .fuehrung-fehler { border-color: var(--fuehrung-fehler); background: var(--fuehrung-fehler-bg); color: var(--fuehrung-fehler); }
 
 /* Stationsansicht (Punkt 4, überarbeitet in Teil 2a-K Punkt 1/2 für
    bildschirmfüllendes Layout - siehe fuehrungStation.js' Dateikopf-
    Kommentar für die volle Begründung der Flex-Höhenverteilung). Diese
-   Regeln betreffen AUSSCHLIESSLICH `.fuehrung-*`-Klassen, keine anderen Tabs. */
-.fuehrung-station { display: flex; flex: 1 1 auto; min-height: 0; gap: var(--space-3); }
+   Regeln betreffen AUSSCHLIESSLICH `.fuehrung-*`-Klassen, keine anderen Tabs.
+   AUFTRAG "Teil 2g", Punkt 2: `.fuehrung-station` traegt jetzt den
+   dunklen Buehnenhintergrund - gilt fuer BEIDE Nutzer dieser Klasse
+   (fuehrungStation.js UND fuehrungAbschluss.js, identischer Wurzel-Aufbau),
+   NICHT fuer die Galerie (eigene Klasse `.fuehrungen-galerie-raster`,
+   unberuehrt) oder die App-Hauptnavigation (ausserhalb dieses Elements). */
+.fuehrung-station { display: flex; flex: 1 1 auto; min-height: 0; gap: var(--space-3);
+  background: var(--fuehrung-buehne-bg); color: var(--fuehrung-buehne-text);
+  padding: var(--space-4); border-radius: var(--radius); }
 .fuehrung-station-haupt { flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 
 .fuehrung-station-kopf { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: baseline;
   column-gap: var(--space-3); row-gap: var(--space-1); margin-bottom: var(--space-2);
-  padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
-.fuehrung-station-zurueck { color: var(--accent); font-size: var(--fs-sm); }
-.fuehrung-station-fuehrungstitel { font-size: var(--fs-sm); color: var(--text-muted); }
-.fuehrung-station-titel { margin: 0; font-size: var(--fs-lg); }
+  padding-bottom: var(--space-2); border-bottom: 1px solid var(--fuehrung-buehne-border); }
+.fuehrung-station-zurueck { color: var(--fuehrung-buehne-akzent); font-size: var(--fs-sm); }
+.fuehrung-station-fuehrungstitel { font-size: var(--fs-sm); color: var(--fuehrung-buehne-text-muted); }
+.fuehrung-station-titel { margin: 0; font-size: var(--fs-lg); color: var(--fuehrung-buehne-text); }
 .fuehrung-station-titel:focus { outline: none; }
-.fuehrung-station-titel:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.fuehrung-station-meta { color: var(--text-muted); font-size: var(--fs-sm); }
+.fuehrung-station-titel:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: 2px; }
+.fuehrung-station-meta { color: var(--fuehrung-buehne-text-muted); font-size: var(--fs-sm); }
 .fuehrung-station-kopf .fuehrung-fehler { flex-basis: 100%; margin: var(--space-1) 0 0 0; }
+/* Punkt 2 (Auftrag wörtlich, "Entwurfskennzeichnung ... auf dunklem Grund"):
+   `.fuehrung-kachel-entwurf` ist auch die Entwurfs-Markierung der (hellen,
+   unveraenderten) Galerie-Kachel - eigene, spezifischere Ueberschreibung
+   NUR im dunklen Kopfbereich der Station/des Abschlussbildschirms, damit
+   die Galerie selbst unangetastet bleibt. */
+.fuehrung-station-kopf .fuehrung-kachel-entwurf { background: var(--fuehrung-buehne-entwurf-bg); color: var(--fuehrung-buehne-entwurf-text); }
 
 .fuehrung-station-inhalt { flex: 1 1 auto; min-height: 0; display: grid;
   grid-template-columns: var(--fuehrung-beleg-breite) var(--fuehrung-text-breite);
@@ -210,8 +268,14 @@
    Quellenzeile/Fehlerbox bleiben fest sichtbar, NUR `.fuehrung-beleg-scroll`
    (der eigentliche, potenziell lange Inhalt) bekommt die Höhenbegrenzung
    und scrollt bei Bedarf intern. */
+/* AUFTRAG "Teil 2g", Punkt 2 (Auftrag wörtlich: "Der Belegbereich bleibt
+   hell, wie ein Dokument auf einer dunklen Bühne") - bewusst UNVERÄNDERTE
+   helle Farben (`--bg`/`--border`/`--text-muted`, wie vor diesem Auftrag),
+   nur ein zusätzlicher Schatten hebt die "Dokument auf Bühne"-Wirkung
+   gegen den jetzt dunklen `.fuehrung-station`-Hintergrund hervor. */
 .fuehrung-beleg { display: flex; flex-direction: column; min-height: 0; padding: var(--space-3);
-  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .35); }
 .fuehrung-beleg::before { content: "Quelle"; flex: 0 0 auto; display: block; font-size: var(--fs-sm); font-weight: 700;
   color: var(--text-muted); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: .04em; }
 .fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--text-muted); }
@@ -233,12 +297,37 @@
 .fuehrung-beleg-bildunterschrift { flex: 0 0 auto; margin: var(--space-2) 0 0 0; font-size: var(--fs-sm); color: var(--text-muted); }
 
 /* Punkt 1: derselbe Scroll-Rückfall wie `.fuehrung-beleg-scroll` oben, für
-   einen ausnahmsweise zu langen Erzähltext. */
+   einen ausnahmsweise zu langen Erzähltext.
+   AUFTRAG "Teil 2g", Punkt 2/3: heller Text auf dunklem Grund, etwas
+   größere Schrift ("etwas größere Schrift als bisher", Auftrag wörtlich) -
+   `--fuehrung-text-min-ch`/`-max-ch` bleiben UNVERÄNDERT in `ch`-Einheiten,
+   die automatisch mit der Schriftgröße mitskalieren (1ch = Breite der "0"
+   in der aktuellen Schriftgröße) - die Zeilenlänge bleibt dadurch weiterhin
+   bei 45-85 Zeichen, ohne die Variablen selbst anzufassen. */
 .fuehrung-erzaehltext { min-height: 0; overflow-y: auto; max-width: var(--fuehrung-text-max-ch);
-  min-width: min(100%, var(--fuehrung-text-min-ch)); }
-.fuehrung-erzaehltext:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  min-width: min(100%, var(--fuehrung-text-min-ch)); color: var(--fuehrung-buehne-text); font-size: var(--fs-lg); }
+.fuehrung-erzaehltext:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: -3px; }
 .fuehrung-erzaehltext p { margin: 0 0 var(--space-3) 0; }
 .fuehrung-erzaehltext ul { margin: 0 0 var(--space-3) 0; padding-left: 1.25em; }
+/* AUFTRAG "Teil 2g", Punkt 2: Basis-Regel `a { color: var(--accent) }`
+   (css/base.css) wäre auf der dunklen Bühne zu dunkel (2,97:1, siehe
+   :root-Kommentar) - deckt insbesondere die klassenlosen "Zum
+   Weiterlesen"-Literaturlinks im Abschlussbildschirm ab (fuehrungAbschluss.js'
+   baueWeiterlesen()), die sonst keine eigene Klasse tragen. */
+.fuehrung-erzaehltext a { color: var(--fuehrung-buehne-akzent); }
+.fuehrung-erzaehltext a:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: 2px; }
+/* Punkt 3 (Auftrag wörtlich: "Der Textblock steht vertikal mittig in
+   seiner Spalte", gilt gleichermaßen für die Vergleichsstation und
+   Stationen ohne Beleg, da alle dieselbe `.fuehrung-erzaehltext`-Klasse
+   nutzen): `.fuehrung-erzaehltext` selbst bleibt der scrollbare Rahmen
+   (Höhe kommt vom Grid/Flex-Elternelement, `overflow-y:auto` s.o.) - die
+   eigentliche Zentrierung übernimmt dieser INNERE Wrapper
+   (`min-height:100%` + Flex-`justify-content:center`), den
+   fuehrungStation.js/fuehrungAbschluss.js jetzt um ihren Inhalt legen.
+   Passt Inhalt in die verfügbare Höhe, zentriert er sich; ist er länger
+   (Scroll-Rückfall), wächst der Wrapper über 100% hinaus und beginnt wie
+   gewohnt oben - kein "in der Mitte abgeschnittener" Einstiegszustand. */
+.fuehrung-erzaehltext-mitte { min-height: 100%; display: flex; flex-direction: column; justify-content: center; }
 
 /* Navigation (Punkt 2, Teil 2a-K): vertikale Säule am rechten Rand der
    GESAMTEN Station (echtes Flex-Geschwister von `.fuehrung-station-haupt`,
@@ -247,22 +336,36 @@
    Stationshöhe -> Pfeil-hoch/Fortschritt/Pfeil-runter stehen dadurch auf
    JEDER Station an derselben Pixel-Position (Folge von Punkt 1, siehe
    fuehrungStation.js). Gefüllte Akzentfarbe + 48px Mindestgröße (Auftrag
-   wörtlich) statt der vorherigen, schwer erkennbaren Rahmen-Buttons. */
+   wörtlich) statt der vorherigen, schwer erkennbaren Rahmen-Buttons.
+   AUFTRAG "Teil 2g", Punkt 3 (Auftrag wörtlich: "▲, Fortschrittsanzeige...
+   und ▼ rücken zu einer kompakten Gruppe zusammen, statt über die volle
+   Höhe verteilt zu sein... Die Gruppe steht vertikal mittig"): EINZIGE
+   Änderung ist `justify-content` von `space-between` auf `center` - die
+   Säule selbst füllt weiterhin die komplette, gemessene Stationshöhe
+   (unverändert aus 2a-K), wodurch die jetzt mittig gruppierten drei
+   Elemente automatisch auf JEDER Station (und dem Abschlussbildschirm,
+   dieselbe Klasse) an identischer Pixel-Position stehen - keine weitere
+   Positionierungslogik nötig. */
 .fuehrung-nav { flex: 0 0 var(--fuehrung-nav-breite); display: flex; flex-direction: column;
-  align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) 0; }
+  align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-1) 0; }
 .fuehrung-nav-pfeil { flex: 0 0 auto; width: var(--fuehrung-nav-btn-groesse); height: var(--fuehrung-nav-btn-groesse);
   display: flex; align-items: center; justify-content: center; border: none; border-radius: var(--radius);
-  background: var(--accent); color: #fff; font-size: var(--fs-xl); line-height: 1; cursor: pointer; text-decoration: none; }
-.fuehrung-nav-pfeil:hover:not(:disabled) { background: var(--accent-hover); }
-.fuehrung-nav-pfeil:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  background: var(--fuehrung-buehne-akzent); color: var(--fuehrung-buehne-akzent-text); font-size: var(--fs-xl);
+  line-height: 1; cursor: pointer; text-decoration: none; }
+.fuehrung-nav-pfeil:hover:not(:disabled) { background: var(--fuehrung-buehne-akzent-hover); }
+.fuehrung-nav-pfeil:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: 3px; }
 /* Deaktiviert (Punkt 2, Auftrag wörtlich "klar unterscheidbar, aber
    sichtbar"): heller Fond statt Akzentfarbe, aber weiterhin ein deutlich
    sichtbarer Rahmen (>=3:1 Kontrast zum umgebenden Seitenhintergrund,
-   WCAG 1.4.11) statt reiner Opazitätsreduktion, die auf dem hellen
-   Seitenhintergrund kaum noch erkennbar gewesen wäre. */
-.fuehrung-nav-pfeil:disabled { background: var(--surface); color: var(--text-muted); border: 1.5px solid var(--text-muted); cursor: default; }
-.fuehrung-nav-fortschritt { flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
-  font-weight: 600; color: var(--text-muted); font-size: var(--fs-sm); text-align: center; }
+   WCAG 1.4.11) statt reiner Opazitätsreduktion - AUFTRAG "Teil 2g": Fond/
+   Rahmen jetzt gegen die dunkle Bühne geprüft (`--fuehrung-buehne-bg`
+   selbst als "heller Fond" wäre dort unsichtbar, deshalb bleibt der Rahmen
+   die tragende Kontrast-Information, `--fuehrung-buehne-text-muted`
+   10,57:1 gegen die Bühne). */
+.fuehrung-nav-pfeil:disabled { background: var(--fuehrung-buehne-bg); color: var(--fuehrung-buehne-text-muted);
+  border: 1.5px solid var(--fuehrung-buehne-text-muted); cursor: default; }
+.fuehrung-nav-fortschritt { flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; color: var(--fuehrung-buehne-text-muted); font-size: var(--fs-sm); text-align: center; }
 .fuehrung-nav-uebersicht { width: var(--fuehrung-nav-breite); height: auto; min-height: var(--fuehrung-nav-btn-groesse);
   padding: var(--space-1); font-size: var(--fs-sm); line-height: 1.15; text-align: center; }
 
@@ -288,55 +391,86 @@
   .fuehrung-beleg { min-height: auto; }
   .fuehrung-beleg-scroll { overflow-y: visible; }
   .fuehrung-erzaehltext { overflow-y: visible; }
+  /* AUFTRAG "Teil 2g", Punkt 3 (Auftrag wörtlich: "Mobil bleibt die untere
+     Navigationsleiste wie bisher") - gemeint ist das LAYOUT (volle Breite,
+     sticky am unteren Rand, Zeilen- statt Spaltenanordnung), unverändert
+     seit 2a-K. Die Farben folgen wie der Rest der Station der neuen dunklen
+     Bühne (Punkt 2) - `--surface`/`--border` (hell) wären gegen die jetzt
+     dunkle `.fuehrung-station` inkonsistent. */
   .fuehrung-nav { flex: 0 0 auto; flex-direction: row; width: 100%;
-    position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--border);
+    position: sticky; bottom: 0; background: var(--fuehrung-buehne-bg); border-top: 1px solid var(--fuehrung-buehne-border);
     padding: var(--space-2) var(--space-3); margin-top: var(--space-3); }
   .fuehrung-nav-uebersicht { width: auto; flex: 1 1 auto; margin: 0 var(--space-2); }
 }
 
 /* Unsicherheitshinweis (Punkt 5) - bewusst optisch vom blauen Info-Button
-   unterschieden (eigene Farbe/Icon-Text statt "i"-Kreis). */
+   unterschieden (eigene Farbe/Icon-Text statt "i"-Kreis). AUFTRAG "Teil 2g",
+   Punkt 2: dieser Baustein (js/utils/unsicherheitHinweis.js) wird
+   AUSSCHLIESSLICH innerhalb von `.fuehrung-erzaehltext` verwendet (geprüft,
+   0 weitere Fundstellen im Projekt) - direkt dunkel-tauglich eingefärbt statt
+   gescopt, da kein zweiter (heller) Einsatzort existiert. Aufgehelltes Rot
+   (`--fuehrung-buehne-hinweis`, 8,13:1 gegen die Bühne) statt des app-weiten
+   `--unsicher` (2,97:1 dort, nicht ausreichend), bleibt aber bewusst weiter
+   ROT (nicht σ-Gelb/Amber) - eigene Bedeutung "redaktionelle Einordnung",
+   keine Verwechslung mit der σ-Konvention gewollt. */
 .unsicherheit-hinweis-wrapper { position: relative; display: inline-block; margin-top: var(--space-2); }
 .unsicherheit-hinweis-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px;
-  padding: var(--space-1) var(--space-3); border: 1.5px solid var(--unsicher, #c0392b); border-radius: var(--radius);
-  background: var(--surface); color: var(--unsicher, #c0392b); font-weight: 600; cursor: pointer; }
-.unsicherheit-hinweis-btn:hover { background: var(--bg); }
-.unsicherheit-hinweis-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  padding: var(--space-1) var(--space-3); border: 1.5px solid var(--fuehrung-buehne-hinweis); border-radius: var(--radius);
+  background: transparent; color: var(--fuehrung-buehne-hinweis); font-weight: 600; cursor: pointer; }
+.unsicherheit-hinweis-btn:hover { background: rgba(255, 158, 149, .12); }
+.unsicherheit-hinweis-btn:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: 2px; }
 .unsicherheit-hinweis-panel { position: absolute; z-index: 20; top: 100%; left: 0; margin-top: var(--space-1);
-  width: min(360px, 90vw); padding: var(--space-3); border: 1.5px solid var(--unsicher, #c0392b); border-radius: var(--radius);
-  background: var(--surface); box-shadow: var(--shadow); }
+  width: min(360px, 90vw); padding: var(--space-3); border: 1.5px solid var(--fuehrung-buehne-hinweis); border-radius: var(--radius);
+  background: var(--fuehrung-buehne-bg); color: var(--fuehrung-buehne-text); box-shadow: var(--shadow); }
 .unsicherheit-hinweis-panel p { margin: 0; padding-right: var(--space-4); }
 .unsicherheit-hinweis-panel:focus { outline: none; }
 .unsicherheit-hinweis-schliessen { position: absolute; top: var(--space-1); right: var(--space-1); min-width: 32px;
-  min-height: 32px; border: none; background: none; font-size: 1.25rem; line-height: 1; cursor: pointer; }
-.unsicherheit-hinweis-schliessen:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  min-height: 32px; border: none; background: none; color: var(--fuehrung-buehne-text); font-size: 1.25rem; line-height: 1; cursor: pointer; }
+.unsicherheit-hinweis-schliessen:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: 2px; }
 
-/* KORREKTURAUFTRAG "Fuehrungen, Teil 2c", K3: Unsicherheit im Belegbereich -
-   eingeklappter σ-Button (AUFTRAG "Teil 2f": vormals ⚠) statt fett/rotem
-   Absatz, eigene, ruhige Warnfarbe (nicht `--unsicher`/`--fuehrung-fehler`,
-   siehe :root-Kommentar oben). */
-.fuehrung-beleg-unsicher { margin-top: var(--space-2); }
-.fuehrung-beleg-unsicher-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px;
+/* AUFTRAG "Teil 2g", Punkt 1: EINE geteilte Komponente (js/utils/unsicherAbsatz.js)
+   fuer den eingeklappten "σ Angaben unsicher"-Hinweis - vormals lokal in
+   belegDarstellung.js als `.fuehrung-beleg-unsicher*` (K3, Teil 2c), jetzt
+   umbenannt und zusaetzlich von js/utils/sidebar.js/js/viz/personenliste.js
+   genutzt (ersetzt dort "Achtung: Angaben unsicher..." in Rot/Fett). Bewusst
+   IMMER die helle Variante (`--fuehrung-unsicher` amber, unveraendert) - alle
+   drei Einsatzorte (Belegbereich der Fuehrungen, Bestand-/Urkunden-Sidebar,
+   Personenliste) liegen auf hellem Grund, keine dunkle Zweitfassung noetig. */
+.unsicher-absatz { margin-top: var(--space-2); }
+.unsicher-absatz-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px;
   padding: var(--space-1) var(--space-3); border: 1.5px solid var(--fuehrung-unsicher); border-radius: var(--radius);
   background: var(--fuehrung-unsicher-bg); color: var(--fuehrung-unsicher); font-weight: 600; cursor: pointer; }
-.fuehrung-beleg-unsicher-btn:hover { background: var(--surface); }
-.fuehrung-beleg-unsicher-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.fuehrung-beleg-unsicher-text { margin: var(--space-2) 0 0 0; padding: var(--space-2) var(--space-3);
+.unsicher-absatz-btn:hover { background: var(--surface); }
+.unsicher-absatz-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.unsicher-absatz-text { margin: var(--space-2) 0 0 0; padding: var(--space-2) var(--space-3);
   border: 1px solid var(--fuehrung-unsicher); border-radius: var(--radius); background: var(--fuehrung-unsicher-bg);
   color: var(--text); font-size: var(--fs-sm); }
 
 /* AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Archiv-Link in der Quellenzeile -
    eigenes <a>, NICHT der ganze .fuehrung-beleg (siehe belegDarstellung.js'
-   Dateikopf-Kommentar zu baueQuellenzeile()). */
+   Dateikopf-Kommentar zu baueQuellenzeile()). Bleibt im HELLEN Belegbereich
+   (Punkt 2, Teil 2g) - unveraendert `--accent`. */
 .fuehrung-beleg-archivlink { color: var(--accent); font-weight: 600; }
 .fuehrung-beleg-archivlink:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+/* AUFTRAG "Teil 2g", Punkt 4/5: verlinkte Namen in der "Genannte Personen"-
+   Zeile (js/utils/genanntePersonen.js) - EINE gemeinsame Basis-Regel fuer
+   beide Nutzer (Fuehrungen-Belegbereich UND regestenKachelraster.js' Kachel,
+   Auftrag wörtlich "Wiederverwendung derselben Funktion") - beide liegen auf
+   hellem Grund, `--accent` passt fuer beide ohne Sonderfall. */
+.genannte-personen { margin: var(--space-3) 0 0 0; font-size: var(--fs-sm); }
+.genannte-personen-link { color: var(--accent); font-weight: 600; }
+.genannte-personen-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.genannte-personen-unsicher { color: var(--fuehrung-unsicher); }
+
 /* Punkt 6: Vertiefungslinks, optisch abgesetzt vom Erzaehltext (eigener
-   oberer Rahmen statt zusaetzlicher Ueberschrift). */
+   oberer Rahmen statt zusaetzlicher Ueberschrift). AUFTRAG "Teil 2g",
+   Punkt 2: liegt IMMER innerhalb der dunklen Buehne (`.fuehrung-erzaehltext`,
+   auch im Abschlussbildschirm) - dunkel-taugliche Farben. */
 .fuehrung-vertiefung { margin-top: var(--space-4); padding-top: var(--space-3);
-  border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: var(--space-2); }
-.fuehrung-vertiefung-link { display: inline-block; color: var(--accent); font-weight: 600; }
-.fuehrung-vertiefung-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  border-top: 1px solid var(--fuehrung-buehne-border); display: flex; flex-direction: column; gap: var(--space-2); }
+.fuehrung-vertiefung-link { display: inline-block; color: var(--fuehrung-buehne-akzent); font-weight: 600; }
+.fuehrung-vertiefung-link:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: 2px; }
 
 /* AUFTRAG "Fuehrungen, Teil 2b", Punkt 4 (js/utils/datensatzAufruf.js):
    sichtbarer, schliessbarer Hinweis bei unbekannter ID/Typ - app-weit
@@ -396,4 +530,7 @@
    eigene Regeln. */
 .fuehrung-abschluss-inhalt { flex: 1 1 auto; max-width: var(--fuehrung-text-max-ch); }
 .fuehrung-abschluss-inhalt:focus { outline: none; }
-.fuehrung-abschluss-leitfrage { font-style: italic; color: var(--text-muted); }
+.fuehrung-abschluss-leitfrage { font-style: italic; color: var(--fuehrung-buehne-text-muted); }
+/* h2/h3 (Ueberschrift "Ende der Fuehrung"/"Selbst erkunden"/"Zum Weiterlesen")
+   setzen KEINE eigene Farbe - erben `color` von `.fuehrung-station` (Punkt 2),
+   dieselbe Vererbung wie der uebrige Erzaehltext. */

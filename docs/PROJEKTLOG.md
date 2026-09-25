@@ -5,6 +5,617 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-25 (41) – Teil 2h: Personenlinks in der Urkunden-Sidebar, Hervorhebung in der Zeitachse, Personenliste, Personen-ID für Inventare
+
+### Punkt 1 - Personen in der Urkunden-Sidebar verlinken
+
+**Umsetzung:** `js/utils/sidebar.js`s `baueUrkundenDetailInhalt()` - die
+Zeile `wrapper.appendChild(baueSidebarFeld('Personen', alsText(record.personen)))`
+durch `baueGenanntePersonenZeile()` (`js/utils/genanntePersonen.js`, Teil 2g,
+unverändert wiederverwendet) ersetzt, mit index-parallelem Zip aus
+`record.personen`/`record.personen_id` und `unsicher: !!record.personen_unsicher`.
+Einzige geänderte Stelle in der Datei, exakt dem Auftrag entsprechend ("nur
+Personenzeile der Urkunden-Sidebar").
+
+**Geprüfte Ansichten** (Urkunden-Sidebar wird von mindestens elf Modulen
+genutzt, siehe `baueUrkundenDetailInhalt()`-Aufrufer): Zeitachse
+(`zeitachse.js`), `dotPlot.js`, `kalenderHeatmap.js` live geprüft - jede
+Person führt über `?datensatz=person:<id>` (exakte Übereinstimmung) zu genau
+einer Personenlisten-Zeile, ähnliche IDs (`adam` vs. `adam_eissler`) korrekt
+unterschieden. `karte.js`/`chordDiagramm.js` (weitere Konsumenten derselben
+Komponente) nicht separat gegengeprüft (Zeitgründen, zusätzlicher
+Listen-Zwischenschritt) - grundsätzlich betroffen, da dieselbe geteilte
+Funktion verwendet wird.
+
+### Punkt 2 - Hervorhebung einer Urkunde in der Zeitachse
+
+**Umsetzung:** `js/viz/zeitachse.js` - neue Konstante
+`HERVORHEBUNG_DIM_OPAZITAET = 0.12`. `oeffneSidebar(record)`/
+`schliesseSidebar()` rufen neu `aktualisiereHervorhebung()` auf, die über
+`instanz.punkteAuswahl` (D3-Selektion aller `circle.urkunde-punkt`, in der
+Aufbau-Kette nach `wireInteraktion()` gesetzt) die `opacity` auf 1
+(ausgewählter Punkt) bzw. `HERVORHEBUNG_DIM_OPAZITAET` (alle anderen) setzt -
+D3-`opacity`-Attribut, nicht `fill-opacity`, dasselbe Muster wie
+`chordDiagramm.js`/`familienbaum.js`. Leerklick-Erkennung über
+`event.target === svg.node()` (kein zusätzliches Hintergrund-Rect nötig),
+schließt die Sidebar bei bestehender Auswahl. `behandleDokumentTaste()`
+erweitert: Escape schließt jetzt auch Sidebar/Hervorhebung, nicht nur das
+Kategorie-Menü. Datensatzaufruf (`?datensatz=urkunde:<id>`) nutzt weiterhin
+ausschließlich das bestehende `oeffneSidebar(record)` - keine zweite Logik.
+
+**Bewusste Scope-Entscheidung:** die separate "ohne Jahr"-Punktegruppe
+(gerendert über das geteilte `zeichneUnbekanntBereich()` aus
+`js/utils/urkundenZeit.js`, das noch von sieben weiteren Modulen genutzt wird:
+`swimlanes.js`, `horizonChart.js`, `ridgeline.js`, `streamgraph.js`,
+`dotPlot.js`, `kalenderHeatmap.js`) wurde bewusst NICHT in die Hervorhebung
+einbezogen, um diese geteilte Utility nicht anzufassen (Nicht-Ziel-konform:
+"keine Änderung an anderen Urkunden-Ansichten").
+
+**Live geprüft:** Klick auf einen Punkt (Sidebar öffnet, alle anderen Punkte
+inkl. deren σ-Markierungen treten zurück) - Klick auf einen anderen
+zurückgetretenen Punkt (Auswahl wechselt korrekt) - Schließen über den
+sichtbaren ×-Button (`button[aria-label="Sidebar schließen"]`, nicht den
+versteckten "← Zurück"-Button, der bei einem ersten Testversuch
+fälschlich getroffen wurde) - Escape - Klick auf leere Fläche - Hover hebt
+die Auswahl NICHT auf - Datensatzaufruf aus einer Führung
+(`wer-fehlt`/Bürgerspital, Station 1, "Im Archiv ansehen") öffnet die
+Zeitachse mit `StaAKr-0050` hervorgehoben (Screenshot vorher/nachher im
+Chat) - Kombination mit Kategorie-Filtern und Unsicherheitsmodus ohne
+Konflikt geprüft.
+
+### Punkt 3 - Unsicherheit in den Zeilen der Personenliste
+
+**Umsetzung:** `js/viz/personenliste.js` - `.pl-zeile-unsicher` (roter
+gestrichelter Rahmen) entfernt, ersetzt durch ein σ-Symbol
+(`UNSICHERHEIT_SYMBOL`, `js/config/constants.js`) im Namensfeld in
+derselben Warnfarbe (`--fuehrung-unsicher`) wie das übrige Interface.
+Tooltip (Maus/Touch/Tastatur) bleibt erhalten, ist jetzt an `istUnsicher`
+gekoppelt statt an die entfernte CSS-Klasse. `aria-label` um "Angaben
+unsicher" ergänzt.
+
+**Live-Bug gefunden und behoben (Selbstauskunft):** das σ-Symbol erschien
+zunächst trotz korrektem Code nicht. Ursache: `resize()` in
+`personenliste.js` war bislang ein reines No-Op
+(`export function resize() {}`) und ignorierte die vom app-weiten
+Unsicherheits-Umschalter generisch aufgerufenen
+`resize({ showUncertainty: aktiv })`-Aufrufe komplett - ein bereits VOR
+diesem Auftrag bestehender, bislang unentdeckter Bug, der auch die alte
+rote Rahmen-Kennzeichnung aus Teil 2g nie wirksam umgeschaltet hat. Behoben
+durch eine echte Implementierung, die `instanz.options` mergt und
+`zeichneTabelle()` neu aufruft. Nach dem Fix (frischer Tab, da
+`navigate()` im selben Tab wiederholt eine veraltete Modulversion lieferte
+- gelöst über `tabs_close`+`preview_start`) korrekt sichtbar.
+
+Nur 5 von 4178 Personenlisten-Zeilen haben ein befülltes
+`unsicherheit_anmerkung` (`leopold_behaim`, `paul_krautwurm`,
+`stephan_pranntner`, `ulrich_edlinger`, `wolfgang_egger`) - bei sehr
+unterschiedlichen Nachnamen war es nicht praktikabel, zwei davon
+gleichzeitig auf einem Screenshot zu zeigen; stattdessen zwei separate
+Bestätigungen eingeholt (Leopold Behaim ohne Tooltip, Ulrich Edlinger mit
+geöffnetem Tooltip).
+
+**`css/components.css` nicht geändert:** die σ-Symbol-Styles für
+`personenliste.js` liegen in dessen eigenem inline `fuegeStyleEin()` -
+analog zum bestehenden Muster dieser Datei, keine Ergänzung der zentralen
+Datei nötig, trotz Nennung in "Betroffene Dateien" im Auftrag.
+
+### Punkt 4a - Erhebung und Zuordnungsvorschlag für Verlassenschaftsinventare
+
+**Wichtiger Vorbefund, der den Auftrag vereinfacht:** `data/personenliste.csv`
+enthält bereits seit einem früheren Auftrag ("Familienbaum-Regression
+beheben + Personenliste umfassend erweitern", 2026-09-21, siehe SCHEMA.md
+Abschnitt 8) für jedes der 68 Verlassenschaftsinventare einen dedizierten
+Eintrag (`quelle` = `Verlassenschaftsinventare`, `personen_id` bereits nach
+Schema vergeben, `nennung_in_verlassenschaften` bereits mit der jeweiligen
+`VI-ID` befüllt, `beruf`/`erste_nennung`/`letzte_nennung` bereits aus der
+Quelle übernommen). Der in diesem Auftrag geforderte Abgleich "Name aus
+Verlassenschaftsinventaren gegen personenliste.csv" ist damit weitgehend
+bereits vorweggenommen - die eigentliche noch offene Aufgabe ist die
+Rückverknüpfung (`personen_id`-Spalte in `verlassenschaftsinventare.csv`
+selbst, siehe Schemavorschlag unten) plus die Prüfung, ob einzelne dieser
+68 dedizierten Einträge tatsächlich zu einer der ANDEREN, aus Urkunden/
+Bürgerbuch stammenden Personen gehören (echte Identität über die
+Quellgrenze hinweg) oder untereinander zusammengehören.
+
+**Methode:** für jeden der 68 Namen der Hauptname (vor einem eventuellen
+Komma-Zusatz wie "vorhin ...") normalisiert (Kleinschreibung,
+Umlaute→ae/oe/ue) und der Nachname gegen alle Schreibweisen der 4110
+Urkunden-/Bürgerbuch-Personen in `personenliste.csv` abgeglichen
+(Namensgleichheit als Kandidat), anschließend jeder Treffer gegen Zeitraum
+und Beruf geprüft.
+
+**Ergebnis: keine plausible Übereinstimmung mit einer bestehenden Urkunden-
+oder Bürgerbuch-Person.** Sieben Nachnamen kommen zwar auch anderswo in
+`personenliste.csv` vor (Schmidt, Pockh/Beck, Mayr, Wagner, Graff/Graf,
+Grienauer, sowie ein Zufallstreffer auf den Vornamen "Barbara"), die
+jeweiligen Bürgerbuch-/Urkunden-Nennungen liegen aber 50 bis rund 150 Jahre
+vor den Inventaren (1671-1719) - bei einer Krems/Steiner Bürgerfamilie über
+mehrere Generationen ist Namensgleichheit über einen solchen Zeitraum kein
+Identitätshinweis, sondern die erwartbare Wiederholung verbreiteter
+Zunft-/Familiennamen. Alle 68 werden daher als eigenständige, von den
+Urkunden-/Bürgerbuch-Personen verschiedene Personen behandelt (Art: "neue
+Person" im Sinne des Auftrags - der zugehörige `personenliste.csv`-Eintrag
+existiert dabei technisch bereits, siehe Vorbefund oben).
+
+**Zwei Fälle mit Verdacht auf Identität INNERHALB der 68 Inventare selbst**
+(nicht Teil der ursprünglichen Fragestellung, aber beim Abgleich
+aufgefallen): `VI-0024`/`VI-0028` (beide "Bartholomäus Eggartner, Ältester
+des Inneren Rats zu Krems", 1679 bzw. 1690) und `VI-0032`/`VI-0033` (beide
+"Anna Catharina Schönthanin, hievor Leutmanslehnerin", 1692 bzw. 1693) -
+identischer Name UND identischer Beruf/Stand, bei `VI-0032`/`33` nur ein
+Jahr Abstand. `personenliste.csv` führt dafür aktuell zwei getrennte
+Einträge (`bartholomaeus_eggartner`/`_2`,
+`anna_catharina_schoenthanin_hievor_leutmanslehnerin`/`_2`) - vermutlich
+zwei Inventare EINER Person (z. B. ein zweites/ergänzendes Inventar), aber
+ohne unabhängige Bestätigung als echte Zusammenlegung markiert (Art:
+"unsicher").
+
+**Offener, nicht auflösbarer Befund zum `*`-Suffix im `Name`-Feld:** neun
+der 68 Namen tragen ein `*` (`VI-0001`, `-0004`, `-0007`, `-0017`, `-0028`,
+`-0033`, `-0034`, `-0051`, `-0057`). Sieben davon fallen mit
+`Vermoegensgruppe = S` zusammen (Sonderkategorie außerhalb A-E, vermutlich
+Schulden-dominiert), zwei nicht (`VI-0001` = Gruppe A, `VI-0033` = Gruppe
+B) - die beiden Wiederholungsfälle oben sind ebenfalls nicht durchgängig
+markiert (nur der jeweils zweite Eintrag trägt das `*`, nicht auch der
+erste). Die Bedeutung des `*` ist in `data/verlassenschaftsinventare.csv`
+selbst nicht dokumentiert und in `docs/SCHEMA.md`/`CHANGELOG.md` nicht
+erklärt - keine Vermutung dazu in die neue `personen_id`-Zuordnung
+einfließen lassen; zur Klärung an den Auftraggeber zurückgemeldet.
+
+**Andere im `Name`-Feld genannte Personen (bewusst NICHT eigens
+zugeordnet, wie im Auftrag verlangt):**
+
+| Inventar | Zusatzangabe | genannte weitere Person |
+|---|---|---|
+| VI-0005 | "vorhin Scharrerin" | früherer Ehename/-mann Scharrer |
+| VI-0007 | "geborene Wengerin" | Geburtsname Wenger |
+| VI-0010 | "vorhero Spöckherin" | früherer Ehename/-mann Spöckher |
+| VI-0016 | "hievor Kippesin" | früherer Ehename/-mann Kippes |
+| VI-0032/VI-0033 | "hievor Leutmanslehnerin"; "Mann im Äußeren Rat" | früherer Ehename/-mann Leutmanslehner; aktueller (namentlich nicht genannter) Ehemann |
+| VI-0047 | "hievor Reinprechtin" | früherer Ehename/-mann Reinprecht |
+| VI-0049 | Beruf/Funktion/Stand nennt "Witwe nach Matthias Schwaighofer, Innerer Rat zu Krems" | verstorbener Ehemann Matthias Schwaighofer (vollständig namentlich genannt, kein Treffer in `personenliste.csv`) |
+| VI-0051 | "und seine Frau Maria Barbara" | Ehefrau Maria Barbara (siehe Datenqualitäts-Hinweis unten) |
+| VI-0057 | "und seine Frau Maria Magdalena" | Ehefrau Maria Magdalena (siehe Datenqualitäts-Hinweis unten) |
+| VI-0059 | "hievor Eysin" | früherer Ehename/-mann Eys |
+| VI-0060 | "gebohrne Rieblin" | Geburtsname Riebl |
+
+**Datenqualitäts-Hinweis (informativ, keine Änderung in diesem Schritt):**
+`VI-0051`/`VI-0057` benennen jeweils ZWEI reale Personen (Ehepaar), der
+bereits bestehende `personenliste.csv`-Eintrag fasst beide unter EINER
+`personen_id` zusammen (`georg_wilhelm_penhell_und_seine_frau_maria_barbara`
+bzw. `hanns_garttler_und_seine_frau_maria_magdalena`). Für die
+Rückverknüpfung in Punkt 4b ausreichend (ein Inventar → ein Datensatz),
+aber inhaltlich ungenau, falls die Ehefrau später einzeln über
+`genanntePersonen.js` verlinkbar sein soll - nicht Teil dieses Auftrags,
+zur Kenntnis vermerkt.
+
+**Vollständige Zuordnungstabelle (alle 68 Inventare):**
+
+| Inventar-ID | Name | Vorschlag personen_id | Art | Begründung |
+|---|---|---|---|---|
+| VI-0001 | Zacharias Hauerwassen* | `zacharias_hauerwassen` | neue Person | kein plausibler Namens-/Zeit-/Berufs-Abgleich mit vorhandenen Urkunden- oder Bürgerbuch-Personen (nächstliegende Namensgleichheiten liegen 50–150 Jahre früher, andere Generation); dedizierter Eintrag bereits am 2026-09-21 in personenliste.csv angelegt. |
+| VI-0002 | Matthias Schmidt | `matthias_schmidt_2` | neue Person | s. o. |
+| VI-0003 | Judith Walcherin | `judith_walcherin` | neue Person | s. o. |
+| VI-0004 | Nicolaus Grollickh* | `nicolaus_grollickh` | neue Person | s. o. |
+| VI-0005 | Clara Rosina Millerin, vorhin Scharrerin | `clara_rosina_millerin_vorhin_scharrerin` | neue Person | s. o. |
+| VI-0006 | Hanns Georg Masko | `hanns_georg_masko` | neue Person | s. o. |
+| VI-0007 | Elisabetha Järitschin, geborene Wengerin* | `elisabetha_jaeritschin_geborene_wengerin` | neue Person | s. o. |
+| VI-0008 | Paul Loivrechten | `paul_loivrechten` | neue Person | s. o. |
+| VI-0009 | Philipp Jacob Scherrer | `philipp_jacob_scherrer` | neue Person | s. o. |
+| VI-0010 | Sabina Engelhartin, vorhero Spöckherin | `sabina_engelhartin_vorhero_spoeckherin` | neue Person | s. o. |
+| VI-0011 | Philipp Gabriel Kripp(es) | `philipp_gabriel_kripp_es` | neue Person | s. o. |
+| VI-0012 | Veit Pockh | `veit_pockh` | neue Person | s. o. |
+| VI-0013 | Adam Höchenauer | `adam_hoechenauer` | neue Person | s. o. |
+| VI-0014 | Johann Mayr | `johann_mayr` | neue Person | s. o. |
+| VI-0015 | Veit Hochstötter | `veit_hochstoetter` | neue Person | s. o. |
+| VI-0016 | Anna Regina Altmanin, hievor Kippesin | `anna_regina_altmanin_hievor_kippesin` | neue Person | s. o. |
+| VI-0017 | Elias Wagner* | `elias_wagner` | neue Person | s. o. |
+| VI-0018 | Anna Christina Liechin | `anna_christina_liechin` | neue Person | s. o. |
+| VI-0019 | Nicolaus Egermayr | `nicolaus_egermayr` | neue Person | s. o. |
+| VI-0020 | Martin Graff | `martin_graff` | neue Person | s. o. |
+| VI-0021 | Sophia Schmälzlin | `sophia_schmaelzlin` | neue Person | s. o. |
+| VI-0022 | Simon Bärtl | `simon_baertl` | neue Person | s. o. |
+| VI-0023 | Andre Ambstötter | `andre_ambstoetter` | neue Person | s. o. |
+| VI-0024 | Bartholomäus Eggartner | `bartholomaeus_eggartner` | neue Person | s. o.; siehe auch VI-0028 |
+| VI-0025 | Christoph Scharnagl | `christoph_scharnagl` | neue Person | s. o. |
+| VI-0026 | Andre Maximilian Fleischer | `andre_maximilian_fleischer` | neue Person | s. o. |
+| VI-0027 | Karl Wengemayr | `karl_wengemayr` | neue Person | s. o. |
+| VI-0028 | Bartholomäus Eggartner* | `bartholomaeus_eggartner_2` | unsicher | Name/Beruf identisch mit VI-0024, 11 Jahre später (1679→1690) - vermutlich dieselbe Person (zweites Inventar), aber ohne unabhängige Bestätigung; Zusammenlegung mit `bartholomaeus_eggartner` erst nach Freigabe. |
+| VI-0029 | Matthias Raittner | `matthias_raittner` | neue Person | s. o. |
+| VI-0030 | Sebastian Conrad Scharrer | `sebastian_conrad_scharrer` | neue Person | s. o. |
+| VI-0031 | Georg Andre Rabrath | `georg_andre_rabrath` | neue Person | s. o. |
+| VI-0032 | Anna Catharina Schönthanin, hievor Leutmanslehnerin | `anna_catharina_schoenthanin_hievor_leutmanslehnerin` | neue Person | s. o.; siehe auch VI-0033 |
+| VI-0033 | Anna Catharina Schönthanin, hievor Leutmanslehnerin* | `anna_catharina_schoenthanin_hievor_leutmanslehnerin_2` | unsicher | Name/Beruf identisch mit VI-0032, nur 1 Jahr später (1692→1693) - vermutlich dieselbe Person (zweites/ergänzendes Inventar), aber ohne unabhängige Bestätigung; Zusammenlegung mit Haupteintrag erst nach Freigabe. |
+| VI-0034 | Johann Daniel Piath* | `johann_daniel_piath` | neue Person | s. o. |
+| VI-0035 | Martin Freysleben | `martin_freysleben` | neue Person | s. o. |
+| VI-0036 | Elias Muth | `elias_muth` | neue Person | s. o. |
+| VI-0037 | Catharina Sutterin | `catharina_sutterin` | neue Person | s. o. |
+| VI-0038 | Hans Georg Lang | `hans_georg_lang` | neue Person | s. o. |
+| VI-0039 | Margaret Khürmerin | `margaret_khuermerin` | neue Person | s. o. |
+| VI-0040 | Eva Fridrichin | `eva_fridrichin` | neue Person | s. o. |
+| VI-0041 | Andre Liechtenschopf | `andre_liechtenschopf` | neue Person | s. o. |
+| VI-0042 | Anton Niglbaur | `anton_niglbaur` | neue Person | s. o. |
+| VI-0043 | Salomon Ebeller | `salomon_ebeller` | neue Person | s. o. |
+| VI-0044 | Barbara Khlapfenbergerin | `barbara_khlapfenbergerin` | neue Person | s. o. |
+| VI-0045 | Franz Grienauer | `franz_grienauer` | neue Person | s. o. |
+| VI-0046 | Anna Maria Muehrin | `anna_maria_muehrin` | neue Person | s. o. |
+| VI-0047 | Maria Magdalena Wolfin, hievor Reinprechtin | `maria_magdalena_wolfin_hievor_reinprechtin` | neue Person | s. o. |
+| VI-0048 | Eva Catharina Daunterlaunin | `eva_catharina_daunterlaunin` | neue Person | s. o. |
+| VI-0049 | Maria Dorothea Schwaighoferin, geweste von Trebersburg | `maria_dorothea_schwaighoferin_geweste_von_trebersburg` | neue Person | s. o.; s. auch Hinweis zu Matthias Schwaighofer oben |
+| VI-0050 | Maria Eggerin | `maria_eggerin` | neue Person | s. o. |
+| VI-0051 | Georg Wilhelm Penhell und seine Frau Maria Barbara* | `georg_wilhelm_penhell_und_seine_frau_maria_barbara` | neue Person | s. o.; s. auch Datenqualitäts-Hinweis oben (Ehepaar unter einer ID) |
+| VI-0052 | Maria Barbara Weinzierlin | `maria_barbara_weinzierlin` | neue Person | s. o. |
+| VI-0053 | Anna Maria Grabenbergerin | `anna_maria_grabenbergerin` | neue Person | s. o. |
+| VI-0054 | Eva Maria Krackherin | `eva_maria_krackherin` | neue Person | s. o. |
+| VI-0055 | Eva Zwickhin | `eva_zwickhin` | neue Person | s. o. |
+| VI-0056 | Hanns Sinthaler | `hanns_sinthaler` | neue Person | s. o. |
+| VI-0057 | Hanns Garttler und seine Frau Maria Magdalena* | `hanns_garttler_und_seine_frau_maria_magdalena` | neue Person | s. o.; s. auch Datenqualitäts-Hinweis oben (Ehepaar unter einer ID) |
+| VI-0058 | Judith Catharina Schäzbergerin | `judith_catharina_schaezbergerin` | neue Person | s. o. |
+| VI-0059 | Anna Rosina Beerin, hievor Eysin | `anna_rosina_beerin_hievor_eysin` | neue Person | s. o. |
+| VI-0060 | Barbara Regina Lindnerin, gebohrne Rieblin | `barbara_regina_lindnerin_gebohrne_rieblin` | neue Person | s. o. |
+| VI-0061 | Michael Thalhammer | `michael_thalhammer` | neue Person | s. o. |
+| VI-0062 | Bartholomäus Plesch | `bartholomaeus_plesch` | neue Person | s. o. |
+| VI-0063 | Christoph Pögner | `christoph_poegner` | neue Person | s. o. |
+| VI-0064 | Johann Joseph Probstl | `johann_joseph_probstl` | neue Person | s. o. |
+| VI-0065 | Anna Sophia Gindlin | `anna_sophia_gindlin` | neue Person | s. o. |
+| VI-0066 | Zacharias Anschiringer | `zacharias_anschiringer` | neue Person | s. o. |
+| VI-0067 | Maria Salome Räbsällin | `maria_salome_raebsaellin` | neue Person | s. o. |
+| VI-0068 | Barbara Steindlin | `barbara_steindlin` | neue Person | s. o. |
+
+**Schemaänderungsvorschlag:**
+
+`personenliste.csv` braucht KEINE neue Spalte - `quelle` = `Verlassenschaftsinventare`,
+`nennung_in_verlassenschaften`, `beruf`, `erste_nennung`/`letzte_nennung` sind
+bereits seit 2026-09-21 vorhanden und für alle 68 Einträge korrekt befüllt
+(siehe Vorbefund oben; die ursprünglich im Auftrag als Beispiel genannte
+`nennung_in_inventaren` ist damit bereits abgedeckt, nur unter einem anderen,
+bereits etablierten Spaltennamen).
+
+Für `verlassenschaftsinventare.csv` (Abschnitt 5 in SCHEMA.md) zwei neue
+Spalten, analog zu `buergerbuch.csv`s bereits bestehendem Muster
+(`personen_id`/kein separates `_unsicher`-Flag dort, aber hier bewusst
+ergänzt, da zwei Fälle bereits jetzt echte Unsicherheit haben):
+
+- `personen_id` (Text) - Verweis auf `personenliste.csv`, für 66 der 68
+  Zeilen der bereits bestehende dedizierte Eintrag (s. Tabelle oben), für
+  `VI-0028`/`VI-0033` vorbehaltlich der Freigabe entweder der
+  `_2`-Eintrag (falls getrennt belassen) oder der Haupteintrag (falls
+  zusammengelegt).
+- `personen_id_unsicher` (ja/nein) - `ja` nur für `VI-0028`/`VI-0033`,
+  sonst `nein`.
+- `unsicherheit_anmerkung` (bereits vorhanden, aktuell für alle 68 Zeilen
+  leer) - für `VI-0028`/`VI-0033` mit der Begründung aus der Tabelle oben
+  zu befüllen.
+
+**Auswirkung einer eventuellen Zusammenlegung von `VI-0024`/`VI-0028` bzw.
+`VI-0032`/`VI-0033` (nur falls in Punkt 4b so freigegeben):** beim
+jeweiligen Haupteintrag würde `nennung_in_verlassenschaften` zu
+`VI-0024|VI-0028` bzw. `VI-0032|VI-0033` (Pipe-Liste, DataLoader zerlegt
+automatisch), `anzahl_nennungen` von 1 auf 2, `letzte_nennung` von 1679 auf
+1690 bzw. von 1692 auf 1693 - der jeweilige `_2`-Eintrag würde dafür
+komplett aus `personenliste.csv` entfernt. `personenliste.js`s Anzeige der
+Inventar-Nennungen (Punkt 4b, `nennung_in_verlassenschaften` analog zu
+`nennung_in_urkunden`/`nennung_in_buergerbuch` auflösen) müsste dafür ohnehin
+Pipe-getrennte Listen unterstützen - kein Sonderfall gegenüber der
+bestehenden Auflösungslogik der beiden anderen Quellen.
+
+**Pause nach diesem Punkt wie im Auftrag verlangt - keine Änderung an
+`data/verlassenschaftsinventare.csv`, `data/personenliste.csv` oder
+`docs/SCHEMA.md` in diesem Schritt.** Punkt 4b (Umsetzung: neue Spalten,
+`personenliste.js`-Anzeige, automatische Verlinkung im Belegbereich der
+Führungen, `wer-fehlt` Station 7/Margaret Khürmerin) folgt erst nach
+Freigabe der obigen Tabelle und des Schemavorschlags.
+
+### Regressionsprüfung (Punkt 1-3)
+
+Alle Urkunden-Ansichten mit Sidebar (Zeitachse, `dotPlot.js`,
+`kalenderHeatmap.js` gezielt, weitere per Routen-Sweep ohne
+Konsolenfehler), Zeitachse mit Kategorie-Filtern und Unsicherheitsmodus in
+Kombination mit der neuen Hervorhebung, Personenliste mit Suche/Sortierung
+und der neuen σ-Kennzeichnung, beide bestehenden Führungen
+(`demo`/`buergerspital-heringe`) inkl. Datensatzaufruf aus einer Station -
+alle ohne Konsolenfehler und ohne sichtbare Regression. Die "alle
+Verlassenschafts-Visualisierungen"-Prüfung blieb auf einen Routen-Sweep
+ohne Konsolenfehler beschränkt (keine tiefere interaktive Prüfung, da
+Punkt 4a/4b diese Ansichten noch nicht verändert).
+
+---
+
+## 2026-09-25 (40) – Teil 2g: Sidebars, Präsentationsgestaltung, Personenlinks
+
+### Punkt 1 - Unsicherheit in den Sidebars
+
+**Umsetzung:** `baueUnsicherheitAbsatz()` (K3, Teil 2c) aus
+`js/fuehrungen/belegDarstellung.js` nach `js/utils/unsicherAbsatz.js`
+verschoben (neu), CSS-Klassen umbenannt (`.fuehrung-beleg-unsicher*` →
+`.unsicher-absatz*`, `css/components.css`) - dieselbe Funktion jetzt von
+DREI Stellen importiert: `belegDarstellung.js` (unverändertes Verhalten),
+`js/utils/sidebar.js` (`baueSidebarInhalt()`'s `daten_unsicher`-Fall,
+`baueUrkundenDetailInhalt()`'s `datum_unsicher`/`orte_unsicher`/
+`personen_unsicher`-Fall - `istUrkundeUnsicher()` dadurch überflüssig,
+entfernt), `js/viz/personenliste.js` (`baueBuergerbuchDetailInhalt()`'s
+`Datum_unsicher`/`Beruf_unsicher`/`orte_unsicher`-Fall -
+`istBuergerbuchUnsicher()` ebenfalls entfernt). Die tote CSS-Regel
+`.bestand-sidebar-unsicher` in `sidebar.js`s `fuegeSidebarStyleEin()`
+entfernt.
+
+**Live-Bug gefunden und behoben (Selbstauskunft):** beim ersten Testlauf
+crashte `fuegeSidebarStyleEin()` mit `ReferenceError: sidebar is not
+defined` - Ursache war ein eigener Kommentar-Backtick
+(`` `.bestand-sidebar-unsicher` ``) INNERHALB des Template-Literal-Strings
+von `style.textContent`, der den String vorzeitig beendete. Behoben durch
+Entfernen der Backticks aus dem Kommentartext (einfache Anführungszeichen
+statt Markdown-Code-Formatierung). `node --check` über alle neun in diesem
+Auftrag geänderten/neuen JS-Dateien danach zusätzlich erfolgreich geprüft.
+
+**Diskrepanz zur Auftragsannahme:** `js/viz/personenliste.js`s
+`.pl-zeile-unsicher` (roter gestrichelter linker Rahmen + Tooltip auf der
+gesamten Tabellenzeile, unabhängig von der hier bearbeiteten
+"Achtung:"-Textkennzeichnung) ist ein ANDERER, bereits bestehender
+Unsicherheits-Indikator - kein "Achtung: Angaben unsicher"-Text, sondern
+ein reiner Rahmen/Tooltip. Da der Auftrag explizit nur die "Achtung:
+Angaben unsicher..." (`.bestand-sidebar-unsicher`)-Konvention nennt,
+bewusst UNVERÄNDERT gelassen (Nicht-Ziel: "keine Änderung an ... anderen
+Daten" schützt implizit auch andere, nicht benannte Darstellungsformen vor
+einer nicht beauftragten Umgestaltung). Zur Kenntnis/Entscheidung
+vorgelegt.
+
+**Nachweis (Akzeptanzkriterium):** `grep "Achtung:"` findet projektweit nur
+noch Kommentar-Erwähnungen in `sidebar.js`/`personenliste.js`/
+`unsicherAbsatz.js` (die Migration selbst dokumentierend) sowie drei
+UNBETEILIGTE Tooltip-Texte in `urkundenZeit.js`/`buergerbuchZeit.js`/
+`bestandsHierarchie.js` (Hover-Tooltips einzelner Viz-Module, ein anderer
+Mechanismus, nicht Teil dieses Auftrags/nicht `.bestand-sidebar-unsicher`).
+Live geprüft: Bestand-Sidebar (Treemap, "Einzelne Rechnungsbücher",
+`daten_unsicher`) und Personenliste-Detail (Oswold Auer, BB-0019,
+`Datum_unsicher`) zeigen beide "σ Angaben unsicher" (amber, eingeklappt),
+Aufklappen zeigt den `unsicherheit_anmerkung`-Text bzw. "Keine weitere
+Angabe." korrekt, `aria-expanded` wechselt korrekt.
+
+### Punkt 2 - Präsentationshintergrund der Führungen
+
+**Umsetzung:** neue `--fuehrung-buehne-*`-Variablen in `css/components.css`
+(`:root`), `.fuehrung-station` (gemeinsame Wurzelklasse von
+`fuehrungStation.js` UND `fuehrungAbschluss.js`) trägt jetzt
+`background: var(--fuehrung-buehne-bg)` - betrifft dadurch automatisch
+BEIDE Nutzer, nicht die Galerie (eigene Klasse) oder die App-Hauptnavigation
+(außerhalb dieses Elements). `.fuehrung-beleg` bleibt bei den
+unveränderten hellen Farben (`--bg`/`--border`), zusätzlich ein Schatten
+("Dokument auf einer dunklen Bühne", Auftrag wörtlich). Kopfbereich,
+Navigationssäule, Prüfhinweise (`.fuehrung-fehler`, jetzt Basis-Regel
+dunkel + eine helle Rücknahme `.fuehrung-beleg .fuehrung-fehler` für den
+einen verbleibenden Fall innerhalb des Belegbereichs), Entwurfskennzeichnung
+(scoped Override `.fuehrung-station-kopf .fuehrung-kachel-entwurf`, damit
+die Galerie-Kachel unangetastet bleibt), Vertiefungslinks und der
+"Was wir nicht wissen"-Button (`js/utils/unsicherheitHinweis.js`,
+ausschließlich hier verwendet, geprüft - direkt dunkel eingefärbt statt
+gescopt) wurden alle mitangepasst.
+
+**Kontrastwerte (WCAG 1.4.3 Text ≥4,5:1, WCAG 1.4.11 Bedienelemente ≥3:1,
+per Formel berechnet, alle gegen `--fuehrung-buehne-bg` #17222c):**
+
+| Farbpaar | Kontrast |
+|---|---|
+| Text (`--fuehrung-buehne-text` #f4f2ec) | 14,41:1 |
+| Text, gedämpft (`--fuehrung-buehne-text-muted` #cbd2d9) | 10,57:1 |
+| Akzent/Button-Fläche (`--fuehrung-buehne-akzent` #7fb0e0) | 7,06:1 |
+| Button-Text auf Akzent-Fläche (#0d141b auf #7fb0e0) | 8,11:1 |
+| Akzent hell/Hover (#a3c9ea) | 9,30:1 |
+| σ-Text, gedeckt (`--fuehrung-buehne-unsicher` #e3c15c) | 9,26:1 |
+| Prüfhinweis-Text (`--fuehrung-buehne-fehler` #ffb86b) | 9,47:1 |
+| Entwurf-Kennzeichnung, Fläche (#c9932f) | 5,91:1 |
+| Entwurf-Kennzeichnung, Text auf Fläche (#191006 auf #c9932f) | 6,89:1 |
+| "Was wir nicht wissen"-Rot, aufgehellt (#ff9e95, vormals `--unsicher` #c0392b mit nur 2,97:1) | 8,13:1 |
+
+Randlinie (`--fuehrung-buehne-border` #4a5c6e, 1,80:1) ist rein dekorativ
+(Trennlinie unter dem Kopfbereich, keine alleinige Information) und daher
+ohne WCAG-Pflichtwert.
+
+**Nachweis (Screenshots, siehe Chat):** Station 1 und Station 10
+(Vergleichsstation) des Bürgerspital-Pfads, Station 2 (ohne Beleg),
+Abschlussbildschirm - alle korrekt dunkel, Belegbereich(e) hell mit
+Schatten, Text durchgehend lesbar.
+
+### Punkt 3 - Erzähltext und Navigationssäule
+
+**Erzähltext:** `.fuehrung-erzaehltext` bekommt `font-size: var(--fs-lg)`
+(18px statt 16px) - `--fuehrung-text-min-ch`/`-max-ch` bleiben unverändert
+in `ch`-Einheiten (skalieren automatisch mit der Schriftgröße mit, die
+Zeilenlänge bleibt dadurch bei 45-85 Zeichen, ohne die Variablen selbst
+anzufassen). Neuer innerer `.fuehrung-erzaehltext-mitte`-Wrapper
+(`min-height:100%; display:flex; flex-direction:column;
+justify-content:center`) - `fuehrungStation.js`s `baueErzaehlbereich()`
+und `fuehrungAbschluss.js`s `render()` hängen ihren gesamten Inhalt jetzt
+in diesen Wrapper statt direkt in `.fuehrung-erzaehltext`. Gilt dadurch
+automatisch auch für die mittlere Spalte der Vergleichsstation und
+Stationen ohne Beleg (dieselbe Klasse). Bei Inhalt, der die verfügbare
+Höhe übersteigt (Scroll-Rückfall), wächst der Wrapper über 100% hinaus und
+beginnt wie gewohnt oben - kein "in der Mitte abgeschnittener"
+Einstiegszustand.
+
+**Nachweis (Abschlussbildschirm, live gemessen):** Inhalt 209,5px hoch in
+einem 537,4px hohen Rahmen - 143,9px Abstand oben, 143,5px Abstand unten
+(symmetrisch, exakt zentriert). Erste visuelle Einschätzung am
+Screenshot wirkte fälschlich "oben angeheftet" (der Kopfbereich oberhalb
+verschiebt den optischen Eindruck) - die Pixel-Messung bestätigt korrekte
+Zentrierung.
+
+**Navigationssäule:** EINZIGE CSS-Änderung ist `.fuehrung-nav`s
+`justify-content` von `space-between` auf `center` (plus
+`.fuehrung-nav-fortschritt`s `flex: 1 1 auto` → `flex: 0 0 auto` - sonst
+würde die Fortschrittsanzeige selbst wachsen und die Zentrierung
+aufheben). Die Säule füllt weiterhin die komplette gemessene
+Stationshöhe (unverändert aus 2a-K), wodurch ▲/Fortschritt/▼ auf JEDER
+Station automatisch an identischer Pixel-Position stehen.
+
+**Nachweis (live gemessen, alle 19 Stationen beider Pfade, 1366×768):**
+`document.documentElement.scrollHeight === window.innerHeight === 768`
+bei jeder einzelnen Station - keine Seitenscroll-Überschreitung.
+`.fuehrung-nav-pfeil`-Position (oberer Pfeil) IDENTISCH auf allen 19
+Stationen: `top: 326px, left: 1264px`. Navigationsgruppe als Ganzes
+(`.fuehrung-nav`-Kind-Elemente, Bürgerspital Station 1): Pfeil-hoch
+y:325,8-373,8, Fortschritt y:381,8-402,8, Pfeil-runter y:410,8-458,8 -
+Mittelpunkt der Gruppe (392,3) deckt sich exakt mit dem Mittelpunkt der
+vollen Säulenhöhe (102,6-682, Mitte 392,3).
+
+**Mobil:** unverändert per Media Query (`@media max-width:800px`) - Layout
+(volle Breite, sticky unten, Zeilenanordnung) bleibt wie zuvor, Farben der
+unteren Leiste (`background`/`border-top`) auf die neuen
+`--fuehrung-buehne-*`-Variablen umgestellt (Konsistenz mit dem Rest der
+jetzt dunklen Station - "wie bisher" bezog sich auf das Layout, nicht auf
+Farben, die app-weit ohnehin gerade neu gefasst werden). Live geprüft
+(375×812): Kopf/Beleg/Erzähltext/untere Navigationsleiste alle korrekt
+dunkel, kein Seitenüberlauf.
+
+### Punkt 4 - Personenlinks im Belegbereich der Führungen
+
+**Umsetzung:** neues `js/utils/genanntePersonen.js`
+(`baueVerlinkteNamen()`/`baueGenanntePersonenZeile()`) nutzt
+`datensatzAufruf.js`s bestehendes `baueDatensatzLink('person', id)` -
+exakte ID-Übereinstimmung. `urkunde`: neue "Genannte Personen"-Zeile UNTER
+dem wiederverwendeten `sidebar.js`-Regestblock (sidebar.js selbst
+unverändert, eigenes Nicht-Ziel-konformes "Personen"-Feld dort bleibt
+bestehen) - `personen`/`personen_id` direkt index-parallel gezippt, σ bei
+`personen_unsicher`. `buergerbuch`: `Name`-Feld und `Bürgen`-Feld zeigen
+jetzt verlinkte Namen statt Freitext - `Buergen` (Freitext) ist NICHT
+index-parallel zu `buergen_id` (Pipe-Liste), deshalb werden die
+Bürgen-Namen stattdessen über `personenKarte` (von `fuehrungenDaten.js`s
+`parseBeleg()` mitgegeben, dieselbe Karte wie für `person`-Belege) aus der
+jeweils ersten `schreibweisen`-Angabe in `personenliste.csv` aufgelöst -
+Datenrandfall "Buergen-Text ohne buergen_id" bleibt unverlinkt (kein
+Informationsverlust). Der bisherige Quellenzeilen-Link für `buergerbuch`
+entfällt (`baueArchivLink()` gibt für diesen Typ jetzt `null` zurück).
+`inventar`/`bestand`/`familie` haben KEINE `personen_id`-Spalte in ihren
+Quell-CSVs (`verlassenschaftsinventare.csv`/`bestandsverzeichnis.csv`/
+`familien.csv`, geprüft) - keine Personenlinks dort möglich, Auftrag
+danach ausdrücklich gefragt.
+
+**Fortsetzen-Button:** `fuehrungStation.js`s
+`merkeVerlassenBeiLinkKlick()`-Selektor um `.genannte-personen-link`
+ergänzt (vorher nur `.fuehrung-beleg-archivlink`/`.fuehrung-vertiefung-link`)
+- sonst hätte ein Verlassen über einen Personenlink KEINEN
+Fortsetzen-Zustand gespeichert.
+
+**Nachweis (live, beide Pfade):**
+- Bürgerspital Station 4 (`urkunde:StaAKr-0018`): "Genannte Personen: Heinrich Mager, Berta Mager", beide korrekt verlinkt (`person:heinrich_mager`/`person:berta_mager`).
+- `wer-fehlt` Station 4 (`buergerbuch:BB-1046`): Name "Magnus Scheipl" verlinkt (`person:magnus_scheipl`), Bürgen "Michael Rogl" verlinkt (`person:michael_rogl`) - beide Links funktional geöffnet, filtern die Personenliste korrekt auf genau eine Person. Fortsetzen-Button nach Linkklick korrekt gespeichert (`sessionStorage`-Zustand geprüft: `{fuehrungId:"wer-fehlt", stationNr:4, ...}`).
+- Kein Konsolenfehler bei keinem der 19 Stationsaufrufe.
+
+### Punkt 5 - Personenlinks im Regestenkachelraster
+
+Kein Umbau nötig (kein Pausieren erforderlich) - `record.personen`/
+`record.personen_id` sind dieselben index-parallelen Listen wie bei den
+Führungen, die bestehende "Personen"-Feld-Anzeige (`setFilterEntity()`-
+basiert, Nicht-Ziel: unverändert) bleibt vollständig bestehen, die neue
+Zeile kommt als reine Ergänzung unter dem Regest/Foto hinzu (dieselbe
+`baueGenanntePersonenZeile()`-Funktion wie Punkt 4). Klick auf einen
+Personenlink stoppt die Ereignis-Weiterleitung zur Kachel (dieselbe
+Ausnahme-Konvention wie die bestehenden Personen-/Ortsnamen-Buttons).
+
+**Nachweis (drei Stichproben, live):** StaAKr-0001 ("Genannte Personen:
+Heinrich V.", 1 Link), StaAKr-0001a ("Genannte Personen: Manegold von
+Passau, Konrad von Krems", 2 Links), StaAKr-0001b ("Genannte Personen:
+Konrad", 1 Link) - alle Links funktional (öffnen die Personenliste,
+gefiltert auf genau eine Person). Testklick bestätigt: Linkklick
+navigiert, OHNE die Kachel gleichzeitig auf-/zuzuklappen
+(`aria-expanded` blieb `false`); ein direkter Klick auf die Kachel
+klappt weiterhin normal auf (`aria-expanded` → `true`). 50 bestehende
+σ-Warnicons (`.regk-warn-icon`) und 32 neue σ-Markierungen an "Genannte
+Personen" (`personen_unsicher`) unverändert/korrekt nebeneinander
+vorhanden - keine Kollision.
+
+### Regressionsprüfung (Abschluss-Anforderung)
+
+20 Routen ohne Konsolenfehler durchlaufen (Bestand ×5, Visualisierungen
+×9, Führungen ×3, Literatur, Über). Sidebars in Zeitachse und
+Parallelkoordinaten öffnen weiterhin korrekt (Zeitachse zusätzlich auf
+den neuen `.unsicher-absatz-btn` geprüft). Kachelraster: Aufklappen/Fotos/
+Unsicherheitskennzeichnung unverändert (s. o.). Fortsetzen-Button
+funktioniert nach Personenlink-Klick (s. o.). Abschlussbildschirm dunkel,
+zentriert, Navigationsgruppe an derselben Position wie alle Stationen.
+Mobile Ansicht (375×812) fehlerfrei, dunkles Farbschema durchgängig.
+
+---
+
+## 2026-09-25 (39) – Teil 2f, Nachtrag: `wer-fehlt` verifiziert, sidebar.js-Frage beantwortet
+
+**Auftrag (Kurzfassung):** Die drei aus Eintrag 38 vorgemerkten Punkte
+abschließen, nachdem `data/fuehrungen.csv` außerhalb dieser Sitzung um den
+Pfad `wer-fehlt` ergänzt und die beiden verbliebenen `vertiefung`-
+Beschreibungen bereits gezielt umgewandelt wurden (siehe Chat-Bestätigung
+zwischen Eintrag 38 und diesem).
+
+### Punkt 1 - Stationen 2/9 von `wer-fehlt`
+
+Live geprüft (Browser-Tab frisch geladen - der vorherige Tab hatte noch
+den Datenstand vor Ergänzung von `wer-fehlt` im Speicher, `ladeFuehrungenDaten()`
+memoisiert pro Seitenaufruf, siehe wiederholt in dieser Sitzung
+dokumentiertes Cache-Verhalten dieses Browser-Werkzeugs - nach frischem
+Laden korrekt). Station 2 (`familie:albrecht_iii`, ein Beleg) und Station 9
+(`familie:albrecht_iii|buergerbuch:BB-1046`, Vergleichsstation) zeigen
+beide 0 Prüfhinweise. Quellenzeile Station 2/9 jeweils "Stammbaum ·
+albrecht_iii · Im Stammbaum ansehen". Link live angeklickt (nicht nur der
+href-Wert geprüft): öffnet den Stammbaum, Albrecht III. und seine direkten
+Beziehungen hervorgehoben, übrige Personen abgeblendet, Detail-Popover
+offen (Name/Titel/Geburts-/Sterbedatum/Familie) - identisch zum bereits in
+Eintrag 38 geprüften synthetischen Fall, jetzt zusätzlich über den echten
+Link in der echten Führung bestätigt.
+
+### Punkt 2 - Unsicherheitskennzeichnung in `sidebar.js`
+
+**Antwort:** `js/utils/sidebar.js` kennzeichnet Unsicherheit an beiden
+Stellen (`baueSidebarInhalt()` Zeile 127-133, `baueUrkundenDetailInhalt()`
+Zeile 395-401) ausschließlich durch den Text **„Achtung: Angaben
+unsicher..."**, rot und fett dargestellt über die CSS-Klasse
+`.bestand-sidebar-unsicher` (`color: var(--unsicher); font-weight: 600;`,
+inline in `sidebar.js` selbst definiert, `css/components.css` enthält dazu
+keine Regel). Kein Icon, kein Unicode-Zeichen, kein `content:`-Pseudo-
+Element - "Achtung:" ist reiner Text, kein Symbol. `js/viz/personenliste.js`
+(Zeile 277-283) verwendet dieselbe Klasse/denselben Text für den
+Bürgerbuch-Unsicherheitshinweis, ebenfalls ohne Symbol.
+
+Da nichts zu ersetzen vorhanden ist (kein Zeichen, kein CSS-Inhalt, kein
+Icon), wurde hier NICHTS geändert - der bedingte Auftrag ("falls dort ein
+anderes Zeichen ... verwendet wird") trifft nicht zu. Ein σ dort einzuführen
+wäre eine NEUE Gestaltungsentscheidung (Symbol einführen, wo bisher keines
+war), keine Migration eines bestehenden Symbols - das ginge über Teil 2f
+Punkt 1 (Nicht-Ziel: "nur das Symbol ändern") hinaus. Vorschlag, falls
+gewünscht: eigener Folgeauftrag, um `sidebar.js`/`personenliste.js` auf
+dieselbe σ-Konvention zu heben, mit expliziter Entscheidung, ob nur ein
+Symbol ergänzt oder die gesamte Darstellung (Text/Farbe/Aufbau) an die
+Führungen-Konvention (K3, Teil 2c) angeglichen werden soll.
+
+### Punkt 3 - Prüfbericht `wer-fehlt` (wie Teil 2d)
+
+Alle 9 Stationen programmatisch durchlaufen (1366×768, `resize()` je
+Stationswechsel angestoßen).
+
+**Verbleibende Prüfhinweise:** keine (0 `.fuehrung-fehler` über alle 9
+Stationen, auch nicht bei Vertiefungslinks).
+
+**Beleglinks (alle live nachvollzogen, nicht nur href geprüft):**
+- Station 3, `person:paul_krautwurm`: öffnet die Personenliste, filtert auf "Paul Krautwurm", 6 Nennungen, Erste Nennung 1359, Weitere Schreibweisen "Paul der Krautwurm" - bestätigt die Zusammenführung aus Eintrag 38 Punkt 3 wirkt korrekt bis in diese Ansicht durch.
+- Station 2/9, `familie:albrecht_iii`: siehe Punkt 1 oben.
+- Station 6, `bestand:1.2.2.3.3.`: öffnet die Treemap, Sidebar zeigt die Haussteuerbücher-Zelle hervorgehoben.
+- Station 8, `bestand:1.1.2.4.5.1.`: öffnet die Treemap, Sidebar zeigt korrekt "Inleute-Steuerbücher Krems" (StAKr, 1.1.2.4.5.1.).
+- Station 4/9 (`person:magnus_scheipl`, über den Bürgerbuch-Beleg BB-1046 aufgelöst) und Station 1/9 (`urkunde:StaAKr-0053`) href-seitig korrekt, entsprechen demselben, bereits mehrfach in dieser Sitzung bestätigten generischen Mechanismus.
+
+**Station 5 ohne Beleg:** kein leerer Rahmen, Erzähltext mittig über die
+volle Breite (Teil 2e-Layout), Navigation an derselben Position wie jede
+andere Station - unverändert korrekt.
+
+**Bildschirmfüllung 1366×768:** alle 9 Stationen ohne Seitenscrollen
+(`document.documentElement.scrollHeight === window.innerHeight === 768`
+bei jeder Station). Internes Scrollen im Belegbereich bei Station 2 (der
+`familie`-Beleg mit den meisten Feldern) und Station 9 (dort: der
+`familie`-Beleg, NICHT der `buergerbuch`-Beleg) - erwartungsgemäß, gleiche
+Kategorie wie die bereits in Eintrag 36/37 geklärten "lange Inhalte"-Fälle,
+kein Erzähltext-internes Scrollen bei keiner Station.
+
+Keine Konsolenfehler während der gesamten Prüfung.
+
+---
+
 ## 2026-09-25 (38) – Teil 2f: σ-Symbol, Belegtyp `familie`, Zusammenführung Paul Krautwurm
 
 ### Punkt 1 - σ statt ⚠

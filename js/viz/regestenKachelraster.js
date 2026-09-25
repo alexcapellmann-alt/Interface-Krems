@@ -82,6 +82,7 @@ import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
 import { setFilterEntity, getZustand, clearZielSignatur } from '../core/state.js';
 import { CAT_COLORS, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { baueGenanntePersonenZeile } from '../utils/genanntePersonen.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { erzeugeFilterleiste } from '../utils/filterleiste.js';
@@ -518,6 +519,29 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   const regestAbsatz = baueRegestBereich(record.regest);
   karte.appendChild(regestAbsatz);
   karte.appendChild(baueFotoBereich(record, beobachter));
+
+  // AUFTRAG "Teil 2g", Punkt 5: "Genannte Personen"-Zeile unter dem Regest -
+  // dieselbe Funktion wie js/fuehrungen/belegDarstellung.js (Punkt 4, Auftrag
+  // wörtlich: "Wiederverwendung derselben Funktion, keine zweite Umsetzung").
+  // `personen`/`personen_id` sind dieselben index-parallelen Listen
+  // (SCHEMA.md) wie dort. Bewusst IMMER sichtbar (nicht an `regk-aufgeklappt`
+  // gekoppelt) - dieselbe Sichtbarkeitsebene wie das bestehende, ebenfalls
+  // immer sichtbare "Personen"-Feld oben (Nicht-Ziel: Aufklappen unverändert).
+  const namen = Array.isArray(record.personen) ? record.personen : (record.personen ? [record.personen] : []);
+  const ids = Array.isArray(record.personen_id) ? record.personen_id : (record.personen_id ? [record.personen_id] : []);
+  const genanntePersonenZeile = baueGenanntePersonenZeile(
+    namen.map((name, i) => ({ name, id: ids[i] || null })),
+    { unsicher: zeigeUnsicherheit && !!record.personen_unsicher }
+  );
+  if (genanntePersonenZeile) {
+    // Dieselbe Ausnahme vom kachelweiten Klick-Handler wie die Personen-/
+    // Ortsnamen-Buttons oben (baueEntityButtons()) - ein Linkklick darf die
+    // Kachel nicht zusätzlich auf-/zuklappen.
+    genanntePersonenZeile.addEventListener('click', (event) => {
+      if (event.target.closest('a')) event.stopPropagation();
+    });
+    karte.appendChild(genanntePersonenZeile);
+  }
 
   // Punkt 1 (Kernstück des Auftrags): Klick-Handler auf der GESAMTEN Kachel
   // statt nur auf dem entfallenen "mehr anzeigen"-Button - jeder Klick
