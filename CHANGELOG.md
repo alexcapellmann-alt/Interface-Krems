@@ -7,6 +7,44 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-25 (91) – Teil 2h, Punkt 4b: Personen-ID für Verlassenschaftsinventare
+
+Nach Freigabe umgesetzt. `data/verlassenschaftsinventare.csv`: neue Spalten
+`personen_id`/`personen_id_unsicher` für alle 68 Zeilen befüllt.
+`data/personenliste.csv`: die beiden bestätigten Zweitinventarisierungen
+(Bartholomäus Eggartner `VI-0024`/`VI-0028`, Anna Catharina Schönthanin
+`VI-0032`/`VI-0033`, Dietrich 2025) zu je einer Zeile mit Pipe-Liste in
+`nennung_in_verlassenschaften` zusammengeführt, Hinweis in
+`unsicherheit_anmerkung`. `js/config/archivalienRegistry.js`:
+`verlassenschaftsinventare.csv` als fünfte Quelle für die Personenliste-
+Ansicht ergänzt. `js/viz/personenliste.js`: Verlassenschaftsinventare als
+dritte auflösbare Quelle (analog Urkunden/Bürgerbuch) - neuer Abschnitt "In
+den Verlassenschaftsinventaren:" in der kombinierten Sidebar-Liste, eigene
+Detail-/Listen-Bausteine. `js/fuehrungen/belegDarstellung.js`: Name eines
+Inventar-Belegs jetzt zur Personenliste verlinkt (analog Bürgerbuch).
+`docs/SCHEMA.md` aktualisiert (neue Spalten, korrigierte Zeilenzahl).
+`wer-fehlt` Station 7 zeigt Margaret Khürmerin jetzt als funktionierenden
+Link mit ihrer Inventar-Nennung. Details siehe PROJEKTLOG Eintrag 43.
+
+---
+
+## 2026-09-25 (90) – Teil 2i: Doppelte Personenzeile zusammenführen
+
+Urkunden zeigten seit Teil 2g/2h an zwei Stellen doppelt Personen: einmal
+die alte, nicht (Kachelraster) bzw. inzwischen bereits verlinkte
+(Führungen, über `sidebar.js`) Zeile, einmal die in Teil 2g zusätzlich
+eingeführte „Genannte Personen"-Zeile. Beschriftung jetzt zentral in
+`js/utils/genanntePersonen.js` auf „Personen" vereinheitlicht, die
+jeweils redundante zweite Zeile entfernt: `js/fuehrungen/belegDarstellung.js`
+(doppelte Zeile im Urkunden-Belegbereich, da `baueUrkundenDetailInhalt()`
+seit Teil 2h bereits selbst verlinkt), `js/viz/regestenKachelraster.js`
+(alte, nur optisch wie Links aussehende Filter-Buttons-Zeile entfernt, die
+Orte-Filterfunktion bleibt unverändert). `sidebar.js` selbst unverändert
+(hatte durch Teil 2h bereits nur eine Zeile). `css/components.css` ohne
+Änderung. Details/Bestandsaufnahme siehe PROJEKTLOG Eintrag 42.
+
+---
+
 ## 2026-09-25 (89) – Teil 2h: Personenlinks in der Urkunden-Sidebar, Hervorhebung in der Zeitachse, Personenliste, Personen-ID für Inventare
 
 **Punkt 1:** `js/utils/sidebar.js`s Personenzeile der Urkunden-Sidebar

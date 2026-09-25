@@ -20,6 +20,12 @@ import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 // getrennt, zurück - roh, ohne umschließendes Label/Feld (siehe
 // baueGenanntePersonenZeile() unten für die vollständige, beschriftete
 // Zeile).
+//
+// AUFTRAG "Teil 2i": Beschriftung zentral hier festgelegt ("Personen" -
+// ersetzt die vormals separate, unverlinkte "Personen"-Zeile an jeder
+// Aufruferstelle vollständig, statt wie in 2g als ZUSÄTZLICHE "Genannte
+// Personen"-Zeile danebenzustehen). Aufrufer ändern hierfür nichts an der
+// Beschriftung selbst.
 export function baueVerlinkteNamen(personen) {
   const fragment = document.createDocumentFragment();
   const eintraege = (personen || []).filter((p) => p && p.name);
@@ -39,8 +45,11 @@ export function baueVerlinkteNamen(personen) {
   return fragment;
 }
 
-// Vollständige, beschriftete "Genannte Personen: …"-Zeile (Punkt 4/5,
-// Auftrag wörtlich: "als eigene Zeile unter dem Regest"). `unsicher`
+// Vollständige, beschriftete "Personen: …"-Zeile (ursprünglich Punkt 4/5,
+// Auftrag wörtlich: "als eigene Zeile unter dem Regest"; Beschriftung seit
+// Teil 2i "Personen" statt "Genannte Personen" - ersetzt die vormals
+// separate, unverlinkte "Personen"-Zeile, statt daneben zu stehen).
+// `unsicher`
 // (z. B. `record.personen_unsicher`) hängt ein σ mit zugänglicher
 // Bezeichnung an - dieselbe Konvention wie die übrigen σ-Verwendungen
 // (aria-hidden am Symbol selbst, Bedeutung über das umgebende `aria-label`
@@ -52,7 +61,7 @@ export function baueGenanntePersonenZeile(personen, { unsicher = false } = {}) {
   if (eintraege.length === 0) return null;
   const absatz = document.createElement('p');
   absatz.className = 'genannte-personen';
-  absatz.appendChild(document.createTextNode('Genannte Personen: '));
+  absatz.appendChild(document.createTextNode('Personen: '));
   absatz.appendChild(baueVerlinkteNamen(eintraege));
   if (unsicher) {
     const symbol = document.createElement('span');

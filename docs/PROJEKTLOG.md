@@ -5,6 +5,134 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-25 (43) – Teil 2h, Punkt 4b: Personen-ID für Verlassenschaftsinventare (Umsetzung nach Freigabe)
+
+**Freigabe des Nutzers (wörtlich):** beide in Eintrag 41 als "unsicher" gemeldeten Verdachtsfälle sind Zweitinventarisierungen derselben Person (Dietrich 2025) - `VI-0024`/`VI-0028` Bartholomäus Eggartner (1679 und 1690, erneute Inventur bei Volljährigkeit des jüngsten Sohnes), `VI-0032`/`VI-0033` Anna Catharina Schönthanin (1692 und 1693). Jeweils dieselbe `personen_id`, `personen_id_unsicher` = nein, Hinweis auf die Zweitinventarisierung in `unsicherheit_anmerkung` bzw. der Anmerkung vermerken.
+
+### Datenänderungen
+
+**`data/verlassenschaftsinventare.csv`:** zwei neue Spalten `personen_id`/`personen_id_unsicher` vor der bestehenden `unsicherheit_anmerkung` eingefügt (dieselbe Spaltenreihenfolgen-Konvention wie bei allen anderen Tabellen: `<feldname>_unsicher` folgt direkt auf sein Feld, `unsicherheit_anmerkung` bleibt die letzte Spalte). `personen_id` für alle 68 Zeilen befüllt - 66 mit der bereits am 2026-09-21 dedizierten `personenliste.csv`-ID (siehe Eintrag 41, Vorbefund), `VI-0024`/`VI-0028` und `VI-0032`/`VI-0033` mit jeweils DERSELBEN ID (`bartholomaeus_eggartner`, `anna_catharina_schoenthanin_hievor_leutmanslehnerin`) gemäß Freigabe. `personen_id_unsicher` für alle 68 Zeilen `nein`. `unsicherheit_anmerkung` für genau diese vier Zeilen befüllt: "Zweitinventarisierung derselben Person (Dietrich 2025) - keine unsichere Personenzuordnung."; die übrigen 64 Zeilen unverändert leer. Format unverändert (BOM, CRLF, Semikolon-Trennung, 19→21 Spalten bei allen 68 Zeilen gleichermaßen, keine neuen Anführungszeichen o. Ä. nötig, da keine Zelle ein Semikolon enthält) - per `git diff` nachgewiesen: 138 geänderte Zeilen = alle 68 Datenzeilen + Kopfzeile je einmal, keine stillen Nebenänderungen.
+
+**`data/personenliste.csv`:** die beiden am 2026-09-21 automatisch angelegten `_2`-Zeilen (`bartholomaeus_eggartner_2`, `anna_catharina_schoenthanin_hievor_leutmanslehnerin_2`) entfernt, ihre Nennung stattdessen in den jeweiligen Haupteintrag zusammengeführt: `nennung_in_verlassenschaften` wird zur Pipe-Liste (`VI-0024|VI-0028` bzw. `VI-0032|VI-0033` - DataLoader zerlegt das automatisch in ein Array, dieselbe generische Pipe-Konvention wie überall, keine Sonderbehandlung nötig), `anzahl_nennungen` von 1 auf 2, `letzte_nennung` auf das jeweils spätere Jahr (1690/1693), `nennungsspanne_jahre` konsistent zur bereits etablierten Konvention der übrigen Mehrfach-Nennungen-Zeilen nachgezogen (11 bzw. 1 - vor dieser Korrektur wäre die Zeile die einzige mit `anzahl_nennungen` > 1 und `nennungsspanne_jahre` = 0 im gesamten Datensatz gewesen, per Konsole gegengeprüft), `unsicherheit_anmerkung` mit demselben Zweitinventarisierungs-Hinweis wie oben befüllt. Format unverändert (BOM, CRLF, Semikolon-Trennung, Spaltenzahl gleich) - `git diff` zeigt netto 6 geänderte Zeilen (2 gelöschte + 2 geänderte, git zeigt Löschung+Neufassung als 4 Zeilen plus 2 reine Löschungen = 6), keine weiteren der 4178 Zeilen berührt.
+
+**Selbstauskunft, informative Nebenwirkung (bewusst hingenommen, nicht verschwiegen):** `js/utils/unsicherAbsatz.js`s `baueUnsicherheitAbsatz()` behandelt jede befüllte `unsicherheit_anmerkung` als Auslöser für die generische "σ Angaben unsicher"-Kennzeichnung, UNABHÄNGIG von einem tatsächlich gesetzten `_unsicher`-Feld (siehe dortiger Dateikopf-Kommentar, bereits vor diesem Auftrag so). Die wörtliche Nutzeranweisung, den Hinweis trotz `personen_id_unsicher` = nein in `unsicherheit_anmerkung` zu vermerken, löst dadurch in der Personenliste (Tabellenzeile UND Detailansicht der beiden betroffenen Personen) dieselbe σ-Kennzeichnung/denselben aufklappbaren Hinweis aus wie eine echte Unsicherheit - inhaltlich passend (der Hinweis erklärt ja tatsächlich etwas Bemerkenswertes an der Zuordnung), aber kein rein interner Vermerk ohne UI-Auswirkung. Live geprüft: in der Personenliste erscheint bei aktivem Unsicherheitsmodus ein σ vor "Bartholomäus Eggartner", Tooltip zeigt den Zweitinventarisierungs-Text; in der Detailansicht des Inventars `VI-0024` (aus der kombinierten Liste heraus geöffnet) erscheint derselbe Text im aufklappbaren "σ Angaben unsicher"-Absatz.
+
+**Transparenter Nebenfund (nicht Teil des Auftrags, informativ dokumentiert):** `docs/SCHEMA.md` Abschnitt 8 nannte bisher "4179 Einträge (4111 aus Urkunden/Bürgerbuch + 68 ...)" - tatsächlich waren es schon vor diesem Auftrag 4178 Zeilen (4110 + 68), eine bereits vorher bestehende Ungenauigkeit um 1, unabhängig von der heutigen Zusammenlegung. Bei der Gelegenheit auf den jetzt korrekten Wert (4176 = 4110 + 66) korrigiert.
+
+### Code-Änderungen
+
+**`js/config/archivalienRegistry.js`:** `verlassenschaften: 'data/verlassenschaftsinventare.csv'` als fünfte Quelle im `personen`-Typ ergänzt (analog zum bereits bestehenden `buergerbuch`-Eintrag) - derselbe generische `ladeArchivalienDaten()`-Mechanismus lädt sie automatisch mit.
+
+**`js/viz/personenliste.js`:** Verlassenschaftsinventare als DRITTE auflösbare Quelle neben Urkunden/Bürgerbuch ergänzt, konsequent nach demselben bereits etablierten Muster:
+- `ermittleInventareFuerPerson()` (analog zu den beiden bestehenden `ermittle…FuerPerson()`-Funktionen) löst `nennung_in_verlassenschaften` gegen eine neue `inventareNachId`-Map (`verlassenschaftsinventare.id` -> Record) auf, aufgebaut in `render()` analog zu `urkundenNachSignatur`/`buergerbuchNachId`.
+- `baueInventarDetailInhalt()`/`baueInventarListeInhalt()`/`zeigeDetailInventar()` (analog zu den Bürgerbuch-Äquivalenten) - Feldauswahl Jahr/Beruf-Funktion-Stand/Ort/Vermögensgruppe (dieselben Felder wie `belegDarstellung.js`s `baueInventarInhalt()`, zusätzlich Ort, da hier sonst keine Ortsangabe zu einer Verlassenschafts-Person verfügbar wäre) plus die geteilte `baueUnsicherheitAbsatz()`-Komponente.
+- `zeigeKombinierteListe()`/`zurueckZurKombiniertenListe()`/`zeigePersonenNennungen()` um einen dritten, analog benannten Abschnitt "In den Verlassenschaftsinventaren:" erweitert - bei `personen_id`s mit mehreren Inventar-Nennungen (aktuell nur die beiden Zweitinventarisierungs-Fälle) erscheint automatisch dieselbe "1 -> Detail, mehrere -> Liste"-Logik wie bei den beiden bestehenden Quellen (`gesamt` zählt jetzt alle drei Quellen zusammen - bei den beiden Zweitinventarisierungs-Personen ist `gesamt` = 2, öffnet also direkt die kombinierte Liste mit den zwei Inventar-Einträgen).
+- `baueZeile()`/`zeichneTabelle()`/`render()`/`oeffneDatensatz()` entsprechend um den dritten Parameter/die dritte Map durchgereicht.
+
+**`js/fuehrungen/belegDarstellung.js`:** `baueInventarInhalt()`s bisher reines Textfeld "Name" durch `feldMitKnoten('Name', baueVerlinkteNamen([{ name: r.Name, id: r.personen_id }]))` ersetzt - exakt dasselbe Muster wie bereits bei `baueBuergerbuchInhalt()`s Name-Feld. `personen_id_unsicher` wird hier bewusst NICHT als eigenes Symbol neben dem Namen angezeigt (aktuell ohnehin durchgehend "nein", ein Unsicher-Symbol wäre unbelegter Vorgriff ohne echten Anwendungsfall).
+
+**`docs/SCHEMA.md`:** Abschnitt 5 (neue Spalten `personen_id`/`personen_id_unsicher`, inkl. Hinweis auf die beiden zusammengelegten IDs), Abschnitt 8 (Zeilenzahl korrigiert, `nennung_in_verlassenschaften` jetzt explizit als Text/Pipe-Liste dokumentiert, Zweitinventarisierungs-Hinweis).
+
+### Live-Prüfung
+
+- **`wer-fehlt`, Station 7** (Akzeptanzkriterium): Margaret Khürmerin erscheint jetzt als funktionierender Link (`?datensatz=person:margaret_khuermerin`) im Belegbereich, führt zu genau EINEM Personenlisten-Treffer mit direkt geöffneter Inventar-Detailansicht (Jahr/Beruf/Ort/Vermögensgruppe von `VI-0039`). Kein Konsolenfehler.
+- **Zweitinventarisierungs-Personen:** `?datensatz=person:bartholomaeus_eggartner` öffnet direkt die kombinierte Liste ("2 Einträge") mit beiden Inventaren (`VI-0024`/1679, `VI-0028`/1690) einzeln anklickbar; jede Detailansicht zeigt den aufklappbaren Zweitinventarisierungs-Hinweis; "← Zurück" führt korrekt zur kombinierten Liste zurück. `anna_catharina_schoenthanin_hievor_leutmanslehnerin` stichprobenartig analog per Datenprüfung bestätigt (nicht zusätzlich einzeln durchgeklickt, identischer Code-Pfad wie Eggartner).
+- **σ-Kennzeichnung in der Tabelle:** bei aktivem Unsicherheitsmodus erscheint σ vor "Bartholomäus Eggartner", Tooltip zeigt den Zweitinventarisierungs-Text (Screenshot im Chat).
+- **Regression:** eine reine Urkunden-Person (`paul_krautwurm`, 6 Urkunden-Nennungen) und eine reine Verlassenschafts-Person ohne Zweitinventarisierung (`judith_walcherin`) weiterhin unverändert korrekt (kein unnötiger dritter Abschnitt, keine falsche Detail/Liste-Umschaltung). `#visualisierungen/verlassenschaften/parallelKoordinaten?datensatz=inventar:VI-0024` (eigene, unveränderte Inventar-Sidebar dieses Moduls) weiterhin fehlerfrei - die zwei neuen Spalten in `verlassenschaftsinventare.csv` stören dort nicht. `vermoegensschichtung`/`marimekkoVerlassenschaften` laden fehlerfrei. Zeitachse/`#bestand/treemap` als stichprobenartige weitere Routen ebenfalls ohne Konsolenfehler.
+
+Keine Konsolenfehler bei allen Prüfungen. `node --check` über alle fünf geänderten JS-Dateien erfolgreich.
+
+---
+
+## 2026-09-25 (42) – Teil 2i: Doppelte Personenzeile zusammenführen
+
+### Bestandsaufnahme (vor der Umsetzung gemeldet)
+
+Seit Teil 2g/2h zeigte eine Urkunde an drei Stellen zwei Personenzeilen
+gleichzeitig:
+
+| Stelle | Zeile 1 (alt, vor 2i) | Zeile 2 (alt, vor 2i) |
+|---|---|---|
+| `js/utils/sidebar.js`s `baueUrkundenDetailInhalt()` (genutzt von Zeitachse, `dotPlot.js`, `kalenderHeatmap.js` und - über `belegDarstellung.js` - beiden Führungen) | **keine Dopplung** - Teil 2h hatte die alte Textzeile hier bereits durch die verlinkte Zeile ERSETZT, nicht ergänzt | „Genannte Personen: …" (verlinkt) |
+| `js/fuehrungen/belegDarstellung.js`s `baueBelegBereich()` (Belegbereich der Führungen, Urkunden-Typ) | „Personen: …" - kam bereits INNERHALB des wiederverwendeten `baueUrkundenDetailInhalt()` (s. o.), war seit Teil 2h bereits verlinkt | „Genannte Personen: …" (verlinkt) - hier zusätzlich vom noch aus Teil 2g stammenden, seither nie entfernten lokalen Code gebaut. Der Auftrag "Teil 2g" Punkt 4 ging noch davon aus, dass `sidebar.js` selbst unverändert bleibt (Kommentar dort wörtlich: "sidebar.js selbst bleibt unveraendert, siehe dessen eigenes 'Personen'-Feld dort") - diese Annahme wurde durch Teil 2h überholt, ohne dass diese Stelle angepasst wurde |
+| `js/viz/regestenKachelraster.js`s `baueKarte()` (Kachelraster) | „Personen: …" - Filter-Buttons (`baueEntityButtons()`/`setFilterEntity()`), optisch wie Links (unterstrichen, farbig) formatiert, aber ohne Navigation zur Personenliste - filtern stattdessen das Kachelraster auf den angeklickten Namen | „Genannte Personen: …" (echte Links) |
+
+Betroffen waren also zwei der drei im Auftrag genannten Dateien
+(`belegDarstellung.js`, `regestenKachelraster.js`) - `sidebar.js` selbst
+zeigte durch die Teil-2h-Umstellung bereits nur eine Zeile und musste in
+diesem Auftrag nicht geändert werden.
+
+### Umsetzung
+
+**Beschriftung zentral in `genanntePersonen.js`:** `baueGenanntePersonenZeile()`
+baut jetzt „Personen: …" statt „Genannte Personen: …" - einzige Stelle, an
+der der Text steht, kein Aufrufer setzt die Beschriftung selbst.
+
+**`js/fuehrungen/belegDarstellung.js`:** die separat gebaute
+„Genannte Personen"-Zeile (vormals direkt nach
+`scroll.appendChild(baueUrkundenDetailInhalt(r))` im `urkunde`-Zweig von
+`baueBelegBereich()`) entfernt - `baueUrkundenDetailInhalt()` liefert die
+verlinkte Personenzeile bereits selbst. Der dadurch ungenutzte Import von
+`baueGenanntePersonenZeile` entfernt (`baueVerlinkteNamen` bleibt, weiterhin
+für die Bürgerbuch-Darstellung gebraucht).
+
+**`js/viz/regestenKachelraster.js`:** die alte, über `baueListenFeld('Personen', ...)`
+gebaute Filter-Buttons-Zeile (stand vormals zwischen Orte- und
+Kategorien-Feld) vollständig entfernt. Die weiter unten (nach Regest/Fotos)
+bereits vorhandene, echte verlinkte Zeile bleibt an ihrer Stelle -
+`baueListenFeld()`/`baueEntityButtons()`/`setFilterEntity()` bleiben
+unverändert bestehen, werden aber jetzt nur noch für Orte aufgerufen (Nicht-
+Ziel: keine Änderung an der Orte-Filterfunktion). Zwei Kommentarstellen, die
+noch die entfernte Personen-Filter-Zeile erwähnten, entsprechend
+aktualisiert.
+
+**`css/components.css`:** keine Änderung nötig - `.genannte-personen`/
+`.genannte-personen-link`/`-unsicher` (aus Teil 2g) werden weiterhin von der
+jetzt einzigen Zeile genutzt; die entfernte Filter-Buttons-Zeile nutzte
+`.regk-entity-btn`, eine mit dem Orte-Feld geteilte Klasse, die also nicht
+entfallen darf und unverändert bleibt.
+
+### Live-Prüfung
+
+**Projektweite Suche nach „Genannte Personen":** keine Treffer mehr in der
+Oberfläche (nur noch zwei Code-Kommentare, die die Beschriftungs-Historie
+erklären, siehe `genanntePersonen.js`/`regestenKachelraster.js`).
+
+- **Zeitachse** (`?datensatz=urkunde:StaAKr-0050`): genau eine Zeile
+  „Personen: Symon von Pyela" mit funktionierendem Link
+  (`#visualisierungen/personen/personenliste?datensatz=person:symon_von_pyela`),
+  Hervorhebung aus Teil 2h weiterhin unverändert aktiv. Screenshot im Chat.
+- **Regesten-Kachelraster:** jede der 50 Kacheln auf Seite 1 zeigt genau
+  eine „Personen: …"-Zeile mit echten Links (`Heinrich V.` →
+  `?datensatz=person:heinrich_v`, Klick navigiert korrekt zur Personenliste,
+  KEIN Auf-/Zuklappen der Kachel ausgelöst). Aufklappen per Kachelklick
+  (Regest/Fotos erscheinen), Foto-Nachladen und der app-weite
+  Unsicherheits-Umschalter (185 von 1069 gefilterte Treffer, Warnbox pro
+  Feld) funktionieren unverändert, keine Konsolenfehler. Screenshot im
+  Chat.
+- **Bürgerspital-Führung, Station 4** (`#fuehrungen/buergerspital-heringe/4`):
+  genau eine Zeile „Personen: Heinrich Mager, Berta Mager" mit
+  funktionierenden Links. Screenshot im Chat.
+- **wer-fehlt-Führung, Station 1** (`#fuehrungen/wer-fehlt/1`): ebenfalls
+  genau eine verlinkte Personenzeile („Albrecht III., Paul der Krautwurm"),
+  keine Regression.
+- **Fortsetzen-Button:** nach Klick auf einen Personenlink aus der
+  Bürgerspital-Führung (Station 4) und Rücksprung zur Führungsübersicht
+  zeigt der „Führung fortsetzen"-Hinweis weiterhin korrekt auf
+  `#fuehrungen/buergerspital-heringe/4` - keine Regression durch die
+  entfernte Zeile.
+
+Keine Konsolenfehler bei allen Prüfungen. `node --check` über die drei
+geänderten Dateien (`genanntePersonen.js`, `belegDarstellung.js`,
+`regestenKachelraster.js`) erfolgreich.
+
+### Punkt 4b (Auftrag 2h)
+
+Unverändert nicht umgesetzt, wartet weiter auf Freigabe - in diesem Auftrag
+nicht angerührt.
+
+---
+
 ## 2026-09-25 (41) – Teil 2h: Personenlinks in der Urkunden-Sidebar, Hervorhebung in der Zeitachse, Personenliste, Personen-ID für Inventare
 
 ### Punkt 1 - Personen in der Urkunden-Sidebar verlinken

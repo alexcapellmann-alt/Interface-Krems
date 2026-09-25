@@ -505,8 +505,13 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   const orteFeld = baueListenFeld('Orte', record.orte, 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
   if (orteFeld) karte.appendChild(orteFeld);
 
-  const personenFeld = baueListenFeld('Personen', record.personen, 'person', 'personen', record.personen_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
-  if (personenFeld) karte.appendChild(personenFeld);
+  // AUFTRAG "Teil 2i": die vormalige, hier gebaute "Personen"-Zeile
+  // (Filter-Buttons über setFilterEntity(), optisch wie Links, aber ohne
+  // Navigation zur Personenliste) entfernt - die weiter unten gebaute,
+  // tatsächlich verlinkte Zeile (baueGenanntePersonenZeile()) trägt jetzt
+  // dieselbe Beschriftung "Personen" und ersetzt sie vollständig, keine
+  // doppelte Zeile mehr. Die Orte-Filter-Buttons (orteFeld oben) sind vom
+  // Nicht-Ziel dieses Auftrags ausgenommen und bleiben unverändert.
 
   const kategorienFeld = baueKategorienFeld(record);
   if (kategorienFeld) karte.appendChild(kategorienFeld);
@@ -520,13 +525,14 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   karte.appendChild(regestAbsatz);
   karte.appendChild(baueFotoBereich(record, beobachter));
 
-  // AUFTRAG "Teil 2g", Punkt 5: "Genannte Personen"-Zeile unter dem Regest -
-  // dieselbe Funktion wie js/fuehrungen/belegDarstellung.js (Punkt 4, Auftrag
-  // wörtlich: "Wiederverwendung derselben Funktion, keine zweite Umsetzung").
-  // `personen`/`personen_id` sind dieselben index-parallelen Listen
-  // (SCHEMA.md) wie dort. Bewusst IMMER sichtbar (nicht an `regk-aufgeklappt`
-  // gekoppelt) - dieselbe Sichtbarkeitsebene wie das bestehende, ebenfalls
-  // immer sichtbare "Personen"-Feld oben (Nicht-Ziel: Aufklappen unverändert).
+  // AUFTRAG "Teil 2g", Punkt 5 (Beschriftung seit Teil 2i "Personen" statt
+  // "Genannte Personen", ersetzt die vormalige Filter-Buttons-Zeile oben
+  // vollständig statt danebenzustehen): verlinkte Personenzeile unter dem
+  // Regest - dieselbe Funktion wie js/fuehrungen/belegDarstellung.js (Punkt
+  // 4, Auftrag wörtlich: "Wiederverwendung derselben Funktion, keine zweite
+  // Umsetzung"). `personen`/`personen_id` sind dieselben index-parallelen
+  // Listen (SCHEMA.md) wie dort. Bewusst IMMER sichtbar (nicht an
+  // `regk-aufgeklappt` gekoppelt).
   const namen = Array.isArray(record.personen) ? record.personen : (record.personen ? [record.personen] : []);
   const ids = Array.isArray(record.personen_id) ? record.personen_id : (record.personen_id ? [record.personen_id] : []);
   const genanntePersonenZeile = baueGenanntePersonenZeile(
@@ -534,9 +540,9 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
     { unsicher: zeigeUnsicherheit && !!record.personen_unsicher }
   );
   if (genanntePersonenZeile) {
-    // Dieselbe Ausnahme vom kachelweiten Klick-Handler wie die Personen-/
-    // Ortsnamen-Buttons oben (baueEntityButtons()) - ein Linkklick darf die
-    // Kachel nicht zusätzlich auf-/zuklappen.
+    // Dieselbe Ausnahme vom kachelweiten Klick-Handler wie die Ortsnamen-
+    // Buttons oben (baueEntityButtons()) - ein Linkklick darf die Kachel
+    // nicht zusätzlich auf-/zuklappen.
     genanntePersonenZeile.addEventListener('click', (event) => {
       if (event.target.closest('a')) event.stopPropagation();
     });
@@ -547,10 +553,11 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   // statt nur auf dem entfallenen "mehr anzeigen"-Button - jeder Klick
   // innerhalb der Kachelfläche (Text, Hintergrund, Ränder) klappt sie auf/
   // zu, unabhängig von allen anderen Kacheln (kein Akkordeon, unverändert
-  // aus dem ursprünglichen Punkt 2). Die beiden Ausnahmen (Foto, Personen-/
-  // Ortsnamen) stoppen ihren eigenen Klick bereits selbst per
-  // event.stopPropagation() (siehe baueFotoBereich()/baueEntityButtons()),
-  // erreichen diesen Handler also gar nicht erst.
+  // aus dem ursprünglichen Punkt 2). Die beiden Ausnahmen (Foto, Orts-/
+  // Personennamen) stoppen ihren eigenen Klick bereits selbst per
+  // event.stopPropagation() (siehe baueFotoBereich()/baueEntityButtons()/
+  // dem genanntePersonenZeile-Listener oben), erreichen diesen Handler also
+  // gar nicht erst.
   function schalteAufklappzustandUm() {
     const aufgeklappt = regestAbsatz.classList.toggle('regk-aufgeklappt');
     karte.setAttribute('aria-expanded', String(aufgeklappt));

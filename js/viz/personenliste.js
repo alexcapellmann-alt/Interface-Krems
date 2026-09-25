@@ -205,7 +205,7 @@ function ermittleSortierNachname(schreibweisen) {
   return woerter[woerter.length - 1];
 }
 
-let instanz = null; // { container, records, options, sortierung, suchbegriff, aktuelleSeite, infoButton, sidebar, urkundenNachSignatur, buergerbuchNachId } – eine aktive Liste pro Modul-Ladung
+let instanz = null; // { container, records, options, sortierung, suchbegriff, aktuelleSeite, infoButton, sidebar, urkundenNachSignatur, buergerbuchNachId, inventareNachId } – eine aktive Liste pro Modul-Ladung
 
 // AUFTRAG "Personenliste – Sidebar...": hält die zuletzt gezeigte
 // kombinierte Liste (Name + aufgelöste Urkunden-/Bürgerbuch-Records) für die
@@ -233,6 +233,18 @@ function ermittleBuergerbuchFuerPerson(record, buergerbuchNachId) {
     ? record.nennung_in_buergerbuch
     : (record.nennung_in_buergerbuch ? [record.nennung_in_buergerbuch] : []);
   return ids.map((id) => buergerbuchNachId.get(id)).filter(Boolean);
+}
+
+// AUFTRAG "Teil 2h", Punkt 4b: löst `nennung_in_verlassenschaften` (ID(s)
+// wie "VI-0024", pipe-getrennte Liste bei einer Zweitinventarisierung
+// derselben Person, z.B. `bartholomaeus_eggartner` -> "VI-0024|VI-0028",
+// siehe PROJEKTLOG) über die übergebene ID->Record-Map auf - analog zu den
+// beiden Funktionen oben.
+function ermittleInventareFuerPerson(record, inventareNachId) {
+  const ids = Array.isArray(record.nennung_in_verlassenschaften)
+    ? record.nennung_in_verlassenschaften
+    : (record.nennung_in_verlassenschaften ? [record.nennung_in_verlassenschaften] : []);
+  return ids.map((id) => inventareNachId.get(id)).filter(Boolean);
 }
 
 // Dasselbe Label+Wert-Feld-Layout wie sidebar.js' (dort private)
@@ -315,6 +327,68 @@ function baueBuergerbuchListeInhalt(records, { onEintragKlick } = {}) {
   return liste;
 }
 
+// AUFTRAG "Teil 2h", Punkt 4b: volle Detailansicht EINES Verlassenschafts-
+// inventars, analog zu baueBuergerbuchDetailInhalt() - Feldauswahl wie in
+// js/fuehrungen/belegDarstellung.js' baueInventarInhalt() (Jahr, Beruf/
+// Funktion/Stand, Vermögensgruppe), hier zusätzlich Ort (dort bislang nicht
+// gezeigt, in der Personenliste aber sinnvoll, da personenliste.js sonst
+// keine Ortsangabe zu einer Verlassenschafts-Person hat). unsicherheit_
+// anmerkung kann seit der Zusammenlegung zweier Zweitinventarisierungs-Fälle
+// (siehe PROJEKTLOG) informativ befüllt sein, ohne dass `personen_id_unsicher`
+// gesetzt ist - baueUnsicherheitAbsatz() zeigt den Hinweis trotzdem
+// (unsicherheit_anmerkung gilt dort unabhängig von einem `_unsicher`-Feld
+// immer als Auslöser, siehe dortiger Dateikopf-Kommentar).
+function baueInventarDetailInhalt(record) {
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(baueBuergerbuchSidebarFeld('Jahr', record.Jahr || '(ohne Jahr)'));
+  if (record['Beruf/Funktion/Stand']) wrapper.appendChild(baueBuergerbuchSidebarFeld('Beruf/Funktion/Stand', record['Beruf/Funktion/Stand']));
+  if (record['Ort (Schaetzung)']) wrapper.appendChild(baueBuergerbuchSidebarFeld('Ort', record['Ort (Schaetzung)']));
+  if (record.Vermoegensgruppe) wrapper.appendChild(baueBuergerbuchSidebarFeld('Vermögensgruppe', record.Vermoegensgruppe));
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, []);
+  if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
+  return wrapper;
+}
+
+// Kompakte Inventar-Liste, analog zu baueBuergerbuchListeInhalt() - ID+Jahr
+// als Kopfzeile, Beruf/Funktion/Stand als Vorschauzeile.
+function baueInventarListeInhalt(records, { onEintragKlick } = {}) {
+  const liste = document.createElement('ul');
+  liste.className = 'bestand-sidebar-urkunden-liste';
+
+  records.forEach((record) => {
+    const item = document.createElement('li');
+    item.className = 'bestand-sidebar-urkunden-eintrag';
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('role', 'button');
+    item.setAttribute('aria-label', `Verlassenschaftsinventar ${record.id}, Details anzeigen`);
+
+    const kopfzeile = document.createElement('span');
+    kopfzeile.className = 'bestand-sidebar-urkunden-signatur';
+    kopfzeile.textContent = `${record.id}${record.Jahr ? ` – ${record.Jahr}` : ''}`;
+    item.appendChild(kopfzeile);
+
+    if (record['Beruf/Funktion/Stand']) {
+      const vorschau = document.createElement('p');
+      vorschau.className = 'bestand-sidebar-urkunden-regest';
+      vorschau.textContent = record['Beruf/Funktion/Stand'];
+      item.appendChild(vorschau);
+    }
+
+    const aktivieren = () => onEintragKlick?.(record);
+    item.addEventListener('click', aktivieren);
+    item.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        aktivieren();
+      }
+    });
+
+    liste.appendChild(item);
+  });
+
+  return liste;
+}
+
 // Volle Detailansicht einer Urkunde - `zeigeZurueck` steuert, ob der
 // Zurück-Button sichtbar wird (nur wenn diese Detailansicht tatsächlich aus
 // einer Liste heraus erreicht wurde, dieselbe Konvention wie sidebar.js'
@@ -343,19 +417,34 @@ function zeigeDetailBuergerbuch(sidebarInstanz, record, zeigeZurueck) {
   titel.focus();
 }
 
-// Kombinierte Liste bei mehreren Treffern INSGESAMT - zwei klar getrennt
+// Volle Detailansicht eines Verlassenschaftsinventars, analog zu
+// zeigeDetailBuergerbuch() (AUFTRAG "Teil 2h", Punkt 4b).
+function zeigeDetailInventar(sidebarInstanz, record, zeigeZurueck) {
+  const { sidebar, titel, koerper, zurueckBtn } = sidebarInstanz;
+  titel.textContent = `${record.Name || record.id}${record.Name ? ` (${record.id})` : ''}`;
+  koerper.innerHTML = '';
+  koerper.appendChild(baueInventarDetailInhalt(record));
+  zurueckBtn.hidden = !zeigeZurueck;
+  sidebar.classList.add('offen');
+  sidebar.setAttribute('aria-hidden', 'false');
+  titel.focus();
+}
+
+// Kombinierte Liste bei mehreren Treffern INSGESAMT - klar getrennt
 // beschriftete Abschnitte (Auftrag, wörtlich: "In Urkunden:"/"Im
-// Bürgerbuch:"), jeweils nur gezeigt, wenn diese Quelle tatsächlich Treffer
-// hat (eine reine Urkunden- oder reine Bürgerbuch-Person zeigt also nur
-// EINEN Abschnitt, ohne leere zweite Überschrift). Merkt sich den eigenen
-// Zustand in `sidebarListenZustand` für die Zurück-Navigation.
-function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords) {
-  sidebarListenZustand = { personName, urkundenRecords, buergerbuchRecords };
+// Bürgerbuch:"; "In den Verlassenschaftsinventaren:" seit Teil 2h Punkt 4b
+// als dritter, analog benannter Abschnitt ergänzt), jeweils nur gezeigt,
+// wenn diese Quelle tatsächlich Treffer hat (eine reine Urkunden-Person
+// zeigt also nur EINEN Abschnitt, ohne leere weitere Überschriften). Merkt
+// sich den eigenen Zustand in `sidebarListenZustand` für die
+// Zurück-Navigation.
+function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords) {
+  sidebarListenZustand = { personName, urkundenRecords, buergerbuchRecords, inventarRecords };
   const { sidebar, titel, koerper, zurueckBtn } = sidebarInstanz;
   titel.textContent = personName;
   koerper.innerHTML = '';
 
-  const gesamt = urkundenRecords.length + buergerbuchRecords.length;
+  const gesamt = urkundenRecords.length + buergerbuchRecords.length + inventarRecords.length;
   const anzahl = document.createElement('p');
   anzahl.className = 'bestand-sidebar-urkunden-anzahl';
   anzahl.textContent = `${gesamt} Eintrag/Einträge`;
@@ -377,6 +466,14 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
       onEintragKlick: (record) => zeigeDetailBuergerbuch(sidebarInstanz, record, true)
     }));
   }
+  if (inventarRecords.length > 0) {
+    const ueberschrift = document.createElement('h4');
+    ueberschrift.textContent = 'In den Verlassenschaftsinventaren:';
+    koerper.appendChild(ueberschrift);
+    koerper.appendChild(baueInventarListeInhalt(inventarRecords, {
+      onEintragKlick: (record) => zeigeDetailInventar(sidebarInstanz, record, true)
+    }));
+  }
 
   zurueckBtn.hidden = true; // die kombinierte Liste selbst ist die Wurzel, kein Zurück-Ziel dahinter
   sidebar.classList.add('offen');
@@ -391,24 +488,26 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
 // zwischenzeitlich geschlossen/zurückgesetzt wurde.
 function zurueckZurKombiniertenListe(sidebarInstanz) {
   if (!sidebarListenZustand) return;
-  const { personName, urkundenRecords, buergerbuchRecords } = sidebarListenZustand;
-  zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords);
+  const { personName, urkundenRecords, buergerbuchRecords, inventarRecords } = sidebarListenZustand;
+  zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords);
 }
 
 // Einziger Einstiegspunkt vom Zeilen-Klick (siehe baueZeile()): "genau 1
 // Treffer insgesamt -> volle Detailansicht, mehrere -> kompakte Liste"
-// (Auftrag, wörtlich) - unabhängig davon, aus welcher der beiden Quellen der
-// eine Treffer stammt.
-function zeigePersonenNennungen(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords) {
+// (Auftrag, wörtlich) - unabhängig davon, aus welcher der drei Quellen der
+// eine Treffer stammt (Verlassenschaftsinventare seit Teil 2h Punkt 4b als
+// dritte Quelle ergänzt).
+function zeigePersonenNennungen(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords) {
   sidebarListenZustand = null;
-  const gesamt = urkundenRecords.length + buergerbuchRecords.length;
+  const gesamt = urkundenRecords.length + buergerbuchRecords.length + inventarRecords.length;
   if (gesamt === 0) return; // keine auflösbare Nennung - nichts zum Anzeigen
   if (gesamt === 1) {
     if (urkundenRecords.length === 1) zeigeDetailUrkunde(sidebarInstanz, urkundenRecords[0], false);
-    else zeigeDetailBuergerbuch(sidebarInstanz, buergerbuchRecords[0], false);
+    else if (buergerbuchRecords.length === 1) zeigeDetailBuergerbuch(sidebarInstanz, buergerbuchRecords[0], false);
+    else zeigeDetailInventar(sidebarInstanz, inventarRecords[0], false);
     return;
   }
-  zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords);
+  zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords);
 }
 
 // Paginierung (Auftrag "in der Personenliste nur 100 Personen pro Seite
@@ -620,7 +719,7 @@ function wechsleSeite(neueSeite) {
 // Symbol-Wahl selbst, die Zeile brauchte vorher aber gar keine textuelle
 // Bezeichnung für einen reinen Rahmen, ein σ-Symbol dagegen schon) bleiben
 // bzw. werden entsprechend ergänzt.
-function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, sidebarInstanz) {
+function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, inventareNachId, sidebarInstanz) {
   const zeile = koerper.insertRow();
   zeile.classList.add('pl-zeile-klickbar');
   zeile.setAttribute('tabindex', '0');
@@ -640,7 +739,8 @@ function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSi
   const aktivieren = () => {
     const urkundenRecords = ermittleUrkundenFuerPerson(record, urkundenNachSignatur);
     const buergerbuchRecords = ermittleBuergerbuchFuerPerson(record, buergerbuchNachId);
-    zeigePersonenNennungen(sidebarInstanz, anzeigeName, urkundenRecords, buergerbuchRecords);
+    const inventarRecords = ermittleInventareFuerPerson(record, inventareNachId);
+    zeigePersonenNennungen(sidebarInstanz, anzeigeName, urkundenRecords, buergerbuchRecords, inventarRecords);
   };
   zeile.addEventListener('click', aktivieren);
   zeile.addEventListener('keydown', (event) => {
@@ -667,7 +767,7 @@ function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSi
 }
 
 function zeichneTabelle() {
-  const { container, records, sortierung, suchbegriff, options, urkundenNachSignatur, buergerbuchNachId, sidebar } = instanz;
+  const { container, records, sortierung, suchbegriff, options, urkundenNachSignatur, buergerbuchNachId, inventareNachId, sidebar } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
   const bestehendeTabelle = container.querySelector('table.pl-tabelle');
   if (bestehendeTabelle) bestehendeTabelle.remove();
@@ -698,7 +798,7 @@ function zeichneTabelle() {
   tabelle.className = 'pl-tabelle';
   baueKopfzeile(tabelle, sortierung);
   const koerper = tabelle.createTBody();
-  seitenRecords.forEach((record) => baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, sidebar));
+  seitenRecords.forEach((record) => baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, inventareNachId, sidebar));
   container.appendChild(tabelle);
   container.appendChild(bauePaginierung(instanz.aktuelleSeite, gesamtSeiten, seitenRecords.length, sortiert.length, 'unten'));
 
@@ -752,18 +852,21 @@ export function render(container, data, options = {}) {
     destroy();
   }
   // AUFTRAG "Personenliste - Sidebar...": `data` ist jetzt das kombinierte
-  // `{familien, personenliste, urkunden, buergerbuch}`-Objekt (siehe
-  // Dateikopf-Kommentar) - `data.personenliste` bleibt das flache, von
-  // dieser Tabelle angezeigte Array, `urkunden`/`buergerbuch` werden hier
-  // EINMALIG zu Nachschlage-Maps (Signatur/ID -> Record) aufbereitet statt
-  // bei jedem Zeilen-Klick erneut linear durchsucht zu werden.
+  // `{familien, personenliste, urkunden, buergerbuch, verlassenschaften}`-
+  // Objekt (siehe Dateikopf-Kommentar) - `data.personenliste` bleibt das
+  // flache, von dieser Tabelle angezeigte Array, `urkunden`/`buergerbuch`/
+  // `verlassenschaften` (Teil 2h, Punkt 4b) werden hier EINMALIG zu
+  // Nachschlage-Maps (Signatur/ID -> Record) aufbereitet statt bei jedem
+  // Zeilen-Klick erneut linear durchsucht zu werden.
   const urkundenRecords = data.urkunden || [];
   const buergerbuchRecords = data.buergerbuch || [];
+  const inventarRecords = data.verlassenschaften || [];
   instanz = {
     container,
     records: data.personenliste || [],
     urkundenNachSignatur: new Map(urkundenRecords.map((r) => [r.signatur, r])),
     buergerbuchNachId: new Map(buergerbuchRecords.map((r) => [r.id, r])),
+    inventareNachId: new Map(inventarRecords.map((r) => [r.id, r])),
     options: { showUncertainty: true, width: null, height: null, ...options },
     sortierung: { schluessel: 'anzahl_nennungen', richtung: 'ab' },
     suchbegriff: '',
@@ -823,6 +926,7 @@ export function oeffneDatensatz(personenId) {
   const anzeigeName = SPALTEN.find((s) => s.schluessel === 'name').wertFn(record);
   const urkundenRecords = ermittleUrkundenFuerPerson(record, instanz.urkundenNachSignatur);
   const buergerbuchRecords = ermittleBuergerbuchFuerPerson(record, instanz.buergerbuchNachId);
-  zeigePersonenNennungen(instanz.sidebar, anzeigeName, urkundenRecords, buergerbuchRecords);
+  const inventarRecords = ermittleInventareFuerPerson(record, instanz.inventareNachId);
+  zeigePersonenNennungen(instanz.sidebar, anzeigeName, urkundenRecords, buergerbuchRecords, inventarRecords);
   return true;
 }
