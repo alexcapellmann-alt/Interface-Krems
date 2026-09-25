@@ -7,6 +7,77 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-25 (89) – Teil 2h: Personenlinks in der Urkunden-Sidebar, Hervorhebung in der Zeitachse, Personenliste, Personen-ID für Inventare
+
+**Punkt 1:** `js/utils/sidebar.js`s Personenzeile der Urkunden-Sidebar
+zeigt Personen jetzt über `baueGenanntePersonenZeile()`
+(`js/utils/genanntePersonen.js`, unverändert) als Links
+(`?datensatz=person:<id>`) statt als reinen Text, `personen_unsicher`
+weiterhin mit σ.
+
+**Punkt 2:** `js/viz/zeitachse.js` - Klick auf einen Punkt öffnet die
+Sidebar UND lässt alle anderen Punkte stark zurücktreten (neue Opazitäts-
+Konstante, D3-`opacity`-Attribut). Klick auf einen anderen Punkt wechselt
+die Auswahl, Hover hebt sie nicht auf. Endet bei Schließen der Sidebar,
+Escape oder Klick auf leere Fläche. Datensatzaufruf nutzt weiterhin
+ausschließlich das bestehende `oeffneSidebar()`.
+
+**Punkt 3:** `js/viz/personenliste.js` - roter Rahmen `.pl-zeile-unsicher`
+entfernt, stattdessen σ-Symbol im Namensfeld in der Interface-Warnfarbe,
+Tooltip bleibt. Dabei gefundener und behobener Bug: `resize()` war ein
+No-Op und ignorierte den app-weiten Unsicherheits-Umschalter komplett
+(betraf auch die alte, jetzt entfernte rote Rahmen-Kennzeichnung).
+
+**Punkt 4a (Forschung, keine Datenänderung):** alle 68 Verlassenschafts-
+inventare gegen `personenliste.csv` abgeglichen - keine plausible
+Übereinstimmung mit einer Urkunden-/Bürgerbuch-Person (nächste
+Namensgleichheiten liegen 50-150 Jahre auseinander), zwei Verdachtsfälle
+auf dieselbe Person INNERHALB der Inventare selbst (`VI-0024`/`VI-0028`,
+`VI-0032`/`VI-0033`). Vollständige Zuordnungstabelle und
+Schemaänderungsvorschlag (`personen_id`/`personen_id_unsicher` neu in
+`verlassenschaftsinventare.csv`, `personenliste.csv` selbst braucht keine
+neue Spalte) siehe PROJEKTLOG Eintrag 41. Pause wie im Auftrag verlangt -
+keine CSV/Schema-Änderung vor Freigabe.
+
+---
+
+## 2026-09-25 (88) – Teil 2g: Sidebars, Präsentationsgestaltung, Personenlinks
+
+**Punkt 1:** `js/utils/sidebar.js`/`js/viz/personenliste.js` zeigen
+Unsicherheit nicht mehr über "Achtung: Angaben unsicher..." (rot/fett,
+`.bestand-sidebar-unsicher`), sondern über dieselbe aufklappbare
+σ-Komponente wie die Führungen - jetzt in `js/utils/unsicherAbsatz.js`
+(neu) zentralisiert und von allen drei Stellen importiert (Auftrag
+wörtlich: "Keine zweite, abweichende Umsetzung"). CSS-Klassen umbenannt
+(`.fuehrung-beleg-unsicher*` → `.unsicher-absatz*`, `css/components.css`).
+
+**Punkt 2+3:** Führungsstationen und Abschlussbildschirm bekommen einen
+dunklen Bühnenhintergrund (neue `--fuehrung-buehne-*`-Variablen,
+`css/components.css`, dokumentiert samt WCAG-Kontrastwerten), der
+Belegbereich bleibt hell. Erzähltext etwas größer, vertikal mittig
+(neuer `.fuehrung-erzaehltext-mitte`-Wrapper in
+`js/fuehrungen/fuehrungStation.js`/`fuehrungAbschluss.js`). Navigationssäule
+(▲/Fortschritt/▼) rückt zu einer kompakten, vertikal mittigen Gruppe
+zusammen (`justify-content:center` statt `space-between`,
+`css/components.css`). Alle 19 Stationen bei 1366×768 ohne Seitenscrollen,
+Navigationsgruppe pixelgleich auf jeder Station - siehe PROJEKTLOG
+Eintrag 40 für die vollständige Kontrasttabelle/Positionswerte.
+
+**Punkt 4+5:** Neue gemeinsame Funktion `js/utils/genanntePersonen.js`
+verlinkt genannte Personen zur Personenliste (`?datensatz=person:<id>`) -
+genutzt von `js/fuehrungen/belegDarstellung.js` (urkunde: neue Zeile
+"Genannte Personen" mit σ bei `personen_unsicher`; buergerbuch: Name UND
+Bürgen jetzt direkt verlinkt, alter Quellenzeilen-Link entfällt) UND
+`js/viz/regestenKachelraster.js` (dieselbe Zeile in jeder Kachel mit
+Personen, Punkt 5 wörtlich: "Wiederverwendung derselben Funktion").
+`inventar`/`bestand`/`familie` haben keine `personen_id`-Spalte, daher
+keine Personenlinks dort. `js/fuehrungen/fuehrungStation.js`s
+Fortsetzen-Trigger um `.genannte-personen-link` ergänzt.
+
+Details/Screenshots/Diagnose siehe PROJEKTLOG Eintrag 40.
+
+---
+
 ## 2026-09-25 (87) – Teil 2f: σ-Symbol, Belegtyp `familie`, Zusammenführung Paul Krautwurm
 
 **Punkt 1:** Unsicherheitssymbol zentralisiert - neue Konstante

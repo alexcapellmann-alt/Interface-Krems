@@ -200,7 +200,16 @@ const PIXEL_PRO_ZOOMSTUFE = 25; // je 25px Breite ein weiterer Zoomstufen-Punkt 
 // Kompromiss, dokumentiert statt stillschweigend riskiert).
 const NEUTRALE_PUNKTFARBE = '#2c4a6e';
 
-let instanz = null; // { container, wurzel, sidebar, infoButton, records, options, zoomVerhalten, zoomTransform, letzteBreite, ausgewaehltesRecord, ausgewaehlteKategorien, kategorieMenuOffen, kategoriePanel, kategorieTriggerBtn } – eine aktive Zeitachse pro Modul-Ladung
+// AUFTRAG "Teil 2h", Punkt 2: Deckkraft der NICHT ausgewählten Punkte bei
+// aktiver Hervorhebung - "als Wert in einer Konstante" (Auftrag wörtlich).
+// Wirkt auf `opacity` (nicht `fill-opacity`), deckt dadurch automatisch
+// sowohl die Füllung als auch den Unsicher-Rand (Punkt 5, `stroke`) mit ab -
+// zeitachse.js hat KEIN separates σ-Icon je Punkt (anders als die sieben
+// WARN_SYMBOL-Module), die Unsicherheit wird ausschließlich über den
+// Punkt-Rand kodiert (s.u.), "σ tritt mit zurück" ist damit bereits erfüllt.
+const HERVORHEBUNG_DIM_OPAZITAET = 0.12;
+
+let instanz = null; // { container, wurzel, sidebar, infoButton, records, options, zoomVerhalten, zoomTransform, letzteBreite, ausgewaehltesRecord, punkteAuswahl, ausgewaehlteKategorien, kategorieMenuOffen, kategoriePanel, kategorieTriggerBtn } – eine aktive Zeitachse pro Modul-Ladung
 
 function farbeFuerKategorie(kategorie) {
   return CAT_COLORS[kategorie] || CAT_COLORS.default;
@@ -248,15 +257,36 @@ const ANZAHL_KATEGORIEN = ermittleAlleKategorien().length; // CAT_COLORS ändert
 // das braucht die Filterwechsel-Logik weiter unten (schließt die Sidebar,
 // falls die gerade angezeigte Urkunde aus der sichtbaren Menge fällt), ist
 // aber KEIN Teil der generischen sidebar.js-Logik (die kennt "Filter" nicht).
+// AUFTRAG "Teil 2h", Punkt 2: Hervorhebung ausschließlich über diese beiden
+// bestehenden Funktionen gesteuert (Auftrag wörtlich: "keine zweite
+// Logik") - jeder Aufrufer, der bereits `oeffneSidebar()`/`schliesseSidebar()`
+// nutzt (Klick auf einen Punkt, `oeffneDatensatz()` s.u. für den
+// Datensatzaufruf aus einer Führung), bekommt die Hervorhebung dadurch
+// automatisch mit, ohne selbst etwas davon zu wissen.
 function oeffneSidebar(record) {
   instanz.ausgewaehltesRecord = record;
   zeigeUrkundenDetail(instanz.sidebar, record);
+  aktualisiereHervorhebung();
 }
 
 function schliesseSidebar() {
   if (!instanz) return;
   instanz.ausgewaehltesRecord = null;
   schliesseSidebarModul(instanz.sidebar, instanz.wurzel);
+  aktualisiereHervorhebung();
+}
+
+// Setzt/aktualisiert `opacity` auf der AKTUELLEN Punkte-Selektion
+// (`instanz.punkteAuswahl`, bei jedem Neuaufbau in zeichneZeitachse()
+// frisch gesetzt) - reiner Style-Update ohne Neuaufbau, wie
+// aktualisiereHighlight()/aktualisiereHervorhebung() in den anderen
+// Modulen mit Klick-Hervorhebung (chordDiagramm.js/familienbaum.js).
+function aktualisiereHervorhebung() {
+  if (!instanz || !instanz.punkteAuswahl) return;
+  const ausgewaehlt = instanz.ausgewaehltesRecord;
+  instanz.punkteAuswahl.attr('opacity', (d) => (
+    ausgewaehlt && d.record !== ausgewaehlt ? HERVORHEBUNG_DIM_OPAZITAET : 1
+  ));
 }
 
 function wireInteraktion(auswahl, container) {
@@ -473,11 +503,18 @@ function behandleDokumentKlick(event) {
 }
 
 function behandleDokumentTaste(event) {
-  if (!instanz || !instanz.kategorieMenuOffen) return;
-  if (event.key === 'Escape') {
+  if (!instanz) return;
+  if (event.key !== 'Escape') return;
+  if (instanz.kategorieMenuOffen) {
     setzeKategorieMenuOffen(false);
     if (instanz.kategorieTriggerBtn) instanz.kategorieTriggerBtn.focus();
+    return;
   }
+  // AUFTRAG "Teil 2h", Punkt 2 (Auftrag wörtlich: "Die Hervorhebung endet
+  // ... bei Escape"): schließt dieselbe Sidebar wie der ×-Button - dieselbe
+  // Funktion, die auch die Hervorhebung zurücksetzt (siehe schliesseSidebar()
+  // oben), keine zweite Logik.
+  if (instanz.ausgewaehltesRecord) schliesseSidebar();
 }
 
 // Jede tatsächliche Auswahländerung braucht laut Auftrag einen echten
@@ -767,13 +804,30 @@ function zeichneZeitachse() {
     // Unsicher-Rand bleibt unverändert bestehen.
     .attr('stroke', (d) => (zeigeUnsicherheit ? '#c0392b' : ermittleRandfarbe(d.record)))
     .attr('stroke-width', zeigeUnsicherheit ? 2 : 1.5)
-    .attr('stroke-dasharray', zeigeUnsicherheit ? '3,2' : null);
+    .attr('stroke-dasharray', zeigeUnsicherheit ? '3,2' : null)
+    // AUFTRAG "Teil 2h", Punkt 2: initiale Deckkraft direkt beim Aufbau -
+    // deckt den Fall ab, dass ein Neuaufbau (Resize, Filterwechsel mit
+    // weiterhin sichtbarer Auswahl) stattfindet, WÄHREND bereits eine
+    // Urkunde ausgewählt ist (instanz.ausgewaehltesRecord überlebt den
+    // Neuaufbau, die alte `punkte`-Selektion nicht).
+    .attr('opacity', (d) => (
+      instanz.ausgewaehltesRecord && d.record !== instanz.ausgewaehltesRecord ? HERVORHEBUNG_DIM_OPAZITAET : 1
+    ));
   wireInteraktion(punkte, instanz.container);
+  instanz.punkteAuswahl = punkte;
 
   svg.attr('height', hoehePlot + RAND.unten)
     .attr('viewBox', `0 0 ${breite} ${hoehePlot + RAND.unten}`)
     .attr('role', 'img')
-    .attr('aria-label', 'Zeitachse der Urkunden nach Jahr, als Schwarm-Diagramm');
+    .attr('aria-label', 'Zeitachse der Urkunden nach Jahr, als Schwarm-Diagramm')
+    // AUFTRAG "Teil 2h", Punkt 2 (Auftrag wörtlich: "bei Klick auf eine
+    // leere Fläche der Visualisierung"): `event.target === svg.node()`
+    // trifft nur zu, wenn der Klick direkt auf den SVG-Hintergrund traf
+    // (kein Punkt/Achse/Text dazwischen) - dieselbe Funktion wie der
+    // ×-Button, kein separater Reset-Pfad.
+    .on('click', (event) => {
+      if (event.target === svg.node() && instanz.ausgewaehltesRecord) schliesseSidebar();
+    });
 
   svg.append('desc').text(
     'Jeder Punkt ist eine Urkunde, als Schwarm um ihr Jahr verteilt und eingefärbt nach ' +
@@ -851,6 +905,10 @@ export function render(container, data, options = {}) {
     zoomTransform: null,
     letzteBreite: null,
     ausgewaehltesRecord: null,
+    // AUFTRAG "Teil 2h", Punkt 2: aktuelle Punkte-Selektion fuer
+    // aktualisiereHervorhebung() - wird bei jedem zeichneZeitachse()-Aufbau
+    // neu gesetzt (s. dort).
+    punkteAuswahl: null,
     // KLEINAUFTRAG "Standardzustand des Kategorie-Filters ändern": Startzustand
     // ist jetzt "alle 16 ausgewählt" (identisch zum bisherigen "Alle
     // auswählen"-Ergebnis) statt eines leeren Sets - alle Punkte sind beim

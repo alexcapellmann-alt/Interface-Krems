@@ -12,8 +12,8 @@
 //   Textkontrast-Berechnung ab, live gefunden - siehe Selbstauskunft im
 //   Chat), werden hier NEUE, aber optisch
 //   IDENTISCHE Felder gebaut (dieselben CSS-Klassen `.bestand-sidebar-feld`/
-//   `.bestand-sidebar-feld-label`/`.bestand-sidebar-unsicher`, deren Regeln
-//   sidebar.js' fuegeSidebarStyleEin() liefert - vom Aufrufer EINMAL pro
+//   `.bestand-sidebar-feld-label`, deren Regeln sidebar.js' fuegeSidebarStyleEin()
+//   liefert - vom Aufrufer EINMAL pro
 //   Stationsaufbau eingebunden, siehe fuehrungStation.js) - keine
 //   sidebar.js-Änderung nötig, weil diese Klassen bereits als eigenständige,
 //   nicht auf `.bestand-sidebar` verschachtelte Selektoren definiert sind.
@@ -38,7 +38,8 @@
 import { baueUrkundenDetailInhalt } from '../utils/sidebar.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { baueDatensatzLink, TYP_ANZEIGE } from '../utils/datensatzAufruf.js';
-import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
+import { baueVerlinkteNamen, baueGenanntePersonenZeile } from '../utils/genanntePersonen.js';
 
 // AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Linkbeschriftung je Belegtyp aus
 // der Freigabe (buergerbuch verlinkt wie person, siehe baueArchivLink()
@@ -46,9 +47,12 @@ import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 // dieselbe Quelle wie die Quellenzeile unten, keine zweite Beschriftungs-
 // Stelle im Code.
 // AUFTRAG "Teil 2f", Punkt 2: "Im Stammbaum ansehen" (Auftrag wörtlich).
+// AUFTRAG "Teil 2g", Punkt 4: `buergerbuch` entfallen (Auftrag wörtlich:
+// "Der bisherige Link 'Alle Einträge zu dieser Person' in der Quellenzeile
+// entfällt, da der Name selbst verlinkt ist" - siehe baueBuergerbuchInhalt()/
+// baueArchivLink() unten).
 const LINKTEXT = {
   person: 'Alle Einträge zu dieser Person',
-  buergerbuch: 'Alle Einträge zu dieser Person',
   familie: 'Im Stammbaum ansehen'
 };
 
@@ -71,15 +75,14 @@ function formatiereDatum(rohwert) {
   return String(jahr);
 }
 
-// bild bekommt keinen Link (Auftrag woertlich). buergerbuch verlinkt NICHT
-// sich selbst (kein eigener Datensatz-Typ, siehe datensatzAufruf.js' Kopf-
-// kommentar), sondern die Personenliste ueber die personen_id des Eintrags.
+// bild bekommt keinen Link (Auftrag woertlich). buergerbuch bekommt seit
+// Teil 2g, Punkt 4 KEINEN Quellenzeilen-Link mehr - der Name ist jetzt
+// direkt im Feld "Name" verlinkt (siehe baueBuergerbuchInhalt() unten),
+// ein zweiter Link auf dieselbe Person in der Quellenzeile waere redundant
+// (Auftrag woertlich).
 function baueArchivLink(beleg) {
-  if (beleg.typ === 'bild' || !beleg.record) return null;
-  const typ = beleg.typ === 'buergerbuch' ? 'person' : beleg.typ;
-  const id = beleg.typ === 'buergerbuch' ? beleg.record.personen_id : beleg.id;
-  if (!id) return null;
-  const href = baueDatensatzLink(typ, id);
+  if (beleg.typ === 'bild' || beleg.typ === 'buergerbuch' || !beleg.record) return null;
+  const href = baueDatensatzLink(beleg.typ, beleg.id);
   if (!href) return null;
   const link = document.createElement('a');
   link.className = 'fuehrung-beleg-archivlink';
@@ -101,45 +104,25 @@ function feld(label, wert) {
   return el;
 }
 
-function alsText(wert) {
-  return Array.isArray(wert) ? wert.join('; ') : (wert || '');
+// AUFTRAG "Teil 2g", Punkt 4: wie feld() oben, aber der Wert ist bereits
+// fertiger DOM-Inhalt (verlinkte Namen aus genanntePersonen.js) statt eines
+// reinen Textstrings - eigene Funktion statt feld() um einen optionalen
+// Node-Parameter zu erweitern, damit dessen bestehende, einfache Signatur
+// (Label, Text) an allen anderen Aufrufstellen unveraendert bleibt.
+function feldMitKnoten(label, knoten) {
+  const el = document.createElement('div');
+  el.className = 'bestand-sidebar-feld';
+  const labelEl = document.createElement('div');
+  labelEl.className = 'bestand-sidebar-feld-label';
+  labelEl.textContent = label;
+  const wertEl = document.createElement('div');
+  wertEl.appendChild(knoten);
+  el.append(labelEl, wertEl);
+  return el;
 }
 
-// K3 (Teil 2c): NICHT mehr sidebar.js' rote `.bestand-sidebar-unsicher`
-// (wirkte neben den amber `.fuehrung-fehler`-Pruefregel-Hinweisen wie ein
-// zweiter Fehler) - eigene, ruhige Darstellung NUR hier im Belegbereich der
-// Fuehrungen (Nicht-Ziel: Unsicherheitsdarstellung anderer Module
-// unveraendert, sidebar.js selbst nicht angefasst): eingeklappter σ-Button
-// (AUFTRAG "Teil 2f", Punkt 1: vormals ⚠, zentrale Konstante) statt
-// fett/rot, Text erst nach Aufklappen sichtbar. Eigene, gedeckte Warnfarbe
-// (`--fuehrung-unsicher`, components.css) statt `--unsicher` (rot,
-// Fehlerkonvention) oder `--fuehrung-fehler` (amber, Pruefregeln) -
-// Unterscheidung zusaetzlich ueber Symbol (σ vs. "Fehler:") und
-// Beschriftung ("Angaben unsicher" vs. "Fehler: ...").
-function baueUnsicherheitAbsatz(record, unsicherFelder) {
-  const istUnsicher = unsicherFelder.some((f) => record[f]) || Boolean(alsText(record.unsicherheit_anmerkung).trim());
-  if (!istUnsicher) return null;
-  const wrapper = document.createElement('div');
-  wrapper.className = 'fuehrung-beleg-unsicher';
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'fuehrung-beleg-unsicher-btn';
-  // AUFTRAG "Teil 2f", Punkt 1: σ statt ⚠ (zentrale Konstante), sichtbarer
-  // Begleittext bleibt unverändert - liefert bereits die zugängliche
-  // Bezeichnung, keine zusätzliche aria-label nötig.
-  btn.textContent = `${UNSICHERHEIT_SYMBOL} Angaben unsicher`;
-  btn.setAttribute('aria-expanded', 'false');
-  const text = document.createElement('p');
-  text.className = 'fuehrung-beleg-unsicher-text';
-  text.hidden = true;
-  text.textContent = alsText(record.unsicherheit_anmerkung) || 'Keine weitere Angabe.';
-  btn.addEventListener('click', () => {
-    const offen = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', String(!offen));
-    text.hidden = offen;
-  });
-  wrapper.append(btn, text);
-  return wrapper;
+function alsText(wert) {
+  return Array.isArray(wert) ? wert.join('; ') : (wert || '');
 }
 
 function baueFehlerBox(fehlertext) {
@@ -166,15 +149,42 @@ function baueQuellenzeile(beleg, datumWert) {
   return zeile;
 }
 
-function baueBuergerbuchInhalt(r) {
+// AUFTRAG "Teil 2g", Punkt 4: Name UND jede:r Buerge verlinkt zur
+// Personenliste. `Buergen` (Freitext, z. B. "Hanns Holzinger, Philip
+// Niderholzer, Ambrosy Druml.") ist NICHT index-parallel zu `buergen_id`
+// (Pipe-Liste) - anders als bei urkunde/personen_id kann der Anzeigename
+// hier deshalb nicht direkt aus dem Record gezippt werden. Stattdessen wird
+// jede buergen_id ueber `personenKarte` (von fuehrungenDaten.js' parseBeleg()
+// mitgegeben, dieselbe Karte wie fuer `person`-Belege) zum kanonischen
+// Namen aus personenliste.csv aufgeloest - Buergen faellt dadurch als
+// separates Feld weg, die Namen stehen stattdessen (verlinkt) im Feld
+// "Buergen" selbst.
+function ermittleBuergenNamen(buergenIds, personenKarte) {
+  const ids = Array.isArray(buergenIds) ? buergenIds : (buergenIds ? [buergenIds] : []);
+  return ids.map((id) => {
+    const schreibweisen = personenKarte.get(id)?.schreibweisen;
+    // Erste (kanonische) Schreibweise als Anzeigename - nicht alle Varianten
+    // zusammen (per Semikolon), das waere als EIN Linktext unpassend.
+    const name = Array.isArray(schreibweisen) ? schreibweisen[0] : (schreibweisen || id);
+    return { id, name };
+  });
+}
+
+function baueBuergerbuchInhalt(r, personenKarte) {
   const wrapper = document.createElement('div');
   wrapper.append(
-    feld('Name', r.Name),
+    feldMitKnoten('Name', baueVerlinkteNamen([{ name: r.Name, id: r.personen_id }])),
     feld('Datum', r.Datum ? formatiereDatum(r.Datum) : '(ohne Datum)')
   );
   if (r.Beruf) wrapper.appendChild(feld('Beruf', r.Beruf));
   if (r.Ort) wrapper.appendChild(feld('Ort', r.Ort));
-  if (r.Buergen && alsText(r.Buergen).trim()) wrapper.appendChild(feld('Bürgen', alsText(r.Buergen)));
+  if (r.buergen_id) {
+    wrapper.appendChild(feldMitKnoten('Bürgen', baueVerlinkteNamen(ermittleBuergenNamen(r.buergen_id, personenKarte))));
+  } else if (r.Buergen && alsText(r.Buergen).trim()) {
+    // Seltener Datenrandfall: Buergen-Freitext ohne buergen_id - unverlinkt
+    // wie bisher zeigen, statt Information stillschweigend zu verlieren.
+    wrapper.appendChild(feld('Bürgen', alsText(r.Buergen)));
+  }
   const hinweis = baueUnsicherheitAbsatz(r, ['Datum_unsicher', 'Beruf_unsicher', 'orte_unsicher']);
   if (hinweis) wrapper.appendChild(hinweis);
   return wrapper;
@@ -323,8 +333,21 @@ export function baueBelegBereich(beleg, bildText) {
   bereich.appendChild(baueQuellenzeile(beleg, datumFelder[beleg.typ]));
 
   const scroll = baueScrollWrapper();
-  if (beleg.typ === 'urkunde') scroll.appendChild(baueUrkundenDetailInhalt(r));
-  else if (beleg.typ === 'buergerbuch') scroll.appendChild(baueBuergerbuchInhalt(r));
+  if (beleg.typ === 'urkunde') {
+    scroll.appendChild(baueUrkundenDetailInhalt(r));
+    // AUFTRAG "Teil 2g", Punkt 4: "Genannte Personen" als EIGENE Zeile UNTER
+    // dem von sidebar.js wiederverwendeten Regest-Block (Nicht-Ziel: sidebar.js
+    // selbst bleibt unveraendert, siehe dessen eigenes "Personen"-Feld dort) -
+    // `personen`/`personen_id` sind index-parallele Listen (SCHEMA.md), anders
+    // als bei buergerbuch's `Buergen`/`buergen_id` (siehe dort) direkt zippbar.
+    const namen = Array.isArray(r.personen) ? r.personen : (r.personen ? [r.personen] : []);
+    const ids = Array.isArray(r.personen_id) ? r.personen_id : (r.personen_id ? [r.personen_id] : []);
+    const personenZeile = baueGenanntePersonenZeile(
+      namen.map((name, i) => ({ name, id: ids[i] || null })),
+      { unsicher: !!r.personen_unsicher }
+    );
+    if (personenZeile) scroll.appendChild(personenZeile);
+  } else if (beleg.typ === 'buergerbuch') scroll.appendChild(baueBuergerbuchInhalt(r, beleg.personenKarte));
   else if (beleg.typ === 'inventar') scroll.appendChild(baueInventarInhalt(r));
   else if (beleg.typ === 'bestand') scroll.appendChild(baueBestandInhalt(r));
   else if (beleg.typ === 'person') scroll.appendChild(bauePersonInhalt(r));

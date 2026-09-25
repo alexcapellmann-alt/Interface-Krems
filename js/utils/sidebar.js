@@ -66,6 +66,8 @@ import { passendeTextfarbe } from './kategorieFarben.js';
 import { CAT_COLORS } from '../config/constants.js';
 import { ladeFotos } from './fotoOrdner.js';
 import { oeffneLightbox } from './lightbox.js';
+import { baueUnsicherheitAbsatz } from './unsicherAbsatz.js';
+import { baueGenanntePersonenZeile } from './genanntePersonen.js';
 
 export const STANDARD_SIDEBAR_FELDER = [
   { feld: 'zitierweise', label: 'Zitierweise' },
@@ -124,13 +126,10 @@ export function baueSidebarInhalt(record, { kategorieName, kategorieFarbe, felde
     if (wert) wrapper.appendChild(baueSidebarFeld(label, wert));
   });
 
-  if (record.daten_unsicher) {
-    const hinweis = document.createElement('p');
-    hinweis.className = 'bestand-sidebar-unsicher';
-    const anmerkung = alsText(record.unsicherheit_anmerkung);
-    hinweis.textContent = `Achtung: Angaben unsicher${anmerkung ? ` – ${anmerkung}` : ''}`;
-    wrapper.appendChild(hinweis);
-  }
+  // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
+  // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['daten_unsicher']);
+  if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
 
   return wrapper;
 }
@@ -365,15 +364,9 @@ function baueUrkundenKategorienFeld(record) {
 // Funktion - brauchte das nie, daher fehlte er hier). Mit INKONSISTENTEN
 // Kriterien zwischen den beiden Alt-Implementierungen (zeitachse.js prüfte
 // datum_unsicher/orte_unsicher/personen_unsicher/Anmerkung, dotPlot.js nur
-// datum_unsicher) - hier das umfassendere Kriterium übernommen, dieselbe
-// bewusste inhaltsgleiche Kopie (statt Import, da dort nicht exportiert)
-// wie zeitachse.js' eigene istRecordUnsicher() (identisch zu
-// regestenKachelraster.js' Funktion gleichen Namens).
-function istUrkundeUnsicher(record) {
-  const anmerkung = record.unsicherheit_anmerkung;
-  const anmerkungVorhanden = Array.isArray(anmerkung) ? anmerkung.length > 0 : !!(anmerkung && anmerkung.trim() !== '');
-  return !!(record.datum_unsicher || record.orte_unsicher || record.personen_unsicher || anmerkungVorhanden);
-}
+// datum_unsicher) - dieses Kriterium ist jetzt Teil der geteilten
+// baueUnsicherheitAbsatz()-Komponente (Teil 2g, Punkt 1, siehe unten), keine
+// separate istUrkundeUnsicher()-Kopie mehr nötig.
 
 // Feldreihenfolge exakt wie im Auftrag vorgegeben (Fotogalerie, Signatur,
 // Datum, Regest, Kategorien, Orte, Personen) - entspricht inhaltlich
@@ -391,14 +384,23 @@ export function baueUrkundenDetailInhalt(record) {
   const kategorienFeld = baueUrkundenKategorienFeld(record);
   if (kategorienFeld) wrapper.appendChild(kategorienFeld);
   if (record.orte && record.orte.length) wrapper.appendChild(baueSidebarFeld('Orte', alsText(record.orte)));
-  if (record.personen && record.personen.length) wrapper.appendChild(baueSidebarFeld('Personen', alsText(record.personen)));
-  if (istUrkundeUnsicher(record)) {
-    const hinweis = document.createElement('p');
-    hinweis.className = 'bestand-sidebar-unsicher';
-    const anmerkung = alsText(record.unsicherheit_anmerkung);
-    hinweis.textContent = `Achtung: Angaben unsicher${anmerkung ? ` – ${anmerkung}` : ''}`;
-    wrapper.appendChild(hinweis);
+  // AUFTRAG "Teil 2h", Punkt 1: Personen jetzt verlinkt zur Personenliste -
+  // dieselbe Funktion wie in den Führungen (belegDarstellung.js) und im
+  // Regestenkachelraster (Auftrag wörtlich: "keine zweite Implementierung").
+  // `personen`/`personen_id` sind index-parallele Listen (SCHEMA.md).
+  if (record.personen && record.personen.length) {
+    const namen = Array.isArray(record.personen) ? record.personen : [record.personen];
+    const ids = Array.isArray(record.personen_id) ? record.personen_id : (record.personen_id ? [record.personen_id] : []);
+    const personenZeile = baueGenanntePersonenZeile(
+      namen.map((name, i) => ({ name, id: ids[i] || null })),
+      { unsicher: !!record.personen_unsicher }
+    );
+    if (personenZeile) wrapper.appendChild(personenZeile);
   }
+  // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
+  // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['datum_unsicher', 'orte_unsicher', 'personen_unsicher']);
+  if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
   return wrapper;
 }
 
@@ -575,7 +577,10 @@ export function fuegeSidebarStyleEin(container) {
     .bestand-sidebar-badge { padding: 2px 10px; border-radius: 99px; font-size: var(--fs-sm); font-weight: 600; }
     .bestand-sidebar-feld { margin-bottom: var(--space-3); }
     .bestand-sidebar-feld-label { font-size: var(--fs-sm); color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-    .bestand-sidebar-unsicher { color: var(--unsicher, #c0392b); font-weight: 600; }
+    /* AUFTRAG "Teil 2g", Punkt 1: .bestand-sidebar-unsicher (rot/fett)
+       entfaellt - Unsicherheit wird jetzt ueber die geteilte
+       .unsicher-absatz-Komponente dargestellt (css/components.css, dort
+       auch fuer die Fuehrungen genutzt). */
     /* Punkt 4 (schlanke Urkunden-Liste, siehe baueUrkundenListeInhalt()) */
     .bestand-sidebar-urkunden-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
     .bestand-sidebar-urkunden-eintrag { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2);

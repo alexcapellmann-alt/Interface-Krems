@@ -67,6 +67,8 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import {
   baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar,
   baueUrkundenListeInhalt, baueUrkundenDetailInhalt
@@ -251,16 +253,6 @@ function baueBuergerbuchSidebarFeld(label, wert) {
   return feld;
 }
 
-// Analog zu sidebar.js' istUrkundeUnsicher(), aber für buergerbuch.csv'
-// eigene `<feldname>_unsicher`-Felder (Datum_unsicher/Beruf_unsicher/
-// orte_unsicher - SCHEMA.md, Abschnitt 4) statt der zeilenweiten
-// personenliste.csv-Konvention.
-function istBuergerbuchUnsicher(record) {
-  const anmerkung = record.unsicherheit_anmerkung;
-  const anmerkungVorhanden = Array.isArray(anmerkung) ? anmerkung.length > 0 : !!(anmerkung && anmerkung.trim() !== '');
-  return !!(record.Datum_unsicher || record.Beruf_unsicher || record.orte_unsicher || anmerkungVorhanden);
-}
-
 // Volle Detailansicht EINES Bürgerbuch-Eintrags - Feldauswahl exakt wie im
 // Auftrag benannt ("Datum, Beruf, Ort, Bürgen"), plus Wirtschaftssektor/
 // Anmerkungen (in buergerbuch.csv vorhanden, weggelassen wäre Auslassung
@@ -274,13 +266,10 @@ function baueBuergerbuchDetailInhalt(record) {
   if (record.Ort) wrapper.appendChild(baueBuergerbuchSidebarFeld('Ort', record.Ort));
   if (record.Buergen) wrapper.appendChild(baueBuergerbuchSidebarFeld('Bürgen', record.Buergen));
   if (record.Anmerkungen) wrapper.appendChild(baueBuergerbuchSidebarFeld('Anmerkungen', record.Anmerkungen));
-  if (istBuergerbuchUnsicher(record)) {
-    const hinweis = document.createElement('p');
-    hinweis.className = 'bestand-sidebar-unsicher';
-    const anmerkung = Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung.join('; ') : record.unsicherheit_anmerkung;
-    hinweis.textContent = `Achtung: Angaben unsicher${anmerkung ? ` – ${anmerkung}` : ''}`;
-    wrapper.appendChild(hinweis);
-  }
+  // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
+  // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['Datum_unsicher', 'Beruf_unsicher', 'orte_unsicher']);
+  if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
   return wrapper;
 }
 
@@ -461,7 +450,11 @@ function fuegeStyleEin(container) {
     .pl-tabelle th, .pl-tabelle td { border-bottom: 1px solid #ddd; padding: 4px 8px; text-align: left; }
     .pl-tabelle th { cursor: pointer; user-select: none; background: #f4f4f4; position: sticky; top: 0; }
     .pl-sortier-pfeil { margin-left: 4px; font-size: 10px; color: #555; }
-    .pl-zeile-unsicher { border-left: 3px dashed #c0392b; }
+    /* AUFTRAG "Teil 2h", Punkt 3: kein roter Rahmen mehr - stattdessen ein
+       σ-Symbol in derselben Warnfarbe wie das übrige Interface
+       (--fuehrung-unsicher, amber statt Rot - dieselbe Variable wie
+       js/utils/unsicherAbsatz.js). */
+    .pl-zeile-unsicher-symbol { color: var(--fuehrung-unsicher, #8a6d1f); font-weight: 700; margin-right: 4px; }
     .pl-paginierung { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; }
     .pl-paginierung-oben { margin-bottom: 8px; }
     .pl-paginierung-unten { margin-top: 8px; }
@@ -618,18 +611,26 @@ function wechsleSeite(neueSeite) {
 // (vorher keine Interaktion) - Klick/Enter/Leertaste löst die Nennungen
 // dieser Person auf und übergibt sie an zeigePersonenNennungen() (siehe
 // oben für die volle "1 -> Detail, mehrere -> Liste"-Fallunterscheidung).
-// Die bestehende Unsicherheits-Markierung/-Tooltip (pl-zeile-unsicher)
-// bleibt unverändert zusätzlich bestehen - beide Klassen/Verhalten
-// koexistieren auf derselben Zeile, unabhängig voneinander.
+// AUFTRAG "Teil 2h", Punkt 3: die bestehende Unsicherheits-Markierung war
+// bisher ein roter Rahmen (`.pl-zeile-unsicher`, PROJEKTLOG Eintrag 40) -
+// jetzt stattdessen ein σ-Symbol (amber, dieselbe Warnfarbe wie im übrigen
+// Interface) vor dem Namen. Tooltip (Maus/Tastatur, unverändert per
+// mouseenter/focus auf der ganzen Zeile) UND das zugängliche `aria-label`
+// (jetzt zusätzlich "Angaben unsicher" - "wie bisher" bezog sich auf die
+// Symbol-Wahl selbst, die Zeile brauchte vorher aber gar keine textuelle
+// Bezeichnung für einen reinen Rahmen, ein σ-Symbol dagegen schon) bleiben
+// bzw. werden entsprechend ergänzt.
 function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, sidebarInstanz) {
   const zeile = koerper.insertRow();
   zeile.classList.add('pl-zeile-klickbar');
   zeile.setAttribute('tabindex', '0');
   zeile.setAttribute('role', 'button');
   const anzeigeName = SPALTEN.find((s) => s.schluessel === 'name').wertFn(record);
-  zeile.setAttribute('aria-label', `${anzeigeName}, Quelleneinträge anzeigen`);
-  if (zeigeUnsicherheit && record.unsicherheit_anmerkung) {
-    zeile.classList.add('pl-zeile-unsicher');
+  const istUnsicher = zeigeUnsicherheit && Boolean(record.unsicherheit_anmerkung);
+  zeile.setAttribute('aria-label', istUnsicher
+    ? `${anzeigeName}, Angaben unsicher, Quelleneinträge anzeigen`
+    : `${anzeigeName}, Quelleneinträge anzeigen`);
+  if (istUnsicher) {
     const anmerkung = Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung.join(' | ') : record.unsicherheit_anmerkung;
     zeile.addEventListener('mouseenter', () => zeigeTooltip(anmerkung, zeile, container));
     zeile.addEventListener('focus', () => zeigeTooltip(anmerkung, zeile, container));
@@ -651,7 +652,17 @@ function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSi
   SPALTEN.forEach((spalte) => {
     const zelle = zeile.insertCell();
     const wert = spalte.wertFn(record);
-    zelle.textContent = wert === null || wert === undefined || wert === '' ? '–' : wert;
+    // AUFTRAG "Teil 2h", Punkt 3: σ-Symbol vor dem Namen - aria-hidden, die
+    // zugängliche Bezeichnung liefert bereits `aria-label` der ganzen Zeile
+    // (s. o.), dieselbe Konvention wie die übrigen σ-Icon-Marker im Projekt.
+    if (istUnsicher && spalte.schluessel === 'name') {
+      const symbol = document.createElement('span');
+      symbol.className = 'pl-zeile-unsicher-symbol';
+      symbol.setAttribute('aria-hidden', 'true');
+      symbol.textContent = UNSICHERHEIT_SYMBOL;
+      zelle.appendChild(symbol);
+    }
+    zelle.appendChild(document.createTextNode(wert === null || wert === undefined || wert === '' ? '–' : wert));
   });
 }
 
@@ -764,9 +775,23 @@ export function render(container, data, options = {}) {
   zeichnePersonenliste();
 }
 
-// Reine HTML-Tabelle: reflowt selbstständig bei veränderter Containerbreite, wie
-// bei regestenKachelraster.js - resize() tut hier bewusst nichts.
-export function resize() {}
+// AUFTRAG "Teil 2h", Punkt 3: LIVE GEFUNDENER BUG (Selbstauskunft) - resize()
+// war bisher ein reines No-Op ("reflowt selbstständig bei veränderter
+// Containerbreite, wie bei regestenKachelraster.js"), das stimmt fuer eine
+// reine Breitenaenderung tatsaechlich (HTML-Tabellen reflowen von selbst).
+// ABER: js/core/app.js nutzt DIESELBE resize()-Funktion generisch auch fuer
+// den Unsicherheiten-Umschalter (`onToggle: (aktiv) => ...resize({
+// showUncertainty: aktiv })`, s. app.js) - das No-Op ignorierte diesen Aufruf
+// bisher komplett, `instanz.options.showUncertainty` aktualisierte sich nie.
+// Die σ-Kennzeichnung (wie zuvor der rote Rahmen, PROJEKTLOG Eintrag 40)
+// war dadurch praktisch nie sichtbar, unabhaengig vom Knopf-Zustand - ein
+// bereits VOR diesem Auftrag bestehender Fehler, hier live beim Testen von
+// Punkt 3 gefunden und behoben (sonst waere Punkt 3 nicht demonstrierbar).
+export function resize(neueOptionen = {}) {
+  if (!instanz) return;
+  instanz.options = { ...instanz.options, ...neueOptionen };
+  zeichneTabelle();
+}
 
 export function destroy() {
   if (!instanz) return;

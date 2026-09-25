@@ -172,6 +172,12 @@ function baueInhaltsBereich(station) {
 // Bild-auf-ab-Scrollbedienung überhaupt greifen kann) - `istTastaturZielGesperrt()`
 // unten erkennt genau diese Klasse und lässt die Stations-Tastatursteuerung
 // dort bewusst NICHT eingreifen.
+// AUFTRAG "Teil 2g", Punkt 3 (Auftrag wörtlich: "Der Textblock steht
+// vertikal mittig in seiner Spalte"): der eigentliche Inhalt wandert in
+// einen inneren `.fuehrung-erzaehltext-mitte`-Wrapper (components.css:
+// `min-height:100%` + Flex-Zentrierung) - `bereich` selbst bleibt der
+// scrollbare Rahmen mit `tabindex`/`role`/`aria-label` (unverändert, siehe
+// `istTastaturZielGesperrt()`-Kommentar oben).
 function baueErzaehlbereich(station) {
   const bereich = document.createElement('div');
   bereich.className = 'fuehrung-erzaehltext';
@@ -179,11 +185,15 @@ function baueErzaehlbereich(station) {
   bereich.setAttribute('role', 'region');
   bereich.setAttribute('aria-label', 'Erzähltext, bei Bedarf scrollbar');
 
+  const mitte = document.createElement('div');
+  mitte.className = 'fuehrung-erzaehltext-mitte';
+  bereich.appendChild(mitte);
+
   station.stationWarnungen.forEach((text) => {
     const box = document.createElement('p');
     box.className = 'fuehrung-fehler';
     box.textContent = text;
-    bereich.appendChild(box);
+    mitte.appendChild(box);
   });
 
   station.textBloecke.forEach((block) => {
@@ -194,19 +204,19 @@ function baueErzaehlbereich(station) {
         li.textContent = punkt;
         liste.appendChild(li);
       });
-      bereich.appendChild(liste);
+      mitte.appendChild(liste);
     } else {
       const p = document.createElement('p');
       p.textContent = block.text;
-      bereich.appendChild(p);
+      mitte.appendChild(p);
     }
   });
 
   if (station.unsicherheit_hinweis) {
-    erzeugeUnsicherheitHinweis(bereich, station.unsicherheit_hinweis);
+    erzeugeUnsicherheitHinweis(mitte, station.unsicherheit_hinweis);
   }
   if (station.vertiefung.length > 0) {
-    bereich.appendChild(baueVertiefungsBereich(station.vertiefung));
+    mitte.appendChild(baueVertiefungsBereich(station.vertiefung));
   }
   return bereich;
 }
@@ -316,8 +326,12 @@ export function render(container, fuehrung, initialeNr) {
   // woertlich) - normale Stationsnavigation (Pfeile/Tastatur) tut es
   // bewusst nicht. Ein delegierter Listener auf `haupt` deckt beide
   // Linkarten ab, ohne belegDarstellung.js' Funktionssignaturen zu aendern.
+  // AUFTRAG "Teil 2g", Punkt 4 (Auftrag wörtlich: "Verlässt man die Führung
+  // über einen solchen Link, greift der bestehende Fortsetzen-Button"):
+  // `.genannte-personen-link` (js/utils/genanntePersonen.js) ergänzt -
+  // dieselbe Drei-Linkarten-Erkennung wie oben.
   function merkeVerlassenBeiLinkKlick(event) {
-    const link = event.target.closest('.fuehrung-beleg-archivlink, .fuehrung-vertiefung-link');
+    const link = event.target.closest('.fuehrung-beleg-archivlink, .fuehrung-vertiefung-link, .genannte-personen-link');
     if (!link) return;
     const station = fuehrung.stationen.find((s) => s.station_nr === aktuelleNr);
     speichereZustand({

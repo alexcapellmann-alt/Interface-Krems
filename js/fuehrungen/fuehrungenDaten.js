@@ -86,9 +86,15 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
     // zu Namen aufzulösen (belegDarstellung.js' baueFamilieInhalt()) - hier
     // am Beleg mitgegeben statt baueBelegBereich()s Signatur zu ändern, da
     // nur dieser eine Typ eine zweite Karte braucht.
-    return typ === 'familie'
-      ? { typ, id, record, fehler: null, familienKarte: quellKarten.familie }
-      : { typ, id, record, fehler: null };
+    // AUFTRAG "Teil 2g", Punkt 4: `buergerbuch` braucht zusätzlich die
+    // VOLLSTÄNDIGE personenliste.csv-Karte, um die `buergen_id`-Liste zu
+    // Namen aufzulösen (`Buergen` selbst ist reiner, nicht zu `buergen_id`
+    // index-paralleler Freitext, siehe belegDarstellung.js' Kommentar zu
+    // baueBuergerbuchInhalt()) - dieselbe Karte, die `person`-Belege ohnehin
+    // schon referenzieren (`quellKarten.person`, BELEG_QUELLEN oben).
+    if (typ === 'familie') return { typ, id, record, fehler: null, familienKarte: quellKarten.familie };
+    if (typ === 'buergerbuch') return { typ, id, record, fehler: null, personenKarte: quellKarten.person };
+    return { typ, id, record, fehler: null };
   });
 }
 

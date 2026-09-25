@@ -153,19 +153,25 @@ export function render(container, fuehrung) {
   haupt.className = 'fuehrung-station-haupt';
   haupt.appendChild(baueKopf(fuehrung));
 
+  // AUFTRAG "Teil 2g", Punkt 3: derselbe `.fuehrung-erzaehltext-mitte`-
+  // Wrapper wie fuehrungStation.js' baueErzaehlbereich() - `inhalt` bleibt
+  // der fokussierbare, scrollbare Rahmen (tabIndex=-1, unverändert).
   const inhalt = document.createElement('div');
   inhalt.className = 'fuehrung-erzaehltext fuehrung-abschluss-inhalt';
   inhalt.tabIndex = -1;
+  const mitte = document.createElement('div');
+  mitte.className = 'fuehrung-erzaehltext-mitte';
+  inhalt.appendChild(mitte);
   const ueberschrift = document.createElement('h2');
   ueberschrift.textContent = 'Ende der Führung';
   const leitfrage = document.createElement('p');
   leitfrage.className = 'fuehrung-abschluss-leitfrage';
   leitfrage.textContent = fuehrung.leitfrage;
-  inhalt.append(ueberschrift, leitfrage);
+  mitte.append(ueberschrift, leitfrage);
   const erkunden = baueSelbstErkunden(fuehrung);
-  if (erkunden) inhalt.appendChild(erkunden);
+  if (erkunden) mitte.appendChild(erkunden);
   const weiterlesen = baueWeiterlesen(fuehrung);
-  if (weiterlesen) inhalt.appendChild(weiterlesen);
+  if (weiterlesen) mitte.appendChild(weiterlesen);
   haupt.appendChild(inhalt);
 
   const letzteNr = fuehrung.stationen[fuehrung.stationen.length - 1].station_nr;
