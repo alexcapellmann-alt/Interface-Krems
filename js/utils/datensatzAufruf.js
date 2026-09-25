@@ -25,11 +25,17 @@ import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN } from '../config/archivalienRegist
 // scheidung nach Tab beim Aufloesen (siehe PROJEKTLOG: dort schlug die
 // Zuordnung für "bestand" fehl, weil eine positionsabhängige Kurzform
 // dieser Segmente an der falschen Stelle erwartet wurde).
+// AUFTRAG "Teil 2f", Punkt 2: neuer Belegtyp `familie` - Zielansicht ist
+// der Habsburg-Zeitleistenbaum (js/viz/familienbaum.js, dieselbe Datei wie
+// die bereits bestehende vertiefung-Zielansicht "familienbaum" aus Teil 2d,
+// hier aber als DATENSATZ-Aufruf mit konkreter Personen-ID statt als reiner
+// Ansichts-Sprung).
 const ZUORDNUNG = {
   urkunde: { segmente: ['visualisierungen', 'urkunden', 'zeitachse'] },
   inventar: { segmente: ['visualisierungen', 'verlassenschaften', 'parallelKoordinaten'] },
   bestand: { segmente: ['bestand', 'treemap'] },
-  person: { segmente: ['visualisierungen', 'personen', 'personenliste'] }
+  person: { segmente: ['visualisierungen', 'personen', 'personenliste'] },
+  familie: { segmente: ['visualisierungen', 'personen', 'familienbaum'] }
 };
 
 // K1 (Teil 2c): lesbare Typbezeichnungen an EINER Stelle - fuer die
@@ -43,7 +49,12 @@ export const TYP_ANZEIGE = {
   inventar: 'Verlassenschaftsinventar',
   bestand: 'Bestand',
   person: 'Person',
-  bild: 'Abbildung'
+  bild: 'Abbildung',
+  // AUFTRAG "Teil 2f", Punkt 2: Quellenzeilen-Bezeichnung "Stammbaum"
+  // (Auftrag wörtlich), nicht "Familie" - dieselbe Konstante speist sowohl
+  // die Quellenzeile (belegDarstellung.js) als auch Screenreader-
+  // Beschriftungen (siehe TYP_ANZEIGE-Dateikopf-Kommentar).
+  familie: 'Stammbaum'
 };
 
 // Deklinationshilfe nur fuer die Bereichs-Haelfte der Vertiefungslink-

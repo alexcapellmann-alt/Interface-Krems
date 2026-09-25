@@ -9,11 +9,19 @@
 // explizit NICHT Teil dieses Auftrags (Nicht-Ziel), nur als offener Punkt im
 // PROJEKTLOG vermerkt.
 //
+// AUFTRAG "Teil 2f", Punkt 1: die oben erwähnte Zusammenführung ist jetzt
+// (in Gegenrichtung) trotzdem erfolgt - nicht indem diese Utility die
+// sieben Module übernimmt, sondern indem ALLE (auch diese Datei) dieselbe
+// zentrale Konstante `UNSICHERHEIT_SYMBOL` aus config/constants.js
+// importieren, statt weiter eigene ⚠-Zeichenliterale zu pflegen.
+//
 // Optisch bewusst vom blauen Info-Button (js/utils/infoButton.js)
 // unterschieden (eigene Klasse/Farbe, siehe fuegeUnsicherheitHinweisStyleEin()
 // in css/components.css) - beide sind runde Buttons mit Popup, aber
 // unterschiedlicher Bedeutung (Info: Erklärung der Ansicht: Unsicherheit:
 // redaktionelle Einordnung einer einzelnen Station).
+
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 let offeneInstanz = null;
 
@@ -50,7 +58,7 @@ export function erzeugeUnsicherheitHinweis(container, text) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'unsicherheit-hinweis-btn';
-  button.textContent = '⚠ Was wir nicht wissen';
+  button.textContent = `${UNSICHERHEIT_SYMBOL} Was wir nicht wissen`;
   button.setAttribute('aria-expanded', 'false');
 
   const panel = document.createElement('div');

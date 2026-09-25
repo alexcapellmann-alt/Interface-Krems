@@ -55,6 +55,7 @@ import {
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 const ICICLE_INFO_TEXT = `Dieses Icicle-Diagramm zeigt die Bestände als gestapelte, horizontale Ebenen: Kategorie, Unterkategorie und einzelner Bestand. Die Breite jedes Abschnitts entspricht seinem Umfang in Laufmetern.
 
@@ -63,7 +64,9 @@ Klick auf eine Kategorie oder Unterkategorie führt weiter in die nächste Ebene
 const MIN_SCHRIFTGROESSE = 11; // dieselbe Richtgröße wie treemap.js/sunburst.js
 const MINDESTBREITE_PX = 24; // dasselbe Fitts'sches-Gesetz-Ziel wie treemap.js' MINDESTHOEHE_ZELLE - hier direkt in Pixeln, keine Radius-Umrechnung nötig (im Unterschied zu sunburst.js' Winkel)
 const ZEILE_HOEHE = 60; // feste Höhe je Zeile (Kategorie/Unterkategorie/Breadcrumb) - die jeweils letzte Zeile (Bestand) nimmt die restliche Höhe
-const WARN_SYMBOL = '⚠';
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 const AUSWAHL_FARBE = '#e07820';
 
 // Größenberechnung (Root-Cause-Check, Schritt 1): derselbe eigene, kleinere

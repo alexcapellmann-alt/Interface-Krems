@@ -5,6 +5,203 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-25 (38) – Teil 2f: σ-Symbol, Belegtyp `familie`, Zusammenführung Paul Krautwurm
+
+### Punkt 1 - σ statt ⚠
+
+**Zentrale Konstante:** `js/config/constants.js`s neue `UNSICHERHEIT_SYMBOL = 'σ'`
+(plus `UNSICHERHEIT_SYMBOL_LABEL = 'Unsicherheit'`, aktuell nicht gebraucht,
+da an jeder Stelle entweder sichtbarer Begleittext ODER `aria-hidden` +
+externe Beschreibung bereits vorhanden ist - siehe unten).
+
+**Geänderte Stellen (vollständige Liste):**
+
+| Datei | Vorher | Nachher |
+|---|---|---|
+| `js/viz/circlePacking.js` | `const WARN_SYMBOL = '⚠'` | importiert `UNSICHERHEIT_SYMBOL`, lokaler Alias `WARN_SYMBOL` |
+| `js/viz/familienbaum.js` | `const WARN_SYMBOL = '⚠'`, Icon ohne `aria-hidden` | importiert `UNSICHERHEIT_SYMBOL`; `aria-hidden="true"` ergänzt (Konsistenz, `knotenGruppen` trägt bereits eigenes `aria-label`, keine Verhaltensänderung) |
+| `js/viz/ganttDiagramm.js` | `const WARN_SYMBOL = '⚠'` | importiert `UNSICHERHEIT_SYMBOL` |
+| `js/viz/icicle.js` | `const WARN_SYMBOL = '⚠'` | importiert `UNSICHERHEIT_SYMBOL` |
+| `js/viz/regestenKachelraster.js` | `const WARN_SYMBOL = '⚠'` | importiert `UNSICHERHEIT_SYMBOL` |
+| `js/viz/sunburst.js` | `const WARN_SYMBOL = '⚠'` | importiert `UNSICHERHEIT_SYMBOL` |
+| `js/viz/treemap.js` | `const WARN_SYMBOL = '⚠'` | importiert `UNSICHERHEIT_SYMBOL` |
+| `js/fuehrungen/belegDarstellung.js` | `'⚠ Angaben unsicher'` | `` `${UNSICHERHEIT_SYMBOL} Angaben unsicher` `` |
+| `js/utils/unsicherheitHinweis.js` | `'⚠ Was wir nicht wissen'` | `` `${UNSICHERHEIT_SYMBOL} Was wir nicht wissen` `` |
+| `js/core/unsicherheitsButton.js` | kein Symbol | `` `${UNSICHERHEIT_SYMBOL} Unsicherheiten anzeigen/ausblenden` `` (Auftrag: "Alle Buttons ... erhalten σ vor der Beschriftung") |
+| `css/components.css` | Kommentar erwähnte ⚠ | Kommentar aktualisiert (keine funktionale CSS-Regel betroffen) |
+
+**Fehler vs. Unsicherheit:** projektweit geprüft, KEINE Stelle kennzeichnete
+bisher einen Fehler mit ⚠ - `.fuehrung-fehler`/`baueFehlerBox()`
+(Führungen-Prüfregeln) verwenden ausschließlich den Text "Fehler: " ohne
+Icon (`css/components.css`, `.fuehrung-fehler::before { content: "Fehler: "; }`).
+Es gibt daher keine Liste "Fehlerstellen mit eigenem Zeichen" zu führen -
+der im Auftrag befürchtete Konflikt bestand nicht.
+
+**Diskrepanz zur Auftragsannahme:** `js/utils/sidebar.js` wurde als
+betroffene Datei genannt ("alle Dateien, die ⚠ enthalten, darunter ...
+js/utils/sidebar.js"), enthält aber weder ⚠ noch ein anderes Warnsymbol -
+`baueSidebarInhalt()`/`baueUrkundenDetailInhalt()` zeigen Unsicherheit
+ausschließlich über den unformatierten, roten Text "Achtung: Angaben
+unsicher..." (`.bestand-sidebar-unsicher`, K3 aus Teil 2c hatte diese Farb-
+/Textkonvention für die Führungen bewusst NICHT übernommen, siehe
+belegDarstellung.js' Dateikopf-Kommentar). Da Punkt 1 als Nicht-Ziel "keine
+Änderung am Aufbau der Unsicherheitsdarstellung, nur das Symbol" vorgibt
+und hier kein Symbol vorhanden ist, das ausgetauscht werden könnte, wurde
+`sidebar.js` NICHT verändert - ein neues Symbol dort einzuführen wäre über
+den Auftragswortlaut ("bisherige Vorkommen von ⚠") hinausgegangen. Zur
+Entscheidung vorgelegt, falls gewünscht als eigener Folgeauftrag.
+
+**Barrierefreiheit:** überall, wo σ direkt neben lesbarem Begleittext
+steht (die drei Button-Fälle oben), liefert der Text selbst bereits die
+zugängliche Bezeichnung - keine zusätzliche Auszeichnung nötig. Die reinen
+SVG-Icon-Marker (sieben Viz-Module) tragen weiterhin `aria-hidden="true"`
+(unverändert aus der ⚠-Konvention, jetzt zusätzlich in familienbaum.js
+ergänzt) - Bedeutung wird dort vom umgebenden Element vermittelt
+(Tooltip/eigenes `aria-label`, z. B. regestenKachelraster.js' Span
+`aria-label="Angaben unsicher, Details im Tooltip"`, live geprüft:
+`aria-label` unverändert korrekt, 103 σ-Spans im Kachelraster gefunden).
+Schriftdarstellung: σ ist ein Standard-Zeichen des griechischen
+Unicode-Blocks, von der projektweiten Schriftfamilie (`Inter`, Fallback
+`system-ui`/`Segoe UI`/`Roboto`, `css/base.css`) nativ abgedeckt - anders
+als ⚠ (das je nach Betriebssystem/Browser als Emoji oder als reines
+Textzeichen dargestellt wird) keine Darstellungsinkonsistenz zu erwarten.
+
+**Nachweis (live geprüft):**
+- `#bestand/treemap`, Unsicherheiten aktiviert: 21 σ-Symbole in der SVG (`svg text`, textContent exakt "σ"), 0 verbleibende ⚠.
+- `#visualisierungen/urkunden/regestenKachelraster`, Unsicherheiten aktiviert: 103 σ-Spans, `aria-label` weiterhin "Angaben unsicher, Details im Tooltip".
+- `#bestand/sunburst`, `#bestand/icicle`: Button korrekt "σ Unsicherheiten anzeigen/ausblenden" (Übersichtsebene zeigt keine Icons, dieselbe MINDESTBREITE-Regel wie zuvor mit ⚠ - keine Verhaltensänderung).
+- Führungsstation 1 (`buergerspital-heringe`): "σ Was wir nicht wissen"-Button öffnet Popup unverändert.
+- `js/fuehrungen/belegDarstellung.js`s neuer `familie`-Beleg (Punkt 2, s. u.): "σ Angaben unsicher"-Button korrekt für Albrecht III. (`geburtsdatum_unsicher=ja`).
+- Keine Konsolenfehler über alle 19 getesteten Routen (Bestand ×5, Visualisierungen ×9, Führungen ×2, Literatur, Über).
+
+**Projektweite Suche nach ⚠ (Akzeptanzkriterium):** außerhalb der
+historischen `CHANGELOG.md`/`PROJEKTLOG.md`-Einträge (bewusst unverändert,
+Änderungsprotokoll) nur noch in erklärenden Code-Kommentaren, die die
+Migration selbst dokumentieren (z. B. "vormals ⚠") - keine funktionale/
+gerenderte ⚠-Stelle mehr im Projekt.
+
+### Punkt 2 - Belegtyp `familie:`
+
+**Umsetzung:** `js/utils/datensatzAufruf.js`s `ZUORDNUNG.familie` →
+`['visualisierungen', 'personen', 'familienbaum']`, `TYP_ANZEIGE.familie`
+= "Stammbaum". `js/fuehrungen/fuehrungenDaten.js`s `BELEG_QUELLEN.familie`
+→ `data/familien.csv`/`id` (bereits von `familienbaum.js`/`chordDiagramm.js`
+genutzte Datei) - unbekannte ID erzeugt automatisch denselben Prüfhinweis
+wie bei den übrigen Typen (bestehender, generischer Mechanismus in
+`parseBeleg()`, keine Sonderbehandlung nötig). Der `familie`-Beleg trägt
+zusätzlich `familienKarte` (die volle geladene familien.csv-Map) am
+Beleg-Objekt, damit `belegDarstellung.js`s neue `baueFamilieInhalt()`
+Eltern-/Ehepartner-IDs zu Namen auflösen kann, ohne `baueBelegBereich()`s
+Signatur zu ändern.
+
+**Darstellung:** Quellenzeile "Stammbaum · `<id>` · Im Stammbaum ansehen".
+Belegbereich zeigt Name, Titel, Geburtsdatum, Sterbedatum (beide bereits
+lesbarer Text in familien.csv, kein `formatiereDatum()` anwendbar - anderes
+Format als die übrigen Typen), Eltern (Vater/Mutter als Namen), Ehepartner
+(als Namen, mehrere möglich), Anmerkung, σ-Unsicherheitshinweis für
+`geburtsdatum_unsicher`/`sterbedatum_unsicher`/`ehepartner_id_unsicher`/
+`vater_id_unsicher`/`mutter_id_unsicher`.
+
+**Link "Im Stammbaum ansehen":** `js/viz/familienbaum.js`s neue
+`oeffneDatensatz(id)` nutzt EXAKT dieselbe Logik wie ein Klick auf die
+Person (`eingefrorenerFokusId` setzen, `aktualisiereHervorhebung()`,
+`zeigePersonenPopover()`) - kein Umbau der bestehenden Hervorhebung nötig,
+daher keine Rückfrage/Pause erforderlich.
+
+**Live gefundener und behobener Bug (Selbstauskunft):** ein direkter,
+GANZ FRISCHER Seitenaufruf auf `?datensatz=familie:albrecht_iii` zeigte
+zunächst fälschlich "Datensatz „albrecht_iii" nicht gefunden.", obwohl die
+Person korrekt im Baum vorhanden war. Ursache: `render()` kann seinen
+Aufbau gerade per `requestAnimationFrame` verzögert haben (derselbe, in
+Eintrag 37 Punkt 3 gefundene und absichtlich enge Zeitraum, in dem
+`window.innerWidth`/`innerHeight` noch nicht bereitstehen) -
+`verarbeiteDatensatzAufruf()` ruft `oeffneDatensatz()` aber synchron GENAU
+EINMAL auf, ohne erneuten Versuch, und `instanz.selektionen` existiert in
+diesem engen Zeitfenster noch nicht. Behoben: `oeffneDatensatz()` merkt
+sich die Anfrage in diesem Fall auf `instanz.ausstehenderDatensatz` (gibt
+optimistisch `true` zurück, damit kein verfrühter Fehlerhinweis
+erscheint), `zeichneFamilienbaum()` holt sie nach, sobald
+`instanz.selektionen` steht. Nach der Korrektur: fünf wiederholte,
+ganz frische Seitenaufrufe auf `?datensatz=familie:albrecht_iii` öffneten
+jedes Mal korrekt (Person hervorgehoben, Popover mit Name/Titel/Daten/
+Familie geöffnet, kein Fehlerhinweis).
+
+**Nachweis (live, per direktem Modul-Aufruf verifiziert - siehe unten zur
+fehlenden Führung):** `baueBelegBereich()` mit einem synthetischen
+`familie:albrecht_iii`-Beleg (Live-Import des Moduls im Browser, temporär
+ins DOM gehängt, nach der Prüfung wieder entfernt - keine Dateiänderung)
+zeigt exakt:
+- Quellenzeile: "Stammbaum · albrecht_iii · Im Stammbaum ansehen"
+- Name: Albrecht III. ("mit dem Zopf")
+- Titel: Herzog von Österreich (1365-1395), zeitweise auch Steiermark, Kärnten, Krain und Tirol
+- Geburtsdatum: 9. September 1349 oder 1350
+- Sterbedatum: 28./29. August 1395
+- Eltern: Albrecht II. ("der Lahme"/"der Weise"); Johanna von Pfirt (korrekt über `vater_id`/`mutter_id` aufgelöst)
+- Ehepartner: Elisabeth von Böhmen (Elisabeth von Luxemburg-Böhmen); Beatrix von Zollern (von Nürnberg) (beide Ehepartner korrekt über `ehepartner_id` aufgelöst)
+- Anmerkung: vollständiger Text
+- σ Angaben unsicher-Button (korrekt, `geburtsdatum_unsicher=ja`)
+- Link-`href`: `#visualisierungen/personen/familienbaum?datensatz=familie:albrecht_iii` (exakt das im Akzeptanzkriterium geforderte Format)
+
+Der Link wurde zusätzlich über die direkte URL (nicht nur der `href`-Wert)
+geöffnet und bestätigt: Baum lädt, Albrecht III. (und seine direkten
+Beziehungen) hervorgehoben, übrige Personen abgeblendet, Popover offen.
+
+**Abweichung vom Akzeptanzkriterium (bitte zur Kenntnis nehmen):** Das
+Akzeptanzkriterium verlangt, dass "Station 2 und Station 9 des Pfads
+`wer-fehlt`" Albrecht III. korrekt zeigen. Dieser Führungspfad existiert
+NICHT in `data/fuehrungen.csv` (aktuell nur `buergerspital-heringe`,
+10 Stationen, aus Teil 2e) - und die Nicht-Ziele dieses Auftrags verbieten
+ausdrücklich "Keine Änderung an `data/fuehrungen.csv`". Ich habe die Daten
+deshalb NICHT angelegt und dieses Teilkriterium NICHT über eine echte
+Führung geprüft, sondern ausschließlich über den direkten Datensatzaufruf
+(oben) und einen synthetischen Beleg - der Code ist nachweislich korrekt,
+die Verknüpfung mit einer tatsächlichen Führungsstation steht noch aus.
+Bitte klären, ob `wer-fehlt` in einem separaten Auftrag ergänzt werden
+soll.
+
+### Punkt 3 - Paul Krautwurm zusammenführen
+
+**Projektweite Suche vorab:** `paul_der_krautwurm` kam ausschließlich in
+zwei Dateien vor: `data/urkunden.csv` (StaAKr-0053, `personen_id`-Spalte)
+und `data/personenliste.csv` (eigener Datensatz). Keine JS-Datei, kein
+`data/fuehrungen.csv`-Vorkommen.
+
+**Umsetzung:** `urkunden.csv`, StaAKr-0053: `personen_id`
+`albrecht_iii|paul_der_krautwurm` → `albrecht_iii|paul_krautwurm`.
+`personenliste.csv`: Zeile `paul_der_krautwurm` entfernt; Zeile
+`paul_krautwurm` angepasst:
+
+| Feld | Vorher | Nachher |
+|---|---|---|
+| `schreibweisen` | Paul Krautwurm | Paul Krautwurm\|Paul der Krautwurm |
+| `anzahl_nennungen` | 5 | 6 |
+| `erste_nennung` | 1359 | 1359 (unverändert) |
+| `letzte_nennung` | 1366 | 1382 |
+| `nennungsspanne_jahre` | 7 | 23 |
+| `nennung_in_urkunden` | StaAKr-0033\|...\|StaAKr-0042 | + StaAKr-0053 |
+| `unsicherheit_anmerkung` | (leer) | "Die Nennung von 1382 (StaAKr-0053) wird trotz eines Abstands von sechzehn Jahren zur vorherigen Nennung (1366) als dieselbe Person gewertet." |
+
+**Nachweis:** `paul_der_krautwurm` kommt projektweit nirgends mehr vor
+(grep, 0 Treffer). Personenliste zeigt `paul_krautwurm` mit 6 Nennungen,
+1359-1382 (exakt das Akzeptanzkriterium). Zeilenweiser Diff-Nachweis: in
+`urkunden.csv` genau 1 Datenzeile geändert (nur die `personen_id`-Spalte
+von StaAKr-0053), in `personenliste.csv` genau 1 Zeile entfernt und 1
+Zeile in genau den sechs genannten Feldern angepasst - alle anderen
+Zeilen/Spalten unverändert. Format (BOM/CRLF) beider Dateien erhalten.
+
+### Regressionsprüfung (Abschluss-Anforderung)
+
+19 Routen ohne Konsolenfehler durchlaufen (Bestand ×5, Visualisierungen
+×9, Führungen ×2, Literatur, Über). Stammbaum-Klick auf eine normale
+Person (Beatrix von Zollern) weiterhin unverändert funktionsfähig
+(Popover öffnet, Hervorhebung korrekt) - keine Regression durch die neue
+`oeffneDatensatz()`/`ausstehenderDatensatz`-Logik. Beide Führungsstationen
+(`buergerspital-heringe`, alle 10 Stationen bereits in Eintrag 36 geprüft,
+hier zusätzlich Station 1 mit σ-Button erneut bestätigt) unverändert
+funktionsfähig.
+
+---
+
 ## 2026-09-25 (37) – Vier unabhängige Korrekturen: Chord-Größe, Verbindungskarte, Familienbaum-Mindestgröße, Flyout-Hover
 
 ### Punkt 1 - Chord-Diagramm: Kreisgröße kompensieren

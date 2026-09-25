@@ -54,6 +54,7 @@ import {
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 const TREEMAP_INFO_TEXT = `Diese Treemap zeigt die Bestände des Stadtarchivs Krems als verschachtelte Flächen, gruppiert nach Kategorien (BKK-Dokumentationsprofil). Die Größe jeder Fläche entspricht dem Umfang des jeweiligen Bestands in Laufmetern.
 
@@ -65,7 +66,9 @@ const MINDESTHOEHE_ZELLE = 24; // Klickbarkeit (Fitts'sches Gesetz, Abschnitt 9)
 const ZURUECK_VERZOEGERUNG_MS = 250; // Back-Button: Sidebar schließt zuerst
 const TOOLTIP_VERZOEGERUNG_WURZEL_MS = 600;
 const AUSWAHL_FARBE = '#e07820';
-const WARN_SYMBOL = '⚠';
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 const MIN_SCHRIFTGROESSE = 11; // Richtwert 10-11px, siehe Auftrag
 
 // Größenberechnung (Punkt 2): eigener, viel kleinerer Mindestwert als der

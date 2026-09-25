@@ -7,6 +7,45 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-25 (87) – Teil 2f: σ-Symbol, Belegtyp `familie`, Zusammenführung Paul Krautwurm
+
+**Punkt 1:** Unsicherheitssymbol zentralisiert - neue Konstante
+`UNSICHERHEIT_SYMBOL` (σ, U+03C3) in `js/config/constants.js`, ersetzt alle
+bisherigen ⚠-Vorkommen: die sieben `WARN_SYMBOL`-Module
+(`circlePacking.js`/`familienbaum.js`/`ganttDiagramm.js`/`icicle.js`/
+`regestenKachelraster.js`/`sunburst.js`/`treemap.js`, jetzt ohne lokale
+Kopie), `js/fuehrungen/belegDarstellung.js` ("σ Angaben unsicher"),
+`js/utils/unsicherheitHinweis.js` ("σ Was wir nicht wissen"). Neu ergänzt:
+`js/core/unsicherheitsButton.js` bekommt σ-Präfix ("σ Unsicherheiten
+anzeigen/ausblenden", hatte zuvor kein Symbol). Keine ⚠-Stelle im Projekt
+kennzeichnete bisher einen Fehler (`.fuehrung-fehler` nutzt ausschließlich
+den Text "Fehler: ", kein Icon) - kein Konflikt, keine zweite
+Symbol-Konstante nötig. `js/utils/sidebar.js` enthielt entgegen der
+Auftragsannahme kein ⚠ (nur unformatierten "Achtung:"-Text) - unverändert
+gelassen, siehe PROJEKTLOG Eintrag 38 für die Begründung.
+
+**Punkt 2:** Neuer Belegtyp `familie:<id>` (Führungen) - Zielansicht
+Habsburg-Zeitleistenbaum. `js/utils/datensatzAufruf.js`/
+`js/fuehrungen/fuehrungenDaten.js`/`js/fuehrungen/belegDarstellung.js`
+(Quellenzeile "Stammbaum", Name/Titel/Geburts-/Sterbedatum/Eltern/
+Ehepartner als aufgelöste Namen/Anmerkung, σ-Unsicherheitshinweis, Link
+"Im Stammbaum ansehen"), `js/viz/familienbaum.js` (neue `oeffneDatensatz()`,
+nutzt exakt die Klick-Logik). `?datensatz=familie:albrecht_iii` live
+verifiziert (siehe PROJEKTLOG 38) - Führungspfad `wer-fehlt` aus dem
+Akzeptanzkriterium existiert noch nicht in `data/fuehrungen.csv` (Nicht-Ziel
+verbot eine Änderung dort), daher nur über den direkten Datensatzaufruf
+geprüft, nicht über die Führung selbst.
+
+**Punkt 3:** `paul_der_krautwurm` (1 Nennung, 1382, StaAKr-0053) in
+`paul_krautwurm` (zuvor 5 Nennungen, 1359-1366) zusammengeführt - jetzt 6
+Nennungen, 1359-1382, `unsicherheit_anmerkung` ergänzt. `data/urkunden.csv`
+(1 Zeile)/`data/personenliste.csv` (1 Zeile entfernt, 1 Zeile angepasst),
+Format unverändert, per Skript nachgewiesen.
+
+Details/Screenshots/Diagnose siehe PROJEKTLOG Eintrag 38.
+
+---
+
 ## 2026-09-25 (86) – Vier unabhängige Korrekturen: Chord-Größe, Verbindungskarte, Familienbaum-Mindestgröße, Flyout-Hover
 
 Dateien: `js/viz/chordDiagramm.js` (Kreisgröße kompensiert die auf 170px

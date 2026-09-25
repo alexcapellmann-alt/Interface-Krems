@@ -37,7 +37,7 @@
 // Farbcodierung aus kategorieFarben.js (importiert, NICHT dupliziert).
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
-import { ACHSEN_SCHRIFTGROESSE } from '../config/constants.js';
+import { ACHSEN_SCHRIFTGROESSE, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { baueBestandsHierarchie, baueTooltipText, kategorieVonKnoten, OHNE_KATEGORIE } from '../utils/bestandsHierarchie.js';
 import { baueKategorieFarbSkala, OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
 import {
@@ -68,7 +68,10 @@ const ZEILE_GESAMT = ZEILENHOEHE + ZEILENABSTAND;
 const RAND = { links: 12, rechts: 20 };
 const ACHSE_HOEHE = 34;
 const MIN_SCHRIFTGROESSE = 11; // dieselbe Richtgröße wie treemap.js/sunburst.js/icicle.js/circlePacking.js
-const WARN_SYMBOL = '⚠';
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js (siehe dortiger Kommentar), unter demselben
+// lokalen Namen weiterverwendet (minimale Diff an den Aufrufstellen unten).
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 
 // Mindestbreite für Balken (Schritt 4, Fitts'sches Gesetz - dieselbe Zielgröße
 // wie MINDESTBREITE_PX in icicle.js/treemap.js bzw. MINDESTRADIUS_PX*2 in

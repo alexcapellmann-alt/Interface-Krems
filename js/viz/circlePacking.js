@@ -48,6 +48,7 @@ import {
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
 const CIRCLEPACKING_INFO_TEXT = `Diese Darstellung zeigt die Bestände als ineinander verschachtelte Kreise: ein großer Kreis pro Kategorie, darin die einzelnen Bestände. Die Kreisgröße entspricht dem Umfang in Laufmetern.
 
@@ -55,7 +56,9 @@ Klick auf eine Kategorie zeigt deren Bestände, Klick auf einen einzelnen Bestan
 
 const MIN_SCHRIFTGROESSE = 11;
 const MINDESTRADIUS_PX = 12; // Durchmesser 24px - dasselbe Fitts'sches-Gesetz-Ziel wie treemap.js/sunburst.js/icicle.js, hier als Radius
-const WARN_SYMBOL = '⚠';
+// AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
+// aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
+const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
 const AUSWAHL_FARBE = '#e07820';
 const FOKUS_STROKE_BREITE = 3;
 

@@ -18,12 +18,16 @@ import { ermittleVertiefungsLink } from '../utils/datensatzAufruf.js';
 
 // Präfixtabelle aus docs/SCHEMA.md Abschnitt 10 - gegen die tatsächlichen
 // Spaltennamen der Quell-CSVs geprüft (siehe PROJEKTLOG).
+// AUFTRAG "Teil 2f", Punkt 2: neuer Belegtyp `familie` -> data/familien.csv
+// (derselbe Habsburg-Stammbaum-Datensatz, den js/viz/familienbaum.js/
+// chordDiagramm.js bereits als `familien` laden), id-Spalte `id`.
 const BELEG_QUELLEN = {
   urkunde: { pfad: 'data/urkunden.csv', idFeld: 'signatur' },
   buergerbuch: { pfad: 'data/buergerbuch.csv', idFeld: 'id' },
   inventar: { pfad: 'data/verlassenschaftsinventare.csv', idFeld: 'id' },
   bestand: { pfad: 'data/bestandsverzeichnis.csv', idFeld: 'kuerzel' },
-  person: { pfad: 'data/personenliste.csv', idFeld: 'personen_id' }
+  person: { pfad: 'data/personenliste.csv', idFeld: 'personen_id' },
+  familie: { pfad: 'data/familien.csv', idFeld: 'id' }
 };
 
 let datenPromise = null;
@@ -77,7 +81,14 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
     if (!record) {
       return { typ, id, record: null, fehler: `${typ}:${id} - ID nicht in ${BELEG_QUELLEN[typ].pfad} gefunden` };
     }
-    return { typ, id, record, fehler: null };
+    // AUFTRAG "Teil 2f", Punkt 2: `familie` braucht zusätzlich zum eigenen
+    // Record die VOLLSTÄNDIGE familien.csv-Karte, um Eltern/Ehepartner-IDs
+    // zu Namen aufzulösen (belegDarstellung.js' baueFamilieInhalt()) - hier
+    // am Beleg mitgegeben statt baueBelegBereich()s Signatur zu ändern, da
+    // nur dieser eine Typ eine zweite Karte braucht.
+    return typ === 'familie'
+      ? { typ, id, record, fehler: null, familienKarte: quellKarten.familie }
+      : { typ, id, record, fehler: null };
   });
 }
 
