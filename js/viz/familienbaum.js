@@ -1457,21 +1457,51 @@ export function render(container, data, options = {}) {
   container.appendChild(wurzel);
   instanz.wurzel = wurzel;
 
-  const breite = ermittleVerfuegbareBreite(container);
-  const hoehe = ermittleVerfuegbareHoehe(container, { reserveUnten: 10 });
-  if (istBildschirmZuKlein(breite, hoehe)) {
-    wurzel.appendChild(baueBildschirmHinweis());
-    return;
+  // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 3: Diagnose per
+  // Debug-Instrumentierung (siehe Selbstauskunft im Chat) - KEIN DPI-/
+  // devicePixelRatio-Fehler (das Projekt liest devicePixelRatio nirgends,
+  // grep-geprüft). Tatsächliche Ursache: `window.innerWidth`/
+  // `window.innerHeight` können GENAU an dieser Stelle noch **0** sein - der
+  // erste `render()`-Aufruf einer frisch geladenen Seite läuft synchron
+  // (Ende der `await ladeArchivalienDaten()`-Kette in app.js) VOR dem
+  // allerersten Layout/Paint-Durchlauf des Browsers, der `window.inner*`
+  // erst mit echten Werten befüllt - live gemessen: `{breite:166, hoehe:320,
+  // innerWidth:0, innerHeight:0}` statt der tatsächlichen Fenstergröße,
+  // dadurch fälschlich `istBildschirmZuKlein() === true`. Unter normalen
+  // Bedingungen ist dieses Zeitfenster verschwindend kurz und bleibt
+  // unbemerkt; die zusätzliche Compositor-/Rasterisierungsarbeit, die
+  // fraktionale Windows-Skalierung (125 %) beim allerersten Frame
+  // verursacht, verbreitert dieses Zeitfenster vermutlich spürbar - deckt
+  // sich mit dem gemeldeten Symptom (reproduzierbar bei 125 %, nicht bei
+  // 100 %). Behebung: liegt `window.innerWidth`/`innerHeight` erkennbar
+  // noch nicht vor (0 - ein gültiges Browserfenster hat nie 0px Breite/
+  // Höhe), wird EIN Frame gewartet (`requestAnimationFrame`) und danach neu
+  // gemessen, statt die verfrühte 0-Messung als "Bildschirm zu klein" zu
+  // werten. Im Normalfall (innerWidth/innerHeight bereits gültig) läuft
+  // exakt derselbe Code wie zuvor, synchron, ohne Verzögerung.
+  function pruefeGroesseUndBaueRest() {
+    const breite = ermittleVerfuegbareBreite(container);
+    const hoehe = ermittleVerfuegbareHoehe(container, { reserveUnten: 10 });
+    if (istBildschirmZuKlein(breite, hoehe)) {
+      wurzel.appendChild(baueBildschirmHinweis());
+      return;
+    }
+
+    baueWerkzeugleiste(wurzel);
+
+    const plotBereich = document.createElement('div');
+    plotBereich.className = 'familienbaum-plot-bereich';
+    wurzel.appendChild(plotBereich);
+    instanz.plotBereich = plotBereich;
+
+    zeichneFamilienbaum();
   }
 
-  baueWerkzeugleiste(wurzel);
-
-  const plotBereich = document.createElement('div');
-  plotBereich.className = 'familienbaum-plot-bereich';
-  wurzel.appendChild(plotBereich);
-  instanz.plotBereich = plotBereich;
-
-  zeichneFamilienbaum();
+  if (!window.innerWidth || !window.innerHeight) {
+    requestAnimationFrame(() => { if (instanz && instanz.wurzel === wurzel) pruefeGroesseUndBaueRest(); });
+    return;
+  }
+  pruefeGroesseUndBaueRest();
 }
 
 export function resize(neueOptionen = {}) {

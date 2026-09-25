@@ -93,6 +93,15 @@
 // selbst ist rein dekorativ (`pointer-events:none`, keine eigenen Listener
 // mehr). Beide Selektionen werden aus DENSELBEN `paare`-Daten gebaut und bei
 // jeder Positions-/Sichtbarkeits-Aktualisierung gemeinsam mitgeführt.
+//
+// KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 2: Regler-
+// Beschriftung "Mindeststärke:" -> "Verbindungsstärke" (Auftrag wörtlich).
+// `reglerMin`/Startwert 2 bereits seit obigem Auftrag korrekt, unverändert.
+// Der Status-Text ("X von Y Verbindungen", s. Punkt 1 oben) entfällt
+// ersatzlos - Y (`paare.length`) zählte auch die seit `reglerMin=2` nie
+// mehr erreichbaren Einzelverbindungen (Stärke 1) mit und war dadurch
+// irreführend (Auftrag wörtlich). `reglerStatus`-Element samt CSS-Klasse
+// entfernt, `aktualisiereSichtbarkeit()` setzt ihn nicht mehr.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis } from '../utils/urkundenOrte.js';
@@ -182,7 +191,6 @@ function fuegeStyleEin(container) {
     .verbindungskarte-regler-gruppe { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
     .verbindungskarte-regler-label { font-size: var(--fs-sm); color: var(--text-muted); }
     .verbindungskarte-regler-input { width: 160px; }
-    .verbindungskarte-regler-status { font-size: var(--fs-sm); font-weight: 600; min-width: 160px; }
     .orts-knoten { cursor: pointer; }
     /* Punkt 2 (siehe Dateikopf-Kommentar): dieselbe :has()-Ausblendung wie
        karte.js (Kleinauftrag "Klick auf Ort-Marker öffnet Sidebar") - jetzt
@@ -252,7 +260,9 @@ async function zeichneVerbindungskarte() {
   reglerGruppe.className = 'verbindungskarte-regler-gruppe';
   const reglerLabel = document.createElement('span');
   reglerLabel.className = 'verbindungskarte-regler-label';
-  reglerLabel.textContent = 'Mindeststärke:';
+  // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 2: Beschriftung
+  // von "Mindeststärke:" auf "Verbindungsstärke" geändert (Auftrag wörtlich).
+  reglerLabel.textContent = 'Verbindungsstärke';
   const reglerInput = document.createElement('input');
   reglerInput.type = 'range';
   reglerInput.className = 'verbindungskarte-regler-input';
@@ -261,9 +271,7 @@ async function zeichneVerbindungskarte() {
   reglerInput.step = '1';
   reglerInput.value = String(reglerMin);
   reglerInput.setAttribute('aria-label', 'Mindestanzahl gemeinsamer Urkunden je Verbindung');
-  const reglerStatus = document.createElement('span');
-  reglerStatus.className = 'verbindungskarte-regler-status';
-  reglerGruppe.append(reglerLabel, reglerInput, reglerStatus);
+  reglerGruppe.append(reglerLabel, reglerInput);
   werkzeugleiste.appendChild(reglerGruppe);
   instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: VERBINDUNGSKARTE_INFO_TEXT, ariaLabel: 'Erklärung zur Verbindungskarte' });
 
@@ -323,10 +331,15 @@ async function zeichneVerbindungskarte() {
 
   // KORREKTUR Punkt 1 (siehe Dateikopf-Kommentar): blendet Linien (beide
   // Selektionen, sichtbar UND Trefferfläche) unterhalb der Mindeststärke aus
-  // und hält den Status-Text synchron - UND blendet jeden Orts-Knoten aus,
-  // der bei der aktuellen Schwelle an keiner sichtbaren Linie mehr beteiligt
-  // ist (verwaiste Orte). style('display') statt erneutem .join(), die
-  // Datenbindung bleibt unangetastet.
+  // - UND blendet jeden Orts-Knoten aus, der bei der aktuellen Schwelle an
+  // keiner sichtbaren Linie mehr beteiligt ist (verwaiste Orte).
+  // style('display') statt erneutem .join(), die Datenbindung bleibt
+  // unangetastet.
+  // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 2: der
+  // Status-Text ("X von Y Verbindungen") entfällt ersatzlos - die Gesamt-
+  // zahl Y zählte auch die technisch seit reglerMin=2 nie mehr erreichbaren
+  // Einzelverbindungen (Stärke 1) mit und war dadurch irreführend (Auftrag
+  // wörtlich).
   function aktualisiereSichtbarkeit() {
     const schwelle = Number(reglerInput.value);
     const sichtbarePaare = paare.filter((p) => p.anzahl >= schwelle);
@@ -334,7 +347,6 @@ async function zeichneVerbindungskarte() {
     linien.style('display', (p) => (p.anzahl >= schwelle ? null : 'none'));
     linienTrefferflaeche.style('display', (p) => (p.anzahl >= schwelle ? null : 'none'));
     ortsKnoten.style('display', (o) => (sichtbareOrte.has(o.name) ? null : 'none'));
-    reglerStatus.textContent = `${sichtbarePaare.length} von ${paare.length} Verbindungen`;
   }
   aktualisiereSichtbarkeit();
   reglerInput.addEventListener('input', aktualisiereSichtbarkeit);

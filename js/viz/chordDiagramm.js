@@ -368,11 +368,26 @@ function zeichneChordDiagramm() {
     });
   });
 
-  const breite = options.width || container.clientWidth || 700;
-  const hoehe = options.height || Math.max(container.clientHeight || 700, 500);
-  // Punkt 2 (siehe Dateikopf-Kommentar): Randmarge von 90 auf 170px erhöht -
-  // Platz für die jetzt horizontalen (nicht mehr radial gedrehten) Labels.
-  const radiusAussen = Math.min(breite, hoehe) / 2 - 170;
+  // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 1: die Randmarge
+  // wuchs (siehe Kommentar zu RAND_MARGE unten) von 90 auf 170px, wodurch der
+  // Kreis bei UNVERÄNDERTER SVG-Größe automatisch kleiner wurde (radius =
+  // min(breite,hoehe)/2 - marge). Statt die Marge zurückzunehmen (die
+  // Labels bräuchten den Platz weiterhin) wird stattdessen die
+  // GESAMT-SVG-Größe um genau das Doppelte der Margenvergrößerung erhöht -
+  // "doppelt", weil die Marge auf JEDER Seite des Kreises anfällt (min(b,h)
+  // ist ein Durchmesser-Maß, die Marge wird zweimal abgezogen, einmal je
+  // Seite). Damit landet radiusAussen exakt wieder beim Stand vor der
+  // Label-Änderung: (min(b,h)+160)/2 - 170 = min(b,h)/2 + 80 - 170 =
+  // min(b,h)/2 - 90. `.chord-chart-bereich`s `overflow:visible` (siehe
+  // fuegeStyleEin() unten) lässt das dadurch über den Flex-Container hinaus
+  // gewachsene `<svg>` unbeschnitten wachsen, exakt wie es die Randmarge
+  // selbst schon vorher tat.
+  const RAND_MARGE = 170;
+  const RAND_MARGE_VORHER = 90;
+  const GROESSEN_AUSGLEICH = (RAND_MARGE - RAND_MARGE_VORHER) * 2;
+  const breite = (options.width || container.clientWidth || 700) + GROESSEN_AUSGLEICH;
+  const hoehe = (options.height || Math.max(container.clientHeight || 700, 500)) + GROESSEN_AUSGLEICH;
+  const radiusAussen = Math.min(breite, hoehe) / 2 - RAND_MARGE;
   const radiusInnen = radiusAussen - 16;
 
   const chordLayout = d3.chord().padAngle(0.06).sortSubgroups(d3.descending)(matrix);

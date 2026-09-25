@@ -263,8 +263,47 @@ function baueIconListe(eintraege, onAktivieren) {
 // unten überlassen, siehe Dateikopf-Kommentar für die Begründung der
 // Aufteilung). `rendereInhalt(panel)` wird bei JEDEM Öffnen neu aufgerufen
 // (frischer Inhalt statt zwischengespeichertem Zustand, wie schon in (44)).
-export function erzeugeFlyoutPanel(ausloeser, { klasse, rendereInhalt }) {
+//
+// KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 4: `schliesstBeiWegbewegen`
+// (neuer Parameter, Default `false`) aktiviert NUR für die temporären
+// Vorschau-Flyouts (verankereVorschauFlyout()/verankereIconFlyout() unten
+// sowie app.js' "Visualisierungen"-Hauptnav-Flyout, die alle drei diesen
+// Parameter explizit `true` setzen) ein zusätzliches, rein Hover-basiertes
+// Schließen - der bereits bestehende Klick-Toggle-Zustand des AKTIVEN
+// Bereichs/Bestands (verankereFlyout() unten, Nicht-Ziel laut Auftrag
+// wörtlich) lässt den Parameter auf `false` und bleibt dadurch exakt beim
+// bisherigen "bleibt bis Klick offen"-Verhalten aus (47)/(48) - dieselbe
+// gemeinsame Kernfunktion bedient also weiterhin BEIDE Schließ-Philosophien,
+// je nach Aufrufer.
+//
+// Warum nicht einfach ein simples mouseleave-schließt-Timer pro Instanz:
+// die vier Flyout-Ebenen sind laut Baustein-Kommentar oben NICHT ineinander
+// verschachtelt (jede eigene Instanz hängt ihr Panel direkt in <body>) -
+// wandert die Maus von einem äußeren Auslöser/Panel in ein VERSCHACHTELTES
+// Kind-Flyout (dessen eigener Auslöser zwar ein DOM-Nachfahre des äußeren
+// Panels ist - siehe schliesseGeschwister()-Kommentar unten zur selben
+// Containment-Prüfung -, dessen eigenes Panel aber NICHT), verlässt die Maus
+// zwangsläufig kurzzeitig Auslöser UND Panel der äußeren Ebene. Ein naiver
+// Timer würde die äußere Ebene deshalb schließen, obwohl der Nutzer gerade
+// noch in der verschachtelten Kette unterwegs ist - dieselbe Fehlklasse, die
+// bereits (47) für das alte, komplett entfernte mouseleave-Verhalten
+// diagnostizierte. Lösung: `istPointerImBereichOderNachfahre()` (unten)
+// prüft beim Ablauf der Karenzzeit zusätzlich rekursiv, ob eine OFFENE
+// Kind-Instanz (deren Auslöser ein DOM-Nachfahre des eigenen Panels ist)
+// gerade selbst noch gehalten wird - über `element.matches(':hover')`
+// (native, synchrone Live-Abfrage des tatsächlichen Hover-Zustands, kein
+// eigenes Positions-Tracking nötig). Schließt umgekehrt ein Kind (nachdem
+// SEIN eigener Timer/Bereich-Check das entscheidet), benachrichtigt es über
+// `benachrichtigeVorfahrenUeberSchliessen()` gezielt seine eigenen Vorfahren
+// neu - ohne das würde ein Vorfahre, der sich beim EIGENEN Timer-Ablauf
+// wegen eines damals noch offenen Kindes zum Offenbleiben entschied, nie
+// wieder neu bewertet und bliebe offen, selbst nachdem der Nutzer die
+// gesamte Kette längst verlassen hat.
+const KARENZZEIT_MS = 120;
+
+export function erzeugeFlyoutPanel(ausloeser, { klasse, rendereInhalt, schliesstBeiWegbewegen = false }) {
   let offen = false;
+  let schliessTimer = null;
 
   const panel = document.createElement('div');
   panel.className = klasse;
@@ -331,23 +370,73 @@ export function erzeugeFlyoutPanel(ausloeser, { klasse, rendereInhalt }) {
     ausloeser.setAttribute('aria-expanded', 'true');
   }
 
+  function brichSchliessenAb() {
+    if (schliessTimer) { clearTimeout(schliessTimer); schliessTimer = null; }
+  }
+
+  // Rekursive Prüfung (siehe Kommentar zu `schliesstBeiWegbewegen` oben):
+  // true, solange der Zeiger noch über dem eigenen Auslöser/Panel steht,
+  // ODER eine noch offene, DOM-nachfahrende Kind-Instanz selbst noch
+  // gehalten wird.
+  function istPointerImBereichOderNachfahre() {
+    if (ausloeser.matches(':hover') || panel.matches(':hover')) return true;
+    for (const andere of FLYOUT_INSTANZEN) {
+      if (andere.panel === panel) continue;
+      if (!andere.istOffen()) continue;
+      if (panel.contains(andere.ausloeser) && andere.istPointerImBereichOderNachfahre()) return true;
+    }
+    return false;
+  }
+
+  // Nach der Karenzzeit (KARENZZEIT_MS) erneut prüfen statt sofort zu
+  // schließen - vermeidet Flackern beim Überqueren kleiner Lücken zwischen
+  // Auslöser und Panel (Auftrag wörtlich) UND gibt einer evtl. gerade erst
+  // betretenen Kind-Instanz genug Zeit, sich selbst als "offen" bei
+  // `FLYOUT_INSTANZEN` einzutragen.
+  function planeSchliessenFallsNoetig() {
+    if (!schliesstBeiWegbewegen) return;
+    brichSchliessenAb();
+    schliessTimer = setTimeout(() => {
+      schliessTimer = null;
+      if (!istPointerImBereichOderNachfahre()) schliesse();
+    }, KARENZZEIT_MS);
+  }
+
+  // Benachrichtigt eigene VORFAHREN (deren Panel den eigenen Auslöser
+  // enthält), wenn diese Instanz gerade geschlossen hat - ohne das bliebe
+  // ein Vorfahre, der beim eigenen Timer-Ablauf wegen dieser (damals noch
+  // offenen) Kind-Instanz offen blieb, für immer offen, selbst nachdem der
+  // Nutzer die gesamte Kette verlassen hat.
+  function benachrichtigeVorfahrenUeberSchliessen() {
+    FLYOUT_INSTANZEN.forEach((andere) => {
+      if (andere.panel === panel) return;
+      if (!andere.istOffen()) return;
+      if (andere.panel.contains(ausloeser)) andere.planeSchliessenFallsNoetig();
+    });
+  }
+
   function schliesse() {
     if (!offen) return;
+    brichSchliessenAb();
     offen = false;
     panel.hidden = true;
     ausloeser.setAttribute('aria-expanded', 'false');
+    benachrichtigeVorfahrenUeberSchliessen();
   }
 
   // Punkt 1 (Folgeauftrag "Flyout-Kette bleibt offen bis Klick..."): Hover
-  // ÖFFNET weiterhin, aber schließt NICHT MEHR selbst - kein mouseleave-
-  // Listener mehr auf Auslöser/Panel, siehe Dateikopf-Kommentar für die
-  // Begründung. Schließen übernimmt ausschließlich a) die bestehenden,
-  // unveränderten Eintrag-Klick-Handler (Navigation), b) der globale
-  // Klick-außerhalb-Listener (stelleGlobalenKlickListenerSicher()) oder c)
-  // schliesseGeschwister() oben (neu), wenn eine NICHT verwandte Instanz
-  // geöffnet wird.
-  function beiAusloeserBetreten() { oeffne(); }
+  // ÖFFNET weiterhin. Schließen übernimmt für den PERMANENTEN Klick-Zustand
+  // (`schliesstBeiWegbewegen === false`, Nicht-Ziel) unverändert nur a) die
+  // bestehenden Eintrag-Klick-Handler, b) der globale Klick-außerhalb-
+  // Listener oder c) schliesseGeschwister() oben. Für die TEMPORÄREN
+  // Vorschau-Flyouts (`schliesstBeiWegbewegen === true`, KORREKTURAUFTRAG
+  // "Vier unabhängige Korrekturen", Punkt 4) kommt zusätzlich d) das
+  // Verlassen von Auslöser UND Panel (nach Karenzzeit, s.o.) hinzu.
+  function beiAusloeserBetreten() { brichSchliessenAb(); oeffne(); }
   ausloeser.addEventListener('mouseenter', beiAusloeserBetreten);
+  ausloeser.addEventListener('mouseleave', planeSchliessenFallsNoetig);
+  panel.addEventListener('mouseenter', brichSchliessenAb);
+  panel.addEventListener('mouseleave', planeSchliessenFallsNoetig);
 
   // Repositionieren bei Fenstergröße-Änderung, aber nur während der Flyout
   // tatsächlich offen ist (reine Positionsanpassung, kein Neuaufbau - anders
@@ -364,12 +453,23 @@ export function erzeugeFlyoutPanel(ausloeser, { klasse, rendereInhalt }) {
     istOffen: () => offen,
     oeffne,
     schliesse,
+    // Von `benachrichtigeVorfahrenUeberSchliessen()`/`istPointerImBereichOderNachfahre()`
+    // ANDERER Instanzen aufgerufen (siehe Kommentar zu `schliesstBeiWegbewegen`
+    // oben) - für Instanzen mit `schliesstBeiWegbewegen === false` (der
+    // permanente Klick-Zustand) ein bewusstes No-Op (planeSchliessenFallsNoetig()
+    // selbst prüft das bereits als erstes).
+    planeSchliessenFallsNoetig,
+    istPointerImBereichOderNachfahre,
     neuRendernFallsOffen() {
       if (offen) rendereInhalt(panel);
     },
     destroy() {
       window.removeEventListener('resize', beiResize);
+      brichSchliessenAb();
       ausloeser.removeEventListener('mouseenter', beiAusloeserBetreten);
+      ausloeser.removeEventListener('mouseleave', planeSchliessenFallsNoetig);
+      panel.removeEventListener('mouseenter', brichSchliessenAb);
+      panel.removeEventListener('mouseleave', planeSchliessenFallsNoetig);
       ausloeser.removeAttribute('aria-haspopup');
       ausloeser.removeAttribute('aria-expanded');
       versteckeTooltip();
@@ -431,6 +531,9 @@ export function verankereFlyout(ausloeser, initialOptionen) {
 export function verankereVorschauFlyout(ausloeser, { tabs, onAktivieren }) {
   const kern = erzeugeFlyoutPanel(ausloeser, {
     klasse: 'visualisierungs-tabs-flyout',
+    // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 4: temporärer
+    // Vorschau-Flyout - schließt zusätzlich per Hover-Wegbewegen (s. o.).
+    schliesstBeiWegbewegen: true,
     rendereInhalt: (panel) => {
       panel.innerHTML = '';
       fuegeFlyoutStyleEin(panel);
@@ -451,6 +554,9 @@ export function verankereVorschauFlyout(ausloeser, { tabs, onAktivieren }) {
 export function verankereIconFlyout(ausloeser, { eintraege, onAktivieren }) {
   const kern = erzeugeFlyoutPanel(ausloeser, {
     klasse: 'visualisierungs-tabs-flyout',
+    // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 4: temporärer
+    // Vorschau-Flyout - schließt zusätzlich per Hover-Wegbewegen (s. o.).
+    schliesstBeiWegbewegen: true,
     rendereInhalt: (panel) => {
       panel.innerHTML = '';
       fuegeFlyoutStyleEin(panel);
