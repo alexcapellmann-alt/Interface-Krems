@@ -192,6 +192,16 @@
   grid-template-columns: var(--fuehrung-beleg-breite) var(--fuehrung-text-breite);
   gap: var(--space-4); align-items: stretch; }
 .fuehrung-station-inhalt.vergleich { grid-template-columns: 1fr 1fr 1fr; }
+/* AUFTRAG "Fuehrungen, Teil 2e", Punkt 1: Station ohne Beleg - eine einzige
+   Spalte, Erzaehltext bleibt ueber .fuehrung-erzaehltext's eigene
+   max-width/min-width (s.u.) auf die uebliche Zeilenlaenge begrenzt,
+   `justify-items:center` zentriert diesen dadurch schmaleren Block
+   innerhalb der vollen verfuegbaren Breite ("mittig angeordnet", Auftrag
+   woertlich). Kopfbereich/Navigationssaeule sind eigene Flex-Geschwister
+   von `.fuehrung-station-inhalt` (siehe fuehrungStation.js) und damit von
+   dieser Variante unberuehrt - stehen automatisch an derselben Position
+   wie auf jeder anderen Station. */
+.fuehrung-station-inhalt.ohne-beleg { grid-template-columns: 1fr; justify-items: center; }
 
 /* Quelle klar vom Erzähltext abgesetzt (Punkt 4, Auftrag wörtlich): eigener
    Hintergrund/Rahmen, Beschriftung über ::before - dieselbe Konvention wie
@@ -271,6 +281,10 @@
   .fuehrung-station { flex-direction: column; }
   .fuehrung-station-haupt { min-height: auto; }
   .fuehrung-station-inhalt, .fuehrung-station-inhalt.vergleich { grid-template-columns: 1fr; min-height: auto; }
+  /* Punkt 1 (Teil 2e): "Mobil wie bisher" - die Zentrierung aus der
+     Desktop-Variante von `.ohne-beleg` oben gilt hier bewusst NICHT, der
+     Erzaehltext verhaelt sich wie auf jeder anderen Station mobil. */
+  .fuehrung-station-inhalt.ohne-beleg { justify-items: normal; }
   .fuehrung-beleg { min-height: auto; }
   .fuehrung-beleg-scroll { overflow-y: visible; }
   .fuehrung-erzaehltext { overflow-y: visible; }

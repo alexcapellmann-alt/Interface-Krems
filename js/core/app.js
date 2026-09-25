@@ -861,6 +861,11 @@ function verankereHauptnavFlyouts() {
   let vorschauHandle = null;
   const vizFlyout = erzeugeFlyoutPanel(vizLink, {
     klasse: 'visualisierungs-tabs-flyout',
+    // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 4: temporärer
+    // Vorschau-Flyout (Hauptnav "Visualisierungen") - schließt zusätzlich
+    // per Hover-Wegbewegen (siehe visualisierungsTabs.js' Kommentar zu
+    // `schliesstBeiWegbewegen`).
+    schliesstBeiWegbewegen: true,
     rendereInhalt: (panel) => {
       // Vorherige Vorschau-Instanz (samt ihrer eigenen, verschachtelten
       // Punkt-3-Flyouts) erst abbauen - sonst sammeln sich bei jedem

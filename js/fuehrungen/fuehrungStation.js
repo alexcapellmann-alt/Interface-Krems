@@ -149,14 +149,21 @@ function baueKopf(fuehrung, station, aktuelleNr) {
   return kopf;
 }
 
+// AUFTRAG "Fuehrungen, Teil 2e", Punkt 1: fehlt der Beleg (belege.length ===
+// 0, bewusst KEIN Fehler/Pruefhinweis - siehe fuehrungenDaten.js' parseBeleg(),
+// die dafuer bereits ein leeres Array statt eines Fehlereintrags liefert),
+// entfaellt .fuehrung-beleg vollstaendig - eigene Grid-Variante `ohne-beleg`
+// (components.css) statt der bestehenden 1- bzw. 2-Beleg-Varianten.
 function baueInhaltsBereich(station) {
   const bereich = document.createElement('div');
-  const vergleich = station.belege.length > 1;
-  bereich.className = vergleich ? 'fuehrung-station-inhalt vergleich' : 'fuehrung-station-inhalt';
+  const anzahlBelege = station.belege.length;
+  bereich.className = anzahlBelege === 0
+    ? 'fuehrung-station-inhalt ohne-beleg'
+    : (anzahlBelege > 1 ? 'fuehrung-station-inhalt vergleich' : 'fuehrung-station-inhalt');
 
-  bereich.appendChild(baueBelegBereich(station.belege[0], station.bild_text));
+  if (anzahlBelege > 0) bereich.appendChild(baueBelegBereich(station.belege[0], station.bild_text));
   bereich.appendChild(baueErzaehlbereich(station));
-  if (vergleich) bereich.appendChild(baueBelegBereich(station.belege[1], station.bild_text));
+  if (anzahlBelege > 1) bereich.appendChild(baueBelegBereich(station.belege[1], station.bild_text));
   return bereich;
 }
 

@@ -5,6 +5,250 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-25 (37) – Vier unabhängige Korrekturen: Chord-Größe, Verbindungskarte, Familienbaum-Mindestgröße, Flyout-Hover
+
+### Punkt 1 - Chord-Diagramm: Kreisgröße kompensieren
+
+`js/viz/chordDiagramm.js`s `zeichneChordDiagramm()`: die Randmarge für die
+horizontalen Labels war bereits zuvor von 90 auf 170px erhöht worden, ohne
+die SVG-Größe entsprechend anzupassen - der Kreis wurde dadurch automatisch
+kleiner (`radiusAussen = min(breite,hoehe)/2 - marge`). Neu: `breite`/`hoehe`
+werden vor der Radius-Berechnung um `GROESSEN_AUSGLEICH = (170-90)*2 = 160`
+vergrößert (Faktor 2, weil die Marge auf JEDER Seite des Durchmessers
+abgezogen wird). Damit ergibt sich rechnerisch wieder exakt der alte
+Radius: `(min(b,h)+160)/2 - 170 = min(b,h)/2 - 90`.
+
+**Nachweis (live gemessen, `#visualisierungen/personen/chordDiagramm`):**
+`getBBox()` aller vier Segment-Pfade ergibt einen Kreisdurchmesser von
+335,0px (Radius 167,5px). Rückrechnung aus der tatsächlichen SVG-Größe zum
+Messzeitpunkt (Basis-Containergröße 992×515px, vor der Vergrößerung) nach
+der ALTEN Formel `min(992,515)/2 - 90`: ebenfalls 167,5px - exakte
+Übereinstimmung. Alle vier Labels ("Dynastie (Habsburger)", "Adel",
+"Klerus", "Bürgertum") vollständig innerhalb des SVG-Viewports sichtbar
+(Screenshot, siehe Chat).
+
+### Punkt 2 - Verbindungskarte: Regler-Beschriftung und Statustext
+
+`js/viz/verbindungskarte.js`: Regler-Beschriftung von "Mindeststärke:" auf
+"Verbindungsstärke" geändert (Auftrag wörtlich). `min`/Startwert war
+bereits 2 (aus einem früheren Auftrag, unverändert bestätigt - live
+geprüft: `input.min === "2"`, `input.value === "2"`). Statustext
+("X von Y Verbindungen") ersatzlos entfernt (`reglerStatus`-Element samt
+CSS-Klasse `.verbindungskarte-regler-status`), `aktualisiereSichtbarkeit()`
+setzt ihn nicht mehr.
+
+**Nachweis (live, `#visualisierungen/orte/verbindungskarte`):** Regler
+zeigt "Verbindungsstärke" ohne Doppelpunkt, kein Statustext im DOM
+(`document.querySelector('.verbindungskarte-regler-status')` → `null`).
+
+### Punkt 3 - Habsburg-Zeitleistenbaum: Mindestgrößen-Bug
+
+**Diagnose:** KEIN DPI-/`devicePixelRatio`-Fehler - das Projekt liest
+`devicePixelRatio` an keiner Stelle (grep-geprüft, 0 Treffer). Tatsächliche
+Ursache per Debug-Instrumentierung nachgewiesen (temporärer Log in
+`js/viz/familienbaum.js`s `render()`, nach der Diagnose wieder entfernt):
+beim allerersten `render()`-Aufruf einer frisch geladenen Seite (Ende der
+`await ladeArchivalienDaten()`-Kette in `app.js`) waren `window.innerWidth`/
+`window.innerHeight` an der Stelle der Mindestgrößen-Messung noch **0**
+(live gemessen: `{breite:166, hoehe:320, innerWidth:0, innerHeight:0}` bei
+tatsächlicher Fenstergröße 1536×864) - der Browser hatte seinen ersten
+Layout-Durchlauf zu diesem Zeitpunkt noch nicht abgeschlossen.
+`istBildschirmZuKlein(166, 320)` wertete das dadurch fälschlich als "zu
+klein". Unter normalen Bedingungen ist dieses Zeitfenster verschwindend
+kurz; die zusätzliche Compositor-/Rasterisierungsarbeit, die fraktionale
+Windows-Skalierung (125 %) beim allerersten Frame zusätzlich verursacht,
+verbreitert dieses Zeitfenster nach dieser Diagnose vermutlich spürbar -
+deckt sich mit dem gemeldeten Symptom (reproduzierbar bei 125 %, nicht bei
+100 %), auch wenn Windows-DPI-Skalierung selbst am Fehler unbeteiligt ist.
+
+**Fundstelle:** `js/viz/familienbaum.js`, `render()`, die
+`ermittleVerfuegbareBreite()`/`ermittleVerfuegbareHoehe()`-Messung direkt
+nach dem Einhängen von `wurzel`.
+
+**Behebung:** liegt `window.innerWidth`/`innerHeight` erkennbar noch nicht
+vor (0 - ein echtes Browserfenster hat nie 0px Breite/Höhe), wird der
+Mindestgrößen-Check samt restlichem Aufbau in eine neue Funktion
+`pruefeGroesseUndBaueRest()` ausgelagert und einmalig per
+`requestAnimationFrame()` verzögert, statt die verfrühte 0-Messung sofort
+als "Bildschirm zu klein" zu werten. Im Normalfall (Werte bereits gültig)
+läuft exakt derselbe Code synchron wie zuvor, ohne Verzögerung.
+
+**Nachweis:** Reproduziert (Browser-Tab frisch geöffnet bei 1536×864 CSS-
+Pixel, dem exakten CSS-Pixel-Äquivalent von 1920×1080 bei 125 %
+Windows-Skalierung - eine physische 125 %-Windows-Skalierung selbst kann
+dieses Tool nicht emulieren) - vor der Korrektur erschien der
+Mindestgrößen-Platzhalter zuverlässig bei jedem frischen Laden; nach der
+Korrektur öffnet sich der Zeitleistenbaum bei fünf wiederholten frischen
+Ladevorgängen jedes Mal normal (Screenshot, siehe Chat).
+
+### Punkt 4 - Temporäre Vorschau-Flyouts: strikt Hover-only
+
+`js/core/visualisierungsTabs.js`s `erzeugeFlyoutPanel()` (gemeinsamer Kern
+aller vier Flyout-Varianten) bekommt einen neuen Parameter
+`schliesstBeiWegbewegen` (Default `false`). Nur die drei temporären
+Vorschau-Flyouts setzen ihn auf `true`: `verankereVorschauFlyout()`,
+`verankereIconFlyout()` (beide in `visualisierungsTabs.js`) sowie der
+"Visualisierungen"-Hauptnav-Flyout (`js/core/app.js`s
+`verankereHauptnavFlyouts()`, direkter `erzeugeFlyoutPanel()`-Aufruf). Der
+permanente Klick-Zustand der aktiven Bereichs-/Bestand-Leiste
+(`verankereFlyout()`) bleibt unverändert bei `false` (Nicht-Ziel).
+
+Mechanik: `mouseleave` auf Auslöser ODER Panel startet einen 120ms-Timer
+(`KARENZZEIT_MS`); `mouseenter` auf einem der beiden bricht ihn ab. Läuft
+der Timer ab, prüft `istPointerImBereichOderNachfahre()` rekursiv, ob der
+Zeiger noch über Auslöser/Panel steht ODER eine offene, DOM-nachfahrende
+Kind-Instanz (deren Auslöser ein Nachfahre des eigenen Panels ist) selbst
+noch gehalten wird (`element.matches(':hover')`, kein eigenes
+Positions-Tracking nötig) - erst wenn das insgesamt `false` ist, schließt
+die Instanz. Schließt eine Instanz, benachrichtigt
+`benachrichtigeVorfahrenUeberSchliessen()` gezielt ihre eigenen offenen
+Vorfahren zur Neubewertung - sonst bliebe ein Vorfahre, der beim eigenen
+Timer-Ablauf wegen eines damals noch offenen Kindes offen blieb, dauerhaft
+offen, auch nachdem die gesamte Kette längst verlassen wurde.
+
+**Nachweis (live, drei Fälle):**
+1. Hover "Visualisierungen" → Flyout öffnet; Maus weit weg bewegt → Flyout
+   schließt nach kurzer Karenzzeit automatisch, ohne Klick.
+2. Verschachtelte Kette: Hover "Visualisierungen" → Hover "Bürgerbuch"
+   (inaktiver Bereichs-Tab) → verschachtelter Flyout mit dessen fünf
+   Ansichten öffnet zusätzlich; Maus in dessen Panel bewegt (Tooltip auf
+   "Trellis") → BEIDE Ebenen bleiben offen (kein vorzeitiges Schließen der
+   äußeren Ebene). Maus danach komplett weg bewegt → BEIDE Ebenen
+   schließen automatisch (Kaskade über Vorfahren-Benachrichtigung
+   bestätigt).
+3. Hover "Bestand" (Hauptnav) → Icon-Flyout öffnet; Maus weg bewegt →
+   schließt automatisch.
+
+Nicht-Ziel bestätigt unverändert: der permanente Klick-Zustand der aktiven
+Bereichs-Leiste (z. B. "Urkunden" nach Navigation dorthin) bleibt als feste
+Tab-Zeile bestehen bzw. verhält sich weiterhin nur klick-gesteuert, keine
+Hover-Wegbewegen-Schließung.
+
+### Grep-Verifikation
+
+```
+devicePixelRatio: 0 Treffer im echten Code (nur im erklärenden Kommentar
+  zu Punkt 3 erwähnt)
+__familienbaumDebug / DEBUG familienbaum: 0 Treffer (Debug-Instrumentierung
+  vollständig entfernt)
+"Mindeststärke:" (alte Regler-Beschriftung mit Doppelpunkt): 0 Treffer im
+  echten Code (nur in erklärenden Kommentaren erwähnt)
+reglerStatus: 0 Treffer im echten Code (nur im erklärenden Kommentar)
+```
+
+---
+
+## 2026-09-25 (36) – Führungen, Teil 2e: Stationen ohne Beleg, neuer Pfad
+
+**Auftrag (Kurzfassung):** `data/fuehrungen.csv` enthält jetzt den ersten
+der neuen, längeren Pfade (`buergerspital-heringe`, zehn Stationen, ersetzt
+die 25 kurzen Führungen). Station 2/3 haben bewusst keinen Beleg, Station 9
+hat `bestand` als Beleg, Station 10 vergleicht erstmals zwei echte
+Urkunden. `vertiefung` enthielt noch Klartext-Beschreibungen.
+
+### Punkt 1 - Stationen ohne Beleg
+
+`js/fuehrungen/fuehrungStation.js`s `baueInhaltsBereich()`: bei
+`station.belege.length === 0` entfällt `.fuehrung-beleg` vollständig (statt
+bisher immer `station.belege[0]` an `baueBelegBereich()` zu übergeben -
+wäre bei leerem Array `undefined` gewesen und hätte dort abgestürzt), neue
+Klasse `ohne-beleg` statt `vergleich`. `css/components.css`: neue Regel
+`.fuehrung-station-inhalt.ohne-beleg { grid-template-columns: 1fr;
+justify-items: center; }` - der Erzähltext bleibt über seine bereits
+bestehende `max-width`/`min-width` (45-85ch, unverändert aus 2a) auf die
+übliche Zeilenlänge begrenzt, `justify-items:center` zentriert diesen
+schmaleren Block innerhalb der vollen Breite. Mobil (`@media (max-width:
+800px)`) eigene Rücknahme `justify-items: normal` - "wie bisher", keine
+Sonderbehandlung. `fuehrungenDaten.js`s `parseBeleg()` lieferte bei leerem
+`beleg`-Feld bereits vor diesem Auftrag ein leeres Array ohne Fehlereintrag
+- kein leerer Beleg erzeugt also einen Prüfhinweis, keine Änderung dort
+nötig. `docs/SCHEMA.md`: `beleg` von "ja" auf "nein" (Pflicht) geändert,
+Verhalten bei leerem Wert dokumentiert.
+
+**Akzeptanzkriterium, Nachweis:** Station 2/3 zeigen keinen leeren Rahmen
+(Screenshot Station 2, siehe unten - Text gut lesbar, kein `.fuehrung-beleg`
+im DOM). Navigationssäule pixelgleich zu Station 1 nachgewiesen
+(`getBoundingClientRect()` von `.fuehrung-nav` auf Station 1 UND Station 2:
+identisch `{x:1258, y:86.6, width:92, height:611.4}`). Erzähltext-Zentrierung
+geprüft (Station 2, 1366×768): `.fuehrung-station-inhalt` x:16-1246,
+`.fuehrung-erzaehltext` x:202-1060 - linker Rand 186px, rechter Rand 186px,
+symmetrisch.
+
+### Punkt 2 - Vertiefungslinks
+
+Python-Skript (dasselbe Muster wie Teil 2d) wandelt die drei in dieser
+Datei vorkommenden Beschreibungen um: "Zeitleiste der Urkunden" und
+"Urkundenkachelansicht" aus der bereits freigegebenen Zuordnung (Eintrag
+34). "Bestandsverzeichnis – Gantt-Diagramm" ist neu, aber eindeutig:
+`archivalienRegistry.js`s `BESTAND_ANSICHTEN` enthält bereits einen Eintrag
+`id: 'ganttDiagramm'` (`js/viz/ganttDiagramm.js`), `ermittleAnsicht()` in
+`datensatzAufruf.js` löst `['bestand', 'ganttDiagramm']` danach regulär
+auf - Pfad `#bestand/ganttDiagramm`, keine Rückfrage nötig. 8 von 8
+befüllten `vertiefung`-Werten ersetzt (2 Stationen bleiben leer, unverändert).
+
+**Spaltenweiser Nachweis:**
+
+```
+fuehrung_id: 0 Abweichungen
+status: 0 Abweichungen
+fuehrung_titel: 0 Abweichungen
+leitfrage: 0 Abweichungen
+kurzbeschreibung: 0 Abweichungen
+themenbereich: 0 Abweichungen
+zeitraum: 0 Abweichungen
+weiterlesen: 0 Abweichungen
+station_nr: 0 Abweichungen
+station_titel: 0 Abweichungen
+station_zeitraum: 0 Abweichungen
+beleg: 0 Abweichungen
+bild_text: 0 Abweichungen
+text: 0 Abweichungen
+unsicherheit_hinweis: 0 Abweichungen
+vertiefung: 8 Abweichungen
+quellen_intern: 0 Abweichungen
+```
+
+Format geprüft und erhalten: BOM vorhanden, ausschließlich CRLF-Zeilenenden,
+alle Felder weiterhin in Anführungszeichen.
+
+### Punkt 3 - Prüfbericht
+
+Alle 10 Stationen im Browser durchlaufen (`location.hash` je Station,
+`resize()` angestoßen, 1366×768).
+
+**Verbleibende Fehlerhinweise:** keine (`.fuehrung-fehler` bei keiner der
+10 Stationen, auch nicht bei Vertiefungslinks).
+
+**Beleglinks:** alle korrekt. Station 9 (`bestand:1.1.2.3.1.`) live
+nachvollzogen: Archiv-Link führt zur Treemap, öffnet dort die Sidebar für
+"Spitalmeisteramtsrechnungen" (Zitierweise "StAKr, 1.1.2.3.1. (Krems und
+Stein, Spitalmeisterrechnungen)") - korrekter Datensatz. Vertiefungslink
+`#bestand/ganttDiagramm` live geöffnet: Gantt-Diagramm rendert ohne
+Konsolenfehler. Station 10 (zwei Urkunden `StaAKr-0018`/`StaAKr-0050`)
+zeigt beide nebeneinander mit je eigener Quellenzeile/Archiv-Link, Seite
+bleibt ohne Überschuss (`scrollHeight === innerHeight === 768`).
+
+**Bildschirmfüllung 1366×768:** alle 10 Stationen ohne Seitenscrollen
+(`document.documentElement.scrollHeight === window.innerHeight` bei jeder
+Station). Internes Scrollen im Belegbereich (`.fuehrung-beleg-scroll`) bei
+7 der 8 `urkunde`-Belege (Stationen 1, 4-8, 10×2) - erwartungsgemäß
+(lange Regesten, siehe vorherige Klärung zu Teil 2d). Station 9
+(`bestand`) benötigt kein internes Scrollen. Kein Erzähltext-internes
+Scrollen bei keiner der 10 Stationen.
+
+Keine neuen Konsolenfehler während der gesamten Prüfung.
+
+**Nebenbefund (außerhalb dieses Auftrags, nicht verändert):**
+`git diff` zeigt zusätzlich eine Abweichung in `data/urkunden.csv`
+(`StAK-UrkKr-0003`, Feld `orte`: "Krems" → "Wien|Krems", eine Zeile). Diese
+Änderung stammt nicht aus dieser Sitzung - in keinem Schritt dieses
+Auftrags wurde `urkunden.csv` geöffnet oder geschrieben. Vermutlich ein
+unverändert aus einer früheren, nicht committeten Sitzung stehen
+gebliebener Arbeitsstand. Wird hier nur zur Kenntnis gebracht, nicht
+zurückgesetzt (kein Auftrag dazu).
+
+---
+
 ## 2026-09-24 (35) – Führungen, Teil 2d, Punkt 2+3: Umwandlung und vollständiger Prüfbericht
 
 **Auftrag (Kurzfassung):** Nach Freigabe der Zuordnung aus Eintrag 34

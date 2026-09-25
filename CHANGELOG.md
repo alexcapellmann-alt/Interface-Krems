@@ -7,6 +7,45 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-25 (86) – Vier unabhängige Korrekturen: Chord-Größe, Verbindungskarte, Familienbaum-Mindestgröße, Flyout-Hover
+
+Dateien: `js/viz/chordDiagramm.js` (Kreisgröße kompensiert die auf 170px
+vergrößerte Randmarge, Gesamt-SVG um 160px je Dimension vergrößert - Kreis
+mathematisch nachgewiesen wieder exakt bei der Größe vor der Label-Änderung,
+alle vier Labels weiterhin vollständig sichtbar), `js/viz/verbindungskarte.js`
+(Regler-Beschriftung "Verbindungsstärke", `min=2` bestätigt unverändert,
+irreführender Statustext "X von Y Verbindungen" entfernt),
+`js/viz/familienbaum.js` (Mindestgrößen-Bug diagnostiziert und behoben - KEIN
+DPI-/devicePixelRatio-Fehler, siehe PROJEKTLOG Eintrag 37 für die per
+Instrumentierung nachgewiesene tatsächliche Ursache: `window.innerWidth`/
+`innerHeight` können beim allerersten `render()`-Aufruf noch 0 sein, bevor
+der Browser seinen ersten Layout-Durchlauf abgeschlossen hat - jetzt per
+`requestAnimationFrame`-Rückversicherung abgefangen), `js/core/visualisierungsTabs.js`
++ `js/core/app.js` (neuer Parameter `schliesstBeiWegbewegen` an
+`erzeugeFlyoutPanel()` - temporäre Vorschau-Flyouts schließen jetzt nach
+kurzer Karenzzeit beim Verlassen von Auslöser UND Panel, rekursiv auch über
+verschachtelte Ketten hinweg; der permanente Klick-Zustand der aktiven
+Bereichs-Leiste bleibt unverändert). Details/Screenshots/Diagnose siehe
+PROJEKTLOG Eintrag 37.
+
+---
+
+## 2026-09-25 (85) – Führungen, Teil 2e: Stationen ohne Beleg, neuer Pfad
+
+Dateien: `js/fuehrungen/fuehrungStation.js` (Belegbereich entfällt bei
+leerem `beleg`, neue Grid-Variante `ohne-beleg`), `css/components.css`
+(`.fuehrung-station-inhalt.ohne-beleg`, zentrierter Erzähltext auf
+Desktop, mobil unverändert), `docs/SCHEMA.md` (`beleg` nicht mehr
+Pflichtfeld), `data/fuehrungen.csv` (ausschließlich Spalte `vertiefung`
+des Pfads `buergerspital-heringe`, spaltenweise gegen 0 Abweichungen in
+allen anderen Spalten geprüft, inkl. neuem Eintrag "Bestandsverzeichnis –
+Gantt-Diagramm" → `#bestand/ganttDiagramm`). Vollständiger Prüfbericht
+(10 Stationen, 1366×768): keine Fehlerhinweise, alle Beleglinks korrekt
+(Station 9/10 live nachvollzogen), keine Seitenscroll-Überschreitung -
+siehe PROJEKTLOG Eintrag 36 für Details.
+
+---
+
 ## 2026-09-24 (84) – Führungen, Teil 2d: echte Führungsdaten, vertiefung umgewandelt
 
 Dateien: `data/fuehrungen.csv` (ausschließlich Spalte `vertiefung`,

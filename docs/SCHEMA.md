@@ -267,7 +267,7 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `station_titel` | Text | ja | |
 | `station_zeitraum` | Text | nein | |
 | `text` | Liste (Pipe-getrennt) | ja | ein Absatz pro Listenelement; ein Absatz, der mit `- ` beginnt, ist ein Aufzählungspunkt - mehrere AUFEINANDERFOLGENDE `- `-Absätze bilden gemeinsam eine Liste |
-| `beleg` | Liste (Pipe-getrennt, 1-2 Einträge) | ja | Format `typ:id`, Trennung am ERSTEN Doppelpunkt (IDs selbst enthalten keinen). Zwei Einträge ergeben eine Vergleichsslide. Präfixtabelle: |
+| `beleg` | Liste (Pipe-getrennt, 0-2 Einträge) | nein | Format `typ:id`, Trennung am ERSTEN Doppelpunkt (IDs selbst enthalten keinen). Zwei Einträge ergeben eine Vergleichsslide. Bleibt der Wert leer, entfällt der Belegbereich vollständig - kein Fehler/Prüfhinweis, der Erzähltext steht dann über die volle verfügbare Breite (begrenzt auf die übliche Zeilenlänge, mittig angeordnet; Teil 2e, Punkt 1). Präfixtabelle: |
 | `bild_text` | Text | nur bei `beleg`-Typ `bild` | Bildunterschrift UND Alt-Text zugleich - muss beschreiben, was zu sehen ist |
 | `unsicherheit_hinweis` | Text | nein | zusätzlicher, REDAKTIONELLER Text - kein Ersatz für die aus der Quell-CSV übernommenen `_unsicher`-Felder/`unsicherheit_anmerkung` (siehe unten) |
 | `vertiefung` | Liste (Pipe-getrennt) | nein | interne Pfade im Router-Format aus Punkt 0.2 (z. B. `#visualisierungen/urkunden/zeitachse`, siehe `js/core/router.js:1-9`) - Format muss erweiterbar bleiben, da Zustandsparameter (Stufe 3, `?entity_typ=…&entity_wert=…` nach demselben Muster wie `router.js:41-46`) später an denselben Pfad angehängt werden |
