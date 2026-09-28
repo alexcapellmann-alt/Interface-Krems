@@ -175,6 +175,50 @@
   --fuehrung-buehne-entwurf-bg: #c9932f;
   --fuehrung-buehne-entwurf-text: #191006;
   --fuehrung-buehne-hinweis: #ff9e95;
+
+  /* AUFTRAG "Teil 2j", Punkt 2: eigene, in sich geschlossene "hell auf
+     dunkel"-Gegenstelle zur Bühnenpalette oben - der Belegbereich
+     (`.fuehrung-beleg`) ist ein helles Dokument INNERHALB der dunklen
+     Bühne (`.fuehrung-station`) und darf deren Textfarbe nicht erben
+     (siehe PROJEKTLOG für die volle Ursachenanalyse: `.fuehrung-beleg`
+     überschrieb bisher nur `background`, nie `color` - fast der gesamte
+     Feld-/Regest-/Wertetext hatte dadurch GAR KEINE eigene Farbregel und
+     erbte still die für die Bühne bestimmte, dort helle Textfarbe).
+     Eigene, dedizierte Variablen statt Wiederverwendung von `--text`/
+     `--accent` direkt, damit eine künftige, unabhängige Änderung dieser
+     app-weiten Variablen den Belegbereich nicht erneut unbemerkt
+     mitverändert - Werte aktuell bewusst identisch zu den entsprechenden
+     app-weiten Farben (`--text`/`--text-muted`/`--border`/`--accent`),
+     mit EINER Ausnahme: `--fuehrung-beleg-unsicher` ist etwas dunkler als
+     das app-weite `--fuehrung-unsicher` (#8a6d1f), weil dessen Kontrast
+     gegen genau diesen Hintergrund nur 4,49:1 erreicht (unter der
+     4,5:1-Mindestschwelle für Text, per `getComputedStyle`-Messung
+     gefunden, siehe PROJEKTLOG) - im bisherigen Einsatz (Sidebar/
+     Kachelraster/Personenliste) unauffällig, weil dort nie exakt gegen
+     `#f7f5f0` gemessen wurde. Alle Werte per WCAG-Formel gegen
+     `--fuehrung-beleg-bg` (bzw. die jeweilige eigene Flächenfarbe, wo
+     vorhanden) geprüft - Text ≥4,5:1 (WCAG 1.4.3), Bedienelemente/
+     Fokusrahmen ≥3:1 (WCAG 1.4.11), vollständige Tabelle mit den am
+     tatsächlichen Element gemessenen Werten im PROJEKTLOG:
+       Text (--fuehrung-beleg-text)                 15,97:1
+       Text, gedämpft (--fuehrung-beleg-text-muted)   6,43:1
+       Akzent/Link/Fokusrahmen (--fuehrung-beleg-akzent) 8,34:1
+       Unsicher-Text (σ, auf --fuehrung-beleg-bg)     5,77:1
+       Unsicher-Text (auf --fuehrung-beleg-unsicher-bg) 5,83:1
+       Prüfhinweis-Text (auf --fuehrung-beleg-fehler-bg) 4,73:1
+     `--fuehrung-beleg-border` (1,30:1) ist wie `--fuehrung-buehne-border`
+     rein dekorativ (Kartenrahmen, zusätzlich durch Schatten/Position
+     erkennbar) und deshalb ohne WCAG-Pflichtwert. */
+  --fuehrung-beleg-bg: #f7f5f0;
+  --fuehrung-beleg-text: #1a1a1a;
+  --fuehrung-beleg-text-muted: #595959;
+  --fuehrung-beleg-border: #ddd8cf;
+  --fuehrung-beleg-akzent: #2c4a6e;
+  --fuehrung-beleg-fokus: #2c4a6e;
+  --fuehrung-beleg-unsicher: #785c14;
+  --fuehrung-beleg-unsicher-bg: #fdf6e3;
+  --fuehrung-beleg-fehler: #b45309;
+  --fuehrung-beleg-fehler-bg: #fff7ed;
 }
 
 /* Galerie (Punkt 3) - dieselbe Kachel-/Raster-Optik wie
@@ -213,7 +257,7 @@
 /* Heller Belegbereich (s.u.) bleibt bei der urspruenglichen, helltauglichen
    Amber-Variante - einzige verbleibende Stelle, an der ein Beleg selbst
    ungueltig ist (ID nicht gefunden). */
-.fuehrung-beleg .fuehrung-fehler { border-color: var(--fuehrung-fehler); background: var(--fuehrung-fehler-bg); color: var(--fuehrung-fehler); }
+.fuehrung-beleg .fuehrung-fehler { border-color: var(--fuehrung-beleg-fehler); background: var(--fuehrung-beleg-fehler-bg); color: var(--fuehrung-beleg-fehler); }
 
 /* Stationsansicht (Punkt 4, überarbeitet in Teil 2a-K Punkt 1/2 für
    bildschirmfüllendes Layout - siehe fuehrungStation.js' Dateikopf-
@@ -269,18 +313,24 @@
    (der eigentliche, potenziell lange Inhalt) bekommt die Höhenbegrenzung
    und scrollt bei Bedarf intern. */
 /* AUFTRAG "Teil 2g", Punkt 2 (Auftrag wörtlich: "Der Belegbereich bleibt
-   hell, wie ein Dokument auf einer dunklen Bühne") - bewusst UNVERÄNDERTE
-   helle Farben (`--bg`/`--border`/`--text-muted`, wie vor diesem Auftrag),
-   nur ein zusätzlicher Schatten hebt die "Dokument auf Bühne"-Wirkung
-   gegen den jetzt dunklen `.fuehrung-station`-Hintergrund hervor. */
+   hell, wie ein Dokument auf einer dunklen Bühne") - ein zusätzlicher
+   Schatten hebt die "Dokument auf Bühne"-Wirkung gegen den dunklen
+   `.fuehrung-station`-Hintergrund hervor.
+   KORREKTURAUFTRAG "Teil 2j", Punkt 2 (Ursache siehe PROJEKTLOG/
+   `--fuehrung-beleg-*`-Kommentar oben): `.fuehrung-beleg` setzt jetzt
+   selbst `color` (vorher NIE gesetzt, nur `background` - der eigentliche
+   Fehler) über die neuen, eigenen `--fuehrung-beleg-*`-Variablen statt
+   `--bg`/`--text-muted` direkt zu referenzieren - dieselbe Entkopplung
+   wie bei der Bühnenpalette. */
 .fuehrung-beleg { display: flex; flex-direction: column; min-height: 0; padding: var(--space-3);
-  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+  border: 1px solid var(--fuehrung-beleg-border); border-radius: var(--radius);
+  background: var(--fuehrung-beleg-bg); color: var(--fuehrung-beleg-text);
   box-shadow: 0 4px 20px rgba(0, 0, 0, .35); }
 .fuehrung-beleg::before { content: "Quelle"; flex: 0 0 auto; display: block; font-size: var(--fs-sm); font-weight: 700;
-  color: var(--text-muted); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: .04em; }
-.fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--text-muted); }
+  color: var(--fuehrung-beleg-text-muted); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: .04em; }
+.fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--fuehrung-beleg-text-muted); }
 .fuehrung-beleg-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-.fuehrung-beleg-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.fuehrung-beleg-scroll:focus-visible { outline: 3px solid var(--fuehrung-beleg-fokus); outline-offset: -3px; }
 /* Punkt 1: Urkundenfoto (aus sidebar.js' baueUrkundenDetailInhalt()
    wiederverwendet, KEINE Änderung an sidebar.js) skaliert unverzerrt/
    vollständig auf die verfügbare Fläche statt `width:100%` unbegrenzt in
@@ -293,8 +343,8 @@
   height: 100%; min-height: 0; }
 .fuehrung-beleg-bild { flex: 1 1 auto; min-height: 0; max-width: 100%; max-height: 100%; width: auto; height: auto;
   object-fit: contain; border-radius: var(--radius); cursor: pointer; }
-.fuehrung-beleg-bild:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.fuehrung-beleg-bildunterschrift { flex: 0 0 auto; margin: var(--space-2) 0 0 0; font-size: var(--fs-sm); color: var(--text-muted); }
+.fuehrung-beleg-bild:focus-visible { outline: 3px solid var(--fuehrung-beleg-fokus); outline-offset: 2px; }
+.fuehrung-beleg-bildunterschrift { flex: 0 0 auto; margin: var(--space-2) 0 0 0; font-size: var(--fs-sm); color: var(--fuehrung-beleg-text-muted); }
 
 /* Punkt 1: derselbe Scroll-Rückfall wie `.fuehrung-beleg-scroll` oben, für
    einen ausnahmsweise zu langen Erzähltext.
@@ -445,13 +495,26 @@
 .unsicher-absatz-text { margin: var(--space-2) 0 0 0; padding: var(--space-2) var(--space-3);
   border: 1px solid var(--fuehrung-unsicher); border-radius: var(--radius); background: var(--fuehrung-unsicher-bg);
   color: var(--text); font-size: var(--fs-sm); }
+/* KORREKTURAUFTRAG "Teil 2j", Punkt 2: `--fuehrung-unsicher` (#8a6d1f, oben)
+   erreicht gegen `--fuehrung-beleg-bg` real gemessen nur 4,49:1 (siehe
+   PROJEKTLOG) - knapp unter der 4,5:1-Textschwelle. Eine spezifischere,
+   nur im Belegbereich geltende Überschreibung auf die etwas dunklere,
+   sicher konforme `--fuehrung-beleg-unsicher`-Variable, statt die
+   Basisregel oben zu ändern (die bliebe sonst für Sidebar/Kachelraster/
+   Personenliste unangetastet betroffen - Nicht-Ziel). */
+.fuehrung-beleg .unsicher-absatz-btn { border-color: var(--fuehrung-beleg-unsicher); background: var(--fuehrung-beleg-unsicher-bg); color: var(--fuehrung-beleg-unsicher); }
+.fuehrung-beleg .unsicher-absatz-btn:hover { background: var(--fuehrung-beleg-bg); }
+.fuehrung-beleg .unsicher-absatz-btn:focus-visible { outline-color: var(--fuehrung-beleg-fokus); }
+.fuehrung-beleg .unsicher-absatz-text { border-color: var(--fuehrung-beleg-unsicher); background: var(--fuehrung-beleg-unsicher-bg); color: var(--fuehrung-beleg-text); }
 
 /* AUFTRAG "Fuehrungen, Teil 2b", Punkt 5: Archiv-Link in der Quellenzeile -
    eigenes <a>, NICHT der ganze .fuehrung-beleg (siehe belegDarstellung.js'
    Dateikopf-Kommentar zu baueQuellenzeile()). Bleibt im HELLEN Belegbereich
-   (Punkt 2, Teil 2g) - unveraendert `--accent`. */
-.fuehrung-beleg-archivlink { color: var(--accent); font-weight: 600; }
-.fuehrung-beleg-archivlink:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+   (Punkt 2, Teil 2g) - seit Teil 2j eigene `--fuehrung-beleg-akzent`/
+   `-fokus`-Variable statt direkt `--accent` (dieselbe Entkopplung wie beim
+   restlichen Belegbereich, siehe :root-Kommentar). */
+.fuehrung-beleg-archivlink { color: var(--fuehrung-beleg-akzent); font-weight: 600; }
+.fuehrung-beleg-archivlink:focus-visible { outline: 3px solid var(--fuehrung-beleg-fokus); outline-offset: 2px; }
 
 /* AUFTRAG "Teil 2g", Punkt 4/5: verlinkte Namen in der "Genannte Personen"-
    Zeile (js/utils/genanntePersonen.js) - EINE gemeinsame Basis-Regel fuer
@@ -462,6 +525,28 @@
 .genannte-personen-link { color: var(--accent); font-weight: 600; }
 .genannte-personen-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .genannte-personen-unsicher { color: var(--fuehrung-unsicher); }
+/* KORREKTURAUFTRAG "Teil 2j", Punkt 2: dieselbe spezifischere, nur im
+   Belegbereich geltende Überschreibung wie bei `.unsicher-absatz-*` oben -
+   `--accent` (Link) ist gegen `--fuehrung-beleg-bg` bereits sicher (8,34:1),
+   bekommt die eigene Variable trotzdem (statt der app-weiten), damit der
+   Belegbereich vollständig auf seine eigene Farbwelt verweist; `--fuehrung-
+   unsicher` (σ) erreicht dagegen real gemessen nur 4,49:1 (s. o.) und wird
+   hier auf die sicher konforme `--fuehrung-beleg-unsicher` umgestellt. */
+.fuehrung-beleg .genannte-personen-link { color: var(--fuehrung-beleg-akzent); }
+.fuehrung-beleg .genannte-personen-link:focus-visible { outline-color: var(--fuehrung-beleg-fokus); }
+.fuehrung-beleg .genannte-personen-unsicher { color: var(--fuehrung-beleg-unsicher); }
+
+/* KORREKTURAUFTRAG "Teil 2j", Punkt 2: Feldnamen (`.bestand-sidebar-feld-
+   label`, Regel liegt in js/utils/sidebar.js' fuegeSidebarStyleEin() -
+   Überschreibung per Spezifität funktioniert stylesheet-übergreifend genau
+   gleich) waren mit `--text-muted` bereits sicher (6,43:1 gemessen, siehe
+   PROJEKTLOG) - keine eigentliche Fehlerquelle, bekommen aber ebenfalls die
+   eigene Belegbereich-Variable, damit wirklich JEDES Element im
+   Belegbereich auf `--fuehrung-beleg-*` statt auf app-weite Variablen
+   verweist (Auftrag wörtlich: "Das gilt für alle Elemente im
+   Belegbereich"). Keine Änderung an Sidebar/Kachelraster/Personenliste -
+   die Basisregel selbst bleibt unangetastet. */
+.fuehrung-beleg .bestand-sidebar-feld-label { color: var(--fuehrung-beleg-text-muted); }
 
 /* Punkt 6: Vertiefungslinks, optisch abgesetzt vom Erzaehltext (eigener
    oberer Rahmen statt zusaetzlicher Ueberschrift). AUFTRAG "Teil 2g",

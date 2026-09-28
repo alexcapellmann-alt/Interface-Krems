@@ -5,6 +5,176 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-28 (44) – Teil 2j: Lesbarkeit des Belegbereichs
+
+### Punkt 1 - Ursache
+
+`.fuehrung-station` (Stationsansicht UND Abschlussbildschirm, seit Teil 2g)
+setzt am Wurzelelement sowohl `background: var(--fuehrung-buehne-bg)` als
+auch `color: var(--fuehrung-buehne-text)` (fast weiß) für die dunkle
+Bühne. `.fuehrung-beleg` (das helle "Dokument auf der Bühne", verschachtelt
+INNERHALB von `.fuehrung-station`) überschrieb bisher nur `background`
+(zuletzt `var(--bg)`) - **nie `color`**. Jeder Text im Belegbereich, der
+selbst keine eigene `color`-Regel hat, erbt dadurch über die CSS-Kaskade
+die für die dunkle Bühne bestimmte, dort helle Textfarbe - sichtbar wird
+er nur, wenn eine Markierung (Browser-Selektion) eine eigene, vom Text
+unabhängige Hintergrundfarbe über die sonst unsichtbare Schrift legt,
+genau das vom Auftraggeber beschriebene Symptom.
+
+Betroffen war dabei praktisch der GESAMTE Feld-/Wertetext: `js/utils/
+sidebar.js`s `baueSidebarFeld()`/`baueUrkundenDetailInhalt()` und
+`js/fuehrungen/belegDarstellung.js`s eigene, bewusst dieselben CSS-Klassen
+wiederverwendende `feld()`/`feldMitKnoten()`-Helfer (Kommentar dort:
+"`.bestand-sidebar-feld-label`, deren Regeln sidebar.js' ...") bauen die
+Feldwerte als **klassenlose** `<div>`s bzw. reine Textknoten - ohne jede
+eigene Farbregel, für ALLE sechs Belegtypen (`urkunde`/`buergerbuch`/
+`inventar`/`bestand`/`person`/`familie`) gleichermaßen, da sie alle
+`feld()`/`feldMitKnoten()` nutzen. Die bereits mit eigener, expliziter
+Farbe versehenen Elemente (Feldnamen/-Labels, "Im Archiv ansehen"-Link,
+Personenlinks, σ-Button/-Text, Quellenzeile, Bildunterschrift,
+Prüfhinweis-Box) waren dagegen schon vorher korrekt lesbar, weil sie auf
+app-weite, HELLE Variablen (`--text-muted`/`--accent`/`--fuehrung-unsicher`/
+`--fuehrung-fehler`) verweisen statt auf die Bühnenvariante - reiner
+Zufall, kein bewusster Schutz.
+
+**Warum die 2g-Kontrastprüfung das nicht fand:** die damalige Tabelle
+(siehe Eintrag "Teil 2g", `--fuehrung-buehne-*`-Kommentar in
+`css/components.css`) berechnete Kontrastwerte für die definierten
+Bühnen-FARBPAARE (z. B. `--fuehrung-buehne-text` gegen
+`--fuehrung-buehne-bg`) - für den hellen Belegbereich selbst wurde nie ein
+entsprechendes Farbpaar definiert, weil dort schlicht keine `color`-Regel
+existierte, die man hätte prüfen können. Eine Variablen-Paar-Rechnung
+kann eine fehlende Regel nicht erfassen - nur eine Messung am
+tatsächlich gerenderten Element (Punkt 3 unten) deckt das auf.
+
+### Punkt 2 - Eigene Farbwelt für den Belegbereich
+
+**Neue, dedizierte Variablengruppe** `--fuehrung-beleg-*` in
+`css/components.css`s `:root`-Block, parallel zur bestehenden
+`--fuehrung-buehne-*`-Gruppe (ausführlicher Herleitungs-/Kontrast-
+Kommentar direkt im CSS): `--fuehrung-beleg-bg`, `-text`, `-text-muted`,
+`-border`, `-akzent`, `-fokus`, `-unsicher`, `-unsicher-bg`, `-fehler`,
+`-fehler-bg`. Werte bewusst NICHT direkt `--bg`/`--text`/`--accent` etc.
+referenziert, sondern als eigene, dedizierte Variablen mit aktuell
+identischem Wert übernommen - eine künftige, von diesem Auftrag
+unabhängige Änderung der app-weiten Variablen wirkt sich dadurch nicht
+mehr unbemerkt auf den Belegbereich aus (Auftrag wörtlich: "damit das
+Problem bei künftigen Änderungen nicht wiederkehrt").
+
+**`.fuehrung-beleg` setzt jetzt selbst `color: var(--fuehrung-beleg-text)`**
+(der eigentliche Fix) - dadurch erben alle bisher klassenlosen Feldwerte
+automatisch die richtige, dunkle Farbe, ohne dass jede einzelne Stelle in
+`sidebar.js`/`belegDarstellung.js` angefasst werden musste (Nicht-Ziel:
+keine JS-Änderung, Ursache lag nachweislich in CSS). `background`/`border`
+laufen ebenfalls über die neue Variablengruppe statt über `--bg`/`--border`
+direkt.
+
+**Bereits explizit gefärbte, aber Führungen-EXKLUSIVE Klassen**
+(`.fuehrung-beleg-quellenzeile`, `.fuehrung-beleg::before`,
+`.fuehrung-beleg-bildunterschrift`, `.fuehrung-beleg-archivlink`
+inkl. Fokusrahmen, `.fuehrung-beleg-scroll`/`.fuehrung-beleg-bild`s
+Fokusrahmen, `.fuehrung-beleg .fuehrung-fehler`) direkt auf die neuen
+`--fuehrung-beleg-*`-Variablen umgestellt - unproblematisch, da diese
+Klassen ausschließlich im Belegbereich vorkommen.
+
+**Mit Sidebar/Kachelraster/Personenliste GETEILTE Klassen**
+(`.bestand-sidebar-feld-label`, `.genannte-personen-link`,
+`.genannte-personen-unsicher`, `.unsicher-absatz-btn`,
+`.unsicher-absatz-text`) durften laut Nicht-Ziel NICHT verändert werden,
+da sie auch außerhalb der Führungen verwendet werden. Stattdessen
+zusätzliche, spezifischere `.fuehrung-beleg <klasse>`-Überschreibungen
+ergänzt, die nur INNERHALB des Belegbereichs greifen (höhere Spezifität
+gewinnt unabhängig von der Regel-Reihenfolge/dem Stylesheet-Ursprung -
+`.bestand-sidebar-feld-label`s Basisregel liegt sogar in einem von
+`sidebar.js` injizierten `<style>`-Tag, die Überschreibung funktioniert
+trotzdem). Live geprüft: Personenliste (`bartholomaeus_eggartner`, VI-0024-
+Detail) zeigt weiterhin die UNVERÄNDERTE Basisfarbe `#8a6d1f` für den
+σ-Button, Kachelraster weiterhin `--accent` für Personenlinks - keine
+Regression an diesen beiden Nicht-Zielen.
+
+**Zusätzlicher, beim Messen gefundener Kontrastfehler (Selbstauskunft):**
+`--fuehrung-unsicher` (#8a6d1f, app-weit, seit Teil 2c/2g für σ-Kennzeichnung
+genutzt) erreicht gegen `--fuehrung-beleg-bg` (#f7f5f0) real gemessen nur
+**4,49:1** - knapp UNTER der 4,5:1-Mindestschwelle für Text (WCAG 1.4.3).
+Nicht Teil der eigentlichen Bühnen-Vererbungs-Ursache (dieser Wert war
+schon vorher explizit gesetzt, nicht geerbt), aber ein echter, bislang
+unentdeckter Grenzfall - vermutlich deshalb nie aufgefallen, weil nie exakt
+gegen `#f7f5f0` gemessen wurde (Sidebar/Kachelraster nutzen zwar denselben
+Farbwert, aber die 2g-Prüfung bezog sich nie auf diese Kombination). Die
+neue `--fuehrung-beleg-unsicher` ist deshalb bewusst dunkler (#785c14,
+5,77:1) statt einfach eine Kopie von `--fuehrung-unsicher` zu sein - betrifft
+ausschließlich den Belegbereich (s. o., spezifischere Überschreibung), die
+Basisvariante bleibt für Sidebar/Kachelraster/Personenliste unverändert
+(dortige Korrektur wäre ein eigener, hier nicht beauftragter Fund).
+
+**Links im hellen Belegbereich vs. dunkler Bühne:** bereits vor diesem
+Auftrag unterschiedlich (`--accent` #2c4a6e für den Belegbereich,
+`--fuehrung-buehne-akzent` #7fb0e0 für den Erzähltext) - jetzt zusätzlich
+über die eigene `--fuehrung-beleg-akzent`-Variable geführt statt direkt
+über `--accent`, für dieselbe Entkopplung wie beim übrigen Belegbereich.
+
+### Punkt 3 - Messung am dargestellten Element
+
+Alle Werte per `getComputedStyle()` im Browser gemessen (Farbe des
+Elements + tatsächlicher effektiver Hintergrund, durch den DOM-Baum nach
+oben aufgelöst bis zur ersten deckenden Hintergrundfarbe) - keine
+Berechnung aus Variablen-Definitionen. Geprüft an sechs Belegtypen
+(Bürgerspital-Führung Stationen 1/4/9, wer-fehlt Stationen 2/3/4/7),
+einer Vergleichsstation (Bürgerspital Station 10, zwei Urkunden-Belege
+nebeneinander) und einer Station ohne Beleg (Bürgerspital Station 2 -
+kein `.fuehrung-beleg` im DOM, Erzähltext-Farbe unverändert `#f4f2ec`
+bestätigt).
+
+| Element | Belegtyp/Station | Textfarbe | effektiver Hintergrund | Kontrast | Mindestwert |
+|---|---|---|---|---|---|
+| Feldwert (Signatur/Datum/Regest/Kategorien/Orte) | urkunde, Station 1 | `#1a1a1a` | `#f7f5f0` | 15,97:1 | 4,5:1 ✓ |
+| Feldname (Label, z. B. "Signatur") | urkunde, Station 1 | `#595959` | `#f7f5f0` | 6,43:1 | 4,5:1 ✓ |
+| Quellenzeile | urkunde, Station 1 | `#595959` | `#f7f5f0` | 6,43:1 | 4,5:1 ✓ |
+| "Im Archiv ansehen"-Link | urkunde, Station 1 | `#2c4a6e` | `#f7f5f0` | 8,34:1 | 4,5:1 ✓ |
+| Personenzeile, Label-Text "Personen: " | urkunde, Station 1 | `#1a1a1a` | `#f7f5f0` | 15,97:1 | 4,5:1 ✓ |
+| Personenlink | urkunde, Station 1 | `#2c4a6e` | `#f7f5f0` | 8,34:1 | 4,5:1 ✓ |
+| σ-Symbol neben Personenlink (synthetischer DOM-Test, keine reale unsichere Urkunden-Personenzeile vorhanden) | urkunde, Station 1 | `#785c14` | `#f7f5f0` | 5,77:1 | 4,5:1 ✓ |
+| σ-Button "Angaben unsicher" (geschlossen) | person, wer-fehlt 3 | `#785c14` | `#fdf6e3` | 5,83:1 | 4,5:1 ✓ |
+| σ-Button Fokusrahmen | person, wer-fehlt 3 | `#2c4a6e` (Outline) | `#f7f5f0` | 8,34:1 | 3:1 ✓ |
+| Aufgeklappter Unsicher-Text | person, wer-fehlt 3 | `#1a1a1a` | `#fdf6e3` | 16,13:1 | 4,5:1 ✓ |
+| Feldwert (Name/Datum/Beruf/Bürgen-Link) | buergerbuch, wer-fehlt 4 | `#1a1a1a`/`#2c4a6e` | `#f7f5f0` | 15,97:1 / 8,34:1 | 4,5:1 ✓ |
+| Feldwert (Name/Jahr/Beruf-Funktion-Stand/Vermögensgruppe) | inventar, wer-fehlt 7 | `#1a1a1a` | `#f7f5f0` | 15,97:1 | 4,5:1 ✓ |
+| Feldwert (Name/Zeitraum/Umfang/Zitierweise/Kurzbeschreibung) | bestand, Station 9 | `#1a1a1a` | `#f7f5f0` | 15,97:1 | 4,5:1 ✓ |
+| Feldwert (Name/Titel/Geburts-/Sterbedatum/Eltern/Ehepartner/Anmerkung) | familie, wer-fehlt 2 | `#1a1a1a` | `#f7f5f0` | 15,97:1 | 4,5:1 ✓ |
+| Feldwert, BEIDE Belegboxen | Vergleich, Station 10 | `#1a1a1a` | `#f7f5f0` | 15,97:1 | 4,5:1 ✓ |
+| Erzähltext (Kontrolle: unverändert) | ohne Beleg, Station 2 | `#f4f2ec` | `#17222c` (Bühne) | 14,41:1 | 4,5:1 ✓ (unverändert aus 2g) |
+| `.bestand-sidebar-feld-label` (Personenliste, Kontrolle) | außerhalb Führungen | `#595959` | `#f7f5f0` | 6,43:1 | unverändert |
+| `.unsicher-absatz-btn` (Personenliste, Kontrolle) | außerhalb Führungen | `#8a6d1f` (Basisvariante, NICHT überschrieben) | `#fdf6e3` | 4,54:1 | unverändert (Nicht-Ziel) |
+| `.genannte-personen-link` (Kachelraster, Kontrolle) | außerhalb Führungen | `#2c4a6e` (`--accent`, NICHT überschrieben) | hell | 8,34:1 | unverändert (Nicht-Ziel) |
+
+Alle 16 im Belegbereich selbst gemessenen Werte liegen über den
+Mindestwerten - der einzige zuvor tatsächlich unterhalb der Schwelle
+liegende Wert (`--fuehrung-unsicher` auf `--fuehrung-beleg-bg`, 4,49:1)
+wird im Belegbereich durch die neue `--fuehrung-beleg-unsicher`-
+Überschreibung nicht mehr erreicht.
+
+### Regressionsprüfung
+
+Erzähltext (Farbe/Größe/Position unverändert, `#f4f2ec` auf `#17222c`,
+14,41:1) - σ-Button "Was wir nicht wissen" (eigene, unveränderte
+`--fuehrung-buehne-hinweis`-Komponente, nicht Teil dieses Auftrags) -
+Navigationssäule (▲/▼/Fortschritt, unverändert) - Abschlussbildschirm
+(`#fuehrungen/buergerspital-heringe/ende`, dunkles Layout inkl.
+"Zum Weiterlesen"-Links unverändert, kein Belegbereich vorhanden) -
+mobile Ansicht (375×812, Station 1, alle Feldwerte weiterhin lesbar,
+Layout unverändert) - Lightbox aus dem Urkundenfoto (öffnet/schließt
+korrekt, Escape funktioniert, keine Konsolenfehler). Kachelraster und
+Personenliste als die beiden ausdrücklich ausgenommenen Ansichten separat
+gegengeprüft (s. Punkt 2/3, Tabelle) - keine Farbänderung dort. Keine
+Konsolenfehler bei allen Prüfungen.
+
+**Akzeptanzkriterium erfüllt:** alle Texte im Belegbereich ohne Markieren
+lesbar (visuell UND per Messung bestätigt), alle gemessenen Werte über den
+Mindestwerten. Screenshots: Bürgerspital Station 1 und 10, `wer-fehlt`
+Station 2, 4 und 7 (siehe Chat).
+
+---
+
 ## 2026-09-25 (43) – Teil 2h, Punkt 4b: Personen-ID für Verlassenschaftsinventare (Umsetzung nach Freigabe)
 
 **Freigabe des Nutzers (wörtlich):** beide in Eintrag 41 als "unsicher" gemeldeten Verdachtsfälle sind Zweitinventarisierungen derselben Person (Dietrich 2025) - `VI-0024`/`VI-0028` Bartholomäus Eggartner (1679 und 1690, erneute Inventur bei Volljährigkeit des jüngsten Sohnes), `VI-0032`/`VI-0033` Anna Catharina Schönthanin (1692 und 1693). Jeweils dieselbe `personen_id`, `personen_id_unsicher` = nein, Hinweis auf die Zweitinventarisierung in `unsicherheit_anmerkung` bzw. der Anmerkung vermerken.
