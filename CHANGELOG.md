@@ -7,6 +7,37 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-28 (92) – Teil 2j: Lesbarkeit des Belegbereichs
+
+**Ursache (Selbstauskunft):** `.fuehrung-beleg` (das helle "Dokument auf
+der dunklen Bühne" im Belegbereich der Führungen) überschrieb seit Teil
+2g nur `background`, nie `color` - fast der gesamte Feld-/Regest-/
+Wertetext (klassenlose `<div>`s aus `sidebar.js`s/`belegDarstellung.js`s
+`feld()`-Helfern, für alle sechs Belegtypen gleichermaßen) hatte dadurch
+gar keine eigene Farbregel und erbte still die für die dunkle Bühne
+bestimmte, dort helle Textfarbe - nur bei Markierung sichtbar. Die
+2g-Kontrastprüfung hatte nur die definierten Bühnen-Farbpaare berechnet,
+nicht diese fehlende Regel erfasst.
+
+**Fix (nur `css/components.css`, keine JS-Änderung nötig):** neue,
+dedizierte `--fuehrung-beleg-*`-Variablengruppe (analog zur bestehenden
+`--fuehrung-buehne-*`), `.fuehrung-beleg` setzt jetzt selbst `color`.
+Führungen-exklusive Klassen direkt umgestellt; mit Sidebar/Kachelraster/
+Personenliste geteilte Klassen (`.bestand-sidebar-feld-label`,
+`.genannte-personen-link/-unsicher`, `.unsicher-absatz-*`) NICHT
+verändert, sondern per spezifischerer `.fuehrung-beleg <klasse>`-Regel nur
+innerhalb des Belegbereichs überschrieben (Nicht-Ziel: keine Änderung an
+anderen Ansichten). Dabei zusätzlich gefunden: `--fuehrung-unsicher`
+(#8a6d1f) erreicht gegen den Belegbereich-Hintergrund real gemessen nur
+4,49:1 (unter der 4,5:1-Schwelle) - im Belegbereich durch eine dunklere,
+sicher konforme `--fuehrung-beleg-unsicher` (#785c14, 5,77:1) ersetzt.
+Kontrastwerte diesmal per `getComputedStyle()` am tatsächlich gerenderten
+Element gemessen (nicht aus Variablen abgeleitet), vollständige Tabelle
+über alle sechs Belegtypen, eine Vergleichsstation und eine Station ohne
+Beleg siehe PROJEKTLOG Eintrag 44.
+
+---
+
 ## 2026-09-25 (91) – Teil 2h, Punkt 4b: Personen-ID für Verlassenschaftsinventare
 
 Nach Freigabe umgesetzt. `data/verlassenschaftsinventare.csv`: neue Spalten
