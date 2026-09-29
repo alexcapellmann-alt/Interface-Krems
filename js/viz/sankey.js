@@ -277,6 +277,7 @@ import { ersteKategorie, ermittleKategorienSortiertNachHaeufigkeit } from '../ut
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { ermittleVerfuegbareBreite, ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 const ANDERE_ORTE = 'Andere Orte';
 const KEIN_ORT = '(kein Ort)';
@@ -326,13 +327,6 @@ const LABEL_LEITLINIE_SCHWELLE = 4; // px Verschiebung, ab der eine Führungslin
 
 const TITEL_TEXT = 'Kategorie → Ort';
 
-const INFO_TEXT = `Dieser Sankey zeigt, welche Orte in Urkunden welcher Kategorie am häufigsten genannt werden: links die Urkunden-Kategorien, rechts die Orte mit mindestens ${ORT_BUENDELUNG_SCHWELLE} Nennungen - alle übrigen sind unter "Andere Orte" zusammengefasst. Kategorien mit weniger als ${KATEGORIE_BUENDELUNG_SCHWELLE} Urkunden sind unter "${ANDERE_KATEGORIEN}" gebündelt. Beide Tooltips auf einem Sammelknoten listen die häufigsten enthaltenen Namen einzeln auf.
-
-Urkunden ohne Kategorie bzw. ohne Ortsangabe werden erst über "Unsicherheiten anzeigen" eingeblendet - nur ihre Bänder sind dann gestrichelt gekennzeichnet.
-
-Die Breite eines Bandes zeigt, wie viele Urkunden diese Kategorie mit diesem Ort verbinden. Die Farbe folgt der Kategorie.
-
-Klick auf einen Knoten oder ein Band hebt dessen Verbindungen dauerhaft hervor (erneuter Klick, Klick auf die freie Fläche oder Escape setzen das zurück).`;
 
 let instanz = null; // { container, records, options, auswahl, hover } – ein aktives Sankey-Diagramm pro Modul-Ladung
 
@@ -965,7 +959,14 @@ export function render(container, data, options = {}) {
     auswahl: null,
     hover: null
   };
-  instanz.infoButton = erzeugeInfoButton(kopfRechts, { text: INFO_TEXT, ariaLabel: 'Erklärung zum Sankey' });
+  infotextFuerModul('sankey', {
+    ORT_BUENDELUNG_SCHWELLE,
+    KATEGORIE_BUENDELUNG_SCHWELLE,
+    ANDERE_KATEGORIEN
+  }).then((cfg) => {
+    if (!instanz || !cfg || !kopfRechts.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(kopfRechts, cfg);
+  });
   document.addEventListener('keydown', handleEscape);
 
   zeichneSankey();

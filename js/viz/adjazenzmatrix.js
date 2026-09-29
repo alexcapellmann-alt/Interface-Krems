@@ -12,12 +12,12 @@ import { CAT_COLORS } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueKoNennungsNetzwerk, waehleTopPersonenNachGrad } from '../utils/urkundenPersonen.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module" - erste Textfassung
 // nannte fälschlich Kategorien statt Personen und eine nicht existierende
 // Klick-Funktion (siehe CHANGELOG/PROJEKTLOG, Eintrag 19) - diese, vom
 // Auftraggeber nach Rückmeldung korrigierte Fassung, wörtlich übernommen.
-const ADJAZENZMATRIX_INFO_TEXT = `Diese Matrix zeigt, wie oft zwei Personen gemeinsam in derselben Urkunde genannt werden. Dargestellt sind die 40 Personen mit den meisten Verbindungen. Eine dunklere Zelle bedeutet häufigere gemeinsame Nennung. Gemeinsame Nennung bedeutet zunächst nur dokumentarische Ko-Präsenz, nicht automatisch eine persönliche, politische oder verwandtschaftliche Beziehung.`;
 
 const TOP_N = 40;
 const ZELLENGROESSE = 16;
@@ -65,7 +65,10 @@ function zeichneMatrix() {
   const hinweis = document.createElement('p');
   hinweis.textContent = `Top ${topKnoten.length} von ${gesamtAnzahlVerbunden} Personen mit mindestens einer Ko-Nennung, nach Verbindungsgrad sortiert.`;
   werkzeugleiste.appendChild(hinweis);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: ADJAZENZMATRIX_INFO_TEXT, ariaLabel: 'Erklärung zur Adjazenzmatrix' });
+  infotextFuerModul('adjazenzmatrix').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   container.appendChild(werkzeugleiste);
 
   const svg = d3.select(container).append('svg')

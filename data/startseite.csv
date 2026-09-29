@@ -1,0 +1,14 @@
+﻿block_id;reihenfolge;typ;kicker;titel;text;link_text;link_ziel;bild;sichtbar
+slide_1;1;slide;Für Entdecker:innen;Entdecken Sie das Gedächtnis der Doppelstadt Krems und Stein.;;Zu den Visualisierungen;#visualisierungen;;ja
+slide_2;2;slide;Geführte Einblicke;Historische Bestände anhand kuratierter Pfade kennenlernen.;;Zu den Führungen;#fuehrungen;;ja
+slide_3;3;slide;Für Heimat- und Familienforschung;Personen, Familien und Orte in Urkunden, Bürgerbuch und Inventaren aufspüren.;;Spuren suchen;#visualisierungen;;ja
+slide_4;4;slide;Für Forschende & Leser:innen;Literatur und Forschung rund um die Stadtgeschichte.;;Zur Literatur;#literatur;;ja
+einleitung;5;einleitung;;;Willkommen im digitalen Interface des Stadtarchivs Krems an der Donau. Unsere Überlieferung reicht bis in das Jahr 1108 zurück und bewahrt das schriftliche Gedächtnis der Doppelstadt Krems und Stein. Hier können Sie den gesamten Bestand nach Kategorie, Zeitraum und Umfang erkunden. Dazu kommen die Urkunden mit ihren Regesten, das Bürgerbuch und Verlassenschaftsinventare sowie die Menschen und Orte, die darin genannt werden. Geführte Pfade erzählen ausgewählte Geschichten aus den Quellen und zeigen auch, wo die Überlieferung Lücken hat. Wenn Sie eine solche Lücke schließen können, freuen wir uns über Ihren Hinweis.;;;;ja
+kachel_1;6;kachel;;Unsere Bestände visualisiert;Der gesamte Bestand des Stadtarchivs als Treemap, Sunburst, Icicle, Circle Packing und Gantt-Diagramm, erkundbar nach Kategorie, Zeitraum und Umfang.;Bestände entdecken;#bestand;;ja
+kachel_2;7;kachel;;Geführte Pfade;Kuratierte Rundgänge durch ausgewählte Themen der Stadtgeschichte. Sie bieten einen guten Einstieg für alle, die nicht auf eigene Faust recherchieren möchten.;Zu den Führungen;#fuehrungen;;ja
+kachel_3;8;kachel;;Literatur & Forschung;Publikationen und Literaturhinweise rund um die Geschichte der Stadt Krems und ihres Archivs.;Zur Literatur;#literatur;;ja
+kachel_4;9;kachel;;Über das Archiv;Geschichte und Bestände des Stadtarchivs, die Herkunft der Daten und der Umgang mit Unsicherheiten und Lücken.;Mehr erfahren;#ueber;;ja
+download_1;10;download;;;;Archivordnung (PDF);https://www.krems.at/fileadmin/user_upload/Archiv_Krems_Archivordnung_publiziert_03_2019.pdf;;ja
+download_2;11;download;;;;Benützerordnung (PDF);https://www.krems.at/fileadmin/user_upload/Benuetzerordnung_Stadtarchiv_Krems_Jaenner_2020.pdf;;ja
+download_3;12;download;;;;ISDIAH-Beschreibung (PDF);https://www.krems.at/fileadmin/user_upload/Stadtarchiv_Krems_ISDIAH_2023.pdf;;ja
+footer_hinweis;13;footer_hinweis;;;© Stadtarchiv Krems an der Donau · Interface im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).;;;;ja

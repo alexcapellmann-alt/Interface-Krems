@@ -80,6 +80,7 @@ import {
   baueSektorFarbSkala
 } from '../utils/buergerbuchZeit.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 const JAHRZEHNT_GROESSE = 10;
 const ZEILENHOEHE = 26;
@@ -91,12 +92,6 @@ const RAND = { oben: 20, unten: 40, links: 20, rechts: 190 };
 // zwischen zwei Bounding-Boxen bei 0px - "keine Überlappung" im strengen
 // Sinn, aber optisch zu knapp).
 const LABEL_MINDESTABSTAND = 18;
-
-const BUMPCHART_INFO_TEXT = `Dieses Bump Chart zeigt, wie sich der Rang der Wirtschaftssektoren nach Anzahl der Bürgeraufnahmen von Jahrzehnt zu Jahrzehnt verändert - Rang 1 ist der jeweils häufigste Sektor in diesem Jahrzehnt.
-
-„Beruf nicht angegeben" wird dabei ganz regulär mitgerankt, nicht ausgeblendet. Eine Lücke in einer Linie bedeutet: dieser Sektor hatte in diesem Jahrzehnt keine einzige Bürgeraufnahme.
-
-Bewegen der Maus über eine Linie hebt sie hervor, ein Klick friert diese Hervorhebung ein (bleibt auch nach dem Wegbewegen der Maus bestehen, erneuter Klick löst sie wieder); ein Klick auf die freie Fläche setzt die Hervorhebung zurück.`;
 
 let instanz = null; // { container, wurzel, records, options, infoButton, hoverSektor, frozenSektor, serienAuswahl } – ein aktives Bump Chart pro Modul-Ladung
 
@@ -169,7 +164,10 @@ function zeichneBumpChart() {
 
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'bumpchart-werkzeugleiste';
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: BUMPCHART_INFO_TEXT, ariaLabel: 'Erklärung zum Bump Chart' });
+  infotextFuerModul('bumpChart').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   const plotBereich = document.createElement('div');
   wurzel.append(werkzeugleiste, plotBereich);

@@ -80,8 +80,8 @@
 // Expand-Umrandung" (siehe CHANGELOG) - macht die beiden obigen Punkte
 // bewusst rückgängig:
 // Punkt 1 (ZWISCHENSTAND, siehe unten weiter korrigiert): Legende wieder als
-//   sichtbares Seitenelement statt Absatz im Info-Popover - KALENDER_INFO_TEXT
-//   war nie geändert worden (der Legenden-Satz wurde ausschließlich in
+//   sichtbares Seitenelement statt Absatz im Info-Popover - der damals noch
+//   lokale Info-Text war nie geändert worden (der Legenden-Satz wurde ausschließlich in
 //   aktualisiereInfoButton() angehängt, jetzt umbenannt in
 //   aktualisiereLegende()), daher hier keine Textänderung nötig. Da der
 //   Info-Button-Text dadurch wieder vollständig STATISCH ist, entfällt auch
@@ -169,6 +169,7 @@ import {
   fuegeBildschirmHinweisStyleEin
 } from '../utils/bildschirmHinweis.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // Punkt 5 (Info-Button) - erste zwei Absätze wörtlich wie im Auftrag
 // übernommen (Akzeptanzkriterium: keine eigenmächtige Umformulierung). Beide
@@ -178,13 +179,10 @@ import { erzeugeInfoButton } from '../utils/infoButton.js';
 // Ein zwischenzeitlicher Folgeauftrag hatte die Legende ("Urkunden: hell →
 // dunkel, max. X") testweise als dritten Absatz an diesen Text angehängt -
 // per Auftrag "Kalender-Legende zurück..." (siehe Dateikopf-Kommentar)
-// rückgängig gemacht: KALENDER_INFO_TEXT ist wieder rein statisch (nur diese
-// zwei Absätze), die Legende ist wieder ein eigenes, sichtbares
+// rückgängig gemacht: der Info-Text ist wieder rein statisch (nur diese
+// zwei Absätze, seit AUFTRAG "Archivspezifische Texte..." aus
+// data/infotexte.csv), die Legende ist wieder ein eigenes, sichtbares
 // Seitenelement mit eigener dynamischer Zahl (siehe aktualisiereLegende()).
-const KALENDER_INFO_TEXT = `Diese Heatmap zeigt, an welchen Kalendertagen bzw. in welchen Jahrzehnten die meisten Urkunden ausgestellt wurden. Je dunkler ein Feld, desto mehr Urkunden fallen auf dieses Datum (alle Jahre zusammengefasst).
-
-Über die Umschaltung „Monat × Tag" / „Jahrzehnt × Monat" lässt sich die Darstellung wechseln. Der Zeitregler grenzt die Anzeige auf einen bestimmten Jahrzehnt-Bereich ein. Klick auf ein Feld öffnet die Liste der Urkunden dieses Datums.`;
-
 const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 const MONATSNAMEN_VOLL = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
@@ -883,20 +881,18 @@ export function render(container, data, options = {}) {
   // destroy()-Aufruf (Ansichtswechsel) warf `TypeError: Cannot read
   // properties of null (reading 'destroy')`, was wiederum ansichtWechseln.js'
   // wirdGewechselt-Flag dauerhaft blockierte (siehe dortiger Bugfix, Teil B).
-  // Fix: der Button wird jetzt HIER, unconditional, erzeugt - instanz.infoButton
-  // ist dadurch ab sofort NIE mehr `null`, unabhängig vom Bildschirmzustand.
-  // Seit Auftrag "Kalender-Legende zurück..." (siehe Dateikopf-Kommentar) ist
-  // KALENDER_INFO_TEXT wieder vollständig statisch - der Button wird daher
-  // NUR noch hier erzeugt und nirgends mehr destroy()/neu gebaut; der
-  // `if (instanz.infoButton)`-Guard in destroy() bleibt trotzdem als reine
-  // Absicherung bestehen (schadet nicht, greift nur nie mehr wegen `null`).
+  // Fix: der Button wird jetzt HIER, unconditional, aufgebaut - unabhängig
+  // vom Bildschirmzustand. Seit Auftrag "Kalender-Legende zurück..." (siehe
+  // Dateikopf-Kommentar) ist der Info-Text wieder vollständig statisch -
+  // der Button wird daher NUR noch hier erzeugt und nirgends mehr destroy()/
+  // neu gebaut. AUFTRAG "Archivspezifische Texte...": der Text kommt jetzt
+  // asynchron aus data/infotexte.csv (infotextFuerModul()), `instanz.
+  // infoButton` ist deshalb bis zum Laden kurz `null` - der
+  // `if (instanz.infoButton)`-Guard in destroy() ist dadurch wieder
+  // notwendig, nicht mehr nur reine Absicherung.
   const infoButtonZeile = document.createElement('div');
   infoButtonZeile.className = 'kal-info-button-zeile';
   container.appendChild(infoButtonZeile);
-  const infoButton = erzeugeInfoButton(infoButtonZeile, {
-    text: KALENDER_INFO_TEXT,
-    ariaLabel: 'Erklärung zur Kalender-Heatmap'
-  });
 
   // Werkzeugleiste (Modus-Umschaltung, Zeitraum-Regler, Legende) wird EINMAL
   // gebaut (baueWerkzeugleiste()) und nie komplett neu erzeugt - ein Redraw
@@ -930,7 +926,7 @@ export function render(container, data, options = {}) {
     plotBereich,
     sidebar,
     infoButtonZeile,
-    infoButton,
+    infoButton: null,
     records: data,
     options: { showUncertainty: true, width: null, height: null, ...options },
     ansichtsModus: 'tag',
@@ -940,6 +936,11 @@ export function render(container, data, options = {}) {
     ausgewaehlteZelle: null
   };
   sidebar.schliessenBtn.addEventListener('click', schliesseZellenListe);
+
+  infotextFuerModul('kalenderHeatmap').then((cfg) => {
+    if (!instanz || !cfg || !infoButtonZeile.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoButtonZeile, cfg);
+  });
 
   baueWerkzeugleiste();
   zeichnePlot();

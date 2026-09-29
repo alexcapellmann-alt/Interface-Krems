@@ -47,12 +47,9 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
-
-const CIRCLEPACKING_INFO_TEXT = `Diese Darstellung zeigt die Bestände als ineinander verschachtelte Kreise: ein großer Kreis pro Kategorie, darin die einzelnen Bestände. Die Kreisgröße entspricht dem Umfang in Laufmetern.
-
-Klick auf eine Kategorie zeigt deren Bestände, Klick auf einen einzelnen Bestand öffnet die Detailansicht in der Seitenleiste.`;
 
 const MIN_SCHRIFTGROESSE = 11;
 const MINDESTRADIUS_PX = 12; // Durchmesser 24px - dasselbe Fitts'sches-Gesetz-Ziel wie treemap.js/sunburst.js/icicle.js, hier als Radius
@@ -261,7 +258,10 @@ function baueWerkzeugleiste() {
   const infoButtonAnker = document.createElement('div');
   infoButtonAnker.style.marginLeft = 'auto';
   instanz.werkzeugleiste.appendChild(infoButtonAnker);
-  instanz.infoButton = erzeugeInfoButton(infoButtonAnker, { text: CIRCLEPACKING_INFO_TEXT, ariaLabel: 'Erklärung zum Circle Packing' });
+  infotextFuerModul('circlePacking').then((cfg) => {
+    if (!instanz || !cfg || !infoButtonAnker.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoButtonAnker, cfg);
+  });
 }
 
 function aktualisiereWerkzeugleiste() {
@@ -462,7 +462,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
-  instanz.infoButton.destroy();
+  instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

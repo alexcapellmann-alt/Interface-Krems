@@ -83,7 +83,8 @@
 // AUFTRAG "Geteilter Info-Button mit Erklär-Popover": der feste
 // Bedienhinweistext "Scrollen = Zoom · Ziehen = Verschieben" entfällt,
 // ersetzt durch den geteilten Info-Button (js/utils/infoButton.js) mit
-// ausführlicherem Erklärtext (siehe ZEITACHSE_INFO_TEXT). Anders als das
+// ausführlicherem Erklärtext (seit AUFTRAG "Archivspezifische Texte..."
+// aus data/infotexte.csv, modul_id "zeitachse"). Anders als das
 // Kategorie-Menü (das bei jedem zeichneZeitachse()-Neuaufbau innerhalb von
 // `wurzel` mit-entsteht) wird der Info-Button bewusst NUR EINMAL in
 // render() erzeugt, in einem eigenen, von zeichneZeitachse() nie
@@ -122,13 +123,11 @@ import {
   fuegeBildschirmHinweisStyleEin
 } from '../utils/bildschirmHinweis.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // Auftrag "Geteilter Info-Button", Punkt 2 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
 // Umformulierung"), Absätze durch Leerzeilen getrennt (siehe infoButton.js).
-const ZEITACHSE_INFO_TEXT = `Diese Visualisierung zeigt alle Urkunden verteilt über ihr Ausstellungsjahr. Jeder Punkt steht für eine Urkunde; die Farbe zeigt ihre thematische Kategorie. Jahre mit vielen Urkunden bilden dichte Punktwolken, einzelne Jahre mit wenigen Urkunden erscheinen als vereinzelte Punkte.
-
-Mit dem Mausrad kann in die Zeitachse hinein- und herausgezoomt werden, durch Ziehen lässt sich der sichtbare Ausschnitt verschieben. Ein Klick auf einen Punkt öffnet die Detailansicht der jeweiligen Urkunde. Über das Kategorie-Menü lassen sich einzelne oder mehrere Themenbereiche gezielt ein- oder ausblenden. Der Button „Unsicherheiten anzeigen" zeigt ausschließlich jene Urkunden, deren Datierung, Ort oder beteiligte Personen nicht sicher überliefert sind.`;
 
 const PUNKT_RADIUS = 4;
 // "oben" entfällt bewusst gegenüber der alten RAND-Konstante: die
@@ -889,16 +888,11 @@ export function render(container, data, options = {}) {
   const infoButtonContainer = document.createElement('div');
   infoButtonContainer.className = 'zeitachse-info-button-anker';
   container.appendChild(infoButtonContainer);
-  const infoButton = erzeugeInfoButton(infoButtonContainer, {
-    text: ZEITACHSE_INFO_TEXT,
-    ariaLabel: 'Erklärung zur Zeitachse anzeigen'
-  });
-
   instanz = {
     container,
     wurzel,
     sidebar,
-    infoButton,
+    infoButton: null,
     records: data,
     options: { showUncertainty: true, width: null, height: null, ...options },
     zoomVerhalten: null,
@@ -931,6 +925,10 @@ export function render(container, data, options = {}) {
   // neu angehängt wird (Listener-Leck).
   document.addEventListener('click', behandleDokumentKlick);
   document.addEventListener('keydown', behandleDokumentTaste);
+  infotextFuerModul('zeitachse').then((cfg) => {
+    if (!instanz || !cfg || !infoButtonContainer.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoButtonContainer, cfg);
+  });
   zeichneZeitachse();
 }
 
@@ -944,7 +942,7 @@ export function destroy() {
   if (!instanz) return;
   document.removeEventListener('click', behandleDokumentKlick);
   document.removeEventListener('keydown', behandleDokumentTaste);
-  instanz.infoButton.destroy();
+  instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

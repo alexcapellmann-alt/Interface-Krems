@@ -63,16 +63,12 @@
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { VERMOEGENS_VARIABLEN, wertFuerVariable, baueSkalaFuerVariable } from '../utils/verlassenschaftenFelder.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // Punkt 3 ("Info-Button-Texte... bitte Vorschläge machen, ich gebe frei"):
 // Vorschlag, noch nicht freigegeben. Nennt SchzG/SchvG bewusst nur beim
 // Namen, ohne ihre Bedeutung zu erklären - die ist nicht zweifelsfrei
 // bekannt (siehe Dateikopf-Kommentar oben).
-const INFO_TEXT = `Diese Matrix zeigt die Spearman-Rangkorrelation zwischen acht Vermögenskennzahlen je Person aus den Verlassenschaftsinventaren (Realvermögen, Gesamtvermögen sowie sechs Anteilswerte in Prozent - SchzG und SchvG jeweils an den Aktiva, Grundstücke, Bargeld, Wertgegenstände und Sonderbestand jeweils am Realvermögen). Blaue Zellen zeigen einen positiven, rote Zellen einen negativen Zusammenhang - je kräftiger die Farbe, desto stärker der Zusammenhang.
-
-Die Rangkorrelation statt der gebräuchlicheren Pearson-Korrelation wurde gewählt, weil die Stichprobe klein ist (67 Personen) und einzelne Werte stark ausreißen - eine Rangkorrelation reagiert darauf robuster.
-
-Fehlende Werte werden paarweise ausgeschlossen, die tatsächliche Stichprobengröße (N) steht im Tooltip jeder Zelle. Klick auf eine Zelle öffnet ein Streudiagramm der beiden gewählten Variablen.`;
 
 let instanz = null; // { container, records, options, infoButton } – eine aktive Korrelationsmatrix pro Modul-Ladung
 
@@ -312,7 +308,10 @@ function zeichneKorrelationsmatrix() {
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.style.cssText = 'display:flex;justify-content:flex-end;';
   container.appendChild(werkzeugleiste);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: INFO_TEXT, ariaLabel: 'Erklärung zur Korrelationsmatrix' });
+  infotextFuerModul('korrelationsmatrix').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   baueLegende(container);
 

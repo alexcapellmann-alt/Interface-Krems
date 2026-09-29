@@ -67,6 +67,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import {
@@ -78,9 +79,6 @@ import {
 // AUFTRAG "Sortierung nach Nachname & Paginierungs-Button-Layout", Punkt 3:
 // zweiter Absatz wörtlich ergänzt (Transparenz über die Sortier-Heuristik,
 // siehe ermittleSortierNachname()).
-const PERSONENLISTE_INFO_TEXT = `Diese Liste zeigt alle in den Quellen erfassten Personen mit ihren Schreibvarianten, der Herkunftsquelle sowie erster und letzter Nennung. Klick auf eine Spaltenüberschrift sortiert die Liste danach.
-
-Die Sortierung nach Name folgt einer vereinfachten Heuristik (letzter erkennbarer Namensbestandteil nach Entfernen von Titeln, Herkunftsangaben und Verwandtschaftszusätzen) – bei uneinheitlicher historischer Schreibweise ist eine zuverlässige Trennung von Vor- und Nachname nicht in allen Fällen möglich.`;
 
 // Punkt 2 - Liste wörtlich wie im Auftrag vorgegeben (Groß-/Kleinschreibung
 // und Punkt werden beim Abgleich ignoriert, siehe istTitelwort()).
@@ -119,8 +117,9 @@ function istTitelwort(wort) {
 }
 
 // Punkt 2: Heuristik, KEINE linguistisch gesicherte Nachnamen-Erkennung
-// (Auftrag, wörtlich - deshalb auch im Info-Text und im Spalten-Hinweis
-// transparent gemacht, siehe PERSONENLISTE_INFO_TEXT/baueKopfzeile()).
+// (Auftrag, wörtlich - deshalb auch im Info-Text (data/infotexte.csv,
+// modul_id "personenliste") und im Spalten-Hinweis transparent gemacht,
+// siehe baueKopfzeile()).
 // Wendet die Entfernungsregeln in der im Auftrag vorgegebenen Reihenfolge
 // an (1. erste Schreibvariante, 2. Titel/Amt am Wortanfang, 3. "von"/"zu"/
 // "zum"/"zur" + Folgewort, 4. Artikel "der/die/dem/des" einzeln,
@@ -827,7 +826,10 @@ function zeichnePersonenliste() {
     zeichneTabelle();
   });
   werkzeugleiste.appendChild(sucheInput);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: PERSONENLISTE_INFO_TEXT, ariaLabel: 'Erklärung zur Personenliste' });
+  infotextFuerModul('personenliste').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   container.appendChild(werkzeugleiste);
 
   const hinweis = document.createElement('p');

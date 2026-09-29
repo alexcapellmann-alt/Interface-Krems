@@ -147,6 +147,8 @@ import { erzeugeFlyoutPanel, verankereFlyout, verankereVorschauFlyout, verankere
 import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegistry.js';
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
+import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke } from './archivKonfiguration.js';
+import { erzeugeUeberSeite } from './ueberSeite.js';
 
 // Abschnitt 4.2: Personennetzwerk/Gantt-Diagramm werden auch auf kleinen
 // Bildschirmen geladen, aber mit sichtbarem Hinweis versehen. Schwellenwert ist
@@ -642,9 +644,11 @@ async function aktualisiereGalerieFlyoutAnsicht(kontext) {
   verarbeiteDatensatzAufruf(kontext.aktuellesVizModul, route);
 }
 
-// Führungen/Literatur/Über: klar gekennzeichnete Platzhalter statt stillschweigend
-// leerer Seiten (Abschnitt 12/15), bis Daten bzw. Anzeige-Modul vorliegen -
-// ausdrücklich mit dem Nutzer so vereinbart für Teil C.
+// Literatur (und der generische "Route nicht gefunden"-Fall): klar
+// gekennzeichnete Platzhalter statt stillschweigend leerer Seiten
+// (Abschnitt 12/15), bis Daten bzw. Anzeige-Modul vorliegen - ausdrücklich
+// mit dem Nutzer so vereinbart für Teil C. "Über" nutzt das seit AUFTRAG
+// "Archivspezifische Texte..." NICHT mehr - siehe renderUeberTab() unten.
 function renderPlatzhalterTab(tab, ueberschrift, hinweistext) {
   const wrapper = document.createElement('div');
   wrapper.className = 'platzhalter-seite';
@@ -656,6 +660,26 @@ function renderPlatzhalterTab(tab, ueberschrift, hinweistext) {
   wrapper.append(titel, hinweis);
   contentRoot.appendChild(wrapper);
   aktuellerKontext = { tab, destroy() {} };
+}
+
+// AUFTRAG "Archivspezifische Texte...", Punkt 2.6: ersetzt den bisherigen
+// renderPlatzhalterTab('ueber', ...)-Aufruf durch das neue, aus ueber.csv
+// gespeiste Modul (js/core/ueberSeite.js). Lädt asynchron (ueber.csv wird
+// laut Punkt 2.1 erst bei Bedarf geladen) - derselbe schlanke
+// Tab-Kontext wie renderFuehrungenTab() unten, kontext wird SOFORT
+// gesetzt (raeumeSeiteAuf() kann daher sofort destroy() aufrufen, falls
+// währenddessen weggenavigiert wird), das eigentliche Modul erst nach
+// dem Laden nachgereicht. Wurde der Tab in der Zwischenzeit bereits
+// gewechselt (aktuellerKontext !== kontext), wird das inzwischen fertig
+// gebaute Modul sofort wieder zerstört statt es unsichtbar leaken zu lassen.
+function renderUeberTab() {
+  const container = erzeugeUnterContainer('ueber-bereich');
+  const kontext = { tab: 'ueber', modul: null, destroy: () => kontext.modul?.destroy() };
+  aktuellerKontext = kontext;
+  erzeugeUeberSeite(container).then((modul) => {
+    if (aktuellerKontext === kontext) kontext.modul = modul;
+    else modul.destroy();
+  });
 }
 
 // AUFTRAG "Führungen, Teil 2a", Punkt 1: eigener, schlanker Tab-Kontext statt
@@ -749,9 +773,16 @@ function renderStartTab() {
   // wird sofort von erzeugeStartseite() selbst überschrieben (startseite.js
   // kennt/setzt ihre eigene Wurzel-Klasse, analog zum Baustein-Muster der
   // anderen erzeuge*()-Bausteine).
+  // AUFTRAG "Archivspezifische Texte...", Punkt 2.5: erzeugeStartseite() lädt
+  // jetzt startseite.csv/archiv.csv und ist daher async - derselbe
+  // Sofort-Kontext+Nachreich-Wettlauf-Schutz wie renderUeberTab() oben.
   const wurzelContainer = erzeugeUnterContainer('startseite-container');
-  const startseite = erzeugeStartseite(wurzelContainer);
-  aktuellerKontext = { tab: null, destroy: () => startseite.destroy() };
+  const kontext = { tab: null, startseite: null, destroy: () => kontext.startseite?.destroy() };
+  aktuellerKontext = kontext;
+  erzeugeStartseite(wurzelContainer).then((startseite) => {
+    if (aktuellerKontext === kontext) kontext.startseite = startseite;
+    else startseite.destroy();
+  });
 }
 
 function renderTab(tab) {
@@ -763,7 +794,7 @@ function renderTab(tab) {
     return renderPlatzhalterTab('literatur', 'Literatur', 'Die Datentabelle data/literatur.csv ist vorhanden, aber es existiert noch kein Anzeige-Modul dafür (Abschnitt 2: Content-driven, mit Einschränkung). Erscheint hier, sobald eines gebaut ist.');
   }
   if (tab === 'ueber') {
-    return renderPlatzhalterTab('ueber', 'Über', 'Projektbeschreibung, Datengrundlage und Unsicherheitslegende folgen in einer späteren Etappe.');
+    return renderUeberTab();
   }
   return renderPlatzhalterTab(tab || 'bestand', 'Nicht gefunden', 'Diese Adresse konnte keinem Tab zugeordnet werden.');
 }
@@ -915,6 +946,50 @@ function verankereHauptnavFlyouts() {
 }
 verankereHauptnavFlyouts();
 
+// AUFTRAG "Archivspezifische Texte...", Punkt 2.1/2.3/2.4: überträgt die
+// geladenen archiv.csv-Werte in die statischen index.html-Elemente
+// (Titel/Logo/Logo-Untertitel/aria-Label/Fußzeile) sowie die
+// --accent-CSS-Variable (Punkt 2.4). Läuft EINMALIG, direkt nachdem
+// ladeArchivKonfiguration() im Bootstrap unten abgeschlossen ist - bei
+// fehlender archiv.csv liefert konfigurationswert() bereits die neutralen
+// Ersatzwerte (siehe archivKonfiguration.js), hier keine weitere
+// Fehlerbehandlung nötig.
+function wendeArchivIdentitaetAn() {
+  document.title = konfigurationswert('seitentitel');
+
+  const logoLink = document.getElementById('app-logo-link');
+  const logoImg = document.getElementById('app-logo-img');
+  const logoSub = document.getElementById('app-logo-sub');
+  const logoDatei = konfigurationswert('logo_datei');
+  if (logoImg && logoDatei) logoImg.src = `data/${logoDatei}`;
+  if (logoSub) logoSub.textContent = konfigurationswert('logo_untertitel');
+  if (logoLink) logoLink.setAttribute('aria-label', `${konfigurationswert('archiv_kurzname')}, Startseite`);
+
+  const footerText = document.getElementById('app-footer-text');
+  if (footerText) footerText.textContent = konfigurationswert('footer_text');
+
+  const akzentfarbe = konfigurationswert('akzentfarbe');
+  if (akzentfarbe) document.documentElement.style.setProperty('--accent', akzentfarbe);
+}
+
+// Punkt 2.1, Ausfallverhalten "ueber.csv fehlt": Navigationspunkt "Über"
+// wird ausgeblendet. Prüft das im Hintergrund (nicht blockierend fürs
+// erste Rendern, siehe Dateikopf-Kommentar "erst bei Bedarf" in
+// archivKonfiguration.js) - ladeSeitenBloecke() cacht das Ergebnis, ein
+// späterer echter Aufruf der Über-Seite lädt die Datei dadurch nicht
+// erneut. Nur eine leere Blockliste bei vorhandener, aber inhaltsleerer
+// Datei blendet die Navigation NICHT aus (das ist kein Fehlerfall) -
+// unterschieden über denselben Cache-Eintrag, indem ladeCSV() selbst bei
+// fehlender Datei wirft (siehe ladeSeitenBloecke()s try/catch) und hier
+// separat, nur für die Ausblenden-Entscheidung, erneut geprüft wird.
+async function pruefeUeberSeiteVerfuegbarkeit() {
+  try {
+    await ladeCSV('data/ueber.csv');
+  } catch {
+    document.getElementById('nav-ueber-link')?.setAttribute('hidden', '');
+  }
+}
+
 // KORREKTUR (siehe CHANGELOG, Startseite): ein leerer Hash wurde bisher
 // unconditional auf '#bestand' umgeleitet (Root-Cause-Befund: es gab bis
 // dahin gar keine eigene Startseiten-Route, die Root-URL landete faktisch
@@ -933,4 +1008,13 @@ starteRouter();
 initialisiereFortsetzenButton();
 window.addEventListener('hashchange', handleRouteChange);
 window.addEventListener('resize', planeResizeVerarbeitung);
+
+// AUFTRAG "Archivspezifische Texte...", Punkt 2.1: archiv.csv wird VOR dem
+// ersten Rendern geladen - top-level await (index.html bindet app.js als
+// <script type="module">, das unterstützt das nativ, kein Build-Step
+// nötig). pruefeUeberSeiteVerfuegbarkeit() bewusst NICHT mit awaited -
+// blockiert das erste Rendern nicht (siehe dortiger Kommentar).
+await ladeArchivKonfiguration();
+wendeArchivIdentitaetAn();
+pruefeUeberSeiteVerfuegbarkeit();
 handleRouteChange();

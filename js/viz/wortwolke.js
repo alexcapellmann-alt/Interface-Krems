@@ -28,9 +28,9 @@
 import { CAT_COLORS } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
-const WORTWOLKE_INFO_TEXT = `Diese Wortwolke zeigt die häufigsten Begriffe aus den Regesten-Texten – je größer ein Wort, desto häufiger kommt es vor. Hinweis: Regesten enthalten oft wiederkehrende Quellenangaben und Formelsprache; die Häufigkeit eines Begriffs sagt daher nichts über seine historische Bedeutung aus.`;
 
 let instanz = null; // { container, records, options, infoButton } – eine aktive Wortwolke pro Modul-Ladung
 
@@ -127,7 +127,10 @@ function zeichneWortwolke() {
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'wortwolke-werkzeugleiste';
   container.appendChild(werkzeugleiste);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: WORTWOLKE_INFO_TEXT, ariaLabel: 'Erklärung zur Wortwolke' });
+  infotextFuerModul('wortwolke').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   const breite = options.width || container.clientWidth || 800;
   const hoehe = options.height || 600;

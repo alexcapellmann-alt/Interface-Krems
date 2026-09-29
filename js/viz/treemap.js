@@ -53,12 +53,9 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
-
-const TREEMAP_INFO_TEXT = `Diese Treemap zeigt die Bestände des Stadtarchivs Krems als verschachtelte Flächen, gruppiert nach Kategorien (BKK-Dokumentationsprofil). Die Größe jeder Fläche entspricht dem Umfang des jeweiligen Bestands in Laufmetern.
-
-Klick auf eine Kategorie zoomt in deren Bestände hinein, ein weiterer Klick führt zurück zur Gesamtübersicht. Klick auf einen einzelnen Bestand öffnet die Detailansicht in der Seitenleiste.`;
 
 const RAND_AUSSEN = 6;
 const RAND_OBEN_WURZEL = 22; // nur für Tiefe 1 in der Wurzel-Ansicht (Kategorie-Pille), siehe topPaddingFuer()
@@ -318,7 +315,10 @@ function baueWerkzeugleiste() {
   const infoButtonAnker = document.createElement('div');
   infoButtonAnker.style.marginLeft = 'auto';
   instanz.werkzeugleiste.appendChild(infoButtonAnker);
-  instanz.infoButton = erzeugeInfoButton(infoButtonAnker, { text: TREEMAP_INFO_TEXT, ariaLabel: 'Erklärung zur Treemap' });
+  infotextFuerModul('treemap').then((cfg) => {
+    if (!instanz || !cfg || !infoButtonAnker.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoButtonAnker, cfg);
+  });
 }
 
 function aktualisiereWerkzeugleiste() {
@@ -724,7 +724,7 @@ export function destroy() {
   if (!instanz) return;
   clearTimeout(instanz.zurueckTimeout);
   versteckeTooltip();
-  instanz.infoButton.destroy();
+  instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

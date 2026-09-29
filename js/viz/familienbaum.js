@@ -336,6 +336,7 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareHoehe, ermittleVerfuegbareBreite } from '../utils/viewportGroesse.js';
 import {
   istBildschirmZuKlein,
@@ -420,8 +421,6 @@ const GRAU_EHEPARTNERFAMILIE = '#9a9a9a';
 const GOLD_FARBE = '#c9a227';
 const HEIRAT_FARBE = '#e8cf8a'; // helle Gold-Variante, siehe Dateikopf-Kommentar
 const KRONE_PFAD = 'M-5,4 L-5,-1 L-2.5,1.5 L0,-3.5 L2.5,1.5 L5,-1 L5,4 Z';
-
-const INFO_TEXT = `Dieser Zeitleisten-Stammbaum zeigt das Haus Habsburg von Rudolf I. bis Joseph II., einschließlich Ehepartnern und Kindern. Die Länge jedes Balkens entspricht der Lebensspanne der Person. Bei Kaisern und Königen aus eigenem Recht ist nur der Zeitraum ihrer tatsächlichen Herrschaft farblich hervorgehoben, nicht die gesamte Lebenszeit.`;
 
 let instanz = null; // { container, wurzel, plotBereich, records, options, byId, kinderIndex, familienFarben, jahrMin, jahrMax, kastenBreite, spaltenAbstand, spaltenLaneAbstand, zoomVerhalten, zoomTransform, letzteBreite, infoButton, hoverFokusId, eingefrorenerFokusId, selektionen } – eine aktive Ansicht pro Modul-Ladung
 
@@ -1353,10 +1352,9 @@ function baueWerkzeugleiste(container) {
   const infoContainer = document.createElement('div');
   infoContainer.className = 'familienbaum-info-anker';
   werkzeugleiste.appendChild(infoContainer);
-  instanz.infoButton = erzeugeInfoButton(infoContainer, {
-    text: INFO_TEXT,
-    ariaLabel: 'Erklärung zum Familienbaum anzeigen',
-    zusatzInhalt: baueFarblegende()
+  infotextFuerModul('familienbaum').then((cfg) => {
+    if (!instanz || !cfg || !infoContainer.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoContainer, { ...cfg, zusatzInhalt: baueFarblegende() });
   });
 
   container.appendChild(werkzeugleiste);

@@ -54,12 +54,9 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
-
-const ICICLE_INFO_TEXT = `Dieses Icicle-Diagramm zeigt die Bestände als gestapelte, horizontale Ebenen: Kategorie, Unterkategorie und einzelner Bestand. Die Breite jedes Abschnitts entspricht seinem Umfang in Laufmetern.
-
-Klick auf eine Kategorie oder Unterkategorie führt weiter in die nächste Ebene, Klick auf einen einzelnen Bestand öffnet die Detailansicht in der Seitenleiste.`;
 
 const MIN_SCHRIFTGROESSE = 11; // dieselbe Richtgröße wie treemap.js/sunburst.js
 const MINDESTBREITE_PX = 24; // dasselbe Fitts'sches-Gesetz-Ziel wie treemap.js' MINDESTHOEHE_ZELLE - hier direkt in Pixeln, keine Radius-Umrechnung nötig (im Unterschied zu sunburst.js' Winkel)
@@ -563,11 +560,6 @@ export function render(container, data, options = {}) {
   // zeichneIcicle() nie angetastet (nur svgBereich wird dort geleert/neu
   // gezeichnet), der Info-Button bleibt also über alle Redraws hinweg
   // bestehen.
-  const infoButton = erzeugeInfoButton(werkzeugleiste, {
-    text: ICICLE_INFO_TEXT,
-    ariaLabel: 'Erklärung zum Icicle-Diagramm'
-  });
-
   const hierarchieDaten = baueBestandsHierarchie(data, MINDESTGROESSE_ROH_ICICLE);
   const kategorienNamen = hierarchieDaten.children.map((k) => k.name).filter((name) => name !== OHNE_KATEGORIE).sort((a, b) => a.localeCompare(b));
 
@@ -580,8 +572,12 @@ export function render(container, data, options = {}) {
     ausgewaehlterName: null,
     svgBereich,
     sidebar,
-    infoButton
+    infoButton: null
   };
+  infotextFuerModul('icicle').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   sidebar.schliessenBtn.addEventListener('click', () => schliesseSidebarModul(instanz.sidebar, instanz.svgBereich));
   zeichneIcicle();
 }
@@ -594,7 +590,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
-  instanz.infoButton.destroy();
+  instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

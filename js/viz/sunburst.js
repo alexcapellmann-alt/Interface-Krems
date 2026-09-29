@@ -71,6 +71,7 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 
@@ -78,9 +79,6 @@ import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 // den jetzt sichtbaren dritten (Unterkategorie-)Ring zu beschreiben - reine
 // Inhaltsanpassung an den neuen Ist-Zustand der Visualisierung, keine
 // Änderung am Info-Button-Mechanismus selbst (Nicht-Ziel, siehe render()).
-const SUNBURST_INFO_TEXT = `Dieser Sunburst zeigt dieselben Bestände wie die Treemap, nur radial angeordnet: Kategorien bilden den innersten Ring, Unterkategorien den mittleren, einzelne Bestände den äußersten. Die Größe eines Segments entspricht dem Umfang des Bestands in Laufmetern.
-
-Klick auf ein Segment in jedem der drei Ringe zoomt in die zugehörige Kategorie, ein Klick auf das Zentrum führt zurück. Klick auf einen einzelnen Bestand öffnet die Detailansicht in der Seitenleiste.`;
 
 const MIN_SCHRIFTGROESSE = 11; // dieselbe Richtgröße wie treemap.js
 // Fitts'sches Gesetz (Abschnitt 9): dieselbe 24px-Zielgröße wie treemap.js'
@@ -834,11 +832,6 @@ export function render(container, data, options = {}) {
   const infoButtonContainer = document.createElement('div');
   infoButtonContainer.className = 'sunburst-info-button-anker';
   container.appendChild(infoButtonContainer);
-  const infoButton = erzeugeInfoButton(infoButtonContainer, {
-    text: SUNBURST_INFO_TEXT,
-    ariaLabel: 'Erklärung zum Sunburst'
-  });
-
   const hierarchieDaten = baueBestandsHierarchie(data, MINDESTGROESSE_ROH_SUNBURST);
   const kategorienNamen = hierarchieDaten.children.map((k) => k.name).filter((name) => name !== OHNE_KATEGORIE).sort((a, b) => a.localeCompare(b));
 
@@ -851,8 +844,12 @@ export function render(container, data, options = {}) {
     ausgewaehlterName: null,
     svgBereich,
     sidebar,
-    infoButton
+    infoButton: null
   };
+  infotextFuerModul('sunburst').then((cfg) => {
+    if (!instanz || !cfg || !infoButtonContainer.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoButtonContainer, cfg);
+  });
   sidebar.schliessenBtn.addEventListener('click', () => schliesseSidebarModul(instanz.sidebar, instanz.svgBereich));
   zeichneSunburst();
 }
@@ -865,7 +862,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
-  instanz.infoButton.destroy();
+  instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

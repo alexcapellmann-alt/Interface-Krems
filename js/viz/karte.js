@@ -230,18 +230,26 @@ import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenDetail, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 import { parseJahr } from '../utils/urkundenZeit.js';
 import { ladeCSV } from '../core/dataLoader.js';
+import { konfigurationswert, infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // Punkt 5 (Vorschlag, siehe Selbstauskunft im Chat - noch nicht freigegeben):
 // dritter Absatz zum neuen Verhalten ergänzt.
-const KARTE_INFO_TEXT = `Diese Karte zeigt alle in den Urkunden genannten Orte. Die Größe eines Punktes entspricht der Häufigkeit der Nennungen. Ein gestrichelter Rand kennzeichnet Orte mit unsicherer Identifizierung.
-
-Wichtig: Ein genannter Ort bedeutet nicht zwingend, dass die Urkunde dort ausgestellt wurde oder ein Ereignis dort stattfand – die Karte zeigt Ortsnennungen, keine Ausstellungsorte oder Reisewege.
-
-Urkunden ohne erkennbaren Ort werden hier nicht dargestellt. Der Zeitregler grenzt die Karte auf einen Jahrzehnt-Zeitraum ein; „Unsicherheiten anzeigen" blendet stattdessen ausschließlich Orte mit unsicherer Identifizierung ein (mit Liste in der Seitenleiste, inklusive der Orte ohne jede Koordinate) – beide lassen sich nicht gleichzeitig nutzen.`;
 
 const MARKER_FARBE = '#1a4d8f';
-const START_ZENTRUM = [48.42, 15.6]; // Krems an der Donau
-const START_ZOOM = 7;
+// AUFTRAG "Archivspezifische Texte...", Punkt 2.8: Kartenstartpunkt aus
+// archiv.csv (`karte_zentrum_lat`/`-lon`/`karte_zoom`), mit den bisherigen
+// Werten als Rückfall (archivKonfiguration.js' Ersatzwerte greifen
+// ohnehin bereits identisch, falls archiv.csv fehlt - Number() hier nur
+// zur Absicherung, falls ein Archiv versehentlich Text statt Zahl einträgt).
+function ermittleStartZentrum() {
+  const lat = Number(konfigurationswert('karte_zentrum_lat'));
+  const lon = Number(konfigurationswert('karte_zentrum_lon'));
+  return Number.isFinite(lat) && Number.isFinite(lon) ? [lat, lon] : [48.42, 15.6];
+}
+function ermittleStartZoom() {
+  const zoom = Number(konfigurationswert('karte_zoom'));
+  return Number.isFinite(zoom) ? zoom : 7;
+}
 const JAHRZEHNT_SCHRITT = 10;
 const DEBOUNCE_MS = 80;
 const HERVORHEBUNG_DAUER_MS = 2500;
@@ -734,7 +742,13 @@ async function zeichneKarte() {
   werkzeugleiste.appendChild(reglerGruppe);
 
   container.appendChild(werkzeugleiste);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: KARTE_INFO_TEXT, ariaLabel: 'Erklärung zur Karte' });
+  const infoCfg = await infotextFuerModul('karte');
+  // destroy() kann während des await aufgerufen worden sein; werkzeugleiste
+  // kann durch einen zwischenzeitlichen Redraw bereits wieder aus dem DOM
+  // entfernt worden sein, auch wenn instanz noch existiert (analog zum
+  // .then()-Guard der übrigen 25 Module).
+  if (!instanz || !werkzeugleiste.isConnected) return;
+  if (infoCfg) instanz.infoButton = erzeugeInfoButton(werkzeugleiste, infoCfg);
 
   const mapDiv = document.createElement('div');
   const breite = options.width || container.clientWidth || 900;
@@ -745,7 +759,7 @@ async function zeichneKarte() {
   container.appendChild(mapDiv);
   instanz.mapDiv = mapDiv;
 
-  const karte = L.map(mapDiv).setView(START_ZENTRUM, START_ZOOM);
+  const karte = L.map(mapDiv).setView(ermittleStartZentrum(), ermittleStartZoom());
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
   }).addTo(karte);

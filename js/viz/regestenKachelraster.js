@@ -87,14 +87,11 @@ import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { erzeugeFilterleiste } from '../utils/filterleiste.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // Auftrag "Geteilter Info-Button", Punkt 3 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
 // Umformulierung"), Absätze durch Leerzeilen getrennt (siehe infoButton.js).
-const KACHELRASTER_INFO_TEXT = `Dieses Kachelraster zeigt die Urkunden des Stadtarchivs Krems als kurze Zusammenfassungen (Regesten). Jede Kachel enthält Datum, Ort, beteiligte Personen und thematische Kategorien einer einzelnen Urkunde.
-
-Klick auf eine Kachel zeigt den vollständigen Text sowie vorhandene Fotos der Urkunde. Über die Suche lässt sich nach Signatur, Ort, Person oder Stichwort filtern, über das Kategorie-Menü nach Themenbereich. Der Button „Unsicherheiten anzeigen" blendet nur jene Urkunden ein, bei denen Datierung, Ort oder beteiligte Personen nicht sicher überliefert sind – inklusive einer kurzen Begründung.`;
-
 let instanz = null; // { container, inhaltContainer, infoButton, records, suchtextByRecord, options, beobachter, aktuelleSeite, filterZustand, filterleiste } – ein aktives Kachelraster pro Modul-Ladung
 
 // Schlüssel entsprechen den Präzisionsstufen aus datePrecision.js (Abschnitt 12, v4.2).
@@ -819,9 +816,9 @@ export function render(container, data, options = {}) {
     }
   });
 
-  instanz.infoButton = erzeugeInfoButton(infoButtonContainer, {
-    text: KACHELRASTER_INFO_TEXT,
-    ariaLabel: 'Erklärung zum Regesten-Kachelraster anzeigen'
+  infotextFuerModul('regestenKachelraster').then((cfg) => {
+    if (!instanz || !cfg || !infoButtonContainer.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoButtonContainer, cfg);
   });
 
   // Punkt 3 (siehe Dateikopf-Kommentar): setzeSuchbegriff() löst denselben
@@ -860,7 +857,7 @@ export function destroy() {
   if (!instanz) return;
   instanz.beobachter.zerstoere();
   instanz.filterleiste.destroy();
-  instanz.infoButton.destroy();
+  instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

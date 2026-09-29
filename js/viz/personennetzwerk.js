@@ -41,15 +41,10 @@
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueBuergschaftsNetzwerk, baueNamensverzeichnis, baueSektorFarbSkala } from '../utils/buergerbuchZeit.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 const TOP_HUB_ANZAHL = 15;
 const VORBERECHNUNGS_TICKS = 300;
-
-const INFO_TEXT = `Dieses Personennetzwerk zeigt Bürgschaftsbeziehungen aus dem Bürgerbuch: ein Knoten ist eine Person (unabhängig davon, ob sie hier als aufgenommener Bürger, als Bürge oder als beides vorkommt), eine Kante eine Bürgschaftsbeziehung. Die Farbe zeigt den Wirtschaftssektor der Person.
-
-Da alle 540 Beziehungen gleichzeitig unlesbar wären, zeigt die Übersicht ohne Auswahl nur die am dichtesten vernetzten Personen und ihre direkten Verbindungen.
-
-Klick auf eine Person (oder die Suche oben) zeigt stattdessen deren vollständiges direktes Beziehungsnetz - „Übersicht" oben kehrt zurück.`;
 
 let instanz = null; // { container, wurzel, records, options, infoButton, simulation, egoId, netzwerk, namenNachId } – ein aktives Netzwerk pro Modul-Ladung
 
@@ -229,7 +224,10 @@ function zeichneNetzwerk() {
   wurzel.innerHTML = '';
 
   const infoContainer = baueWerkzeugleiste(wurzel);
-  instanz.infoButton = erzeugeInfoButton(infoContainer, { text: INFO_TEXT, ariaLabel: 'Erklärung zum Personennetzwerk' });
+  infotextFuerModul('personennetzwerk').then((cfg) => {
+    if (!instanz || !cfg || !infoContainer.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(infoContainer, cfg);
+  });
 
   const ausschnitt = egoId
     ? waehleEgoAusschnitt(netzwerk.knoten, netzwerk.paare, egoId)

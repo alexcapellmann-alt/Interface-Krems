@@ -33,9 +33,9 @@
 // theoretischen Fall künftiger unvollständiger Datenpflege (liefert dann
 // ein leeres, aber technisch vorhandenes ohneJahr-Array).
 //
-// Punkt 1 (Info-Button, Auftrag: "Vorschlag machen, ich gebe frei"): Text
-// unten (TRELLIS_INFO_TEXT) ist ein VORSCHLAG, noch nicht freigegeben - siehe
-// Selbstauskunft im Chat.
+// Punkt 1 (Info-Button, Auftrag: "Vorschlag machen, ich gebe frei"): der
+// Info-Text war zunächst ein Vorschlag (seither freigegeben, seit AUFTRAG
+// "Archivspezifische Texte..." aus data/infotexte.csv, modul_id "trellis").
 //
 // AUFTRAG "Bürgerbuch-Trellis – größere Beschriftung, dünner Rahmen je
 // Panel": Punkt 1 (Beschriftung vergrößern) - der Auftrag nennt "Sektor-Titel
@@ -94,6 +94,7 @@ import {
   baueSektorFarbSkala
 } from '../utils/buergerbuchZeit.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareBreite, ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 
@@ -116,12 +117,6 @@ const FACET_ZIEL_ASPEKT = 1.73;
 const FACET_INNENRAND = { oben: 26, unten: 22, links: 6, rechts: 6 };
 // Punkt 1 (siehe Dateikopf-Kommentar): 11→15px, Faktor ≈1,36.
 const SEKTOR_TITEL_SCHRIFTGROESSE = 15;
-
-const TRELLIS_INFO_TEXT = `Dieser Trellis zeigt für jeden Wirtschaftssektor ein eigenes kleines Diagramm: die x-Achse ist das Jahr, die y-Achse die Anzahl der Bürgeraufnahmen in diesem Jahr. Alle Diagramme nutzen dieselbe y-Skala, damit die Sektoren fair miteinander vergleichbar bleiben.
-
-„Beruf nicht angegeben" fasst Bürgeraufnahmen ohne vermerkten Beruf/Sektor in einem eigenen Panel zusammen, statt sie auszublenden.
-
-Gestrichelter roter Rand kennzeichnet Jahre mit mindestens einer unsicheren Datums- oder Berufsangabe.`;
 
 let instanz = null; // { container, wurzel, records, options, infoButton } – ein aktiver Trellis pro Modul-Ladung
 
@@ -209,7 +204,10 @@ function zeichneTrellis() {
 
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'trellis-werkzeugleiste';
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: TRELLIS_INFO_TEXT, ariaLabel: 'Erklärung zum Trellis' });
+  infotextFuerModul('trellis').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   const plotBereich = document.createElement('div');
   plotBereich.className = 'trellis-plot-bereich';
