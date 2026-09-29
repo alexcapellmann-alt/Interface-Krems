@@ -5,6 +5,119 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-29 (45) – Paket 1: Lokale Bibliotheken und Schriften
+
+**Kontext:** erster Teil des Auftrags "Lokale Bibliotheken und Schriften
+(Paket 1) · Archivspezifische Texte und Identität in CSV-Dateien (Paket
+2)" - macht das Interface für andere Kommunalarchive nachnutzbar, ohne
+dass Besucher:innen-IP-Adressen bei jedem Seitenaufruf an Google
+(Schriften), d3js.org oder unpkg.com (Bibliotheken) übermittelt werden.
+Paket 2 (archivspezifische CSV-Konfiguration) folgt erst nach Freigabe und
+Commit dieses Pakets.
+
+### 1.1 D3 lokal
+
+`vendor/d3/d3.v7.min.js` (exakte Version laut Datei-Kopfkommentar:
+**v7.9.0**, unverändert von `https://d3js.org/d3.v7.min.js` heruntergeladen
+- byteidentisch, keine Modifikation) plus `vendor/d3/LICENSE` (ISC,
+Copyright 2010-2023 Mike Bostock, von `github.com/d3/d3` Tag `v7.9.0`).
+`index.html`s `<script src="…">` auf den lokalen Pfad umgestellt,
+`js/core/dataLoader.js`s Kopfkommentar entsprechend angepasst (einzige
+Code-Referenz auf die alte CDN-URL). Keine Versionsänderung.
+
+### 1.2 Leaflet lokal
+
+`vendor/leaflet/leaflet.js` + `leaflet.css` (Version 1.9.4, unverändert
+von `unpkg.com/leaflet@1.9.4/dist/` heruntergeladen) plus
+`vendor/leaflet/images/` mit allen fünf von CSS (`layers.png`,
+`layers-2x.png`) bzw. von `L.Icon.Default` in `leaflet.js` selbst
+referenzierten Grafiken (`marker-icon.png`, `marker-icon-2x.png`,
+`marker-shadow.png` - per `grep` auf `marker-*.png` in `leaflet.js`
+ermittelt, nicht nur die in `leaflet.css` per `url()` sichtbaren zwei
+Dateien). `vendor/leaflet/LICENSE` (BSD-2-Clause). `index.html`s
+`<link>`/`<script>` auf die lokalen Pfade umgestellt. Leaflets eigene
+Pfadauflösung für die Bildordner funktioniert unverändert, da sie relativ
+zur URL von `leaflet.css` selbst berechnet wird (kein Code in `karte.js`/
+`statischeKarte.js` referenziert Icon-Pfade direkt, per `grep` bestätigt -
+keine Änderung an diesen Modulen nötig).
+
+### 1.3 Schriften lokal
+
+`vendor/fonts/` mit vier `woff2`-Dateien: `inter-latin.woff2`,
+`inter-latin-ext.woff2`, `playfair-display-latin.woff2`,
+`playfair-display-latin-ext.woff2`, plus `OFL.txt` (SIL Open Font License
+1.1, Copyright-Zeilen für Inter und Playfair Display, gemeinsamer
+Lizenztext - von den offiziellen `OFL.txt`-Dateien im `google/fonts`-Repo
+übernommen).
+
+**Wichtiger Befund beim Herunterladen (Selbstauskunft):** obwohl der
+Auftrag "woff2-Dateien für Inter (400, 500, 600, 700) und Playfair Display
+(600, 700)" nennt, liefert die Google-Fonts-API für beide Familien pro
+Zeichensatz-Ausschnitt (Latin, Latin Extended) nur EINE Datei, die alle
+vier bzw. beide angefragten Schriftstärken über die eingebettete
+"wght"-Variable-Font-Achse abdeckt (nachgeprüft: die von Google gelieferten
+Download-URLs für Inter 400/500/600/700 "latin" sind untereinander
+byteidentisch, ebenso für "latin-ext"; dasselbe bei Playfair Display
+600/700). Es existieren serverseitig also gar keine vier bzw. zwei
+separaten Dateien zum Herunterladen - `css/fonts.css` deklariert trotzdem
+die vollen vier bzw. zwei `@font-face`-Regeln mit je eigenem
+`font-weight` (der Browser wählt anhand dessen automatisch die passende
+Instanz aus der Variable-Font-Datei), referenziert dabei aber jeweils
+dieselbe, einmal heruntergeladene Datei - inhaltlich exakt das, was
+Google selbst an Browser ausliefert, nur lokal statt vom CDN.
+
+`css/fonts.css` (neu, vor `base.css` eingebunden) enthält zwölf
+`@font-face`-Regeln (4 Gewichte × 2 Zeichensatz-Ausschnitte für Inter + 2
+Gewichte × 2 Ausschnitte für Playfair Display), `font-display: swap`,
+`unicode-range` unverändert von Google übernommen (Latin + Latin
+Extended - deckt u. a. "ř"/"ů" in "Jindřichův Hradec" und "ő" in
+ungarischen Ortsnamen ab, live per `document.fonts.check()` nach
+erzwungenem Laden bestätigt, siehe Regressionsprüfung). Die beiden
+`preconnect`-Zeilen und das Google-Fonts-`<link>` in `index.html`
+entfernt.
+
+**Quelle der Schriftdateien:** Google Fonts API, `css2`-Endpunkt,
+Anfrage `family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap`
+(dieselbe Anfrage, die zuvor das entfernte `<link>` in `index.html`
+stellte), mit modernem Chrome-User-Agent abgerufen, um `woff2`- statt
+`woff`/`ttf`-URLs zu erhalten - Inter Version v20, Playfair Display
+Version v40 (Versionsnummern aus den Google-Font-Datei-Pfaden).
+
+### Regressionstest Paket 1
+
+**Domainliste** (per `performance.getEntriesByType('resource')` UND
+Entwicklertools-Netzwerkreiter nach Neuladen, über Startseite, Bestand
+(Treemap, Gantt-Diagramm, Sunburst), Zeitachse der Urkunden, Regesten-
+Kachelraster, Personenliste, Karte, eine Führungsstation, Literatur- und
+Über-Platzhalter): einzige externe Domains sind `a.tile.openstreetmap.org`,
+`b.tile.openstreetmap.org`, `c.tile.openstreetmap.org` (Kartenkacheln,
+laut Nicht-Ziel unverändert) - keine Treffer für `fonts.googleapis.com`,
+`fonts.gstatic.com`, `d3js.org` oder `unpkg.com` in den beobachteten
+Netzwerkanfragen.
+
+**Grep-Nachweis:**
+```
+grep -rn "d3js.org" index.html js        → keine Treffer
+grep -rn "unpkg" index.html js css       → keine Treffer
+grep -rn "googleapis\|gstatic" index.html css → keine Treffer
+```
+(Die vendorierte `vendor/d3/d3.v7.min.js` selbst enthält in ihrem eigenen,
+unveränderten Kopfkommentar weiterhin "d3js.org" als Urheberangabe - das
+ist Teil der Bibliothek selbst, nicht von `index.html`/`js` erfasst und
+vom Akzeptanzkriterium nicht ausgeschlossen.)
+
+Alle Diagramme rendern unverändert (D3: Treemap, Sunburst, Gantt-Diagramm,
+Zeitachse, Kachelraster stichprobenartig geprüft), Karte zeigt Kacheln,
+Cluster-Marker, Zoom-Buttons und Attribution ("Leaflet | © OpenStreetMap-
+Mitwirkende") korrekt. Überschriften/Fließtext optisch identisch zu vorher
+(Playfair Display für Überschriften, Inter für Fließtext, Screenshots im
+Chat). Sonderzeichen-Test: "Jindřichův Hradec, Hodonín, győri" per
+`document.fonts.check()` und Live-Rendering bestätigt in Inter dargestellt
+(nicht in einer Systemersatzschrift). Keine Konsolenfehler bei allen
+geprüften Ansichten.
+
+---
+
 ## 2026-09-28 (44) – Teil 2j: Lesbarkeit des Belegbereichs
 
 ### Punkt 1 - Ursache

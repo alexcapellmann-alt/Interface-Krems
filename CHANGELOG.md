@@ -7,6 +7,25 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-29 (93) – Paket 1: Lokale Bibliotheken und Schriften
+
+D3 (v7.9.0, unverändert von `d3js.org`), Leaflet (1.9.4, unverändert von
+`unpkg.com`, inkl. aller fünf Marker-/Layer-Bildgrafiken) und die
+Schriften Inter/Playfair Display (Google Fonts, Latin + Latin Extended)
+liegen jetzt lokal unter `vendor/` bzw. `vendor/fonts/` statt von
+externen CDNs geladen zu werden - vermeidet, dass Besucher:innen-IP-
+Adressen bei jedem Seitenaufruf an Dritte übermittelt werden. Neue Datei
+`css/fonts.css` (vor `base.css` eingebunden) mit den `@font-face`-Regeln.
+`index.html` entsprechend umgestellt, `js/core/dataLoader.js`s
+Kopfkommentar angepasst (einzige Code-Referenz auf die alte D3-CDN-URL).
+Keine Versionsänderungen, kein sichtbarer Unterschied in Aussehen/
+Verhalten (Screenshots/Domainliste/Sonderzeichen-Test siehe PROJEKTLOG
+Eintrag 45) - einzige weiterhin externe Domain: `tile.openstreetmap.org`
+(Kartenkacheln, unverändert). Paket 2 (archivspezifische CSV-Konfiguration)
+folgt erst nach Freigabe dieses Pakets.
+
+---
+
 ## 2026-09-28 (92) – Teil 2j: Lesbarkeit des Belegbereichs
 
 **Ursache (Selbstauskunft):** `.fuehrung-beleg` (das helle "Dokument auf
