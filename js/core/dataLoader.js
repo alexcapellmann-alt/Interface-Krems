@@ -2,8 +2,10 @@
 // Vertrag: siehe Masterprompt Abschnitt 6.
 //
 // Voraussetzung: D3 v7 ist bereits als globales `d3` geladen (klassisches
-// <script src="https://d3js.org/d3.v7.min.js"></script> in index.html) –
-// kein Build-Step, kein npm-Import (Abschnitt 2).
+// <script src="vendor/d3/d3.v7.min.js"></script> in index.html, seit
+// AUFTRAG "Lokale Bibliotheken und Schriften", Punkt 1.1 lokal statt vom
+// bisherigen externen CDN eingebunden) – kein Build-Step, kein npm-Import
+// (Abschnitt 2).
 //
 // Der DataLoader bleibt bewusst generisch: er kennt keine konkreten
 // Spaltennamen einzelner Tabellen (die stehen in docs/SCHEMA.md) und
