@@ -31,8 +31,16 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 | `kategorien` | Liste (Pipe-getrennt) | nein | |
 | `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
 | `unsicherheit_anmerkung` | Text | nein | für Hover-Tooltip |
+| `bilder` | Liste (Pipe-getrennt) | nein | **neu (Auftrag "Urkundenfotos über die Spalte `bilder`", 2026-09-30):** die tatsächlichen Dateinamen der Fotos zu dieser Urkunde, ohne Pfad - der vollständige Bildpfad ergibt sich aus `fotos/thumbs/<foto_ordner>/<Dateiname>`. Letzte Spalte der Tabelle, direkt nach `foto_ordner` eingefügt. Löst das bisherige, separat per Kommandozeilenskript erzeugte JSON-Manifest ab (siehe PROJEKTLOG) - Foto-Zuordnung ist damit ohne Programmierkenntnisse direkt in der Tabelle pflegbar. |
 
 **Hinweis:** enthält zusätzliches Tabellenblatt "Änderungsprotokoll" – internes Arbeitsdokument, nicht Teil der Interface-Daten, wird nicht mit exportiert.
+
+**Hinweise für Archivar:innen zu `bilder` (kein Programmierwissen nötig):**
+- Dateinamen exakt wie im Ordner eintragen, **einschließlich Groß-/Kleinschreibung** - der Server, der das Interface ausliefert, unterscheidet Groß-/Kleinschreibung bei Dateinamen, Windows auf dem eigenen Rechner normalerweise nicht. Ein Dateiname, der auf dem eigenen PC klaglos funktioniert (`stak_0001_r.jpg` statt `StAK_0001_r.jpg`), kann online als "Bild nicht gefunden" erscheinen.
+- Mehrere Fotos durch `|` trennen. Die Reihenfolge in der Zelle bestimmt die Anzeigereihenfolge.
+- Neues Foto: Datei in den passenden Ordner unter `fotos/thumbs/<foto_ordner>/` legen UND den Dateinamen zusätzlich in die `bilder`-Zelle der betreffenden Zeile eintragen (beides nötig, nicht nur eines von beidem).
+- Beim Neuerzeugen/Neuimportieren dieser Tabelle (z. B. bei der Einarbeitung weiterer Regestfassungen) **muss die Spalte `bilder` erhalten bleiben** - sie steht nirgendwo sonst.
+- Beim Bearbeiten in Excel: als „CSV UTF-8 (durch Trennzeichen getrennt)“ speichern (dieselbe Konvention wie bei allen übrigen Tabellen dieses Interfaces).
 
 ---
 

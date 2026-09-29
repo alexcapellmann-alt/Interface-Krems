@@ -16,7 +16,7 @@ function parseKommaZahl(rohwert) {
   return Number.isFinite(zahl) ? zahl : null;
 }
 
-// Lädt orte.csv einmalig (Memoisierung wie bei fotoOrdner.js) und baut ein
+// Lädt orte.csv einmalig (memoisiert) und baut ein
 // Namen -> {lat, lon, ...} Verzeichnis. Orte ohne auswertbare Koordinaten werden
 // nicht aufgenommen (dieselbe "Datenehrlichkeit vor Code-Eleganz"-Haltung wie beim
 // DataLoader: kein Rateweise-Platzhalterwert für fehlende Koordinaten).

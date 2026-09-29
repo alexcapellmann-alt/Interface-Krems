@@ -9,16 +9,15 @@
 
 import { navigiereZu } from '../core/router.js';
 import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
-import { ladeFotos } from '../utils/fotoOrdner.js';
+import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
 import { ermittlePausierteFuehrung } from './fuehrungFortsetzen.js';
 
-async function ermittleKachelBild(fuehrung) {
+function ermittleKachelBild(fuehrung) {
   const ersterBeleg = fuehrung.stationen[0]?.belege[0];
   if (!ersterBeleg || ersterBeleg.fehler) return null;
   if (ersterBeleg.typ === 'bild') return ersterBeleg.id;
   if (ersterBeleg.typ === 'urkunde') {
-    const fotos = await ladeFotos(ersterBeleg.record.foto_ordner);
-    return fotos[0] || null;
+    return ermittleBildUrls(ersterBeleg.record)[0] || null;
   }
   return null;
 }
@@ -34,6 +33,7 @@ function baueKachel(fuehrung, bildUrl) {
     img.className = 'fuehrung-kachel-bild';
     img.src = bildUrl;
     img.alt = '';
+    wendeBildFehlerbehandlungAn(img, bildUrl, fuehrung.fuehrung_id);
     kachel.appendChild(img);
   } else {
     const platzhalter = document.createElement('div');
@@ -127,7 +127,7 @@ export async function render(container, { hinweis } = {}) {
 
     const raster = document.createElement('div');
     raster.className = 'fuehrungen-galerie-raster';
-    const bilder = await Promise.all(gruppe.map(ermittleKachelBild));
+    const bilder = gruppe.map(ermittleKachelBild);
     gruppe.forEach((fuehrung, i) => raster.appendChild(baueKachel(fuehrung, bilder[i])));
     abschnitt.appendChild(raster);
     wurzel.appendChild(abschnitt);
