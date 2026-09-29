@@ -4,6 +4,9 @@ archiv_kurzname;Stadtarchiv Krems;Kurzform, u. a. für Seitentitel und Logo-Besc
 seitentitel;Interface Stadtarchiv Krems;Titel im Browser-Tab
 logo_datei;logo.svg;Dateiname des Logos im Ordner data/ (SVG oder PNG)
 logo_untertitel;Stadtarchiv;Text neben dem Logo in der Kopfzeile
+favicon_datei;favicon.svg;Dateiname der quadratischen Favicon-SVG-Datei im Ordner data/. Bleibt leer, wird kein Favicon gesetzt.
+favicon_png_datei;favicon-32.png;Dateiname des 32×32-PNG-Rückfalls im Ordner data/ für Browser ohne SVG-Favicon-Unterstützung
+apple_touch_icon_datei;apple-touch-icon.png;Dateiname des 180×180-PNG-Symbols im Ordner data/ für Mobilgeräte-Startbildschirme, ohne Transparenz (iOS stellt transparente Bereiche sonst schwarz dar)
 adresse_strasse;Körnermarkt 14;
 adresse_ort;3500 Krems an der Donau;
 telefon;0 27 32 / 801 578;Anzeigeform

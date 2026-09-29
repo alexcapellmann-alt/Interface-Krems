@@ -7,6 +7,43 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-29 (97) – Favicon ersetzt: σ statt K
+
+Das K-Favicon aus dem letzten Auftrag (Ausschnitt aus dem Stadtlogo)
+wurde durch ein eigenständiges Symbol ersetzt: ein weißes σ auf einem
+abgerundeten Quadrat in der Akzentfarbe `#2c4a6e` - dasselbe Zeichen, das
+im Interface bereits für Unsicherheit steht. Kennzeichnet damit das
+Interface selbst, nicht ein bestimmtes Archiv. Mechanismus
+(`wendeFaviconAn()` in `js/core/app.js`) und die drei Schlüssel/Werte in
+`archiv.csv` unverändert - nur `data/favicon.svg`, `data/favicon-32.png`
+und `data/apple-touch-icon.png` wurden (vom Auftraggeber bereitgestellt)
+ausgetauscht, dazu die `anmerkung`-Spalte der drei Favicon-Zeilen in
+`archiv.csv` neutral gefasst (nicht mehr logo-bezogen) und `docs/
+SCHEMA.md` um den Hinweis ergänzt, dass andere Archive das σ-Favicon
+beibehalten oder ersetzen können. Details/Verifikation siehe PROJEKTLOG
+Eintrag 49.
+
+---
+
+## 2026-09-29 (96) – Favicon (konfigurierbar über archiv.csv)
+
+Neues Favicon, wie das Logo über `data/archiv.csv` konfigurierbar, damit
+andere Archive ihr eigenes verwenden können. Drei neue Dateien: `data/
+favicon.svg` (quadratischer Ausschnitt aus `logo.svg` - nur das gelbe
+Quadrat mit „K", ohne den Schriftzug „rems", Formen/Farben unverändert),
+`data/favicon-32.png` (32×32, PNG-Rückfall) und `data/apple-touch-icon.png`
+(180×180, opaker weißer statt transparenter Hintergrund - iOS stellt
+Transparenz in Touch-Icons teils schwarz dar). Drei neue, dokumentierte
+Zeilen in `archiv.csv` (`favicon_datei`, `favicon_png_datei`,
+`apple_touch_icon_datei`), bestehende Zeilen unverändert. `js/core/app.js`s
+neue `wendeFaviconAn()` setzt die passenden `<link rel="icon"|
+"apple-touch-icon">`-Elemente beim Start; fehlt/leert ein Schlüssel, wird
+das jeweilige Element schlicht nicht erzeugt (kein Fehler, kein leerer/
+kaputter Link). `docs/SCHEMA.md` Abschnitt 13.1 um die drei Schlüssel
+ergänzt. Details/Ausfalltest siehe PROJEKTLOG Eintrag 48.
+
+---
+
 ## 2026-09-29 (95) – Korrekturen zu Paket 2: Kachelüberschriften, Über-Seite mittig, Kontakt-Icons
 
 Drei Korrekturen nach Prüfung durch den Auftraggeber, vor dem ersten Commit
