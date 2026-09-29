@@ -30,12 +30,17 @@ import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN } from '../config/archivalienRegist
 // die bereits bestehende vertiefung-Zielansicht "familienbaum" aus Teil 2d,
 // hier aber als DATENSATZ-Aufruf mit konkreter Personen-ID statt als reiner
 // Ansichts-Sprung).
+// AUFTRAG "Literaturseite", Punkt 6: neuer Typ `literatur` - Zielansicht ist
+// der Literatur-TAB selbst (kein Archivalientyp/keine Visualisierung, daher
+// nur ein Segment `['literatur']`) - ermittleAnsicht() unten bekommt dafür
+// einen dritten Zweig neben "bestand"/"visualisierungen".
 const ZUORDNUNG = {
   urkunde: { segmente: ['visualisierungen', 'urkunden', 'zeitachse'] },
   inventar: { segmente: ['visualisierungen', 'verlassenschaften', 'parallelKoordinaten'] },
   bestand: { segmente: ['bestand', 'treemap'] },
   person: { segmente: ['visualisierungen', 'personen', 'personenliste'] },
-  familie: { segmente: ['visualisierungen', 'personen', 'familienbaum'] }
+  familie: { segmente: ['visualisierungen', 'personen', 'familienbaum'] },
+  literatur: { segmente: ['literatur'] }
 };
 
 // K1 (Teil 2c): lesbare Typbezeichnungen an EINER Stelle - fuer die
@@ -54,7 +59,8 @@ export const TYP_ANZEIGE = {
   // (Auftrag wörtlich), nicht "Familie" - dieselbe Konstante speist sowohl
   // die Quellenzeile (belegDarstellung.js) als auch Screenreader-
   // Beschriftungen (siehe TYP_ANZEIGE-Dateikopf-Kommentar).
-  familie: 'Stammbaum'
+  familie: 'Stammbaum',
+  literatur: 'Literatur'
 };
 
 // Deklinationshilfe nur fuer die Bereichs-Haelfte der Vertiefungslink-
@@ -91,6 +97,12 @@ function ermittleAnsicht(segmente) {
     return ansicht
       ? { segmente: ['visualisierungen', a, ansicht.id], label: ansicht.label, bereichLabel: archivalientyp.label, bereichSchluessel: a }
       : null;
+  }
+  // AUFTRAG "Literaturseite", Punkt 6: `literatur` ist kein Archivalientyp/
+  // keine Visualisierung (kein Registry-Eintrag noetig) - immer gueltig,
+  // solange der Tab selbst existiert (er tut es, siehe app.js' renderTab()).
+  if (tab === 'literatur') {
+    return { segmente: ['literatur'], label: 'Literaturliste', bereichLabel: null, bereichSchluessel: 'literatur' };
   }
   return null;
 }

@@ -14,6 +14,7 @@
 import { baueHash } from '../core/router.js';
 import { ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { loescheZustand } from './fuehrungFortsetzen.js';
+import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
 
 const MOBIL_UMBRUCH_PX = 800;
 
@@ -106,9 +107,15 @@ function baueSelbstErkunden(fuehrung) {
 }
 
 // "Zum Weiterlesen": weiterlesen-Eintraege (bereits gegen literatur.csv
-// aufgeloest, siehe fuehrungenDaten.js' parseWeiterlesen()). Externer Link
-// (falls vorhanden) mit Symbol + target="_blank"/rel="noopener" als extern
-// gekennzeichnet (Auftrag woertlich).
+// aufgeloest, siehe fuehrungenDaten.js' parseWeiterlesen()).
+//
+// AUFTRAG "Literaturseite", Punkt 5: zeigt jetzt die VOLLSTÄNDIGE
+// `zitation` (statt der bisherigen Kurzform aus autor/titel/jahr) plus
+// einen internen Link "in der Literaturliste" auf den Eintrag - derselbe
+// Deep-Link-Mechanismus (Punkt 6) wie ein direkter ?datensatz=literatur:<id>-
+// Aufruf, hier über die zentrale baueDatensatzLink() gebaut (keine eigene
+// Href-Konstruktion). Ein vorhandener externer `link` bleibt wie bisher
+// zusätzlich erhalten (Symbol + target="_blank"/rel="noopener").
 function baueWeiterlesen(fuehrung) {
   if (fuehrung.weiterlesen.length === 0) return null;
   const abschnitt = document.createElement('section');
@@ -125,17 +132,20 @@ function baueWeiterlesen(fuehrung) {
       return;
     }
     const p = document.createElement('p');
-    const angabe = [record.autor, record.titel, record.jahr].filter(Boolean).join(', ');
+    p.appendChild(document.createTextNode(`${record.zitation} `));
+    const internerLink = document.createElement('a');
+    internerLink.href = baueDatensatzLink('literatur', record.literatur_id);
+    internerLink.textContent = 'in der Literaturliste';
+    p.appendChild(internerLink);
     if (record.link) {
+      p.appendChild(document.createTextNode(' '));
       const link = document.createElement('a');
       link.href = record.link;
       link.target = '_blank';
       link.rel = 'noopener';
-      link.textContent = `${angabe} ↗`;
-      link.setAttribute('aria-label', `${angabe}, externer Link, öffnet in neuem Tab`);
+      link.textContent = '↗';
+      link.setAttribute('aria-label', `${record.zitation}, externer Link, öffnet in neuem Tab`);
       p.appendChild(link);
-    } else {
-      p.textContent = angabe;
     }
     abschnitt.appendChild(p);
   });

@@ -7,6 +7,64 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-29 (99) – fuehrungen.csv: weiterlesen auf echte literatur_id-Werte umgestellt
+
+Folgeauftrag zu (98)s Befund: `weiterlesen` enthielt bei 10 von 12
+Führungen volle Literaturangaben statt `literatur_id`-Kurzschlüsseln -
+vom Auftraggeber bestätigt und mit neuen Werten versehen. Alle zehn
+Felder auf die vorgegebenen `literatur_id`-Listen umgestellt
+(`data/fuehrungen.csv`, nur Spalte `weiterlesen` bzw. bei vier Führungen
+zusätzlich `quellen_intern` derselben Zeile, keine anderen Texte
+verändert). Nicht-Literaturangaben-Fragmente (Seitenzahlen, „Quellen im
+Interface: …", „Ergänzend: …") aus den alten `weiterlesen`-Werten an
+`quellen_intern` angehängt, sofern dort nicht schon vorhanden. Neue Zeile
+`ploeckinger1950` in `data/literatur.csv` (Kategorie „Weinbau", nach
+`landsteiner2001`). Ergebnis: alle 12 Führungen lösen jetzt fehlerfrei
+auf (vorher 10 mit sichtbarem Fehlerhinweis), Literaturseite zeigt
+korrekt bis zu sieben Rückverweise je Titel (Kerschbaumer). Details siehe
+PROJEKTLOG Eintrag 51.
+
+---
+
+## 2026-09-29 (98) – Literaturseite
+
+Neuer Literatur-Tab (ersetzt den bisherigen Platzhalter): zeigt die 105
+Einträge aus `data/literatur.csv` (neues Schema - `literatur_id` ist kein
+Zotero-Key mehr, `zitation` unverändert als Haupttext) gegliedert nach
+`kategorie` (12 Gruppen, Reihenfolge = erstes Auftreten in der CSV, nicht
+alphabetisch), mit Sprungmarken-Navigation, Sortierung nach Autor/Jahr
+umschaltbar und begrenzter Lesespaltenbreite (wie die Über-Seite). Oben ein
+Bereich "Weiter recherchieren" aus der neuen `data/recherche_links.csv`
+(3 externe Einstiege, z. B. Büchereikatalog). Neues Modul `js/core/
+literaturSeite.js`, Info-Button (`literaturSeite` in `data/infotexte.csv`).
+Content-driven wie die übrigen Tabs: fehlt `literatur.csv` oder hat sie
+keine Datenzeilen, wird der Nav-Punkt ausgeblendet.
+
+Rückverweise auf Führungen ("Verwendet in: …") werten `fuehrungen.csv`s
+`weiterlesen`-Spalte über die bereits bestehende Lade-/Parse-Logik aus
+`js/fuehrungen/fuehrungenDaten.js` aus (keine zweite Implementierung).
+`js/fuehrungen/fuehrungAbschluss.js`s "Zum Weiterlesen" zeigt jetzt die
+vollständige `zitation` plus einen internen Link "in der Literaturliste"
+(neuer Deep-Link-Typ `literatur:<id>` in `js/utils/datensatzAufruf.js`,
+scrollt zum Eintrag und hebt ihn kurz hervor - unbekannte ID zeigt den
+bestehenden "nicht gefunden"-Hinweis).
+
+Live gefundener und behobener Bug: `scrollIntoView({behavior:'smooth'})`
+blieb im Testaufbau wirkungslos stehen (dieselbe rAF-Zuverlässigkeitsklasse
+wie die bereits dokumentierte `d3`-`.transition()`-Problematik in
+`ganttDiagramm.js`) - beide Sprungstellen (Kategorien-Sprungmarken,
+Deep-Link-Hervorhebung) laufen jetzt ohne `behavior:'smooth'`, garantiert
+sofort wirksam.
+
+`docs/SCHEMA.md` §9 (neues Schema, Hinweis auf Kategorienreihenfolge),
+neuer §9.1 (`recherche_links.csv`), §10/§12 aktualisiert (u. a. Hinweis,
+dass `weiterlesen` bei den meisten Führungen bereits volle
+Literaturangaben statt `literatur_id`-Kurzschlüssel enthält - Nicht-Ziel,
+nicht behoben, der Archivarin gemeldet). Details/Testprotokoll siehe
+PROJEKTLOG Eintrag 50.
+
+---
+
 ## 2026-09-29 (97) – Favicon ersetzt: σ statt K
 
 Das K-Favicon aus dem letzten Auftrag (Ausschnitt aus dem Stadtlogo)

@@ -229,23 +229,43 @@ Unverändert gegenüber letzter Prüfung.
 
 ---
 
-## 9. literatur.csv
+## 9. literatur.csv (Auftrag "Literaturseite", 2026-09-29: neues Schema, 105 Datenzeilen)
 
-Bisher nur im Masterprompt (Abschnitt 4.4, Ordnerstruktur) erwähnt, hier erstmals als eigene Tabellenstruktur festgehalten. Speist (künftig) den Literatur-Tab; neue Zeile = neuer Eintrag im Interface, automatisch, ohne Code-Änderung (Content-driven-Prinzip). **Aktuell nur die Kopfzeile, keine Datenzeilen** - der Literatur-Tab zeigt bislang ohnehin nur einen Platzhaltertext (`js/core/app.js:673-674`), lädt die Datei noch nicht.
+Speist den Literatur-Tab (`js/core/literaturSeite.js`); neue Zeile = neuer Eintrag im Interface, automatisch, ohne Code-Änderung (Content-driven-Prinzip). Gliedert die Seite nach Themen (Generous-Interface-Prinzip: Überblick statt Suchmaske) - Heimat- und Familienforscher:innen sollen sehen, welche Literatur es gibt, wo sie online zugänglich ist und in welchen Führungen sie verwendet wird.
+
+**Wichtige Korrektur gegenüber der früheren Planung (Auftrag "Führungen, Teil 1"):** `literatur_id` ist **kein Zotero-Zitierkey mehr** - vorgesehen ist jetzt ein einfacher Kurzschlüssel aus Autor + Jahr (z. B. `kuehnel1960`), von Hand vergeben. Referenzziel bleibt unverändert `fuehrungen.csv`s `weiterlesen`-Spalte (siehe Abschnitt 10).
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `literatur_id` | Text | ja | neu (Auftrag "Führungen, Teil 1", Punkt 2, 2026-09-23) - vorgesehen ist der Zotero-Zitierkey, Werte werden manuell nachgetragen, hier bewusst leer gelassen (keine abgeleiteten/erfundenen Keys). Referenzziel für `fuehrungen.csv`' `weiterlesen`-Spalte (siehe Abschnitt 10). |
-| `titel` | Text | ja | |
-| `autor` | Text | nein | |
-| `jahr` | Zahl | nein | |
-| `kurzbeschreibung` | Text | nein | |
-| `kategorie` | Text | nein | z. B. "Zur Stadtgeschichte", "Zur Bürgerbuch-Forschung" |
-| `link` | Text (URL) | nein | |
+| `literatur_id` | Text | ja | Kurzschlüssel Autor+Jahr (z. B. `kuehnel1960`), s. o. - **kein** Zotero-Key |
+| `zitation` | Text | ja | fertige Literaturangabe, wird UNVERÄNDERT als Haupttext des Eintrags angezeigt (keine Kürzung) |
+| `autor` | Text | nein | Kurzform, nur für die Sortierung "nach Autor" und kompakte Verweise verwendet - nicht das, was angezeigt wird (das ist `zitation`) |
+| `titel` | Text | nein | Kurzform, wie `autor` - dient zusätzlich als Sortier-Rückfall, wenn `autor` leer ist |
+| `jahr` | Zahl | nein | für die Sortierung "nach Jahr"; leer erlaubt, solche Einträge erscheinen bei dieser Sortierung am Ende |
+| `kurzbeschreibung` | Text | nein | derzeit in allen 105 Zeilen leer |
+| `kategorie` | Text | nein | gliedert die Seite in Themen-Gruppen. **Die Reihenfolge der Gruppen im Interface folgt der Reihenfolge des ERSTEN Auftretens der Kategorie in dieser Datei, nicht alphabetisch** - die Archivarin bestimmt die Gliederung dadurch allein über die Zeilenreihenfolge, ohne Code-Änderung. Leere `kategorie` sammelt sich in einer Gruppe "Weitere Literatur" am Ende. |
+| `link` | Text (URL) | nein | zeigt einen "online"-Link mit Extern-Kennzeichnung |
+| `verfuegbarkeit` | Text | nein | vom Archiv zu befüllen (z. B. "Handbibliothek"), derzeit in allen 105 Zeilen leer |
+| `zeitraum_von` | Zahl | nein | behandelter Zeitraum - wird geladen, aber NICHT dargestellt (Auftrag, Nicht-Ziel: keine Zeitleiste der Epochen); bleibt für einen späteren Auftrag in der Datei |
+| `zeitraum_bis` | Zahl | nein | s. o. |
 
-**Kein `_unsicher`-Feld vorgesehen:** Diese Tabelle beschreibt veröffentlichte, extern verifizierbare Literatur, keine archivarische Unsicherheit im bisherigen Sinn – daher keine Unsicherheits-Kennzeichnung nötig. Falls sich das ändert (z. B. bei unklaren bibliografischen Angaben), kann `unsicherheit_anmerkung` bei Bedarf nachträglich ergänzt werden, wie bei jeder anderen Tabelle auch.
+**Kein `_unsicher`-Feld vorgesehen:** Diese Tabelle beschreibt veröffentlichte, extern verifizierbare Literatur, keine archivarische Unsicherheit im bisherigen Sinn – daher keine Unsicherheits-Kennzeichnung nötig.
 
-**Korrektur (Auftrag "Führungen, Teil 1", Punkt 1, 2026-09-23):** dieselbe fälschliche Platzhalter-Kopfzeile wie bei `ratsprotokolle.csv` (siehe Abschnitt 2) entfernt - betraf ebenfalls nichts Sichtbares (Tab lädt die Datei noch nicht, s. o.).
+**"Verwendet in"-Rückverweise:** die Seite ermittelt aus `fuehrungen.csv`s `weiterlesen`-Spalte (Abschnitt 10), welche Führungen einen Titel referenzieren, und zeigt das dort - reine Auswertung, keine eigene Spalte in `literatur.csv` nötig.
+
+---
+
+### 9.1 recherche_links.csv (neu, Auftrag "Literaturseite", 2026-09-29)
+
+Speist den Bereich "Weiter recherchieren" oben auf der Literaturseite (externe Einstiege wie Bibliothekskatalog, Zeitschrift des Archivs). Fehlt die Datei oder hat sie keine Zeile mit `sichtbar=ja`, entfällt der Bereich ohne Fehler.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `reihenfolge` | Zahl | ja | Anzeigereihenfolge der Karten |
+| `titel` | Text | ja | Kartentitel, zugleich Linktext |
+| `beschreibung` | Text | nein | kurzer Erklärtext auf der Karte |
+| `link` | Text (URL) | ja | öffnet in neuem Tab, mit "↗"-Symbol und `aria-label` als extern gekennzeichnet - dieselbe Konvention wie "Zum Weiterlesen" in den Führungen (Abschnitt 12) |
+| `sichtbar` | Text (Enum: `ja`/`nein`) | ja | nur `sichtbar=ja`-Zeilen erscheinen |
 
 ---
 
@@ -264,7 +284,7 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `themenbereich` | Text | nur 1. Station | |
 | `zeitraum` | Text | nur 1. Station | der von der Führung abgedeckte Gesamtzeitraum |
 | `status` | Text (Enum) | nur 1. Station | `entwurf` (sichtbar, aber gekennzeichnet) oder `veroeffentlicht` |
-| `weiterlesen` | Liste (Pipe-getrennt) | nur 1. Station | `literatur_id`-Werte (siehe Abschnitt 9), bleibt bis zur manuellen Zotero-Key-Pflege leer |
+| `weiterlesen` | Liste (Pipe-getrennt) | nur 1. Station | `literatur_id`-Werte (siehe Abschnitt 9, kein Zotero-Key mehr) - manuell zu pflegen. **Stand 2026-09-29:** bei den meisten Führungen bereits befüllt, allerdings mit vollständigen Literaturangaben statt `literatur_id`-Kurzschlüsseln (Altbestand aus der Zeit vor Abschnitt 9s Schema-Umstellung) - diese Werte lösen sich gegen die jetzt echten `literatur.csv`-Einträge NICHT auf und erscheinen als sichtbarer Fehlerhinweis (s. Abschnitt 12). Betrifft alle Führungen außer `buergerspital-heringe`/`wer-fehlt` (dort leer). Nicht Teil des Auftrags "Literaturseite" (Nicht-Ziel: keine Änderung an `fuehrungen.csv`) - der Archivarin zur Kenntnis gebracht. |
 | `station_nr` | Zahl | ja | Reihenfolge der Stationen innerhalb einer Führung |
 | `station_titel` | Text | ja | |
 | `station_zeitraum` | Text | nein | |
@@ -313,6 +333,7 @@ Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (si
 | `bestand` | `#bestand/treemap` | bestehendes `wechsleZuKategorie()` + `waehleBestandAus()` (inkl. Kategorie-Vorauswahl und Hervorhebung) |
 | `person` | `#visualisierungen/personen/personenliste` | bestehende Suchfeld-Logik + `zeigePersonenNennungen()` |
 | `buergerbuch` (Führungs-Belegtyp) | verlinkt NICHT sich selbst, sondern `person:<personen_id des Eintrags>` | s. o. (`person`) |
+| `literatur` (Auftrag "Literaturseite", 2026-09-29) | `#literatur` (kein Archivalientyp/keine Visualisierung, daher nur ein Segment) | `js/core/literaturSeite.js`s `oeffneDatensatz(id)` - scrollt zum Eintrag (`scrollIntoView`, bewusst ohne `behavior:'smooth'`, siehe PROJEKTLOG) und hebt ihn kurz hervor |
 
 **Erweiterung um Zustandsparameter (Stufe 3, NICHT Teil dieses Auftrags):** weitere Query-Parameter (z. B. `zeitraum=1500-1550`, `filter=kategorie:Kauf`) können künftig neben `datensatz` in derselben URL stehen, ohne dieses Format zu ändern - `router.js`' `parseHash()` bräuchte dafür nur weitere `params.get(...)`-Zeilen.
 
@@ -324,9 +345,9 @@ Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (si
 
 **URL-Format:** `#fuehrungen/<fuehrung_id>/ende` - drittes Routensegment `ende` statt einer `station_nr`, von `js/core/app.js`' `aktualisiereFuehrungenAnsicht()` VOR der `station_nr`-Auflösung abgezweigt (sonst würde `Number('ende')` zu `NaN` und fälschlich "nicht gefunden" auslösen). Neuladen erhält die Ansicht (kein Sonderfall - derselbe Mechanismus wie jede andere Route).
 
-**Auflösung von `weiterlesen`:** `js/fuehrungen/fuehrungenDaten.js`s `parseWeiterlesen()` löst jede `literatur_id` aus der (nur auf der ersten Stationszeile gültigen, siehe Abschnitt 10) `weiterlesen`-Spalte gegen `literatur.csv` auf (`ladeFuehrungenDaten()` lädt diese Datei zusätzlich zu den fünf Beleg-Quell-CSVs). Anzeige (Abschlussbildschirm, Block "Zum Weiterlesen"): `autor, titel, jahr`, bei vorhandenem `link` als externer Link (`target="_blank"`, `rel="noopener"`, mit Symbol gekennzeichnet).
+**Auflösung von `weiterlesen`:** `js/fuehrungen/fuehrungenDaten.js`s `parseWeiterlesen()` löst jede `literatur_id` aus der (nur auf der ersten Stationszeile gültigen, siehe Abschnitt 10) `weiterlesen`-Spalte gegen `literatur.csv` auf (`ladeFuehrungenDaten()` lädt diese Datei zusätzlich zu den fünf Beleg-Quell-CSVs). **Anzeige (Abschlussbildschirm, Block "Zum Weiterlesen"), seit Auftrag "Literaturseite" (2026-09-29):** die vollständige `zitation` PLUS ein interner Link "in der Literaturliste" (Deep Link `literatur:<literatur_id>`, siehe Abschnitt 11) - ein vorhandener externer `link` bleibt zusätzlich als externer Link erhalten (Symbol, `target="_blank"`, `rel="noopener"`). Vorher zeigte dieser Block nur eine Kurzform aus `autor, titel, jahr`.
 
-**Neue Prüfregel (Stil Abschnitt 10/2a):** `literatur_id` nicht in `literatur.csv` gefunden → sichtbarer Fehlerhinweis an der Stelle des Eintrags, statt eines stillen Auslassens oder Abbruchs. Mit einer temporären Testkopie verifiziert (zwei echte Einträge + eine unbekannte ID), siehe PROJEKTLOG Eintrag 33 - `data/literatur.csv` selbst bleibt weiterhin ohne echte Dateninhalte (nur Kopfzeile).
+**Neue Prüfregel (Stil Abschnitt 10/2a):** `literatur_id` nicht in `literatur.csv` gefunden → sichtbarer Fehlerhinweis an der Stelle des Eintrags, statt eines stillen Auslassens oder Abbruchs. Ursprünglich (siehe PROJEKTLOG Eintrag 33) mit einer temporären Testkopie verifiziert, solange `literatur.csv` noch ohne echte Dateninhalte war. **Aktueller Stand (Auftrag "Literaturseite"):** dieselbe Prüfregel greift jetzt in der Praxis bei den meisten Führungen, da deren `weiterlesen`-Spalte volle Literaturangaben statt `literatur_id`-Kurzschlüssel enthält (siehe Abschnitt 10) - der Archivarin gemeldet, nicht behoben (Nicht-Ziel dieses Auftrags).
 
 ---
 

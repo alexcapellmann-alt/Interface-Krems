@@ -5,6 +5,343 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-29 (51) – fuehrungen.csv: weiterlesen auf echte literatur_id-Werte umgestellt
+
+**Kontext:** Rückmeldung zu Eintrag 50s Befund (`weiterlesen` enthielt bei
+10 von 12 Führungen volle Literaturangaben statt `literatur_id`-Kurz-
+schlüssel) - der Auftraggeber hat die Annahme im ursprünglichen Auftrag
+als falsch bestätigt und neue `weiterlesen`-Werte sowie eine neue
+`literatur.csv`-Zeile vorgegeben.
+
+**Klärung Punkt 1:** `git diff data/fuehrungen.csv` war zum Zeitpunkt der
+Rückfrage bereits leer (per `git diff`/`git status --short` und erneutem
+`md5sum`-Abgleich mit dem zuvor dokumentierten Wert
+`ec2278b87317cd210cbfbea104f47a51` bestätigt) - die vom Auftraggeber
+beobachteten "+2 −2" ließen sich zu diesem Zeitpunkt nicht reproduzieren,
+vermutlich eine veraltete Ansicht auf seiner Seite. `index.html`s einzige
+Änderung: `id="nav-literatur-link"` auf dem bestehenden Literatur-
+Navigationslink ergänzt (Auftrag "Literaturseite", Punkt 3) - notwendig,
+damit `pruefeLiteraturVerfuegbarkeit()` ihn bei fehlender/leerer
+`literatur.csv` per `getElementById` ausblenden kann, exakt nach dem
+bereits bestehenden Muster von `id="nav-ueber-link"`.
+
+**Punkt 2 (zehn `weiterlesen`-Werte ersetzt):** alle zehn Werte exakt wie
+vorgegeben eingetragen (`frauen-im-archiv` → `dietrich2025|kuehnel1960`
+usw., vollständige Liste per Diff unten). `buergerspital-heringe`/
+`wer-fehlt` (bereits vorher leer) unverändert.
+
+**Punkt 3 (Nicht-Literaturangaben nach `quellen_intern`):** die zehn
+ursprünglichen `weiterlesen`-Texte wurden vor dem Ersetzen einzeln
+geprüft - vier enthielten tatsächlich Nicht-Literaturangaben-Fragmente
+(Seitenzahlen, „Quellen im Interface: …", „Ergänzend: …"), sechs bestanden
+ausschließlich aus vollständigen Literaturzitaten ohne Zusatztext:
+
+- `frauen-im-archiv`, `glaube-haustuer`, `zwei-staedte-ein-rat`,
+  `weinbau-krems-stein`, `buergerrecht-krems`, `haus-in-wien-krems`:
+  reine Zitate, 1:1 durch die vorgegebenen IDs ersetzt, `quellen_intern`
+  unverändert.
+- `eisen-waage-krems`: enthielt zusätzlich eine dritte, nicht in der
+  ID-Liste genannte Quelle ("Peter Rauscher, Andrea Serles, Beate
+  Pamperl, Die Kremser Waag- und Niederlagsbücher
+  (donauhandel.univie.ac.at)") - stilistisch selbst eine Literaturangabe,
+  aber nicht Teil der vorgegebenen zwei IDs und deckungsgleich mit dem
+  dritten Eintrag in `data/recherche_links.csv`. Da Punkt 3 nur explizit
+  Seitenzahlen/„Quellen im Interface"/„Ergänzend" als Beispiele für
+  NICHT-Literaturangaben nennt, ist dieser Fall ein Grenzfall - um keine
+  Information zu verlieren, an `quellen_intern` angehängt (mit Hinweis auf
+  `recherche_links.csv`) statt sie ersatzlos zu streichen. Dem
+  Auftraggeber hiermit transparent gemeldet statt stillschweigend
+  entschieden.
+- `donau-bruecke`, `schule-gasthaus`, `bildung-schulgeld`: die
+  erwarteten Seitenzahl-/„Quellen im Interface"-/„Ergänzend"-Fragmente
+  gefunden und an `quellen_intern` angehängt, jeweils geprüft, dass der
+  Inhalt dort nicht schon (auch nicht in abweichender Formulierung)
+  stand - bei `schule-gasthaus` war die Seitenzahl "S. 238" zur
+  Schönfellner-Stelle in `quellen_intern` bereits vorhanden (aus einem
+  anderen Satz), daher nur die zusätzliche Seitenspanne "S. 238–239"
+  sowie die komplett neue Kerschbaumer-Seitenangabe "S. 310–311" und der
+  "Quellen im Interface"-Satz angehängt.
+
+**Punkt 4 (neue `literatur.csv`-Zeile):** `ploeckinger1950` nach
+`landsteiner2001` in der Kategorie „Weinbau" eingefügt, Text exakt wie
+vorgegeben, keine andere Zeile verändert. `git diff --numstat
+data/literatur.csv` zeigt `107 1` (107 Insertionen, 1 Deletion) - das ist
+KEIN Hinweis auf 107 tatsächlich neue Zeilen, sondern dieselbe bereits
+mehrfach dokumentierte Eigenschaft des unversionierten Zustands: `git`
+vergleicht gegen den letzten Commit, der `literatur.csv` noch mit nur der
+alten Kopfzeile kennt (Auftrag "Literaturseite" hat die gesamte
+105-Zeilen-Datei bereits vorher, aber ebenfalls noch unversioniert,
+ersetzt) - der Diff zeigt deshalb weiterhin die GANZE Datei als neu,
+nicht nur die eine tatsächlich in dieser Sitzung hinzugekommene Zeile.
+Per `grep -c ";"` bzw. Zeilenvergleich vor/nach dieser Sitzung bestätigt:
+tatsächlich nur eine neue Zeile (`ploeckinger1950;...`), alle anderen 105
+Zeilen zeichenidentisch zum Stand vor dieser Rückfrage.
+
+**Verifikation:**
+- `python3 -c "csv.DictReader(...)"` liest sowohl `fuehrungen.csv`
+  (101 Zeilen) als auch `literatur.csv` (106 Zeilen) weiterhin
+  fehlerfrei ein - keine CSV-Struktur beschädigt.
+- Live über die App's eigene `ladeFuehrungenDaten()` alle 12 Führungen
+  programmatisch geprüft: JEDE `weiterlesen`-ID löst sich auf, `fehler`
+  ist bei KEINER einzigen der jetzt 21 `weiterlesen`-Referenzen gesetzt
+  (vorher: 10 von 12 Führungen mit mindestens einem Fehlerhinweis).
+- Stichprobe im UI (`schule-gasthaus/ende`): kein `.fuehrung-fehler`-
+  Element, drei korrekt aufgelöste "Zum Weiterlesen"-Einträge mit
+  internen Links, keine Konsolenfehler.
+- Literaturseite: `Weinbau (5)` (vorher 4), `ploeckinger1950` zeigt
+  korrekt "Verwendet in: Wer lebt vom Wein?".
+- **Kerschbaumer-Rückverweise:** live gezählt: **sieben** Führungen
+  (`zwei-staedte-ein-rat`, `weinbau-krems-stein`, `buergerrecht-krems`,
+  `haus-in-wien-krems`, `donau-bruecke`, `schule-gasthaus`,
+  `bildung-schulgeld`), nicht sechs wie im Auftrag als Beispiel genannt -
+  eine direkte, korrekte Konsequenz der vom Auftraggeber selbst
+  vorgegebenen zehn ID-Listen (`kerschbaumer1885` kommt darin siebenmal
+  vor); dem Auftraggeber transparent gemeldet statt die Erwartung
+  stillschweigend zu bestätigen.
+
+**`git diff data/fuehrungen.csv`:** 10 geänderte Zeilen (10 Insertionen/
+10 Deletionen) - exakt eine pro betroffener Führung, da `weiterlesen` und
+(wo betroffen) `quellen_intern` bei allen zehn auf derselben Zeile
+(Station 1) stehen. Vollständiger Diff im Abschlussbericht an den
+Auftraggeber.
+
+---
+
+## 2026-09-29 (50) – Literaturseite
+
+**Kontext:** Auftrag "Literaturseite" - der Tab "Literatur" zeigte bisher
+nur einen Platzhalter. Beiliegende Dateien vom Auftraggeber bereits in
+`data/` abgelegt: `literatur.csv` (105 Einträge, neues Schema) und
+`recherche_links.csv` (neu, 3 Einträge). Ziel: Überblick nach Themen statt
+Suchmaske (Generous-Interface-Prinzip).
+
+### 1. "Weiter recherchieren"
+
+Drei Karten aus `recherche_links.csv` (Titel, Beschreibung, Link, extern
+gekennzeichnet wie "Zum Weiterlesen" in den Führungen: `↗`-Symbol,
+`target="_blank"`, `rel="noopener"`, sprechendes `aria-label`). Fehlt die
+Datei/keine sichtbaren Zeilen: Bereich entfällt, eigener `try/catch` mit
+`console.warn` (kein `console.error`).
+
+**Live-Ausfalltest** (Datei umbenannt, Seite neu geladen, danach
+wiederhergestellt): Bereich verschwindet korrekt, `document.querySelectorAll
+('.literatur-recherche')` liefert `null`. Konsole zeigt neben meinem
+eigenen `console.warn` zusätzlich einen browsereigenen `[error] Failed to
+load resource: 404`-Eintrag - das ist KEIN Fehler aus eigenem Code,
+sondern dieselbe unvermeidbare Netzwerk-Diagnosemeldung, die JEDER
+`fetch()` auf eine fehlende Datei in diesem Projekt erzeugt (identisch bei
+allen bisherigen CSV-Ausfalltests, z. B. `ueber.csv`/`favicon.svg` in
+früheren Aufträgen dieser Sitzung) - kein JS-Laufzeitfehler, keine
+Absturzursache, vom Anwendungscode nicht unterdrückbar.
+
+### 2. Literaturliste nach Kategorien
+
+`gruppiereNachKategorie()` gruppiert nach `kategorie` in Reihenfolge des
+ERSTEN Auftretens in der CSV (kein Sortieren der Kategorienamen selbst -
+die Archivarin bestimmt die Gliederung dadurch über die Zeilenreihenfolge).
+Einträge ohne `kategorie` sammeln sich in "Weitere Literatur" am Ende
+(aktuell ungenutzt: alle 105 Zeilen haben eine Kategorie).
+
+Jeder Eintrag zeigt `zitation` (unverändert, keine Kürzung), optional
+`kurzbeschreibung`, einen "online"-Link (extern gekennzeichnet, nur bei
+vorhandenem `link`), `verfuegbarkeit` und "Verwendet in: …" (nur bei
+Rückverweisen, siehe Punkt 4) - jedes Feld nur bei tatsächlichem Inhalt,
+keine leeren Zeilen/Labels.
+
+**Kategorien-Navigation - Design-Entscheidung gegen `js/utils/
+filterleiste.js`:** das bestehende, im Auftrag als mögliche Vorlage
+genannte Filterleisten-Modul sortiert seine Kategorienliste selbst
+alphabetisch (siehe dessen `erzeugeFilterleiste()`) - das widerspricht
+direkt der hier geforderten "Reihenfolge = erstes Auftreten"-Regel
+(Akzeptanzkriterium: erste Gruppe "Überblicke und Nachschlagewerke",
+letzte "Quelleneditionen und Regesten", keine alphabetische Sortierung).
+"Falls passend" (Auftrag wörtlich) trifft hier also nicht zu - stattdessen
+eine eigene, einfache Sprungmarken-Leiste (`<button>`-Elemente, KEINE
+`<a href="#...">`-Links: ein echter Hash-Link würde vom App-weiten
+`hashchange`-Router als Tab-Navigation fehlinterpretiert).
+
+**Live gefundener und behobener Bug (rAF-Zuverlässigkeit):**
+`scrollIntoView({behavior:'smooth', block:'start'})` blieb im ersten
+Testlauf bei `scrollY=0` stehen - wirkungslos, aber ohne Fehler, auch bei
+direktem `.click()` auf den Button (kein Problem der Automatisierung
+selbst, per direktem JS-Aufruf reproduziert). Root Cause: `behavior:
+'smooth'` hängt wie eine CSS-/d3-Transition am Compositor-getriebenen
+`requestAnimationFrame` - auf einem nicht sichtbaren/nicht komponierten
+Tab feuert das nicht zuverlässig, dieselbe bereits an anderer Stelle im
+Projekt dokumentierte Problemklasse (siehe `js/viz/ganttDiagramm.js`s
+`wireZoom()`-Kommentar zu `d3.transition()`). Fix: `behavior` weggelassen
+(Standard `'auto'`, springt sofort, garantiert) - live erneut geprüft:
+`scrollY` sprang sofort auf den korrekten Wert (7068px für "Weinbau").
+Betraf beide Sprungstellen (Kategorien-Sprungmarken UND Punkt 6s
+Deep-Link-Hervorhebung), beide identisch behoben.
+
+**Sortierung:** zwei Umschalt-Buttons ("Autor"/"Jahr", `aria-pressed`).
+"Autor": `localeCompare('de')` auf `autor`, bei leerem `autor` auf `titel`
+zurückfallend. "Jahr": aufsteigend, `Number.isFinite`-geprüft, Einträge
+ohne Jahr am Ende. Beide Sortierungen live gegen eine unabhängig in der
+Konsole berechnete Erwartungsreihenfolge verglichen (`JSON.stringify`-
+Vergleich) - für "Überblicke und Nachschlagewerke" (19 Einträge) in
+BEIDEN Sortierungen exakte Übereinstimmung bestätigt.
+
+**Textlayout:** `.literatur-liste { max-width: 70ch; margin: 0 auto; }` -
+dieselbe Konvention wie `ueberSeite.js`s `.ueber-wurzel`. Die
+Recherche-Karten und die Kategorien-/Sortier-Leiste nutzen bewusst eine
+BREITERE `max-width: 1200px`-Spalte (mehr Platz für drei Karten
+nebeneinander bzw. bis zu 12 Kategorienamen) - nur die eigentliche
+Leseliste (Zitationen) bekommt die schmale 70ch-Spalte.
+
+**CSS bewusst inline statt eigene `css/literatur.css`-Datei:** entspricht
+der neueren, mit `ueberSeite.js` etablierten Konvention (eigene
+`fuegeStyleEin()` je Modul) statt der älteren `css/startseite.css`-Datei -
+kein `<link>` in `index.html` nötig, Modul bleibt vollständig
+selbstständig.
+
+**Verifikation (live, Desktop):** `document.querySelectorAll
+('.literatur-gruppe-titel')` liefert alle 12 Gruppentitel inkl. korrekter
+Zählung (`Überblicke und Nachschlagewerke (19)` … `Quelleneditionen und
+Regesten (5)`), Summe 105 Einträge. Screenshots: Kopfbereich (Recherche-
+Karten + Kategorienleiste + Sortierung), Sortierung "Jahr" aktiv, 375px
+(Karten/Kategorien stapeln korrekt einspaltig), Info-Popover. Keine
+Konsolenfehler bei normalem Durchklicken.
+
+### 3. Content-driven
+
+Neue `pruefeLiteraturVerfuegbarkeit()` in `js/core/app.js` (Bootstrap-
+Tail, wie `pruefeUeberSeiteVerfuegbarkeit()`), prüft zusätzlich
+`records.length > 0` (Auftrag wörtlich: "fehlt ODER hat keine
+Datenzeilen" - eine vorhandene, aber leere CSV wirft bei `ladeCSV()`
+selbst nicht). Nav-Link bekommt neue `id="nav-literatur-link"`
+(`index.html`).
+
+**Live-Ausfalltest** (`literatur.csv` umbenannt, Seite neu geladen,
+danach wiederhergestellt): `document.getElementById('nav-literatur-
+link').hasAttribute('hidden')` → `true`. Wieder derselbe unvermeidbare
+`[error] Failed to load resource: 404`-Browser-Log wie unter Punkt 1,
+kein Fehler aus eigenem Code (`pruefeLiteraturVerfuegbarkeit()`s eigener
+`catch`-Zweig greift lautlos).
+
+### 4. Rückverweise auf Führungen
+
+`ermittleRuecklinke()` in `literaturSeite.js` nutzt AUSSCHLIESSLICH das
+bereits von `js/fuehrungen/fuehrungenDaten.js`s `ladeFuehrungenDaten()`
+aufbereitete Ergebnis (jede Führung trägt ihre `weiterlesen`-Liste bereits
+fertig gegen `literatur.csv` aufgelöst) - baut daraus nur noch einen
+umgekehrten Index `literatur_id -> [{fuehrung_id, fuehrung_titel}]`. KEINE
+zweite Pipe-Parse-/Auflösungslogik, `fuehrungenDaten.js` selbst
+unangetastet (nicht Teil der Betroffenen Dateien).
+
+**Live-Test mit temporärem Eintrag:** `demal1985` in `fuehrungen.csv`s
+`buergerspital-heringe`-Zeile (Spalte `weiterlesen`, vorher leer)
+eingetragen. Prüfsumme vorher: `md5sum data/fuehrungen.csv` =
+`ec2278b87317cd210cbfbea104f47a51`. Live geprüft: Literaturseite zeigt
+beim Eintrag `demal1985` jetzt "Verwendet in: Eine Tonne Heringe" mit
+Link `#fuehrungen/buergerspital-heringe` - Klick darauf öffnet die
+Führung korrekt. Danach Zeile exakt zurückgesetzt (`git diff
+data/fuehrungen.csv` vor dem Zurücksetzen zeigte ausschließlich die eine
+geplante Änderung), Prüfsumme nachher: `ec2278b87317cd210cbfbea104f47a51`
+- identisch, `git diff --stat` danach leer.
+
+**Wichtiger Befund, NICHT Teil dieses Auftrags (Nicht-Ziel: keine
+Änderung an `fuehrungen.csv`), der Archivarin hiermit gemeldet:** die
+Auftragsannahme "`weiterlesen` ist bei allen Führungen derzeit leer"
+trifft auf den tatsächlichen Dateiinhalt NICHT zu - nur zwei von zwölf
+Führungen (`buergerspital-heringe`, `wer-fehlt`) haben ein leeres
+`weiterlesen`-Feld. Die übrigen zehn enthalten bereits Werte, allerdings
+VOLLE Literaturangaben statt `literatur_id`-Kurzschlüssel (z. B.
+`glaube-haustuer`: `Johannes Laroche, Konfessionszugehörigkeit in Stein
+an der Donau im Lichte letztwilliger Verfügungen (1525–1627) (ungedr.
+Masterarbeit, Wien 2023).` statt einer ID wie `laroche2023`). Diese Werte
+lösen sich gegen `literatur.csv` nicht auf und erscheinen jetzt (da
+`literatur.csv` erstmals echte Zeilen hat) live als sichtbarer
+Fehlerhinweis "weiterlesen: literatur_id „…" nicht in literatur.csv
+gefunden" auf dem jeweiligen Abschlussbildschirm - korrektes,
+bestehendes Verhalten (Stil Abschnitt 10/2a, SCHEMA.md), keine Regression
+durch diesen Auftrag, aber jetzt erstmals sichtbar. Betroffen: alle
+Führungen außer den zwei genannten. Empfehlung: `weiterlesen` in
+`fuehrungen.csv` bei Gelegenheit auf echte `literatur_id`-Werte
+umstellen.
+
+### 5. "Zum Weiterlesen" in den Führungen
+
+`js/fuehrungen/fuehrungAbschluss.js`s `baueWeiterlesen()` zeigt jetzt
+`record.zitation` (statt der bisherigen Kurzform `autor, titel, jahr`)
+plus einen internen Link "in der Literaturliste"
+(`baueDatensatzLink('literatur', record.literatur_id)`, zentrale
+Link-Konstruktion, keine eigene Href-Bastelei). Ein vorhandener externer
+`link` bleibt zusätzlich erhalten (`↗`, `target="_blank"`,
+`rel="noopener"`).
+
+**Live geprüft** mit demselben temporären `demal1985`-Eintrag (Punkt 4):
+Abschlussbildschirm von `buergerspital-heringe` zeigt "Dorothea Demal,
+Zur Geschichte der Kremser Spitäler im Mittelalter (Dipl.-Arbeit Wien
+1985). in der Literaturliste" mit `href="#literatur?datensatz=literatur:
+demal1985"`.
+
+### 6. Deep Link auf Literatureinträge
+
+Neuer Typ `literatur` in `js/utils/datensatzAufruf.js`s `ZUORDNUNG`
+(`segmente: ['literatur']`) und `ermittleAnsicht()` (dritter Zweig neben
+`bestand`/`visualisierungen` - `literatur` ist kein Archivalientyp/keine
+Visualisierung, daher immer gültig, kein Registry-Eintrag nötig).
+`literaturSeite.js`s `oeffneDatensatz(literaturId)` sucht das Element über
+eine bei jedem Redraw gepflegte `Map` (`literatur_id -> Element`, kein
+`querySelector` mit ID-Escaping-Risiko), scrollt hin (`scrollIntoView`,
+s. Bug-Fix oben) und setzt kurz `.literatur-eintrag-hervorgehoben`
+(`color-mix`-Hintergrund, 1,6s CSS-`transition`, per `setTimeout` wieder
+entfernt).
+
+`renderLiteraturTab()` (`app.js`) ruft nach dem asynchronen Laden
+`verarbeiteDatensatzAufruf(modul, route)` auf - Literatur läuft nicht über
+die generische Galerie/Flyout-Pipeline (die das sonst zentral erledigt),
+daher hier separat verdrahtet, nach demselben Sofort-Kontext+Nachreich-
+Wettlauf-Schutz wie `renderUeberTab()`.
+
+**Live geprüft:** `#literatur?datensatz=literatur:hellerschmid2018`
+springt zum Eintrag (scrollY korrekt). `#literatur?datensatz=
+literatur:erfundeneid999` zeigt den bestehenden Hinweis "Datensatz
+„erfundeneid999" nicht gefunden." (`zeigeHinweis()`, unverändert).
+
+### 7. Info-Button
+
+Neue Zeile `literaturSeite` in `data/infotexte.csv` (Text/aria_label
+exakt wie im Auftrag vorgegeben) - `git diff data/infotexte.csv` zeigt
+genau eine hinzugefügte Zeile, keine bestehende Zeile verändert. Live
+geprüft: Popover zeigt die drei Absätze korrekt, Position/Optik wie bei
+allen anderen Info-Buttons.
+
+### 8. Dokumentation
+
+`docs/SCHEMA.md`: §9 komplett neu gefasst (neues Schema, Hinweis
+"`literatur_id` ist kein Zotero-Key mehr", Hinweis auf die
+Kategorienreihenfolge), neuer §9.1 für `recherche_links.csv`, §10s
+`weiterlesen`-Zeile um den Punkt-4-Befund ergänzt, §11s Zuordnungstabelle
+um `literatur` ergänzt, §12s Anzeige-Beschreibung aktualisiert (zeigt
+jetzt `zitation` + internen Link statt der alten Kurzform) und um den
+Befund aus Punkt 4 ergänzt.
+
+### Regressionstest
+
+Startseiten-Kachel ("Zur Literatur →") UND Slide-CTA ("Zur Literatur")
+live angeklickt, beide führen korrekt zum Literatur-Tab. Eine Führung MIT
+befülltem `weiterlesen` (aber gültigen IDs wären nötig, s. Punkt 4-Befund)
+und eine Führung ohne jegliche `weiterlesen`-Werte (`wer-fehlt`) bis zum
+Abschlussbildschirm durchgeklickt - bei `wer-fehlt` erscheint korrekt KEIN
+"Zum Weiterlesen"-Abschnitt (unverändertes Verhalten). Netzwerk-Reiter
+über einen vollständigen Literatur-Tab-Aufruf geprüft: ausschließlich
+Anfragen an `localhost:8845` (eigener Server), keine externe Anfrage.
+`node --check` auf allen sieben geänderten/neuen JS-Dateien
+(`app.js`, `literaturSeite.js`, `datensatzAufruf.js`,
+`fuehrungAbschluss.js`) fehlerfrei. Einzige bekannte, offengelegte
+Abweichung: `data/literatur.csv` wird pro vollständigem Seitenaufruf
+zweimal angefragt (einmal direkt von `literaturSeite.js`, einmal
+innerhalb von `ladeFuehrungenDaten()` für die Rückverweis-Auflösung) -
+`ladeCSV()` cacht grundsätzlich nicht (projektweite Konvention), eine
+Vermeidung hätte eine Änderung an `fuehrungenDaten.js` erfordert, die
+nicht Teil der Betroffenen Dateien ist - als kleine, bewusst hingenommene
+Ineffizienz gemeldet statt stillschweigend in Kauf genommen.
+
+---
+
 ## 2026-09-29 (49) – Favicon ersetzt: σ statt K
 
 **Kontext:** Auftrag "Favicon ersetzen (σ statt K)" - das im letzten
