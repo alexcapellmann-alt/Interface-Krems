@@ -149,6 +149,7 @@ import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
 import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke } from './archivKonfiguration.js';
 import { erzeugeUeberSeite } from './ueberSeite.js';
+import { erzeugeLiteraturSeite } from './literaturSeite.js';
 
 // Abschnitt 4.2: Personennetzwerk/Gantt-Diagramm werden auch auf kleinen
 // Bildschirmen geladen, aber mit sichtbarem Hinweis versehen. Schwellenwert ist
@@ -785,13 +786,36 @@ function renderStartTab() {
   });
 }
 
+// AUFTRAG "Literaturseite", Punkt 6: derselbe Sofort-Kontext+Nachreich-
+// Wettlauf-Schutz wie renderUeberTab() oben (literatur.csv lädt asynchron) -
+// zusätzlich wird nach dem Laden verarbeiteDatensatzAufruf() aufgerufen
+// (Deep Link literatur:<id> über ?datensatz=, siehe
+// js/utils/datensatzAufruf.js), analog zu aktualisiereGalerieFlyoutAnsicht()s
+// gleichlautendem Aufruf für Bestand/Visualisierungen - Literatur läuft
+// nicht über diese generische Galerie/Flyout-Pipeline, braucht die
+// Verdrahtung deshalb hier separat.
+function renderLiteraturTab() {
+  const container = erzeugeUnterContainer('literatur-bereich');
+  const kontext = { tab: 'literatur', modul: null, destroy: () => kontext.modul?.destroy() };
+  aktuellerKontext = kontext;
+  const route = aktuelleRoute();
+  erzeugeLiteraturSeite(container).then((modul) => {
+    if (aktuellerKontext === kontext) {
+      kontext.modul = modul;
+      verarbeiteDatensatzAufruf(modul, route);
+    } else {
+      modul.destroy();
+    }
+  });
+}
+
 function renderTab(tab) {
   if (!tab) return renderStartTab();
   if (tab === 'bestand') return renderBestandTab();
   if (tab === 'visualisierungen') return renderVisualisierungenTab();
   if (tab === 'fuehrungen') return renderFuehrungenTab();
   if (tab === 'literatur') {
-    return renderPlatzhalterTab('literatur', 'Literatur', 'Die Datentabelle data/literatur.csv ist vorhanden, aber es existiert noch kein Anzeige-Modul dafür (Abschnitt 2: Content-driven, mit Einschränkung). Erscheint hier, sobald eines gebaut ist.');
+    return renderLiteraturTab();
   }
   if (tab === 'ueber') {
     return renderUeberTab();
@@ -1020,6 +1044,21 @@ async function pruefeUeberSeiteVerfuegbarkeit() {
   }
 }
 
+// AUFTRAG "Literaturseite", Punkt 3 (Content-driven): fehlt literatur.csv
+// oder hat sie keine Datenzeilen, wird der Nav-Punkt "Literatur" ausgeblendet
+// - dieselbe Konvention wie pruefeUeberSeiteVerfuegbarkeit() oben, hier
+// zusätzlich die Datenzeilen-Anzahl geprüft (Auftrag wörtlich: "fehlt ODER
+// hat keine Datenzeilen"), da eine vorhandene, aber leere CSV bei
+// ladeCSV() nicht wirft.
+async function pruefeLiteraturVerfuegbarkeit() {
+  try {
+    const { records } = await ladeCSV('data/literatur.csv');
+    if (records.length === 0) throw new Error('data/literatur.csv hat keine Datenzeilen.');
+  } catch {
+    document.getElementById('nav-literatur-link')?.setAttribute('hidden', '');
+  }
+}
+
 // KORREKTUR (siehe CHANGELOG, Startseite): ein leerer Hash wurde bisher
 // unconditional auf '#bestand' umgeleitet (Root-Cause-Befund: es gab bis
 // dahin gar keine eigene Startseiten-Route, die Root-URL landete faktisch
@@ -1047,4 +1086,5 @@ window.addEventListener('resize', planeResizeVerarbeitung);
 await ladeArchivKonfiguration();
 wendeArchivIdentitaetAn();
 pruefeUeberSeiteVerfuegbarkeit();
+pruefeLiteraturVerfuegbarkeit();
 handleRouteChange();
