@@ -330,6 +330,122 @@ Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (si
 
 ---
 
+## 13. Archivspezifische Konfigurationsdateien (Auftrag "Archivspezifische Texte und Identität in CSV-Dateien", 2026-09-29)
+
+Diese vier Dateien machen das Interface für ANDERE Kommunalarchive nachnutzbar, ohne dass am Code etwas geändert werden muss - Name, Kontakt, Logo, Kartenausschnitt sowie alle Texte der Startseite, der Über-Seite und der "?"-Info-Buttons stehen hier, nicht mehr fest im Code. **Dieser Abschnitt richtet sich ausdrücklich an Archivar:innen ohne Programmierkenntnisse** - die vier Dateien lassen sich mit jedem Tabellenprogramm (Excel, LibreOffice Calc, Google Sheets) öffnen und bearbeiten, solange beim Speichern das Format "CSV UTF-8, Semikolon-getrennt" gewählt wird (bei Excel: "CSV UTF-8 (durch Trennzeichen getrennt)").
+
+**Gemeinsame Regeln für alle vier Dateien** (siehe auch die allgemeinen Konventionen ganz oben in diesem Dokument):
+
+- CSV, UTF-8 **mit BOM** (das ist die Voreinstellung bei "CSV UTF-8" in Excel), Semikolon `;` als Spaltentrenner.
+- Ein Absatzumbruch INNERHALB einer Textzelle wird mit einem senkrechten Strich `|` geschrieben, z. B. `Erster Absatz.|Zweiter Absatz.` - genau wie in `fuehrungen.csv` (Abschnitt 10).
+- **Platzhalter** in geschweiften Klammern werden automatisch durch echte Werte ersetzt, z. B. `{archiv_kurzname}` oder `{n_urkunden}`. Verfügbare Platzhalter:
+  - jeder Schlüssel aus `archiv.csv` (Spalte `schluessel`, z. B. `{archiv_kurzname}`, `{email}`)
+  - `{n_bestaende}`, `{n_urkunden}`, `{n_buergerbuch}`, `{n_inventare}` - die jeweils aktuelle Zeilenzahl der entsprechenden Archivalien-Tabelle, wird bei jedem Seitenaufruf neu gezählt (muss nie von Hand aktualisiert werden)
+  - in `infotexte.csv` zusätzlich einzelne, vom jeweiligen Modul selbst mitgegebene Werte (aktuell nur beim Sankey-Diagramm, siehe dort)
+  - **Wichtig:** eckige Klammern `[wie hier]` sind KEINE Platzhalter und bleiben unverändert stehen - so lassen sich eigene Erinnerungen/Lücken im Text markieren (z. B. `[AUTOR:IN, TITEL, JAHR]`), ohne dass das Interface versucht, sie zu ersetzen.
+  - Tippt man sich bei einem Platzhalter-Namen (z. B. `{n_urkunde}` statt `{n_urkunden}`), erscheint der betroffene Textblock auf der Seite **gar nicht** (statt einer falschen/rohen Ausgabe) - das Öffnen der Browser-Konsole zeigt dann eine Warnung mit dem genauen, nicht erkannten Namen.
+- Fehlt eine der vier Dateien komplett (z. B. beim Ausprobieren, oder weil sie noch nicht befüllt ist), stürzt das Interface nicht ab - siehe die Spalte "Verhalten bei fehlender Datei" unten.
+
+### 13.1 archiv.csv - Name, Kontakt, Logo, Kartenausschnitt
+
+Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. Ä.). Wird als einzige der vier Dateien bereits geladen, bevor die Seite zum ersten Mal etwas anzeigt.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `schluessel` | Text | ja | fester Name der Einstellung, siehe Tabelle unten - nicht verändern, nicht übersetzen |
+| `wert` | Text | ja | der tatsächliche Wert |
+| `anmerkung` | Text | nein | rein für die eigene Dokumentation, wird im Interface nirgends angezeigt |
+
+**Vorgesehene Schlüssel** (jede fehlende Zeile bekommt einen neutralen Ersatzwert, siehe unten):
+
+| `schluessel` | Beispielwert | Wo sichtbar |
+|---|---|---|
+| `archiv_name` | Stadtarchiv Krems an der Donau | Fußzeile (Kontakt), Über-Seite |
+| `archiv_kurzname` | Stadtarchiv Krems | aria-Label des Logo-Links (barrierefreie Bezeichnung, nicht sichtbarer Text) |
+| `seitentitel` | Interface Stadtarchiv Krems | Browser-Tab-Titel |
+| `logo_datei` | logo.svg | Dateiname des Logos, muss zusammen mit dieser CSV in `data/` liegen |
+| `logo_untertitel` | Stadtarchiv | kleiner Text neben dem Logo oben links |
+| `adresse_strasse` | Körnermarkt 14 | Fußzeile/Kontakt, Über-Seite |
+| `adresse_ort` | 3500 Krems an der Donau | Fußzeile/Kontakt, Über-Seite |
+| `telefon` | 0 27 32 / 801 578 | als lesbarer Text angezeigt |
+| `telefon_international` | +432732801578 | NICHT sichtbar, wird nur für den klickbaren `tel:`-Link verwendet - **vollständige internationale Nummer, mit Landesvorwahl, ohne Leerzeichen/Schrägstriche** |
+| `email` | stadtarchiv@krems.gv.at | als Text UND als `mailto:`-Link |
+| `website` | www.krems.gv.at/stadtarchiv | als lesbarer Text angezeigt |
+| `website_link` | https://www.krems.gv.at/stadtarchiv | NICHT sichtbar, vollständige URL für den Link hinter `website` |
+| `akzentfarbe` | #2c4a6e | Hauptfarbe der Oberfläche (Buttons, Links, Info-Buttons) - ein Hex-Farbcode wie in jedem Grafikprogramm, mit `#`. Kontrast zu Weiß sollte mindestens 4,5:1 betragen (in jedem Online-Kontrast-Prüfer eingeben) |
+| `karte_zentrum_lat` | 48.42 | Breitengrad, wo alle Karten beim Öffnen zentriert sind |
+| `karte_zentrum_lon` | 15.6 | Längengrad, siehe oben |
+| `karte_zoom` | 7 | Start-Zoomstufe der Karten (kleinere Zahl = weiter herausgezoomt) |
+| `footer_text` | Interface des Stadtarchivs … | Fußzeile ALLER Seiten AUSSER der Startseite (die hat ihre eigene, siehe `startseite.csv`s `footer_hinweis` unten) |
+
+**Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe, Kremser Kartenausschnitt als Rückfall), eine Fehlermeldung in der Browser-Konsole, kein Absturz.
+
+### 13.2 startseite.csv - Inhalte der Startseite
+
+Eine Zeile pro Baustein ("Block") der Startseite. Die Reihenfolge auf der Seite richtet sich NICHT nach der Zeilenreihenfolge in der Datei, sondern nach der Spalte `reihenfolge` - Zeilen lassen sich also in beliebiger Reihenfolge einfügen/sortieren.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `block_id` | Text | ja | frei wählbarer, eindeutiger Name der Zeile (nur zur eigenen Orientierung) |
+| `reihenfolge` | Zahl | ja | bestimmt die Anzeigereihenfolge (aufsteigend), auch typübergreifend |
+| `typ` | Text (Enum) | ja | einer von `slide` / `einleitung` / `kachel` / `download` / `footer_hinweis`, siehe unten |
+| `kicker` | Text | nur bei `slide` | kurzer Vorspann über der Slide-Überschrift |
+| `titel` | Text | bei `slide`/`kachel` | Überschrift |
+| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | bei `einleitung`/`kachel`/`footer_hinweis` | Fließtext |
+| `link_text` | Text | nein | Beschriftung des Buttons/Links (bei `slide`/`kachel`: nur sichtbar, wenn `link_ziel` ebenfalls befüllt ist; bei `download`: Pflicht) |
+| `link_ziel` | Text (URL oder `#anker`) | nein | Linkziel - `#visualisierungen`, `#fuehrungen` usw. für interne Sprünge, `https://…` für externe Seiten/PDFs |
+| `bild` | Text (Dateiname) | nein, nur bei `slide` | Dateiname eines Bilds in `data/` als Slide-Hintergrund - bleibt die Zelle leer, zeigt die Slide stattdessen einen Verlaufshintergrund mit der Kennzeichnung "Platzhalterbild" |
+| `sichtbar` | `ja`/`nein` | ja | nur Zeilen mit `ja` werden angezeigt - `nein` lässt eine Zeile in der Datei stehen, ohne sie zu löschen (z. B. um sie später wieder zu aktivieren) |
+
+**Typen im Detail:**
+- `slide`: ein Bild/Verlauf im Karussell oben. Beliebig viele Zeilen möglich (bei mehr als vier zyklische Wiederholung der vier Hintergrundverläufe).
+- `einleitung`: GENAU EINE Zeile erwartet (weitere werden ignoriert, nur die mit der niedrigsten `reihenfolge` erscheint) - der Begrüßungstext unter dem Karussell.
+- `kachel`: eine der Angebotskacheln darunter. Beliebig viele Zeilen möglich, das Kachelraster passt sich automatisch an.
+- `download`: ein Link im Fußzeilen-Block "Downloads & Rechtliches". Ohne jede `download`-Zeile entfällt dieser Block vollständig (keine leere Überschrift).
+- `footer_hinweis`: GENAU EINE Zeile erwartet - der Copyright-/Hinweistext ganz unten auf der Startseite (NICHT dieselbe Fußzeile wie auf den übrigen Seiten, siehe `archiv.csv`s `footer_text`).
+
+Kontaktangaben (Adresse/Telefon/E-Mail/Website) stehen NICHT hier, sondern in `archiv.csv` (dort einmal für die ganze Seite gepflegt).
+
+**Verhalten bei fehlender Datei:** die Startseite zeigt nur die immer vorhandene Kopf- und Fußzeile der Anwendung, keine Slides/Kacheln/Downloads, eine Warnung in der Browser-Konsole.
+
+### 13.3 ueber.csv - Inhalte der Über-Seite
+
+Eine Zeile pro Textabschnitt, wie `startseite.csv` nach `reihenfolge` sortiert und nur `sichtbar=ja` angezeigt.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `block_id` | Text | ja | frei wählbarer, eindeutiger Name (nur zur eigenen Orientierung) |
+| `reihenfolge` | Zahl | ja | Anzeigereihenfolge |
+| `ebene` | `1`/`2` | ja | `1` = eigene Zwischenüberschrift (größer), `2` = Unterpunkt innerhalb des zuletzt vorangegangenen `1`-Abschnitts (kleiner) |
+| `titel` | Text | ja | Überschrift des Abschnitts |
+| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | ja | Fließtext |
+| `sichtbar` | `ja`/`nein` | ja | wie bei `startseite.csv` |
+
+Am Ende der Seite erscheint automatisch ein Kontaktblock (Name/Adresse/Telefon/E-Mail/Website aus `archiv.csv`) - dafür ist keine eigene Zeile in `ueber.csv` nötig.
+
+Das Unsicherheits-Symbol σ, an beliebiger Stelle im Fließtext verwendet, wird automatisch in derselben Warnfarbe hervorgehoben wie überall sonst im Interface.
+
+**Verhalten bei fehlender Datei:** der Navigationspunkt "Über" wird oben in der Kopfzeile komplett ausgeblendet (keine leere Seite erreichbar).
+
+### 13.4 infotexte.csv - Texte der "?"-Info-Buttons
+
+Eine Zeile pro Visualisierung/Modul, das einen Info-Button ("?" oben rechts) besitzt.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `modul_id` | Text | ja | fester technischer Name der Visualisierung (= Dateiname ohne `.js` in `js/viz/`, z. B. `treemap`, `sankey`, `karte`) - NICHT verändern, sonst findet das Interface den Text nicht mehr |
+| `aria_label` | Text | ja | barrierefreie Bezeichnung des Buttons (wird von Screenreadern vorgelesen), z. B. "Erklärung zur Treemap" |
+| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | ja | der eigentliche Erklärtext im aufklappbaren Popover |
+| `anmerkung` | Text | nein | rein für die eigene Dokumentation, wird nirgends angezeigt |
+
+**Vollständige Liste der 26 `modul_id`-Werte** (jede muss einmal vorkommen, damit die jeweilige Ansicht einen Info-Button hat): `adjazenzmatrix`, `bipartiteFlowMap`, `bumpChart`, `chordDiagramm`, `circlePacking`, `dotPlot`, `familienbaum`, `ganttDiagramm`, `icicle`, `kalenderHeatmap`, `karte`, `korrelationsmatrix`, `marimekkoVerlassenschaften`, `parallelKoordinaten`, `personenliste`, `personennetzwerk`, `regestenKachelraster`, `sankey`, `streamgraph`, `sunburst`, `treemap`, `trellis`, `verbindungskarte`, `vermoegensschichtung`, `wortwolke`, `zeitachse`.
+
+**Sonderfall Sankey-Diagramm:** dessen Text verwendet zusätzlich drei modulinterne Platzhalter, die NICHT aus `archiv.csv` kommen, sondern vom Sankey-Modul selbst beim Anzeigen eingesetzt werden: `{ORT_BUENDELUNG_SCHWELLE}`, `{KATEGORIE_BUENDELUNG_SCHWELLE}`, `{ANDERE_KATEGORIEN}` (aktuell 15, 10 bzw. "Andere Kategorien").
+
+**Verhalten bei fehlender Datei oder fehlendem Eintrag:** die betroffene Ansicht zeigt einfach KEINEN Info-Button (kein leeres oder kaputtes "?"), eine Warnung in der Browser-Konsole nennt die genaue `modul_id`. Alle übrigen Module mit einem vorhandenen Eintrag sind davon nicht betroffen.
+
+---
+
 ## Zusammenfassung: offene Punkte über alle Tabellen hinweg
 
 1. `ratsprotokolle.csv`: `kategorien_unsicher` fehlt weiterhin, Entscheidung offen

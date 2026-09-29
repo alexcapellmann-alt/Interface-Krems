@@ -7,6 +7,59 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-29 (95) – Korrekturen zu Paket 2: Kachelüberschriften, Über-Seite mittig, Kontakt-Icons
+
+Drei Korrekturen nach Prüfung durch den Auftraggeber, vor dem ersten Commit
+von Paket 2 (94). (1) Die vier Kachelüberschriften auf der Startseite
+waren unsichtbar - Root Cause: `js/core/startseite.js`s `baueKachelbereich()`
+erzeugte das `<h3>`-Element zwar und befüllte es mit `daten.titel`, hängte
+es aber nie an die Kachel an (fehlendes `kachel.appendChild(titel)`) -
+ergänzt. (2) Die Über-Seite stand am linken Rand statt mittig - Root
+Cause: `#app-content` ist ein Grid mit `grid-template-columns: auto auto
+1fr` (`css/layout.css`); `.ueber-wurzel` fehlte (anders als `.viz-inhalt`/
+`.platzhalter-seite`) das dafür nötige `grid-column: 1 / -1`, wodurch es
+per Auto-Placement allein in der ersten, auf den Inhalt geschrumpften
+`auto`-Spalte landete - `margin:auto` hatte dadurch keinen Freiraum zum
+Verteilen. Ergänzt in `js/core/ueberSeite.js`. (3) Neuer gemeinsamer
+Baustein `js/utils/kontaktLinks.js` (`erzeugeKontaktLink()`): Telefon/
+E-Mail/Website erhalten je ein eingebettetes SVG-Icon (aria-hidden,
+`currentColor`, keine externe Bibliothek/Anfrage) und sind jetzt
+unterstrichen statt nur farblich erkennbar (WCAG 1.4.1) - einheitlich in
+`startseite.js`s Fußzeile und `ueberSeite.js`s Kontaktblock, ersetzt
+dortigen fast identischen Einzelcode. `css/base.css` (`.kontakt-link`),
+`css/startseite.css` (Unterstreichung der Fußzeilen-Kontaktlinks war
+zuvor bewusst deaktiviert, jetzt entfernt). Details/Screenshots siehe
+PROJEKTLOG Eintrag 47.
+
+---
+
+## 2026-09-29 (94) – Paket 2: Archivspezifische Texte und Identität in CSV-Dateien
+
+Name, Kontakt, Logo, Kartenstartpunkt, Akzentfarbe sowie alle Texte der
+Startseite, der neuen Über-Seite und der 26 Info-Buttons kommen jetzt aus
+vier neuen CSV-Dateien (`data/archiv.csv`, `startseite.csv`, `ueber.csv`,
+`infotexte.csv`) statt fest aus dem Code - macht das Interface für andere
+Kommunalarchive ohne Programmierkenntnisse nachnutzbar. Neuer gemeinsamer
+Loader `js/core/archivKonfiguration.js` (Konfigurationswerte, Seiten-
+Blöcke, Platzhalter-Ersetzung `{schluessel}`, Zählwerte-Platzhalter
+`{n_urkunden}` u. a.). Neues Modul `js/core/ueberSeite.js` ersetzt den
+bisherigen Über-Platzhalter. `js/core/startseite.js` komplett auf
+`startseite.csv` umgestellt (behebt dabei den Telefonlink-Fehler mit der
+fehlenden letzten Ziffer). `js/core/app.js`/`index.html`: Titel/Logo/
+Fußzeile/Akzentfarbe werden beim Start aus `archiv.csv` gesetzt, "Über"
+wird bei fehlender `ueber.csv` ausgeblendet. `js/viz/karte.js`/
+`js/utils/statischeKarte.js`: Kartenstartpunkt aus `archiv.csv`. Alle 26
+Visualisierungsmodule: eigene `_INFO_TEXT`-Konstanten entfernt, Text kommt
+jetzt über `infotextFuerModul(modulId)` aus `infotexte.csv` (dabei zwei
+bereits vorher bestehende, potenzielle `TypeError`-Fälle in `circlePacking.js`/
+`treemap.js`s `destroy()` gefunden und abgesichert, siehe PROJEKTLOG).
+`docs/SCHEMA.md` um Abschnitt 13 ergänzt (Dokumentation für Archivar:innen
+ohne Programmierkenntnisse). Ausfalltests (jede der vier Dateien einzeln
+entfernt) und `grep`-Nachweis (`Krems` nur noch in Code-Kommentaren) im
+Bericht, Details siehe PROJEKTLOG Eintrag 46.
+
+---
+
 ## 2026-09-29 (93) – Paket 1: Lokale Bibliotheken und Schriften
 
 D3 (v7.9.0, unverändert von `d3js.org`), Leaflet (1.9.4, unverändert von

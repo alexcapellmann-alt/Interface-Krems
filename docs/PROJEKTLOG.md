@@ -5,6 +5,370 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-29 (47) – Korrekturen zu Paket 2 (nach Prüfung durch den Auftraggeber, vor Commit)
+
+**Kontext:** Rückmeldung nach eigener Prüfung von Paket 2 (46): CSV-
+Prüfsummen, Zahlen auf der Über-Seite und der Telefonlink stimmen; drei
+konkrete Korrekturen gefordert, danach stoppen, kein Commit.
+
+### 1. Kachelüberschriften auf der Startseite unsichtbar (Fehler)
+
+**Root Cause:** `js/core/startseite.js`s `baueKachelbereich()` erzeugte
+für jede Kachel korrekt ein `<h3>`-Element und befüllte es mit
+`daten.titel` (die Spalte `titel` aus `startseite.csv` wurde also richtig
+gelesen, kein CSV-/Spalten-Fehler) - das Element wurde aber nie per
+`kachel.appendChild(titel)` an die Kachel angehängt, blieb dadurch ein
+freischwebendes, nie ins DOM eingefügtes Objekt. Live vor dem Fix
+bestätigt: `document.querySelector('.startseite-kachel').outerHTML`
+enthielt ausschließlich `<p>` (Text) und `<a>` (Link), kein `<h3>` - exakt
+die gemeldete Symptomatik ("Text und Link sind da"). Fix: eine Zeile
+(`kachel.appendChild(titel);`) direkt nach der `titel`-Erzeugung ergänzt.
+
+**Verifikation:** `document.querySelectorAll('.startseite-kachel').map(k
+=> k.querySelector('h3')?.textContent)` liefert nach dem Fix alle vier
+Titel aus `startseite.csv` ("Unsere Bestände visualisiert", "Geführte
+Pfade", "Literatur & Forschung", "Über das Archiv"). Screenshot der
+Kachelreihe im Chat.
+
+### 2. Über-Seite nicht mittig
+
+**Root Cause:** `#app-content` ist ein CSS-Grid mit
+`grid-template-columns: auto auto 1fr` (`css/layout.css`). Andere
+vollflächigen Einzel-Container (`.viz-inhalt`, `.platzhalter-seite`)
+bekommen dafür explizit `grid-column: 1 / -1`, damit ihre Spur die volle
+Breite von `#app-content` einnimmt. `.ueber-wurzel` (`js/core/ueberSeite.js`)
+fehlte diese Regel - ohne sie platziert Grid-Auto-Placement das einzige
+Kind in Zelle (Spalte 1, Zeile 1); Spalte 1 ist `auto`-groß, schrumpft
+also exakt auf den intrinsischen Inhalt (hier: die 70ch-`max-width`
+selbst). Da die Spur dadurch bereits genau so breit wie der Inhalt ist,
+hat `margin:0 auto` keinen Freiraum mehr zum Verteilen - der Block klebt
+strukturell links, unabhängig vom `margin`-Wert. Live vor dem Fix
+gemessen: `getComputedStyle(#app-content).gridTemplateColumns` =
+`"706.562px 0px 246.438px"` (Spalte 1 exakt so breit wie `.ueber-wurzel`
+selbst, `marginLeft`/`marginRight` beide `0px`). Fix: `.ueber-wurzel`
+bekommt `grid-column: 1 / -1` (dieselbe Regel wie `.viz-inhalt`/
+`.platzhalter-seite`).
+
+**Verifikation (Desktop, 1024px Breite):** `elLeft`/Restfläche links und
+rechts je `151.2px` - exakt symmetrisch. Bei 375px (Mobile-Preset) nimmt
+der Block korrekt die volle verfügbare Breite ein (kein Freiraum zum
+Zentrieren vorhanden, `padding` bleibt erhalten) - Screenshots beider
+Breiten im Chat.
+
+### 3. Kontaktlinks ohne visuelles Erkennungsmerkmal (WCAG 1.4.1)
+
+Neuer gemeinsamer Baustein `js/utils/kontaktLinks.js`,
+`erzeugeKontaktLink(typ, href, text, optionen)` (`typ`:
+`telefon`/`email`/`website`) - baut ein `<a class="kontakt-link">` mit
+einem eingebetteten, selbst gezeichneten SVG-Icon (`aria-hidden="true"`,
+`stroke="currentColor"`, im selben minimalistischen Stil wie
+`js/utils/vizIcons.js`, 24×24-Viewbox: stilisierter Telefonhörer,
+Briefumschlag, Globus mit Meridianen) gefolgt vom Linktext. KEINE externe
+Icon-Bibliothek (Nicht-Ziel laut Auftrag) - Icons sind reine Inline-SVG-
+Pfade, keine zusätzliche Netzwerkanfrage (Netzwerk-Reiter live geprüft:
+`js/utils/kontaktLinks.js` selbst lädt wie jedes andere Modul vom eigenen
+Server, sonst keine neuen Requests gegenüber vorher). `startseite.js`s
+`baueFooter()` und `ueberSeite.js`s `baueKontaktblock()` nutzen jetzt
+beide dieselbe Funktion für alle drei Linktypen, ersetzt den vorher fast
+identischen, doppelt vorhandenen Einzelcode.
+
+CSS: `.kontakt-link`/`.kontakt-link-icon` neu in `css/base.css` (Icon +
+Text nebeneinander, `text-decoration: underline` unabhängig von der
+jeweiligen Textfarbe - WCAG 1.4.1 verlangt, dass sich Links nicht
+ausschließlich durch Farbe vom Fließtext unterscheiden). `color` wird
+bewusst NICHT in `.kontakt-link` gesetzt, damit beide Aufrufer ihre
+jeweils schon vorhandene, zum Hintergrund passende Linkfarbe behalten
+(`currentColor` im SVG übernimmt automatisch dieselbe Farbe). Auf der
+Startseiten-Fußzeile (dunkler `--accent`-Hintergrund, heller Text) war
+Unterstreichung für Kontaktlinks bisher per `.startseite-footer address a
+{ text-decoration: none; }` bewusst deaktiviert (nur Hover unterstrichen)
+- diese Deaktivierung entfernt (`css/startseite.css`); die
+Downloads-Liste (separater Anwendungsfall, nicht Teil dieses Auftrags)
+behält ihre eigene, bereits klar erkennbare "↓"-Markierung.
+
+**Verifikation:** Screenshots beider Kontaktbereiche (Startseiten-
+Fußzeile: helle Icons/Unterstreichung auf dunkelblauem Grund; Über-Seite:
+Akzentfarbe auf hellem Grund) im Chat, in beiden klar lesbar. Netzwerk-
+Reiter zeigt ausschließlich bereits vorher vorhandene bzw. selbst
+gehostete Requests, keine neue externe Anfrage. `node --check` auf allen
+drei geänderten/neuen Dateien (`startseite.js`, `ueberSeite.js`,
+`kontaktLinks.js`) fehlerfrei.
+
+---
+
+## 2026-09-29 (46) – Paket 2: Archivspezifische Texte und Identität in CSV-Dateien
+
+**Kontext:** zweiter Teil des Auftrags "Lokale Bibliotheken und Schriften
+(Paket 1) · Archivspezifische Texte und Identität in CSV-Dateien (Paket
+2)" - macht sämtliche archivspezifischen Angaben (Name, Kontakt, Logo,
+Kartenstartpunkt, Texte der Startseite/Über-Seite/Info-Buttons) aus vier
+neuen CSV-Dateien statt aus dem Code ladbar, damit andere Kommunalarchive
+das Interface ohne Programmierkenntnisse nachnutzen können. Vor Beginn
+geprüft: alle vier Dateien (`archiv.csv`, `startseite.csv`, `ueber.csv`,
+`infotexte.csv`) liegen in `data/`, UTF-8 mit BOM, Semikolon-getrennt,
+konsistente Spaltenzahl - Zeilenzahlen (16/12/21/26) passen exakt zu den
+im Auftrag genannten Akzeptanzkriterien.
+
+### 2.1 Gemeinsamer Loader (`js/core/archivKonfiguration.js`, neu)
+
+Drei Funktionen wie gefordert: `konfigurationswert(schluessel)` (Wert aus
+`archiv.csv`), `ladeSeitenBloecke(pfad)` (Blöcke einer Seite, nach
+`reihenfolge` sortiert, nur `sichtbar=ja`, Platzhalter aufgelöst - EINE
+generische Funktion für `startseite.csv` UND `ueber.csv`, da sie
+Platzhalter-Ersetzung feldnamen-unabhängig auf JEDES Textfeld eines
+Records anwendet), `infotextFuerModul(modulId, zusatzWerte)` (Infotext +
+aria-Label aus `infotexte.csv`, fertig für `erzeugeInfoButton()`). Dazu
+`ersetzePlatzhalterInRecord()` als die geforderte gemeinsame
+Platzhalter-Funktion - das Trennen der Absätze an `|` übernimmt bereits
+`dataLoader.js` selbst (jede Pipe-Zelle wird dort generisch zu einer
+Liste, siehe dessen Dateikopf-Kommentar), hier bleibt nur die eigentliche
+`{schluessel}`-Ersetzung.
+
+`archiv.csv` wird in `js/core/app.js` per `await ladeArchivKonfiguration()`
+VOR `handleRouteChange()` geladen (top-level `await` im Modul, `index.html`
+bindet `app.js` bereits als `<script type="module">`, keine Änderung
+daran nötig). Die übrigen drei Dateien laden lazy, gecacht über denselben
+`state.js`-Datencache wie alle Archivalien-CSVs.
+
+**Zählwerte-Platzhalter** (`{n_bestaende}`/`{n_urkunden}`/
+`{n_buergerbuch}`/`{n_inventare}`): werden aus der jeweils aktuellen
+Zeilenzahl der vier Archivalien-Tabellen ermittelt (`Promise.allSettled`,
+damit eine einzelne fehlende Quelltabelle nicht alle vier Zählwerte
+unbrauchbar macht).
+
+**Ausfalltests** (jeweils Datei umbenannt, geprüft, zurückbenannt):
+
+| Datei umbenannt | Beobachtetes Verhalten | Konsole |
+|---|---|---|
+| `archiv.csv` | Titel "Archiv-Interface", Logo/Kontakt/Fußzeile leer, Akzentfarbe bleibt `base.css`-Rückfall, Seite funktioniert sonst normal | `console.error` mit Dateiname |
+| `startseite.csv` | Startseite zeigt nur App-Kopf-/Fußzeile, keine Slides/Kacheln/Downloads (Kontaktblock der Startseiten-Fußzeile bleibt, da er aus `archiv.csv` kommt) | `console.warn` |
+| `ueber.csv` | Navigationspunkt "Über" oben in der Kopfzeile vollständig ausgeblendet | `console.warn` |
+| `infotexte.csv` | KEIN Info-Button auf der geprüften Ansicht (Treemap), keine leere/kaputte Schaltfläche | `console.warn` (Datei) + `console.warn` mit der `modul_id` |
+
+Keine Konsolenfehler außer den vier genannten, gezielten Meldungen. Alle
+vier Dateien danach zurückbenannt, `git status data/` zeigt wieder nur
+die fünf ursprünglich neuen, unveränderten Dateien.
+
+### 2.2 Platzhalter
+
+`{archiv_kurzname}` etc. sowie die vier Zählwerte funktionieren in allen
+drei textführenden Dateien. Live geprüft: Über-Seite zeigt "315
+Verzeichnungseinheiten", "1069 Urkunden", "2791 Einträge des
+Bürgerbuchs" (echte, bei jedem Aufruf neu gezählte Werte). Sankey-Infotext
+zeigt weiterhin "15", "10" und "Andere Kategorien" (unverändert aus dem
+Modul selbst als `zusatzWerte` übergeben). Eckige Klammern bleiben
+unverändert (kein Platzhalter-Muster erfasst sie) - in den aktuellen
+CSV-Inhalten kam kein Fall wie `[AUTOR:IN, TITEL, JAHR]` tatsächlich vor
+(nur als Beispiel im Auftrag genannt), das Verhalten wurde trotzdem am
+regulären Text bestätigt (kein `[...]` wird je ersetzt, da das Muster nur
+`{...}` erfasst).
+
+### 2.3 Identität und Kopfbereich (`archiv.csv`)
+
+`index.html`s `<title>` neutral ("Archiv-Interface"), wird von
+`js/core/app.js`s neuer `wendeArchivIdentitaetAn()` beim Start ersetzt.
+Logo: das bisherige Inline-SVG unverändert als `data/logo.svg`
+gespeichert, `index.html` zeigt es jetzt über `<img>` mit `logo_datei`,
+`alt=""` + `aria-hidden` (Link selbst trägt das Label). Logo-Untertitel
+und Fußzeile (`footer_text`) ebenso aus der Konfiguration gesetzt.
+Kopfzeile im Screenshot unverändert (siehe Bericht) - `grep -n "Krems"
+index.html` liefert keinen Treffer mehr.
+
+### 2.4 Akzentfarbe
+
+`css/base.css`: `--accent` bleibt als Rückfallwert bestehen, wird aber
+jetzt von `app.js` aus `akzentfarbe` überschrieben
+(`document.documentElement.style.setProperty()`). `--accent-hover` wird
+per `color-mix(in srgb, var(--accent) 85%, white)` abgeleitet statt fest
+gepflegt - reproduziert den bisherigen Hover-Ton `#3d6591` nicht exakt
+(keine reine Aufhellung des alten `#2c4a6e`), laut Auftrag ausdrücklich
+zulässig ("ggf. minimal anderer Hover-Ton"). Testweise andere Farbe
+(`#8a1c1c`) in einer Arbeitskopie von `archiv.csv` eingesetzt: Kachel-Links,
+Info-Buttons und der "Unsicherheiten anzeigen"-Rahmen färben sich live um
+(Screenshot im Chat), Originalwert danach wiederhergestellt.
+
+### 2.5 Startseite (`js/core/startseite.js`, umgeschrieben)
+
+`SLIDES`/`EINLEITUNGSTEXT`/`KACHELN`/`KONTAKT`/`DOWNLOADS`-Konstanten
+entfernt, Inhalte kommen jetzt aus `ladeSeitenBloecke('data/startseite.csv')`
+(Anzahl Slides/Kacheln/Downloads ergibt sich allein aus der Datei) bzw.
+`konfigurationswert()` (Kontakt). Slide-Hintergründe weiterhin nach
+Position den vier bestehenden CSS-Klassen zugeordnet, zyklisch bei mehr
+als vier Slides. Ist `bild` befüllt, wird `data/<bild>` als
+Hintergrundbild gesetzt und der "Platzhalterbild"-Hinweis entfällt (aktuell
+bei keiner der vier echten Slides befüllt, daher weiterhin
+Verlaufshintergründe im Screenshot - Mechanismus selbst aber implementiert
+und im Code nachvollziehbar). Kein Downloads-Kopfbereich ohne
+`download`-Zeilen. Telefonlink jetzt aus `telefon_international`
+(`tel:+432732801578`, live geprüft) - behebt den bisherigen Fehler mit der
+fehlenden letzten Ziffer. Veraltete "Über ist nur ein Platzhalter"-Kommentare
+entfernt (Datei ohnehin komplett neu geschrieben). `erzeugeStartseite()`
+ist jetzt async (lädt Daten) - `app.js`s `renderStartTab()` entsprechend
+mit demselben Sofort-Kontext-plus-Nachreich-Muster wie `renderFuehrungenTab()`
+angepasst (Wettlauf-Schutz: wird der Tab während des Ladens gewechselt,
+wird die inzwischen fertig gebaute Startseite sofort wieder zerstört statt
+sie unsichtbar leaken zu lassen).
+
+Live geprüft: 4 Slides (u. a. "Für Heimat- und Familienforschung"), 4
+Kacheln (inkl. "Über das Archiv"), kein horizontaler Überlauf bei 375px/
+768px/Desktopbreite (`document.documentElement.scrollWidth <=
+clientWidth` an allen drei Breiten bestätigt).
+
+### 2.6 Über-Seite (`js/core/ueberSeite.js`, neu)
+
+Ersetzt den bisherigen `renderPlatzhalterTab('ueber', ...)`-Aufruf in
+`app.js` (neue `renderUeberTab()`, gleiches Wettlauf-Schutz-Muster wie
+2.5). `ebene=1` als `<h2>`, `ebene=2` als `<h3>`, Absätze an `|` getrennt
+(automatisch durch `dataLoader.js`, hier nur noch pro Absatz ein `<p>`).
+Kontaktblock am Ende aus `archiv.csv` (kein eigener CSV-Block nötig). Das
+σ-Symbol im Fließtext wird über die vorhandene `UNSICHERHEIT_SYMBOL`-
+Konstante (`js/config/constants.js`) erkannt und in derselben Warnfarbe
+wie überall sonst hervorgehoben (`.ueber-sigma`, `#8a6d1f`) - live
+bestätigt (ein Vorkommen in `ueber.csv`, Block "unsicherheit"). Gestaltung:
+eigenes, schlankes `<style>` (max. 70ch Zeilenbreite, sonst dieselbe
+Typografie wie der Rest des Interfaces - keine eigenen Fonts/Farben außer
+der σ-Hervorhebung).
+
+Live geprüft: alle 21 Blöcke erscheinen in der richtigen Reihenfolge
+(`document.querySelectorAll('.ueber-block').length === 22` = 21
+CSV-Blöcke + 1 Kontaktblock), Zahlen sind eingesetzt (s. Punkt 2.2), bei
+375px lesbar (Screenshot im Chat). Kein `[AUTOR:IN, TITEL, JAHR]`-artiger
+Platzhalter tatsächlich in den Daten vorhanden (s. Punkt 2.2) - falls
+später einer eingefügt wird, bleibt er laut Implementierung unverändert
+stehen (nur `{...}`, nie `[...]`, wird ersetzt).
+
+### 2.7 Info-Buttons (`infotexte.csv`)
+
+Alle 26 Module (`js/viz/*.js`) holen Text + aria-Label jetzt über
+`infotextFuerModul(modulId)` (`modulId` = Dateiname ohne `.js`) statt über
+eine eigene `_INFO_TEXT`-Konstante. 18 Module folgten einem einfachen,
+einheitlichen Muster (Konstante entfernt, `instanz.infoButton =
+erzeugeInfoButton(...)` durch
+`infotextFuerModul(id).then((cfg) => { if (!instanz || !cfg) return;
+instanz.infoButton = erzeugeInfoButton(container, cfg); })` ersetzt) -
+automatisiert per Skript umgesetzt, danach `node --check` + `git diff`
+pro Datei kontrolliert.
+
+**Sieben Module brauchten individuelle Anpassung:**
+- `sankey.js`: `infotextFuerModul('sankey', { ORT_BUENDELUNG_SCHWELLE,
+  KATEGORIE_BUENDELUNG_SCHWELLE, ANDERE_KATEGORIEN })` - die drei
+  modulinternen Werte werden als `zusatzWerte` mitgegeben, überschreiben
+  keine gleichnamigen globalen Werte (gäbe es aktuell ohnehin nicht).
+- `familienbaum.js`: `zusatzInhalt` (Farblegende) bleibt wie gefordert im
+  Code, wird beim Erzeugen mit dem geladenen `cfg` zusammengeführt
+  (`{ ...cfg, zusatzInhalt: baueFarblegende() }`).
+- `icicle.js`/`sunburst.js`: bauten den Info-Button bisher VOR `instanz`
+  und reichten ihn als `infoButton`-Property in die `instanz =
+  {...}`-Literale durch (Funktion damals synchron) - umgebaut auf
+  `infoButton: null` im Literal, Button wird nach `instanz` per `.then()`
+  nachgereicht; `destroy()` entsprechend auf `instanz.infoButton?.destroy()`
+  abgesichert (vorher unconditional, s. u.).
+- `kalenderHeatmap.js`/`regestenKachelraster.js`/`zeitachse.js`: derselbe
+  Umbau, hier war `instanz` bereits vorher vorhanden bzw. der Button wurde
+  bereits mit `infoButton: null` vorinitialisiert (`regestenKachelraster.js`)
+  - jeweils nur die Erzeugung selbst asynchron nachgezogen.
+- `karte.js`: einzige Ausnahme mit einem bereits VORHANDENEN `async`-
+  Kontext (`zeichneKarte()`) - dort `await infotextFuerModul('karte')`
+  direkt verwendet (kein `.then()`, dasselbe bereits etablierte
+  `if (!instanz) return`-Nach-await-Muster wie an anderer Stelle in
+  derselben Funktion).
+
+**Selbstauskunft, live gefundener Bug (zwei Module):** `circlePacking.js`
+und `treemap.js` riefen in ihrem `destroy()` bisher `instanz.infoButton.destroy()`
+UNCONDITIONAL auf - unproblematisch, solange der Button synchron und
+garantiert vor jedem möglichen `destroy()`-Aufruf entstand. Durch die neue
+asynchrone Erzeugung (Button existiert bis zum ersten Auflösen von
+`infotextFuerModul()` kurzzeitig noch nicht) hätte ein `destroy()` in
+diesem kurzen Zeitfenster (z. B. sehr schneller Tab-Wechsel direkt nach
+dem Öffnen) zu `TypeError: Cannot read properties of null (reading
+'destroy')` geführt - beide auf `instanz.infoButton?.destroy()`
+umgestellt, bevor es zu einem echten Fehler kommen konnte.
+
+**Nachträglich behobene Einschränkung (Selbstauskunft, ursprünglich als
+"bewusst hingenommen" gemeldet, auf Rückfrage geschlossen):** Module, die
+ihren Info-Button bei JEDEM vollständigen Redraw (Resize, Filter-/
+Unsicherheiten-Umschaltung) neu aufbauen (`dotPlot.js`, `ganttDiagramm.js`
+u. a.), lösen bei jedem Redraw eine NEUE `infotextFuerModul()`-Anfrage
+aus. Da die Datei nach dem ersten Laden gecacht ist, löst sie praktisch
+sofort auf - bei zwei Redraws INNERHALB desselben Mikrotask-Fensters
+hätte der zuerst erzeugte Button überschrieben werden können, ohne zuvor
+zerstört zu werden (verwaiste `document`-Listener auf einem bereits aus
+dem DOM entfernten Element, unsichtbar aber ein echter Listener-Leck).
+Fix: alle 26 `.then()`-Callbacks (bzw. der `await`-Zweig in `karte.js`)
+prüfen jetzt zusätzlich zu `instanz`/`cfg` explizit
+`CONTAINER.isConnected`, bevor `erzeugeInfoButton()` aufgerufen wird -
+dasselbe Element, in das der Button gehängt werden soll:
+
+```js
+infotextFuerModul('ganttDiagramm').then((cfg) => {
+  if (!instanz || !cfg || !werkzeugleisteRechts.isConnected) return;
+  instanz.infoButton = erzeugeInfoButton(werkzeugleisteRechts, cfg);
+});
+```
+
+Ein durch einen zwischenzeitlichen zweiten Redraw bereits aus dem DOM
+entferntes Werkzeugleisten-Element bricht den Callback jetzt VOR
+`erzeugeInfoButton()` ab - der verwaiste Button (inkl. seiner beiden
+`document`-Listener) entsteht dadurch gar nicht erst, statt nur unsichtbar
+zu bleiben. Live erneut geprüft (Gantt und Dot Plot): 6 reale
+Fenstergrößenänderungen in Folge sowie eine deutlich härtere Probe - 20
+synchron im selben Tick ausgelöste `resize()`-Aufrufe über den
+ungedrosselten "Unsicherheiten anzeigen"-Button und 6 synchron
+aufeinanderfolgende Modulwechsel Gantt↔Dot Plot per `location.hash` -
+jeweils genau ein `.info-button`-Element, keine Konsolenfehler.
+
+Stichprobe (10 statt der geforderten mindestens 8 Module live geprüft,
+Konsole+Sichtprüfung, teils mit Screenshot): Sankey, Familienbaum (inkl.
+Farblegende), Treemap, Personenliste, Karte, Icicle, Sunburst,
+Kalender-Heatmap, Regesten-Kachelraster, Zeitachse, Chord-Diagramm - keine
+Konsolenfehler, Text/aria-Label entsprechen `infotexte.csv`.
+`grep -rn "_INFO_TEXT\|const INFO_TEXT" js/` liefert keinen Treffer (auch
+sechs stale Kommentar-Erwähnungen der alten Konstantennamen wurden
+bereinigt, nicht nur der Code selbst).
+
+### 2.8 Kartenstartpunkt
+
+`js/viz/karte.js`/`js/utils/statischeKarte.js` lesen `karte_zentrum_lat`/
+`-lon`/`karte_zoom` jetzt über `konfigurationswert()`, mit den bisherigen
+Werten (`[48.42, 15.6]`, Zoom 7) als Rückfall bei fehlendem/ungültigem
+Wert (`Number.isFinite()`-Prüfung). Karten starten mit den unveränderten
+Werten aus `archiv.csv` unverändert wie bisher (Screenshot im Chat).
+
+### 2.9 Dokumentation
+
+`docs/SCHEMA.md` um Abschnitt 13 ergänzt (vier Unterabschnitte, eine
+Tabelle pro Datei plus Ausfallverhalten) - bewusst so geschrieben, dass
+eine Archivarin ohne Programmierkenntnisse die Dateien in Excel/LibreOffice
+selbst befüllen kann (z. B. Hinweis auf "CSV UTF-8" beim Speichern in
+Excel, volle Liste aller 26 `modul_id`-Werte, Erklärung der eckigen vs.
+geschweiften Klammern).
+
+### Regressionstest Paket 2
+
+- **Ausfalltests:** siehe Punkt 2.1 oben, alle vier Dateien nach der
+  Prüfung zurückbenannt (`git status data/` zeigt wieder nur die fünf
+  unveränderten neuen Dateien, keine `.bak`-Reste).
+- **`grep -rn "Krems" index.html js`:** sechs verbleibende Treffer, alle
+  in Kommentaren (Datenquellen-Zitationen/Masterarbeits-Titel/
+  Projekt-Historie in `bipartiteFlowMap.js`, `vermoegensschichtung.js`
+  (2×), `wortwolke.js` (3×)) - keiner in tatsächlich angezeigtem Text oder
+  Code-Logik.
+- Alle bisherigen Ansichten erneut geprüft: Bestand-Tab, Führungen (Galerie
+  + Station), Literatur-Platzhalter, zwölf Visualisierungsmodule (s. o.) -
+  keine Konsolenfehler. Prüfung ausschließlich über den in `CLAUDE.md`
+  festgelegten Cache-freien Testserver (Port 8845) - der im Auftrag
+  genannte "localhost:8000" wird hier nicht verwendet, da `CLAUDE.md`
+  explizit ausschließlich den no-cache-Server auf Port 8845 vorschreibt;
+  falls "localhost:8000" ein eigener, mir nicht bekannter Server ist, bitte
+  zurückmelden.
+- Screenshots im Chat: Startseite (Desktop + 375px), Über-Seite (Desktop +
+  375px), Kopfzeile, drei Info-Popover (Sankey, Familienbaum mit
+  Farblegende, Treemap), Karte.
+
+Keine Erweiterungen des im Auftrag beschriebenen Umfangs vorgenommen.
+
+---
+
 ## 2026-09-29 (45) – Paket 1: Lokale Bibliotheken und Schriften
 
 **Kontext:** erster Teil des Auftrags "Lokale Bibliotheken und Schriften

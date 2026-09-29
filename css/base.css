@@ -16,8 +16,18 @@
   --border:       #ddd8cf;
   --text:         #1a1a1a;
   --text-muted:   #595959;
+  /* AUFTRAG "Archivspezifische Texte...", Punkt 2.4: --accent wird beim
+     App-Start aus archiv.csv' `akzentfarbe` gesetzt (js/core/app.js,
+     `document.documentElement.style.setProperty('--accent', ...)`) - der
+     Wert hier bleibt als Rückfall (Datei fehlt/Spalte leer). --accent-hover
+     wird NICHT mehr separat gepflegt, sondern per color-mix() aus
+     --accent abgeleitet, damit ein anderes Archiv nur EINE Farbe angeben
+     muss (Auftrag wörtlich) - reproduziert den bisherigen Hover-Ton
+     #3d6591 nicht exakt (keine reine Aufhellung des bisherigen #2c4a6e),
+     aber "ggf. minimal anderer Hover-Ton" ist laut Auftrag ausdrücklich
+     zulässig. */
   --accent:       #2c4a6e;
-  --accent-hover: #3d6591;
+  --accent-hover: color-mix(in srgb, var(--accent) 85%, white);
   --unsicher:     #c0392b;
 
   /* Typografie */
@@ -75,6 +85,24 @@ a {
   color: var(--accent);
   text-decoration-thickness: 1px;
 }
+
+/* Korrektur zu Paket 2 (Punkt 3): gemeinsamer Stil für die
+   Kontakt-Icon-Links aus js/utils/kontaktLinks.js (Startseite-Fußzeile UND
+   Über-Seite) - Icon + Text nebeneinander, Unterstreichung unabhängig von
+   der Textfarbe (WCAG 1.4.1: Links dürfen sich nicht nur durch Farbe vom
+   Fließtext unterscheiden). `color` selbst wird bewusst NICHT hier
+   gesetzt - beide Aufrufer haben unterschiedliche Hintergründe (heller
+   Über-Seiten-Text vs. dunkle Akzentfarbe der Startseiten-Fußzeile) und
+   setzen ihre je eigene, bereits vorhandene Linkfarbe fort; `currentColor`
+   im SVG übernimmt automatisch dieselbe Farbe wie der Linktext. */
+.kontakt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+.kontakt-link-icon { flex: 0 0 auto; }
 
 img { max-width: 100%; }
 

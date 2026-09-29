@@ -47,6 +47,7 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
 
 // Auftrag "Info-Button für die 5 Bestandsvisualisierungen": der vorgegebene
@@ -55,11 +56,6 @@ import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
 // Buttons) - auf Rückfrage vom Auftraggeber freigegeben, den Text um einen
 // dritten Absatz dazu zu ergänzen (siehe CHANGELOG). Erste beiden Absätze
 // bleiben wörtlich wie vorgegeben.
-const GANTT_INFO_TEXT = `Dieses Diagramm zeigt den zeitlichen Entstehungs- bzw. Laufzeitraum jedes Bestands als horizontalen Balken entlang der Zeitachse. Die Farbe zeigt die zugeordnete Kategorie.
-
-Klick auf einen Balken öffnet die Detailansicht des jeweiligen Bestands in der Seitenleiste.
-
-Ziehen verschiebt die Zeitachse, Strg+Mausrad bzw. Trackpad-Pinch zoomt hinein oder heraus; die Buttons +/−/⟷ in der Werkzeugleiste bieten dieselbe Funktion für Tastatur und Touch.`;
 
 const NAMENSSPALTE_BREITE = 220;
 const ZEILENHOEHE = 16;        // Balkenhöhe (unverändert aus der Vorversion)
@@ -675,7 +671,10 @@ function zeichneGantt() {
   const btnReset = zoomButtons.reset;
   const btnRein = zoomButtons.rein;
   werkzeugleiste.append(legende, werkzeugleisteRechts);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleisteRechts, { text: GANTT_INFO_TEXT, ariaLabel: 'Erklärung zum Gantt-Diagramm' });
+  infotextFuerModul('ganttDiagramm').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleisteRechts.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleisteRechts, cfg);
+  });
 
   const kopfzeile = document.createElement('div');
   kopfzeile.className = 'gantt-kopfzeile';

@@ -40,6 +40,7 @@
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { farbeFuerVermoegensgruppe, VERMOEGENSGRUPPE_ANZEIGE_REIHENFOLGE } from '../utils/vermoegensgruppenFarben.js';
 
 const RAND = { oben: 26, unten: 44, links: 44, rechts: 12 };
@@ -58,8 +59,6 @@ const SPLIT_OPTIONEN = {
   ort: { knopfLabel: 'Ort', spalte: 'Ort (Schaetzung)', suffix: true },
   geschlecht: { knopfLabel: 'Geschlecht', spalte: 'Geschlecht (Schaetzung)', suffix: false }
 };
-
-const INFO_TEXT = 'Diese Ansicht zeigt, wie sich die Verlassenschaftsinventare auf die Vermögensgruppen A (verschuldet) bis E (Oberschicht) verteilen - je ein Diagramm pro untersuchtem Jahrzehnt, nach Dietrichs Klassifikation. Über den Schalter lässt sich die Verteilung zusätzlich nach Ort oder geschätztem Geschlecht aufschlüsseln, um etwa die wirtschaftliche Entwicklung Steins oder geschlechtsspezifische Vermögensmuster sichtbar zu machen.';
 
 let instanz = null; // { container, chartContainer, records, splitModus, sidebar, infoButton } – eine aktive Ansicht pro Modul-Ladung
 
@@ -361,7 +360,10 @@ export function render(container, data, options = {}) {
   container.appendChild(werkzeugleiste);
 
   instanz = { container, chartContainer, records: data, options: { width: null, height: null, ...options }, splitModus: 'keine' };
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: INFO_TEXT, ariaLabel: 'Erklärung zur Vermögensschichtung' });
+  infotextFuerModul('vermoegensschichtung').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   fuegeSidebarStyleEin(container);
   instanz.sidebar = baueSidebarGeruest(container);
   instanz.sidebar.schliessenBtn.addEventListener('click', schliesseDetailliste);

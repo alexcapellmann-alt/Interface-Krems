@@ -77,6 +77,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { parseKommaZahl, VERMOEGENS_VARIABLEN } from '../utils/verlassenschaftenFelder.js';
 
 const RAND = { oben: 16, unten: 48, links: 12, rechts: 12 };
@@ -120,8 +121,6 @@ const SEGMENT_FARBEN = {
 // "oben" sitzt (unverändert seit dem vorherigen Auftrag), sonst identisch zur
 // Tabellen-Reihenfolge der vier quantitativ ausgewerteten Bestandteile.
 const SEGMENT_ZEICHEN_REIHENFOLGE = ['grundstuecke', 'bargeld', 'wertgegenstaende', 'sonderbestand', 'mobilien'];
-
-const INFO_TEXT = 'Dieses Marimekko zeigt, wie sich das Realvermögen der Verlassenschaftsinventare je Vermögensgruppe (A = verschuldet bis E = Oberschicht, nach Dietrichs Klassifikation) zusammensetzt. Die Spaltenbreite entspricht der Summe des Realvermögens der jeweiligen Gruppe, die Segmenthöhe der Vermögenszusammensetzung.\n\nGrundstücke, Bargeld, Wertgegenstände und beruflicher Sonderbestand sind die vier von Dietrich quantitativ ausgewerteten Kategorien. Der verbleibende Anteil entfällt auf übrige Mobilien (Textilien, Geschirr, Möbel und sonstige Alltagsgegenstände) – diese wurden bewusst nicht in die Prozentrechnung einbezogen, da ihre uneinheitliche historische Verbuchung (z. B. Hauerzubehör mal als Fahrnis, mal als Handelslager) die quantitative Auswertung verzerrt hätte. Dietrich untersucht diese Gegenstände stattdessen qualitativ in einem eigenen Kapitel seiner Arbeit.';
 
 let instanz = null; // { container, wurzel, chartContainer, records, options, infoButton } – eine aktive Ansicht pro Modul-Ladung
 
@@ -335,7 +334,10 @@ export function render(container, data, options = {}) {
   wurzel.appendChild(chartContainer);
 
   instanz = { container, wurzel, chartContainer, records: data, options: { width: null, height: null, ...options }, infoButton: null };
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: INFO_TEXT, ariaLabel: 'Erklärung zum Marimekko der Verlassenschaften' });
+  infotextFuerModul('marimekkoVerlassenschaften').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   zeichneMarimekko();
 }
 

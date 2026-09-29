@@ -107,10 +107,10 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis } from '../utils/urkundenOrte.js';
 import { baueStatischeKarte, projiziere, erzeugeUeberlagerungsSvg } from '../utils/statischeKarte.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
-const VERBINDUNGSKARTE_INFO_TEXT = `Diese Karte zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden. Eine Verbindungslinie zwischen zwei Orten bedeutet, dass beide in mindestens einer gemeinsamen Urkunde vorkommen – nicht, dass zwischen ihnen eine tatsächliche Reise- oder Handelsbeziehung bestand.`;
 
 const LINIEN_FARBE = '#1a4d8f';
 
@@ -273,7 +273,10 @@ async function zeichneVerbindungskarte() {
   reglerInput.setAttribute('aria-label', 'Mindestanzahl gemeinsamer Urkunden je Verbindung');
   reglerGruppe.append(reglerLabel, reglerInput);
   werkzeugleiste.appendChild(reglerGruppe);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: VERBINDUNGSKARTE_INFO_TEXT, ariaLabel: 'Erklärung zur Verbindungskarte' });
+  infotextFuerModul('verbindungskarte').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   const linienGruppe = svgUeberlagerung.append('g').style('pointer-events', 'auto');
 

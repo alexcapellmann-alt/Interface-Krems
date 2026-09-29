@@ -71,7 +71,8 @@
 //    Titel/Familienzuordnung).
 // WICHTIG (Punkt 1, wörtlich): eine eigene, NICHT-quellenbasierte Heuristik,
 // keine belegte historische Klassifikation - im Info-Text unmissverständlich
-// benannt (STREAMGRAPH_INFO_TEXT unten, wörtlich aus dem Auftrag übernommen).
+// benannt (Infotext seit AUFTRAG "Archivspezifische Texte..." aus
+// data/infotexte.csv, modul_id "chordDiagramm").
 //
 // ermittleGruppenGroessen() (unten) klassifiziert JEDE EINZELNE
 // Personennennung roh aus den Records (Auftrag Punkt 1, wörtlich: "Für JEDE
@@ -144,6 +145,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
 
@@ -191,8 +193,6 @@ export const GRUPPEN = [
   { schluessel: 'klerus', label: 'Klerus', farbe: '#5b2d82' },
   { schluessel: 'buerger', label: 'Bürgertum', farbe: '#2f7a45' }
 ];
-
-const CHORD_INFO_TEXT = 'Dieses Diagramm zeigt, wie oft Personen aus vier sozialen Gruppen – Dynastie (Habsburger), Adel, Klerus und Bürgertum – gemeinsam in Urkunden genannt werden. Die Gruppenzuordnung basiert auf einer eigens entwickelten Heuristik (erkennbare Titelwörter im Namen, Abgleich mit der Habsburger-Stammbaumdatei, sowie eine recherchierte Liste bekannter Adelsfamilien) – sie ist keine belegte historische Klassifikation der einzelnen Personen, sondern eine Näherung. Personen ohne erkennbaren Titel oder bekannten Adelsnamen werden als „Bürger" eingeordnet, was echten, nicht erkennbaren niederen Adel unterschätzen kann.';
 
 let instanz = null; // { container, wurzel, chartContainer, familienRecords, urkundenRecords, options, infoButton, sidebar, hoverGruppe, frozenGruppe, gruppenAuswahl, sehnenAuswahl, ausgewaehlteSehne } – eine aktive Ansicht pro Modul-Ladung
 
@@ -579,7 +579,10 @@ export function render(container, data, options = {}) {
     sehnenAuswahl: null,
     ausgewaehlteSehne: null
   };
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: CHORD_INFO_TEXT, ariaLabel: 'Erklärung zum Chord-Diagramm' });
+  infotextFuerModul('chordDiagramm').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   instanz.sidebar = baueSidebarGeruest(container);
   instanz.sidebar.schliessenBtn.addEventListener('click', () => {
     schliesseSidebar(instanz.sidebar, chartContainer);

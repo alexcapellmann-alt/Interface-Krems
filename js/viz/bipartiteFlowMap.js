@@ -460,6 +460,7 @@ import { ladeOrtsVerzeichnis } from '../utils/urkundenOrte.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
 import { baueStatischeKarte, projiziere, erzeugeUeberlagerungsSvg } from '../utils/statischeKarte.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 // Wiederverwendung statt Neuimplementierung (unverändert seit dem
 // Gruppen-Umbau, s.o.).
@@ -471,7 +472,6 @@ import { GRUPPEN, ermittleGruppe } from './chordDiagramm.js';
 // Auftraggeber nach Rückmeldung korrigierte Fassung, wörtlich übernommen.
 // KORREKTUR (aktueller Auftrag, s.o.): auf die neue Tortendiagramm-
 // Darstellung inkl. Klick-Vergrößerung und Pluralitätsregel aktualisiert.
-const BIPARTITEFLOWMAP_INFO_TEXT = 'Diese Ansicht zeigt jeden in den Urkunden genannten Ort als Tortendiagramm: vier Segmente für die sozialen Gruppen Dynastie/Habsburger, Adel, Klerus und Bürgertum (dieselbe Heuristik wie im Chord-Diagramm der Personen-Ansicht - keine belegte historische Klassifikation, sondern eine Näherung, siehe dortige Erläuterung für Details). Die Kreisgröße zeigt die Gesamtzahl aller Verbindungen an diesem Ort, die Segmentanteile die Verteilung auf die vier Gruppen. Klick auf einen Knoten vergrößert ihn und öffnet die zugehörigen Urkunden (Klick auf ein Segment: nur die Urkunden dieser Gruppe, Klick auf den restlichen Knoten: alle Urkunden des Ortes), Klick auf freie Kartenfläche setzt die Vergrößerung zurück. Die vier Buttons oben links heben Orte hervor, an denen die jeweilige Gruppe den höchsten Einzelwert der vier hat (Pluralitätsregel - die relativ häufigste Gruppe genügt, eine strenge Mehrheit über 50% ist nicht nötig).';
 
 // Punkt 1 (siehe Dateikopf-Kommentar): Mindestradius (Auftrag-Richtwert
 // 4-5px) und Höchstradius der größenskalierten Kreise.
@@ -681,7 +681,10 @@ async function zeichneFlowMap() {
     gruppenButtons.set(g.schluessel, btn);
   });
 
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: BIPARTITEFLOWMAP_INFO_TEXT, ariaLabel: 'Erklärung zur Orte-Tortendiagramm-Karte' });
+  infotextFuerModul('bipartiteFlowMap').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   const breite = options.width || container.clientWidth || 900;
   const hoehe = options.height || 600;

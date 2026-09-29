@@ -42,6 +42,8 @@
 // Werkzeugleiste/dem Info-Button beider Module (dortiges z-index:900, siehe
 // jeweiliger Dateikopf-Kommentar) - Popover/Werkzeugleiste bleiben also
 // weiterhin über allem.
+import { konfigurationswert } from '../core/archivKonfiguration.js';
+
 const OVERLAY_Z_INDEX = 450;
 
 // Baut das transparente SVG-Overlay über einer per baueStatischeKarte()
@@ -74,7 +76,15 @@ export function baueStatischeKarte(mapDiv, koordinatenListe) {
   if (koordinatenListe.length > 0) {
     karte.fitBounds(L.latLngBounds(koordinatenListe.map((k) => [k.lat, k.lon])), { padding: [40, 40] });
   } else {
-    karte.setView([48.42, 15.6], 7);
+    // AUFTRAG "Archivspezifische Texte...", Punkt 2.8: Kartenstartpunkt aus
+    // archiv.csv, mit den bisherigen Werten als Rückfall.
+    const lat = Number(konfigurationswert('karte_zentrum_lat'));
+    const lon = Number(konfigurationswert('karte_zentrum_lon'));
+    const zoom = Number(konfigurationswert('karte_zoom'));
+    karte.setView(
+      Number.isFinite(lat) && Number.isFinite(lon) ? [lat, lon] : [48.42, 15.6],
+      Number.isFinite(zoom) ? zoom : 7
+    );
   }
   return karte;
 }

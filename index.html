@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Interface Stadtarchiv Krems</title>
+<title>Archiv-Interface</title>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
@@ -14,23 +14,16 @@
 <body>
 <header class="app-header">
   <div class="app-header-inner">
-    <a id="app-logo-link" class="app-logo" href="#" aria-label="Stadtarchiv Krems – Startseite">
-      <svg class="app-logo-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140.73 47.75">
-        <polygon fill="#fc0" points="0 11.5 36.25 11.5 36.25 47.75 0 47.75 0 11.5 0 11.5"/>
-        <polygon fill="#1d1d1b" points="36.25 36.04 27.02 22.71 35.61 11.5 27.9 11.5 20.75 21.73 20.75 0 14.43 0 14.43 36.04 20.75 36.04 20.75 23.9 28.35 36.04 36.25 36.04 36.25 36.04"/>
-        <path fill="#1d1d1b" d="M281.2,408.19c-4.59-.44-7.06,2.62-8.15,5.92H273a32.45,32.45,0,0,0,.5-5.43h-5v24.54h5.28v-10c0-7.36,2.37-10.76,7.26-9.88l.25-5.18Z" transform="translate(-227.73 -397.18)"/>
-        <path fill="#1d1d1b" fill-rule="evenodd" d="M304.69,418.81c0-5.83-3-10.62-10-10.62-7.16,0-11.21,5.53-11.21,12.94,0,8.64,4.2,12.59,11.85,12.59a22.56,22.56,0,0,0,8.49-1.58l-.49-4.2a16.9,16.9,0,0,1-7.16,1.58c-4.89,0-7.41-2.57-7.26-8.25h15.65a23.65,23.65,0,0,0,.15-2.46Zm-5.28-1.24H289c.44-3.31,2.52-5.48,5.48-5.48s5,2.12,4.94,5.48Z" transform="translate(-227.73 -397.18)"/>
-        <path fill="#1d1d1b" d="M346.05,433.22V416.29c0-5.58-2.61-8.1-7.31-8.1a8.87,8.87,0,0,0-8.19,5.28c-.4-2.17-2-5.28-6.82-5.28a8.8,8.8,0,0,0-8.29,5.33l-.1,0a32.18,32.18,0,0,0,.35-4.79h-5v24.54h5.28V421.47c0-5.13,2.92-8.89,6.27-8.89,3,0,3.56,2.18,3.56,4.94v15.7h5.18V421.47c0-5.38,3.16-8.89,6.32-8.89,2.82,0,3.56,1.93,3.56,5v15.65Z" transform="translate(-227.73 -397.18)"/>
-        <path fill="#1d1d1b" d="M368.45,425.77c0-8.15-10.86-5.73-10.86-10.47,0-1.88,1.43-3.06,4.35-3.06a17.5,17.5,0,0,1,4.79.69l.14-4.3a30.31,30.31,0,0,0-4.59-.44c-6.66,0-10.12,3.36-10.12,7.6,0,8.5,10.76,5.53,10.76,10.47,0,2-2,3.26-4.83,3.26a20,20,0,0,1-5.34-.79l-.15,4.49a27.78,27.78,0,0,0,5.19.5c6.57,0,10.66-3.36,10.66-8Z" transform="translate(-227.73 -397.18)"/>
-      </svg>
-      <span class="app-logo-sub">Stadtarchiv</span>
+    <a id="app-logo-link" class="app-logo" href="#" aria-label="Archiv, Startseite">
+      <img id="app-logo-img" class="app-logo-svg" src="" alt="" aria-hidden="true">
+      <span id="app-logo-sub" class="app-logo-sub"></span>
     </a>
     <nav aria-label="Hauptnavigation" class="haupt-navigation">
       <a href="#bestand" data-tab="bestand">Bestand</a>
       <a href="#visualisierungen" data-tab="visualisierungen">Visualisierungen</a>
       <a href="#fuehrungen" data-tab="fuehrungen">Führungen</a>
       <a href="#literatur" data-tab="literatur">Literatur</a>
-      <a href="#ueber" data-tab="ueber">Über</a>
+      <a id="nav-ueber-link" href="#ueber" data-tab="ueber">Über</a>
     </nav>
   </div>
 </header>
@@ -38,7 +31,7 @@
 <main id="app-content" tabindex="-1"></main>
 
 <footer class="app-footer">
-  <p>Interface Stadtarchiv Krems – Prototyp im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).</p>
+  <p id="app-footer-text"></p>
 </footer>
 
 <script src="vendor/d3/d3.v7.min.js"></script>

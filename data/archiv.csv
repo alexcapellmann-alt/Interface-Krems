@@ -1,0 +1,18 @@
+﻿schluessel;wert;anmerkung
+archiv_name;Stadtarchiv Krems an der Donau;Vollständiger Name, u. a. im Footer und Kontaktblock
+archiv_kurzname;Stadtarchiv Krems;Kurzform, u. a. für Seitentitel und Logo-Beschriftung für Screenreader
+seitentitel;Interface Stadtarchiv Krems;Titel im Browser-Tab
+logo_datei;logo.svg;Dateiname des Logos im Ordner data/ (SVG oder PNG)
+logo_untertitel;Stadtarchiv;Text neben dem Logo in der Kopfzeile
+adresse_strasse;Körnermarkt 14;
+adresse_ort;3500 Krems an der Donau;
+telefon;0 27 32 / 801 578;Anzeigeform
+telefon_international;+432732801578;Für den Anruf-Link. Im bisherigen Code fehlte eine Ziffer (+43273280157).
+email;stadtarchiv@krems.gv.at;
+website;www.krems.gv.at/stadtarchiv;Anzeigeform
+website_link;https://www.krems.gv.at/stadtarchiv;
+akzentfarbe;#2c4a6e;Hauptfarbe der Oberfläche (derzeit in css/base.css). Kontrast zu Weiß mindestens 4,5:1.
+karte_zentrum_lat;48.42;Startmittelpunkt der Karten (Breitengrad, Dezimalpunkt)
+karte_zentrum_lon;15.6;Startmittelpunkt der Karten (Längengrad, Dezimalpunkt)
+karte_zoom;7;Startzoomstufe der Karten
+footer_text;Interface des Stadtarchivs Krems. Prototyp im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).;Fußzeile aller Seiten außer der Startseite

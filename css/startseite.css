@@ -280,10 +280,18 @@
 .startseite-footer address a,
 .startseite-footer-links a {
   color: rgba(255, 255, 255, .85);
-  text-decoration: none;
 }
+/* Korrektur zu Paket 2 (Punkt 3): die drei Kontakt-Links (Telefon/E-Mail/
+   Website, js/utils/kontaktLinks.js' .kontakt-link) waren hier zuvor per
+   `text-decoration: none` bewusst unterstreichungsfrei und nur über die
+   (ohnehin schon reduzierte weiße) Textfarbe als Link erkennbar - auf
+   Rückfrage jetzt durchgehend unterstrichen (WCAG 1.4.1), die Downloads-
+   Liste behält ihre eigene, bereits klar erkennbare "↓"-Markierung statt
+   einer zusätzlichen Unterstreichung. */
+.startseite-footer-links a { text-decoration: none; }
 .startseite-footer address a:hover,
-.startseite-footer-links a:hover { color: #fff; text-decoration: underline; }
+.startseite-footer-links a:hover { color: #fff; }
+.startseite-footer-links a:hover { text-decoration: underline; }
 .startseite-footer address a:focus-visible,
 .startseite-footer-links a:focus-visible {
   outline: 2px solid rgba(255, 255, 255, .8);

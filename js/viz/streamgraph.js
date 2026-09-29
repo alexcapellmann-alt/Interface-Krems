@@ -61,6 +61,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import {
   teileNachJahr,
   ermittleSektorenSortiertNachHaeufigkeit,
@@ -76,8 +77,6 @@ const HOEHE_PLOT = 320;
 const AKTIV_OPAZITAET = 1;
 const INAKTIV_OPAZITAET = 0.15;
 const STANDARD_OPAZITAET = 0.85;
-
-const STREAMGRAPH_INFO_TEXT = `Diese Ansicht zeigt die zeitliche Entwicklung der Bürgeraufnahmen je Wirtschaftssektor als organisch geschichtete Flächen. Im Unterschied zu Trellis (getrennte Panels) und Bump Chart (Rangverschiebung) lässt sich hier die relative Größenveränderung der Sektoren im Fluss der Zeit erfassen. „Beruf nicht angegeben" ist als eigene Schicht enthalten, da dieses Feld bei 1.250 von 2.791 Einträgen fehlt.`;
 
 let instanz = null; // { container, wurzel, records, options, infoButton, hoverSektor, frozenSektor, flaechenAuswahl } – eine aktive Ansicht pro Modul-Ladung
 
@@ -137,7 +136,10 @@ function zeichneStreamgraph() {
 
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'streamgraph-werkzeugleiste';
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: STREAMGRAPH_INFO_TEXT, ariaLabel: 'Erklärung zum Streamgraph' });
+  infotextFuerModul('streamgraph').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
 
   const plotBereich = document.createElement('div');
   plotBereich.className = 'streamgraph-plot-bereich';

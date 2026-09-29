@@ -1,144 +1,59 @@
 // js/core/startseite.js
-// Startseite (Landingpage) des neuen Interfaces - erscheint bei Aufruf der
+// Startseite (Landingpage) des Interfaces - erscheint bei Aufruf der
 // Root-URL (leerer Hash), oberhalb bleibt die unveränderte Hauptnavigation
-// (Bestand/Visualisierungen/Führungen/Literatur/Über) sichtbar. Strukturell
-// und gestalterisch an der Landingpage des alten Single-File-Prototyps
-// orientiert (Desktop/GitHub/Interface-Krems/index.html, dort:
-// #hero-slider/.welcome-section/.info-grid-section/.landing-footer) - Inhalte
-// bewusst NICHT wörtlich übernommen, sondern an die tatsächliche Struktur des
-// neuen Interfaces angepasst (siehe einzelne Kommentare unten und
-// PROJEKTLOG.md für die vollständige Abwägung).
+// (Bestand/Visualisierungen/Führungen/Literatur/Über) sichtbar.
+//
+// AUFTRAG "Archivspezifische Texte und Identität in CSV-Dateien", Punkt
+// 2.5: Slides/Einleitung/Kacheln/Downloads/Footer-Hinweis kommen jetzt aus
+// data/startseite.csv (Typen `slide`/`einleitung`/`kachel`/`download`/
+// `footer_hinweis`, über js/core/archivKonfiguration.js' ladeSeitenBloecke()
+// - bereits nach `reihenfolge` sortiert, nur `sichtbar=ja`, Platzhalter
+// aufgelöst), Kontaktdaten aus data/archiv.csv (konfigurationswert()).
+// Anzahl der Slides/Kacheln/Downloads ergibt sich dadurch allein aus der
+// CSV, keine feste Vier-Slides/Drei-Kacheln-Annahme mehr im Code.
 //
 // Baustein-Muster (Abschnitt 5, wie bereichsLeiste.js/ansichtWechseln.js):
 // eine Funktion erzeugt den Baustein und gibt {destroy()} zurück - destroy()
 // räumt hier zusätzlich den Karussell-Automatik-Timer auf (sonst liefe er
-// nach einem Tab-Wechsel im Hintergrund weiter).
+// nach einem Tab-Wechsel im Hintergrund weiter). Anders als die übrigen
+// Bausteine im Projekt ist erzeugeStartseite() jetzt ASYNC (lädt Daten,
+// siehe js/core/app.js' renderStartTab() für den Aufrufer-seitigen
+// Wettlauf-Schutz).
+
+import { ladeSeitenBloecke, konfigurationswert } from './archivKonfiguration.js';
+import { erzeugeKontaktLink } from '../utils/kontaktLinks.js';
 
 const KARUSSELL_INTERVALL_MS = 7000; // Auftrag: "alle 6-8 Sekunden", Mittelwert
+const STARTSEITE_CSV = 'data/startseite.csv';
 
-// Vier Slides, thematisch an die tatsächlich vorhandenen Tabs angelehnt (nicht
-// die alten Themen "Urkundensuche"/"Bibliothekskatalog" - dafür gibt es im
-// neuen Interface keinen eigenen Tab). Bewusste Zuordnung: Visualisierungen,
-// Führungen, Literatur, ein allgemein einladender Einstieg zu Bestand - deckt
-// vier der fünf Haupttabs ab (Über wird stattdessen im Footer/Kachelbereich
-// nicht separat beworben, da es aktuell nur ein Platzhalter ist).
-const SLIDES = [
-  {
-    kicker: 'Für Entdecker:innen',
-    headline: 'Entdecken Sie das Gedächtnis der Doppelstadt Krems-Stein.',
-    ctaText: 'Zu den Visualisierungen',
-    ctaHref: '#visualisierungen',
-    verlauf: 'startseite-slide-bg--1'
-  },
-  {
-    kicker: 'Geführte Einblicke',
-    headline: 'Historische Bestände anhand kuratierter Pfade kennenlernen.',
-    ctaText: 'Zu den Führungen',
-    ctaHref: '#fuehrungen',
-    verlauf: 'startseite-slide-bg--2'
-  },
-  {
-    kicker: 'Für Forschende & Leser:innen',
-    headline: 'Literatur und Forschung rund um die Stadtgeschichte.',
-    ctaText: 'Zur Literatur',
-    ctaHref: '#literatur',
-    verlauf: 'startseite-slide-bg--3'
-  },
-  {
-    kicker: 'Für Neueinsteiger:innen',
-    headline: 'Das Stadtarchiv Krems – ein digitaler Einstieg für alle.',
-    ctaText: 'Jetzt entdecken',
-    ctaHref: '#bestand',
-    verlauf: 'startseite-slide-bg--4'
-  }
-];
+// Slide-Hintergründe bleiben nach POSITION den bestehenden CSS-Klassen
+// zugeordnet (Auftrag Punkt 2.5, wörtlich: "weiter nach Position aus den
+// bestehenden CSS-Klassen, bei mehr als vier Slides zyklisch") -
+// `css/startseite.css` kennt genau vier Verlaufsklassen.
+const SLIDE_HINTERGRUND_KLASSEN = ['startseite-slide-bg--1', 'startseite-slide-bg--2', 'startseite-slide-bg--3', 'startseite-slide-bg--4'];
 
-// Einleitungstext (Schritt 3) - bewusst NEU formuliert, nicht die wörtliche
-// Übernahme aus dem alten Interface (dort: "Wir verwahren den schriftlichen
-// Nachweis der Verwaltungstätigkeit, eine rund 1.000 Stück umfassende
-// Urkundensammlung..."). Dieselbe kommunikative Aufgabe (Begrüßung,
-// historischer Umfang seit 1108, Hinweis auf den Inhalt), aber realistisch
-// auf das neue Interface bezogen: keine eigene Urkunden-Datenbank als Tab,
-// stattdessen Bestandsvisualisierungen als zentrales Angebot.
-const EINLEITUNGSTEXT = 'Willkommen im digitalen Interface des Stadtarchivs Krems an der Donau. '
-  + 'Unsere Bestände reichen bis in das Jahr 1108 zurück und bewahren das schriftliche '
-  + 'Gedächtnis der historischen Doppelstadt Krems-Stein. Dieses Interface macht den '
-  + 'gesamten Bestandsbaum als interaktive Visualisierung erfahrbar – nach Kategorie, '
-  + 'Zeitraum und Umfang erkundbar, ergänzt um geführte Pfade und weiterführende Literatur.';
-
-// Drei Kacheln (Schritt 4) - bewusst NUR die drei Themen, die tatsächlich
-// einem echten Tab entsprechen (Bestand/Führungen/Literatur). Die alte dritte
-// Kachel "Service & Lesesaal" (Öffnungszeiten, Voranmeldung, Lesesaal-Infos)
-// wurde NICHT übernommen - dafür gibt es im neuen Interface keine
-// entsprechende Funktion/Information (auch nicht im "Über"-Platzhalter),
-// eine erfundene Entsprechung wäre irreführend. Stattdessen: Führungen, ein
-// im alten Prototyp gar nicht auf der Startseite beworbenes, aber im neuen
-// Interface echt vorhandenes Tab (siehe PROJEKTLOG für die Abwägung).
-const KACHELN = [
-  {
-    titel: 'Unsere Bestände visualisiert',
-    text: 'Der gesamte Bestand des Stadtarchivs als interaktive Treemap, Sunburst, Icicle, '
-      + 'Circle Packing und Zeitachse – nach Kategorie, Zeitraum und Umfang erkundbar.',
-    ctaText: 'Visualisierungen entdecken',
-    ctaHref: '#bestand'
-  },
-  {
-    titel: 'Geführte Pfade',
-    text: 'Kuratierte Einblicke in ausgewählte Themen und Zeiträume des Archivs – ein guter '
-      + 'Einstieg für alle, die nicht auf eigene Faust recherchieren möchten.',
-    ctaText: 'Zu den Führungen',
-    ctaHref: '#fuehrungen'
-  },
-  {
-    titel: 'Literatur & Forschung',
-    text: 'Publikationen und Literaturhinweise rund um die Geschichte der Stadt Krems und '
-      + 'ihres Archivs.',
-    ctaText: 'Zur Literatur',
-    ctaHref: '#literatur'
-  }
-];
-
-// Footer-Inhalte (Schritt 5) - 1:1 aus dem alten Interface übernommen
-// (Kontaktdaten sind real, siehe Auftrag). Root-Cause-Check zu den drei
-// PDF-Links (aktiv geprüft, nicht angenommen): im Projektordner selbst
-// existiert kein assets-/docs-Ordner mit diesen Dateien - im alten Interface
-// verweisen dieselben drei Links jedoch bereits auf reale, öffentlich
-// gehostete PDFs auf www.krems.at (nicht auf lokale Pfade) - genau diese
-// externen URLs werden hier unverändert übernommen, keine toten/erfundenen
-// Pfade nötig.
-const KONTAKT = {
-  name: 'Stadtarchiv Krems an der Donau',
-  adresse: 'Körnermarkt 14, 3500 Krems an der Donau',
-  telefon: '0 27 32 / 801 578',
-  telefonHref: 'tel:+43273280157',
-  email: 'stadtarchiv@krems.gv.at',
-  website: 'www.krems.gv.at/stadtarchiv',
-  websiteHref: 'https://www.krems.gv.at/stadtarchiv'
-};
-
-const DOWNLOADS = [
-  { text: 'Archivordnung (PDF)', href: 'https://www.krems.at/fileadmin/user_upload/Archiv_Krems_Archivordnung_publiziert_03_2019.pdf' },
-  { text: 'Benützerordnung (PDF)', href: 'https://www.krems.at/fileadmin/user_upload/Benuetzerordnung_Stadtarchiv_Krems_Jaenner_2020.pdf' },
-  { text: 'ISDIAH-Beschreibung (PDF)', href: 'https://www.krems.at/fileadmin/user_upload/Stadtarchiv_Krems_ISDIAH_2023.pdf' }
-];
-
-function baueSlide(daten, index) {
+function baueSlide(daten, index, anzahl) {
   const artikel = document.createElement('article');
   artikel.className = 'startseite-slide';
   artikel.setAttribute('aria-roledescription', 'Slide');
-  artikel.setAttribute('aria-label', `Slide ${index + 1} von ${SLIDES.length}: ${daten.kicker}`);
+  artikel.setAttribute('aria-label', `Slide ${index + 1} von ${anzahl}: ${daten.kicker}`);
 
   const hintergrund = document.createElement('div');
-  hintergrund.className = `startseite-slide-bg ${daten.verlauf}`;
+  hintergrund.className = `startseite-slide-bg ${SLIDE_HINTERGRUND_KLASSEN[index % SLIDE_HINTERGRUND_KLASSEN.length]}`;
 
-  // Platzhalter-Hinweis (Schritt 2: noch keine echten Fotos zugeordnet) -
-  // aria-hidden, da rein visueller Entwicklungshinweis ohne inhaltlichen
-  // Wert für Screenreader-Nutzende (Kicker/Headline werden ohnehin vorgelesen).
-  const platzhalterHinweis = document.createElement('span');
-  platzhalterHinweis.className = 'startseite-platzhalter-hinweis';
-  platzhalterHinweis.setAttribute('aria-hidden', 'true');
-  platzhalterHinweis.textContent = 'Platzhalterbild';
-  hintergrund.appendChild(platzhalterHinweis);
+  // Punkt 2.5: "Ist die Spalte bild befüllt, wird das Bild aus data/ als
+  // Hintergrund verwendet und der Hinweis 'Platzhalterbild' entfällt."
+  if (daten.bild) {
+    hintergrund.style.backgroundImage = `url("data/${daten.bild}")`;
+    hintergrund.style.backgroundSize = 'cover';
+    hintergrund.style.backgroundPosition = 'center';
+  } else {
+    const platzhalterHinweis = document.createElement('span');
+    platzhalterHinweis.className = 'startseite-platzhalter-hinweis';
+    platzhalterHinweis.setAttribute('aria-hidden', 'true');
+    platzhalterHinweis.textContent = 'Platzhalterbild';
+    hintergrund.appendChild(platzhalterHinweis);
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'startseite-slide-overlay';
@@ -152,15 +67,15 @@ function baueSlide(daten, index) {
   kicker.textContent = daten.kicker;
 
   const headline = document.createElement('h2');
-  headline.textContent = daten.headline;
+  headline.textContent = daten.titel;
 
   inhalt.append(kicker, headline);
 
-  if (daten.ctaText && daten.ctaHref) {
+  if (daten.link_text && daten.link_ziel) {
     const cta = document.createElement('a');
     cta.className = 'startseite-slide-cta';
-    cta.href = daten.ctaHref;
-    cta.textContent = daten.ctaText;
+    cta.href = daten.link_ziel;
+    cta.textContent = daten.link_text;
     inhalt.appendChild(cta);
   }
 
@@ -168,11 +83,11 @@ function baueSlide(daten, index) {
   return artikel;
 }
 
-// Karussell-Logik (Schritt 2): automatischer Wechsel alle 7s, Pfeile links/
-// rechts, Klick-Punkte unten, Pfeiltasten-Bedienung bei Fokus im Karussell.
-// prefers-reduced-motion deaktiviert die Automatik (dieselbe Rücksichtnahme
-// wie im alten Prototyp) - manuelle Bedienung bleibt davon unberührt.
-function baueKarussell(wurzel) {
+// Karussell-Logik (unverändert aus der bisherigen Fassung): automatischer
+// Wechsel alle 7s, Pfeile links/rechts, Klick-Punkte unten, Pfeiltasten-
+// Bedienung bei Fokus im Karussell. prefers-reduced-motion deaktiviert die
+// Automatik - manuelle Bedienung bleibt davon unberührt.
+function baueKarussell(wurzel, slides) {
   const bereich = document.createElement('section');
   bereich.className = 'startseite-hero';
   bereich.setAttribute('aria-label', 'Einstiegspunkte in die Sammlung');
@@ -181,7 +96,7 @@ function baueKarussell(wurzel) {
 
   const slidesWrapper = document.createElement('div');
   slidesWrapper.className = 'startseite-slides-wrapper';
-  const slideElemente = SLIDES.map((daten, i) => baueSlide(daten, i));
+  const slideElemente = slides.map((daten, i) => baueSlide(daten, i, slides.length));
   slideElemente.forEach((el) => slidesWrapper.appendChild(el));
 
   const prevBtn = document.createElement('button');
@@ -200,7 +115,7 @@ function baueKarussell(wurzel) {
   punkteGruppe.className = 'startseite-slider-dots';
   punkteGruppe.setAttribute('role', 'group');
   punkteGruppe.setAttribute('aria-label', 'Slide direkt anwählen');
-  const punkte = SLIDES.map((daten, i) => {
+  const punkte = slides.map((daten, i) => {
     const punkt = document.createElement('button');
     punkt.type = 'button';
     punkt.className = 'startseite-slider-dot';
@@ -220,7 +135,7 @@ function baueKarussell(wurzel) {
     slideElemente[aktuell].classList.remove('aktiv');
     punkte[aktuell].classList.remove('aktiv');
     punkte[aktuell].setAttribute('aria-pressed', 'false');
-    aktuell = ((index % SLIDES.length) + SLIDES.length) % SLIDES.length;
+    aktuell = ((index % slides.length) + slides.length) % slides.length;
     slideElemente[aktuell].classList.add('aktiv');
     punkte[aktuell].classList.add('aktiv');
     punkte[aktuell].setAttribute('aria-pressed', 'true');
@@ -236,9 +151,6 @@ function baueKarussell(wurzel) {
   nextBtn.addEventListener('click', () => { geheZu(aktuell + 1); starteAutomatik(); });
   punkte.forEach((punkt, i) => punkt.addEventListener('click', () => { geheZu(i); starteAutomatik(); }));
 
-  // Tastaturbedienung (Auftrag: Pfeiltasten ODER Tab+Enter auf die Punkte -
-  // Tab+Enter funktioniert bereits nativ über die <button>-Punkte, hier
-  // zusätzlich Pfeiltasten bei Fokus irgendwo im Karussell-Bereich).
   bereich.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft') { event.preventDefault(); geheZu(aktuell - 1); starteAutomatik(); }
     if (event.key === 'ArrowRight') { event.preventDefault(); geheZu(aktuell + 1); starteAutomatik(); }
@@ -254,17 +166,24 @@ function baueKarussell(wurzel) {
   };
 }
 
-function baueEinleitung(wurzel) {
+function baueEinleitung(wurzel, block) {
   const bereich = document.createElement('section');
   bereich.className = 'startseite-einleitung';
   bereich.setAttribute('aria-label', 'Willkommen');
-  const text = document.createElement('p');
-  text.textContent = EINLEITUNGSTEXT;
-  bereich.appendChild(text);
+  const absaetze = Array.isArray(block.text) ? block.text : [block.text];
+  absaetze.forEach((absatz) => {
+    const p = document.createElement('p');
+    p.textContent = absatz;
+    bereich.appendChild(p);
+  });
   wurzel.appendChild(bereich);
 }
 
-function baueKachelbereich(wurzel) {
+// Punkt 2.5: "Kein Kopfbereich für Downloads, wenn keine download-Zeilen
+// vorhanden sind" - deckt sowohl "keine Kachel" (kacheln.length===0, s.u.)
+// als auch diesen expliziten Fall ab.
+function baueKachelbereich(wurzel, kacheln) {
+  if (kacheln.length === 0) return;
   const bereich = document.createElement('section');
   bereich.className = 'startseite-kachelbereich';
   bereich.setAttribute('aria-label', 'Unsere Angebote');
@@ -272,22 +191,29 @@ function baueKachelbereich(wurzel) {
   const raster = document.createElement('div');
   raster.className = 'startseite-kacheln';
 
-  KACHELN.forEach((daten) => {
+  kacheln.forEach((daten) => {
     const kachel = document.createElement('article');
     kachel.className = 'startseite-kachel';
 
     const titel = document.createElement('h3');
     titel.textContent = daten.titel;
+    kachel.appendChild(titel);
 
-    const text = document.createElement('p');
-    text.textContent = daten.text;
+    const absaetze = Array.isArray(daten.text) ? daten.text : [daten.text];
+    absaetze.forEach((absatz) => {
+      const p = document.createElement('p');
+      p.textContent = absatz;
+      kachel.appendChild(p);
+    });
 
-    const cta = document.createElement('a');
-    cta.className = 'startseite-kachel-cta';
-    cta.href = daten.ctaHref;
-    cta.textContent = `${daten.ctaText} →`;
+    if (daten.link_text && daten.link_ziel) {
+      const cta = document.createElement('a');
+      cta.className = 'startseite-kachel-cta';
+      cta.href = daten.link_ziel;
+      cta.textContent = `${daten.link_text} →`;
+      kachel.appendChild(cta);
+    }
 
-    kachel.append(titel, text, cta);
     raster.appendChild(kachel);
   });
 
@@ -295,7 +221,7 @@ function baueKachelbereich(wurzel) {
   wurzel.appendChild(bereich);
 }
 
-function baueFooter(wurzel) {
+function baueFooter(wurzel, downloads, footerHinweisBlock) {
   const footer = document.createElement('footer');
   footer.className = 'startseite-footer';
   footer.setAttribute('role', 'contentinfo');
@@ -307,60 +233,80 @@ function baueFooter(wurzel) {
   const kontaktTitel = document.createElement('h3');
   kontaktTitel.textContent = 'Kontakt';
   const adresse = document.createElement('address');
-  adresse.innerHTML = `${KONTAKT.name}<br>${KONTAKT.adresse}<br>`;
-  const telefonLink = document.createElement('a');
-  telefonLink.href = KONTAKT.telefonHref;
-  telefonLink.textContent = KONTAKT.telefon;
-  const emailLink = document.createElement('a');
-  emailLink.href = `mailto:${KONTAKT.email}`;
-  emailLink.textContent = KONTAKT.email;
-  const websiteLink = document.createElement('a');
-  websiteLink.href = KONTAKT.websiteHref;
-  websiteLink.target = '_blank';
-  websiteLink.rel = 'noopener';
-  websiteLink.textContent = KONTAKT.website;
+  const name = konfigurationswert('archiv_name');
+  const adresseStrasse = konfigurationswert('adresse_strasse');
+  const adresseOrt = konfigurationswert('adresse_ort');
+  adresse.innerHTML = `${name}<br>${adresseStrasse}${adresseStrasse && adresseOrt ? ', ' : ''}${adresseOrt}<br>`;
+  // AUFTRAG Punkt 2.5: Telefonlink aus `telefon_international` (behebt den
+  // Fehler im bisherigen Code, dem dafür die letzte Ziffer fehlte -
+  // `telefon_international` in archiv.csv ist bereits vollständig).
+  // Korrektur zu Paket 2 (Punkt 3): Icon+Unterstreichung jetzt über die mit
+  // ueberSeite.js geteilte erzeugeKontaktLink() (js/utils/kontaktLinks.js).
+  const telefonLink = erzeugeKontaktLink('telefon', `tel:${konfigurationswert('telefon_international')}`, konfigurationswert('telefon'));
+  const emailLink = erzeugeKontaktLink('email', `mailto:${konfigurationswert('email')}`, konfigurationswert('email'));
+  const websiteLink = erzeugeKontaktLink('website', konfigurationswert('website_link'), konfigurationswert('website'), { neuesFenster: true });
   adresse.append(telefonLink, document.createElement('br'), emailLink, document.createElement('br'), websiteLink);
   kontaktSpalte.append(kontaktTitel, adresse);
 
-  const downloadsSpalte = document.createElement('div');
-  const downloadsTitel = document.createElement('h3');
-  downloadsTitel.textContent = 'Downloads & Rechtliches';
-  const downloadsListe = document.createElement('ul');
-  downloadsListe.className = 'startseite-footer-links';
-  DOWNLOADS.forEach((eintrag) => {
-    const li = document.createElement('li');
-    const link = document.createElement('a');
-    link.href = eintrag.href;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.textContent = eintrag.text;
-    li.appendChild(link);
-    downloadsListe.appendChild(li);
-  });
-  downloadsSpalte.append(downloadsTitel, downloadsListe);
+  innen.append(kontaktSpalte);
 
-  innen.append(kontaktSpalte, downloadsSpalte);
+  if (downloads.length > 0) {
+    const downloadsSpalte = document.createElement('div');
+    const downloadsTitel = document.createElement('h3');
+    downloadsTitel.textContent = 'Downloads & Rechtliches';
+    const downloadsListe = document.createElement('ul');
+    downloadsListe.className = 'startseite-footer-links';
+    downloads.forEach((eintrag) => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = eintrag.link_ziel;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = eintrag.link_text;
+      li.appendChild(link);
+      downloadsListe.appendChild(li);
+    });
+    downloadsSpalte.append(downloadsTitel, downloadsListe);
+    innen.append(downloadsSpalte);
+  }
 
-  const copy = document.createElement('p');
-  copy.className = 'startseite-footer-copy';
-  copy.textContent = '© Stadtarchiv Krems an der Donau · Interface im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).';
+  footer.appendChild(innen);
 
-  footer.append(innen, copy);
+  // Nicht-Ziel (Auftrag wörtlich): die Startseiten-Fußzeile (`footer_hinweis`
+  // aus startseite.csv) bleibt eigenständig, wird NICHT mit `footer_text`
+  // aus archiv.csv zusammengelegt (der bespielt stattdessen die app-weite
+  // Fußzeile außerhalb der Startseite, siehe js/core/app.js).
+  if (footerHinweisBlock) {
+    const copy = document.createElement('p');
+    copy.className = 'startseite-footer-copy';
+    const absaetze = Array.isArray(footerHinweisBlock.text) ? footerHinweisBlock.text : [footerHinweisBlock.text];
+    copy.textContent = absaetze.join(' ');
+    footer.appendChild(copy);
+  }
+
   wurzel.appendChild(footer);
 }
 
-export function erzeugeStartseite(container) {
+export async function erzeugeStartseite(container) {
+  const bloecke = await ladeSeitenBloecke(STARTSEITE_CSV);
+
   container.innerHTML = '';
   container.className = 'startseite-wurzel';
 
-  const karussell = baueKarussell(container);
-  baueEinleitung(container);
-  baueKachelbereich(container);
-  baueFooter(container);
+  const slides = bloecke.filter((b) => b.typ === 'slide');
+  const einleitung = bloecke.find((b) => b.typ === 'einleitung');
+  const kacheln = bloecke.filter((b) => b.typ === 'kachel');
+  const downloads = bloecke.filter((b) => b.typ === 'download');
+  const footerHinweis = bloecke.find((b) => b.typ === 'footer_hinweis');
+
+  const karussell = slides.length > 0 ? baueKarussell(container, slides) : null;
+  if (einleitung) baueEinleitung(container, einleitung);
+  baueKachelbereich(container, kacheln);
+  baueFooter(container, downloads, footerHinweis);
 
   return {
     destroy() {
-      karussell.destroy();
+      karussell?.destroy();
       container.innerHTML = '';
       container.className = '';
     }

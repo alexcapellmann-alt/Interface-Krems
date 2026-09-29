@@ -240,6 +240,7 @@ import {
 } from '../utils/urkundenZeit.js';
 import { baueKategorieFarbSkala, OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
 import {
   baueSidebarGeruest,
@@ -267,16 +268,10 @@ const OHNE_KATEGORIE = '(ohne Kategorie)';
 
 // Schritt 3 (Info-Button-Text, siehe Abschlussbericht zur Prüfung durch den
 // Auftraggeber vorgelegt) - drei Absätze nach demselben Muster wie
-// ganttDiagramm.js' GANTT_INFO_TEXT: was zeigt die Visualisierung, was
-// bedeuten die beiden "nie stillschweigend ausblenden"-Sonderfälle
-// ((ohne Kategorie)/Undatiert), wie wird sie bedient (Zoom/Pan, Schritt 5).
-const DOTPLOT_INFO_TEXT = `Dieser Dot Plot zeigt, wie sich die Urkunden über die Zeit und nach Kategorie verteilen. Jede Punktreihe entspricht einer Kategorie, die x-Achse dem Jahr der Urkunde - je dichter die Punkte an einer Stelle, desto mehr Urkunden wurden in diesem Zeitraum dieser Kategorie zugeordnet.
-
-„(ohne Kategorie)" fasst Urkunden ohne zugeordnete Kategorie in einer eigenen Zeile zusammen, statt sie auszublenden. Urkunden ohne auswertbares Jahr erscheinen im grau hinterlegten Bereich unten.
-
-Klick auf einen Punkt öffnet die Detailansicht der jeweiligen Urkunde in der Seitenleiste.
-
-Ziehen verschiebt die Zeitachse, Strg+Mausrad bzw. Trackpad-Pinch zoomt hinein oder heraus; die Buttons +/−/⟷ links neben diesem Info-Button bieten dieselbe Funktion für Tastatur und Touch.`;
+// ganttDiagramm.js' Infotext: was zeigt die Visualisierung, was bedeuten
+// die beiden "nie stillschweigend ausblenden"-Sonderfälle ((ohne
+// Kategorie)/Undatiert), wie wird sie bedient (Zoom/Pan, Schritt 5). Text
+// seit AUFTRAG "Archivspezifische Texte..." aus data/infotexte.csv.
 
 // Schritt 2 (siehe Dateikopf-Kommentar): Basis-Punktradius bei
 // MIN_ZEILENHOEHE - skaliert proportional mit der tatsächlich verwendeten
@@ -506,7 +501,10 @@ function zeichneDotPlot() {
   const btnReset = zoomButtons.reset;
   const btnRein = zoomButtons.rein;
   werkzeugleiste.append(werkzeugleisteRechts);
-  instanz.infoButton = erzeugeInfoButton(werkzeugleisteRechts, { text: DOTPLOT_INFO_TEXT, ariaLabel: 'Erklärung zum Dot Plot' });
+  infotextFuerModul('dotPlot').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleisteRechts.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleisteRechts, cfg);
+  });
 
   instanz.wurzel.append(werkzeugleiste, plotBereich);
   plotBereich.innerHTML = '';

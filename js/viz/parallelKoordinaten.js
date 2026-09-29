@@ -69,6 +69,7 @@ import { parseKommaZahl } from '../utils/verlassenschaftenFelder.js';
 import { farbeFuerVermoegensgruppe, VERMOEGENSGRUPPE_ANZEIGE_REIHENFOLGE } from '../utils/vermoegensgruppenFarben.js';
 import { baueSidebarGeruest, oeffneSidebar, schliesseSidebar, fuegeSidebarStyleEin } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // rechts deutlich größer als bei der Vorfassung (49): die letzte Achse ist
 // jetzt immer "Gesamtvermögen (fl.)" (20 Zeichen, fett) - ihr Titel würde
@@ -160,7 +161,6 @@ const FARBFELD = {
 // Satz): beide Textteile wörtlich wie geliefert übernommen, noch nicht
 // freigegeben. `\n\n` trennt die Absätze - infoButton.js teilt genau daran
 // in einzelne <p>-Elemente auf (siehe dortiger Dateikopf-Kommentar).
-const INFO_TEXT = 'Jede Linie zeigt das Vermögensprofil eines Verlassenschaftsinventars: von der Höhe des Realvermögens über dessen Zusammensetzung bis zum Gesamtergebnis. Die vier Anteilswerte summieren sich nicht auf 100 % - es sind ausgewählte, keine vollständigen Bestandteile. Über den Umschalter lässt sich zusätzlich ein Forderungs-/Schuldenprofil einblenden: SchzG ("Schulden zum Gut") zeigt Forderungen des Erblassers, SchvG ("Schulden vom Gut") die aus der Erbmasse zu begleichenden Verbindlichkeiten.\n\nDie Einteilung in die Vermögensgruppen A-E folgt der Klassifikation von Max Roman Dietrich (Masterarbeit "Verlassenschaftsinventare in Krems und Stein zwischen 1671 und 1719"). Die Inventare erfassen nahezu ausschließlich die besitzende Bürgerschaft - die besitzlose Unterschicht, die etwa die Hälfte der Stadtbevölkerung ausmachte, ist darin nicht vertreten.';
 
 const DETAIL_FELDER_BASIS = [
   { feld: 'beruf', label: 'Beruf' },
@@ -580,7 +580,10 @@ export function render(container, data, options = {}) {
     // "keine" - siehe Dateikopf-Kommentar.
     ansicht: 'vermoegensprofil', farbModus: 'vermoegensgruppe', hover: null, auswahl: null, farbSkala: null, linienAuswahl: null
   };
-  instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { text: INFO_TEXT, ariaLabel: 'Erklärung zu den Parallelkoordinaten' });
+  infotextFuerModul('parallelKoordinaten').then((cfg) => {
+    if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+  });
   fuegeSidebarStyleEin(container);
   instanz.sidebar = baueSidebarGeruest(container);
   instanz.sidebar.schliessenBtn.addEventListener('click', () => {
