@@ -365,6 +365,9 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `seitentitel` | Interface Stadtarchiv Krems | Browser-Tab-Titel |
 | `logo_datei` | logo.svg | Dateiname des Logos, muss zusammen mit dieser CSV in `data/` liegen |
 | `logo_untertitel` | Stadtarchiv | kleiner Text neben dem Logo oben links |
+| `favicon_datei` | favicon.svg | Symbol im Browser-Tab - eine quadratische SVG-Datei (gleiche Breite wie Höhe), muss in `data/` liegen - leer lassen, wenn kein Favicon gesetzt werden soll (kein Fehler, es erscheint dann einfach keines) |
+| `favicon_png_datei` | favicon-32.png | Rückfall als 32×32-Pixel-PNG (ebenfalls quadratisch) für Browser, die ein SVG-Favicon nicht unterstützen - leer lassen, wenn nicht benötigt |
+| `apple_touch_icon_datei` | apple-touch-icon.png | Symbol, das iPhones/iPads verwenden, wenn die Seite auf dem Startbildschirm gespeichert wird - ein 180×180-Pixel-PNG OHNE Transparenz (Apple stellt transparente Bereiche sonst teils schwarz statt durchsichtig dar) - leer lassen, wenn nicht benötigt |
 | `adresse_strasse` | Körnermarkt 14 | Fußzeile/Kontakt, Über-Seite |
 | `adresse_ort` | 3500 Krems an der Donau | Fußzeile/Kontakt, Über-Seite |
 | `telefon` | 0 27 32 / 801 578 | als lesbarer Text angezeigt |
@@ -379,6 +382,8 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `footer_text` | Interface des Stadtarchivs … | Fußzeile ALLER Seiten AUSSER der Startseite (die hat ihre eigene, siehe `startseite.csv`s `footer_hinweis` unten) |
 
 **Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe, Kremser Kartenausschnitt als Rückfall), eine Fehlermeldung in der Browser-Konsole, kein Absturz.
+
+**Zum mitgelieferten Favicon:** Die drei Standarddateien (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`) zeigen ein weißes σ auf einem abgerundeten Quadrat in der Interface-Akzentfarbe - dasselbe Zeichen, das im Interface bereits für Unsicherheit steht. Es kennzeichnet das Interface selbst (die Anwendung), nicht ein bestimmtes Archiv. Andere Archive können es unverändert beibehalten oder durch ein eigenes Symbol ersetzen (einfach die drei Dateien gleichen Namens in `data/` austauschen, die Schlüssel in `archiv.csv` bleiben gleich).
 
 ### 13.2 startseite.csv - Inhalte der Startseite
 

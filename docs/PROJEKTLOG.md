@@ -5,6 +5,218 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## 2026-09-29 (49) – Favicon ersetzt: σ statt K
+
+**Kontext:** Auftrag "Favicon ersetzen (σ statt K)" - das im letzten
+Auftrag erstellte K-Favicon (Ausschnitt aus dem Stadtlogo) wird durch ein
+eigenständiges Symbol ersetzt (weißes σ auf abgerundetem Quadrat in
+`#2c4a6e`, dasselbe Zeichen wie die app-weite Unsicherheits-Kennzeichnung)
+- kennzeichnet damit das Interface selbst statt ein bestimmtes Archiv.
+Die drei fertigen Dateien wurden vom Auftraggeber bereits in `data/`
+abgelegt (überschreiben die bisherigen K-Dateien gleichen Namens).
+Nicht-Ziele: keine Änderung an den drei Dateien selbst, an
+`wendeFaviconAn()`, an den Schlüsselwerten in `archiv.csv`, am Logo in der
+Kopfzeile; keine Kopplung der Favicon-Farbe an `akzentfarbe` zur
+Laufzeit.
+
+### 1. Dateien geprüft
+
+`data/favicon.svg` (`viewBox="0 0 100 100"`, abgerundetes Rechteck
+`rx="14"` in `#2c4a6e` plus weißer σ-Pfad, keine Transparenz außerhalb
+der Eckenrundung), `data/favicon-32.png` (32×32, RGBA - Transparenz nur
+in den vier Eckausschnitten der Rundung, für Browser-Favicons üblich) und
+`data/apple-touch-icon.png` (180×180, RGB OHNE Alphakanal - vollflächiges
+Quadrat ohne Rundung, entspricht der Vorgabe "iOS rundet selbst und füllt
+Transparenz schwarz") liegen in `data/` und sind per HTTP mit `200 OK`
+erreichbar (`curl -I` auf alle drei Pfade geprüft).
+
+Live geprüft (`document.querySelectorAll('link[rel~="icon"],
+link[rel="apple-touch-icon"]')` nach frischem Laden): alle drei
+`<link>`-Elemente verweisen unverändert (Mechanismus nicht angefasst) auf
+die - jetzt neuen - Dateien `data/favicon.svg`, `data/favicon-32.png`,
+`data/apple-touch-icon.png`, keine Konsolenfehler.
+
+**Gerenderte Größen als Bild geprüft:** 32×32 (Originaldatei) und 180×180
+(Originaldatei) direkt, zusätzlich 32px probeweise auf 16×16
+heruntergerechnet (Pillow/LANCZOS) - das σ bleibt bei allen drei Größen
+erkennbar, bei 16px naturgemäß weicher als das vormalige K (dickere,
+kantigere Formen skalieren im Allgemeinen kleiner besser), aber die
+charakteristische offene Schlaufe mit oberem Querstrich bleibt
+unterscheidbar.
+
+### 2. Anmerkungen und Dokumentation
+
+`data/archiv.csv`: `anmerkung`-Spalte der drei Favicon-Zeilen neutral
+neu gefasst (z. B. "Dateiname der quadratischen Favicon-SVG-Datei im
+Ordner data/" statt einer auf das Logo bezogenen Formulierung - die
+vorherigen Anmerkungen sprachen ohnehin nicht wörtlich von einem
+"Logo-Ausschnitt", wurden aber im Sinne des Auftrags trotzdem präzisiert/
+neutralisiert). `wert`-Spalte (Dateinamen) und alle übrigen 16 Zeilen
+unverändert - `git diff data/archiv.csv` zeigt ausschließlich die drei
+neuen Zeilen als Ganzes (siehe Selbstauskunft unten zur Diff-Darstellung).
+
+`docs/SCHEMA.md` Abschnitt 13.1: die drei Zeilen der Schlüssel-Tabelle
+entsprechend neutral umformuliert, dazu ein neuer erklärender Absatz nach
+der Tabelle ("Zum mitgelieferten Favicon"): beschreibt das σ-Symbol als
+Kennzeichen des Interfaces selbst (nicht eines bestimmten Archivs) und
+dass andere Archive es beibehalten oder durch ein eigenes ersetzen
+können.
+
+**Selbstauskunft zur Diff-Darstellung:** Das Akzeptanzkriterium verlangt,
+dass `git diff data/archiv.csv` ausschließlich Änderungen in der Spalte
+`anmerkung` der drei Favicon-Zeilen zeigt. Da `archiv.csv` insgesamt noch
+nie committet wurde (Teil des seit Paket 2 durchgehend unversionierten
+Änderungspakets), zeigt ein `git diff` gegen den letzten Commit
+zwangsläufig alle drei Zeilen als vollständige Neuzeilen, nicht als
+Teiländerung einer bereits committeten Zeile - das ist eine Eigenschaft
+des aktuellen, noch unversionierten Zustands, keine Abweichung von der
+Vorgabe. Innerhalb dieser Sitzung wurde ausschließlich das dritte Feld
+(`anmerkung`) der drei betroffenen Zeilen angefasst, `schluessel` und
+`wert` blieben in allen drei Zeilen exakt wie zuvor - per Vergleich der
+Zeileninhalte vor/nach der Änderung bestätigt.
+
+### 3. Aufräumen
+
+Das beim K-Favicon-Auftrag verwendete Rasterisierungsskript
+(`erzeuge_favicon_png.py`) lag von Anfang an ausschließlich im
+sitzungseigenen Scratchpad-Verzeichnis (`C:\Users\...\Temp\claude\...\
+scratchpad\`), NIEMALS im Repository - `find`-Suche nach
+`*favicon*`/`*erzeuge*` im Projektverzeichnis bestätigt: keine
+Fundstelle außer den beabsichtigten `data/favicon*`-Dateien selbst und
+dem unabhängigen, bereits vorher existierenden `scripts/
+erzeugeFotoManifest.js` (anderer Zweck, nicht Teil dieses Auftrags). Es
+gibt daher nichts aufzuräumen.
+
+### Regressionstest
+
+Seite frisch geladen: keine Konsolenfehler, alle drei `<link>`-Elemente
+korrekt gesetzt. Ausfalltest wiederholt (`favicon_datei` in einer
+temporären Kopie von `archiv.csv` geleert, Seite neu geladen, Datei
+danach wiederhergestellt): das SVG-`<link>`-Element fehlt danach
+erwartungsgemäß, die beiden PNG-Elemente bleiben bestehen, kein
+Konsolenfehler - `git diff data/archiv.csv` nach der Wiederherstellung
+zeigt wieder ausschließlich die drei absichtlich neu formulierten
+Anmerkungs-Zeilen, keine Restspuren des Ausfalltests.
+
+---
+
+## 2026-09-29 (48) – Favicon (konfigurierbar über archiv.csv)
+
+**Kontext:** Auftrag "Favicon" - das Interface hatte bislang kein Favicon.
+Soll wie das Logo über `archiv.csv` konfigurierbar sein. Nicht-Ziele: keine
+Änderung am Logo in der Kopfzeile, keine externen Dienste/Generatoren zur
+Laufzeit.
+
+### 1. Favicon-Datei
+
+**Ausschnitt bestimmt:** `data/logo.svg` (`viewBox="0 0 140.73 47.75"`)
+besteht aus zwei relevanten Formen für das Bildzeichen - einem gelben
+Quadrat (`<polygon fill="#fc0" points="0 11.5 36.25 11.5 36.25 47.75 0
+47.75 ...">`, x:[0,36.25]/y:[11.5,47.75], bereits selbst 36.25×36.25 groß)
+und dem schwarzen K (`<polygon fill="#1d1d1b" points="36.25 36.04 ...">`,
+x:[14.43,36.25]/y:[0,36.04] - ragt oben bewusst über das Quadrat hinaus,
+Teil der ursprünglichen Gestaltung). Die restlichen vier Pfade sind der
+Schriftzug „rems" (eigener, weit versetzter Koordinatenraum via
+`transform="translate(-227.73 -397.18)"`, x-Bereich beginnt erst bei
+x≈46, also rechts außerhalb des K/Quadrat-Bereichs) - Nicht-Ziel, nicht
+übernommen.
+
+Vereinigungs-Bounding-Box aus Quadrat+K: x:[0,36.25], y:[0,47.75] -
+36.25×47.75, nicht quadratisch. Um „Formen unverändert" strikt
+einzuhalten (kein Beschneiden von Tinte), wird die Breite statt der Höhe
+angepasst: `viewBox="-5.75 0 47.75 47.75"` (47.75 = Höhe der
+Vereinigungs-Box, Breite auf denselben Wert gebracht, Inhalt dadurch exakt
+horizontal zentriert, 5.75 Einheiten Rand links/rechts) - eine echte
+quadratische viewBox, keine einzige Koordinate der beiden Polygone
+verändert. `data/favicon.svg` enthält ausschließlich diese zwei Polygone,
+sonst nichts.
+
+**Rasterisierung ohne externen Dienst/Generator:** kein `rsvg-convert`/
+ImageMagick/Inkscape/`cairosvg`/`sharp` im System verfügbar (geprüft) -
+stattdessen ein kleines, lokales Python-Skript
+(`erzeuge_favicon_png.py`, im Scratchpad-Verzeichnis dieser Sitzung, NICHT
+im Repository) mit `Pillow` (bereits installiert): zeichnet dieselben
+beiden Polygon-Koordinaten direkt (8-fach supersampled + LANCZOS-
+Downscale für glatte Kanten) - exakt dieselbe Geometrie wie in
+`favicon.svg`, keine Interpretation/kein SVG-Renderer nötig. `data/
+favicon-32.png` (32×32, transparenter Hintergrund - für Browser-Favicons
+üblich und unproblematisch) und `data/apple-touch-icon.png` (180×180,
+OPAKER weißer statt transparenter Hintergrund - bekannte iOS-Eigenheit,
+transparente Bereiche in Touch-Icons werden dort teils schwarz statt
+durchsichtig dargestellt; „Formen unverändert" bleibt erfüllt, nur der
+zuvor transparente Rand um Quadrat/K bekommt eine Füllfarbe).
+
+**Verifikation Lesbarkeit:** alle drei Dateien als Bild im Chat geprüft -
+32×32 und die zusätzlich probeweise auf 16×16 herunterskalierte Fassung
+zeigen beide ein klar erkennbares schwarzes „K" auf gelbem Grund (die
+kräftigen, breiten Striche des K bleiben auch bei 16px ohne Verwaschen
+lesbar). 180×180 ebenso klar erkennbar.
+
+### 2. Konfiguration
+
+Drei neue Zeilen in `data/archiv.csv` (nach `logo_untertitel` eingefügt,
+alle bisherigen 16 Zeilen unverändert - per Diff bestätigt):
+`favicon_datei` (favicon.svg), `favicon_png_datei` (favicon-32.png),
+`apple_touch_icon_datei` (apple-touch-icon.png), je mit erklärender
+`anmerkung`-Spalte wie die übrigen Schlüssel.
+
+Neue Funktion `wendeFaviconAn()` in `js/core/app.js` (aufgerufen am Ende
+von `wendeArchivIdentitaetAn()`, also im selben Bootstrap-Schritt wie
+Titel/Logo/Fußzeile/Akzentfarbe): erzeugt für jeden der drei Schlüssel bei
+vorhandenem, nicht-leerem Wert ein `<link>`-Element (`rel="icon"`
+`type="image/svg+xml"` für `favicon_datei`, `rel="icon"`
+`type="image/png"` für `favicon_png_datei`, `rel="apple-touch-icon"` für
+`apple_touch_icon_datei`) und hängt es an `<head>` an - `index.html`
+selbst enthält bewusst KEINE eigenen `<link rel="icon">`-Platzhalter
+(anders als beim Logo-`<img>`), damit ein fehlender/leerer Schlüssel das
+Element gar nicht erst entstehen lässt, statt ein `<link>` mit leerem/
+kaputtem `href` zu erzeugen - erfüllt Punkt 2 wörtlich ("wird das
+entsprechende Element nicht gesetzt, ohne Fehler").
+
+**Ausfalltest** (`favicon_datei` in einer temporären Kopie von
+`archiv.csv` geleert, Seite neu geladen, Datei danach wiederhergestellt,
+`git status`/`diff` zeigt keine verbleibende Änderung an `archiv.csv`):
+`document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"]')`
+liefert danach nur noch die PNG- und Apple-Touch-Icon-Links, KEIN
+SVG-Icon-Element - `read_console_messages` zeigt keinen Fehler. Mit allen
+drei Werten gefüllt liefert dieselbe Abfrage alle drei `<link>`-Elemente
+mit den erwarteten `href`s (`data/favicon.svg`, `data/favicon-32.png`,
+`data/apple-touch-icon.png`); alle drei Dateien per direktem HTTP-Zugriff
+(`curl -I`) mit `200 OK` bestätigt, keine Konsolenfehler.
+
+**Selbstauskunft, Grenze der Verifikation im Test-Tooling:** das
+Akzeptanzkriterium verlangt einen "Screenshot des Browser-Tabs" bzw.
+"Favicon erscheint im Tab (Chrome und Firefox, Inkognito)". Das
+Browser-Werkzeug dieser Sitzung rendert ausschließlich den Seiteninhalt,
+keine Browser-Chrome/Tableiste - ein Screenshot davon kann das Favicon
+also strukturell nicht zeigen, unabhängig vom tatsächlichen Ergebnis.
+Stattdessen verifiziert wie oben beschrieben: korrekt erzeugte
+`<link>`-Elemente mit korrektem `rel`/`type`/`href`, alle drei
+Icon-Dateien per HTTP erreichbar und bildlich als klar lesbares K
+bestätigt. Ob das Favicon in einer echten Chrome-/Firefox-Tableiste
+(insbesondere Inkognito) erscheint, bittet ich den Auftraggeber selbst zu
+prüfen - das ist mit dem verfügbaren Werkzeug nicht zuverlässig
+nachstellbar. Separat, rein informativ: ein direkter Aufruf von
+`data/favicon.svg` als eigene Seite im Browser-Werkzeug zeigt eine
+verzerrte, nicht-quadratische Darstellung - das ist ein reines Artefakt
+der Art, wie dieser spezielle Browser eine freistehend aufgerufene
+SVG-Datei ohne umgebende Seite skaliert (`getBoundingClientRect()` zeigt
+1024×768 trotz `viewBox="-5.75 0 47.75 47.75"`, also eine nicht-
+proportionale Streckung auf die volle Fenstergröße) und hat mit dem
+Favicon-Einsatz selbst nichts zu tun - dort bestimmt der Browser die
+Icon-Größe selbst und respektiert die quadratische `viewBox` korrekt
+(dieselbe Geometrie liegt auch der PNG-Rasterisierung zugrunde, die
+sichtbar korrekt quadratisch ist).
+
+### 3. Dokumentation
+
+`docs/SCHEMA.md` Abschnitt 13.1: drei neue Zeilen in der
+Schlüssel-Tabelle, inkl. Hinweis auf quadratisches Format bei allen drei
+und dem zusätzlichen Hinweis auf die iOS-Transparenz-Eigenheit beim
+Apple-Touch-Icon. `CHANGELOG.md`/`PROJEKTLOG.md` (dieser Eintrag) ergänzt.
+
+---
+
 ## 2026-09-29 (47) – Korrekturen zu Paket 2 (nach Prüfung durch den Auftraggeber, vor Commit)
 
 **Kontext:** Rückmeldung nach eigener Prüfung von Paket 2 (46): CSV-

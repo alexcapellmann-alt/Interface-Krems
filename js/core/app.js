@@ -970,6 +970,36 @@ function wendeArchivIdentitaetAn() {
 
   const akzentfarbe = konfigurationswert('akzentfarbe');
   if (akzentfarbe) document.documentElement.style.setProperty('--accent', akzentfarbe);
+
+  wendeFaviconAn();
+}
+
+// AUFTRAG "Favicon": das Favicon soll wie das Logo über archiv.csv
+// konfigurierbar sein, damit andere Archive ihr eigenes verwenden können.
+// index.html enthält bewusst KEINE eigenen <link rel="icon">-Elemente -
+// sie werden hier je Schlüssel einzeln erzeugt, damit ein fehlender/leerer
+// Eintrag (Punkt 2, Auftrag wörtlich) das entsprechende Element schlicht
+// nicht entstehen lässt, statt ein <link> mit leerem/kaputtem href zu
+// setzen (kein Konsolenfehler, kein 404 auf "data/"). `.remove()` vor dem
+// Neuaufbau ist eine reine Absicherung gegen einen theoretischen zweiten
+// Aufruf dieser Funktion, nicht für den normalen Ein-mal-Bootstrap nötig.
+function wendeFaviconAn() {
+  const eintraege = [
+    { schluessel: 'favicon_datei', id: 'app-favicon-svg', rel: 'icon', typ: 'image/svg+xml' },
+    { schluessel: 'favicon_png_datei', id: 'app-favicon-png', rel: 'icon', typ: 'image/png' },
+    { schluessel: 'apple_touch_icon_datei', id: 'app-apple-touch-icon', rel: 'apple-touch-icon', typ: null }
+  ];
+  eintraege.forEach(({ schluessel, id, rel, typ }) => {
+    document.getElementById(id)?.remove();
+    const datei = konfigurationswert(schluessel);
+    if (!datei) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = rel;
+    if (typ) link.type = typ;
+    link.href = `data/${datei}`;
+    document.head.appendChild(link);
+  });
 }
 
 // Punkt 2.1, Ausfallverhalten "ueber.csv fehlt": Navigationspunkt "Über"
