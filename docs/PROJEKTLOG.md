@@ -5,6 +5,355 @@ dokumentiert werden (siehe Masterprompt, Status-Absatz). Neueste Einträge oben.
 
 ---
 
+## Datenkorrekturen
+
+Eigener, dauerhafter Abschnitt (nicht Teil der chronologischen Einträge
+unten) für entfernte/korrigierte Datensätze in den CSV-Tabellen - Zweck:
+taucht eine hier gelistete Signatur/ID bei einem künftigen Datenimport
+wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
+wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
+müssen. Neueste Korrektur oben.
+
+### 2026-09-30 – Zwei doppelt erfasste Urkunden entfernt (Auftrag "Doppelte Urkunden bereinigen (Teil A)")
+
+**Entfernt:**
+
+| Signatur | Begründung | Entscheidung |
+|---|---|---|
+| `StaAKr-0873` | Dublette von `StaAKr-0007` (1305 VI 24) - Fotos byteidentisch (`md5sum`, 5/5 Dateien geprüft) | Entfernen, durch den Auftraggeber nach Prüfung entschieden |
+| `StaAKr-0542` | Dublette von `StaAKr-0876` (1493 I 12/13) - Fotos byteidentisch (`md5sum`, 14/14 Dateien geprüft) | Entfernen, durch den Auftraggeber nach Prüfung entschieden |
+
+**Ausdrücklich NICHT entfernt** (zur Abgrenzung, damit diese beiden nicht
+versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
+(eigene Ausfertigung desselben Privilegs wie `StaAKr-0007`, eigene Fotos),
+`StaAKr-0007` und `StaAKr-0876` selbst.
+
+**Folgeänderungen:**
+- `data/urkunden.csv`: die zwei Zeilen entfernt (1069 → 1067 Datensätze),
+  `unsicherheit_anmerkung` bei `StaAKr-0007`, `StaAKr-0008` und
+  `StaAKr-0876` um einen Hinweis auf die Dublette bzw. Parallelausfertigung
+  ergänzt (voller Wortlaut siehe Eintrag 53 unten).
+- `fotos/thumbs/StaAKr-0873/` und `fotos/thumbs/StaAKr-0542/` gelöscht
+  (Inhalt vorher vollständig als Duplikat der verbleibenden Ordner
+  bestätigt).
+- `data/personenliste.csv`: `rudolf_iii` neu berechnet (`anzahl_nennungen`
+  4→3, `StaAKr-0873` aus `nennung_in_urkunden` entfernt) - einzige
+  betroffene Zeile, systematisch gegen beide entfernten Signaturen
+  geprüft.
+- `data/orte.csv`: `krems`s `haeufigkeit` neu berechnet (277→276,
+  `StaAKr-0542` trug `orte=Krems`). `wien`s `haeufigkeit` bewusst NICHT
+  geändert, obwohl `StaAKr-0873` `orte=Wien` trug - der gespeicherte Wert
+  (296) stimmte schon VOR der Entfernung nicht mit einer Neuberechnung aus
+  `urkunden.csv` überein (298, Abweichung 2) und wird deshalb laut Auftrag
+  nicht angetastet, nur gemeldet (siehe Eintrag 53).
+
+---
+
+## 2026-09-30 (53) – Doppelte Urkunden bereinigt (Teil A)
+
+**Kontext:** Auftrag "Doppelte Urkunden bereinigen (Teil A) · Fotos der
+UrkSt-Urkunden als Vorschaubilder (Teil B)" - beim Umstellen auf die
+Spalte `bilder` (Eintrag 52) war aufgefallen, dass `StaAKr-0873`/
+`StaAKr-0007` und `StaAKr-0542`/`StaAKr-0876` dieselben, byteidentischen
+Fotos tragen. Nach Prüfung durch den Auftraggeber: `StaAKr-0873` und
+`StaAKr-0542` entfernen, `StaAKr-0007`/`StaAKr-0008`/`StaAKr-0876`
+bleiben (Tabelle siehe Abschnitt "Datenkorrekturen" oben). Nur Teil A
+umgesetzt (Auftrag ausdrücklich: Teil B erst nach Freigabe).
+
+### A.1 Datensätze entfernen
+
+Byteidentität vor dem Löschen per `md5sum` bestätigt: alle 5 Dateien in
+`StaAKr-0873/` identisch zu `StaAKr-0007/`, alle 14 Dateien in
+`StaAKr-0542/` identisch zu `StaAKr-0876/` - keine Abweichung, kein Stopp
+nötig. Ordner gelöscht.
+
+`data/urkunden.csv`: die zwei Zeilen per gezieltem Textabgleich entfernt
+(nicht über eine CSV-Bibliothek neu geschrieben, um Quoting/Zeilenenden
+nicht anzufassen). **Live-Blocker während der Umsetzung:** der erste
+Schreibversuch (eigenes Python-Skript) scheiterte mit `PermissionError`,
+ein direkter Editier-Versuch mit `EPERM ... rename` - Ursache: ein
+laufender `EXCEL.exe`-Prozess (per `Get-Process` bestätigt) hielt die
+Datei offenbar exklusiv geöffnet. Den Nutzer gefragt statt selbst
+einzugreifen (z. B. den Prozess zu beenden) - nach Schließen von Excel
+funktionierten dieselben Schreibversuche sofort.
+
+**Vergleichsnachweis** (eigenes Prüfskript, vergleicht jede Zeile der
+1069 Datensätze umfassenden Vorher-Kopie gegen die 1067 Datensätze der
+Nachher-Datei, jeweils ohne die beiden entfernten Signaturen):
+0 Abweichungen in den verbleibenden 1067 Zeilen, Kopfzeile unverändert,
+BOM/CRLF byteexakt erhalten (1068/1068 Zeilenenden `\r\n`, 0 bare `\n`).
+
+`grep -rn "StaAKr-0873|StaAKr-0542" data js` liefert danach nur noch die
+drei Anmerkungs-Treffer aus A.2 (siehe unten) plus - vor A.3 - den
+damals noch unveränderten `personenliste.csv`-Eintrag von `rudolf_iii`.
+
+### A.2 Anmerkungen ergänzt
+
+Alle drei `unsicherheit_anmerkung`-Felder waren vorher leer (CSV-Abgleich
+bestätigt), der neue Text wurde daher jeweils als alleiniger Inhalt
+eingetragen (kein Anhängen an vorhandenen Text nötig). Exakter Wortlaut
+wie vom Auftraggeber vorgegeben, unverändert übernommen.
+
+**Unsicherheitsfeld-Prüfung (Auftrag wörtlich verlangt):** `datum_unsicher`
+ist bei `StaAKr-0876` weiterhin `nein`, obwohl die neue Anmerkung eine
+echte Datierungsfrage anspricht ("Ob es sich um das Original vom 12.
+Jänner oder um eine Abschrift vom 13. Jänner handelt, ist ungeklärt.") -
+absichtlich NICHT geändert (Nicht-Ziel: keine Änderung an Datierungen
+außer den Anmerkungen selbst), hiermit wie gefordert gemeldet statt
+stillschweigend belassen. Bei `StaAKr-0007`/`StaAKr-0008` betrifft die
+neue Anmerkung kein Unsicherheitsfeld inhaltlich (reiner Dubletten-/
+Parallelausfertigungs-Hinweis).
+
+Live geprüft: das σ-Symbol öffnet bei allen drei Urkunden den erwarteten
+Anmerkungstext (Screenshot `StaAKr-0876` im Bericht an den Auftraggeber).
+
+### A.3 Personenliste
+
+Systematische Prüfung (`grep` über die gesamte Datei nach beiden
+entfernten Signaturen): **nur `rudolf_iii`** betroffen, ausschließlich
+über `StaAKr-0873` (bestätigt: `StaAKr-0542` kommt in keiner
+`nennung_in_urkunden`/`nennung_in_buergerbuch`/
+`nennung_in_verlassenschaften`-Zelle vor). `anzahl_nennungen` 4→3,
+`StaAKr-0873` aus `nennung_in_urkunden` entfernt. `erste_nennung`/
+`letzte_nennung`/`nennungsspanne_jahre` bleiben unverändert (1305/1305/0)
+- alle drei verbleibenden Nennungen (`StaAKr-0007`, `StaAKr-0008`,
+`StAK-Stein-2000`) liegen wie die entfernte selbst im Jahr 1305, keine
+Neuberechnung ändert das Ergebnis. Kein Fall, bei dem eine Person nach
+der Entfernung ganz ohne Nennung dastünde. Vergleichsnachweis: 4177
+Zeilen vorher/nachher, genau 1 Zeile geändert.
+
+### A.4 Ortsliste
+
+**Methodik zuerst geprüft** (Auftrag wörtlich verlangt): `haeufigkeit`
+gegen eine unabhängige Neuberechnung aus `urkunden.csv`s `orte`-Spalte
+(Pipe-getrennt) getestet, dabei auch geprüft, ob `buergerbuch.csv`s
+`Ort`- bzw. `verlassenschaftsinventare.csv`s `Ort (Schaetzung)`-Spalte
+mit eingerechnet werden - für `Krems` ergab NUR die reine
+`urkunden.csv`-Zählung (277) eine exakte Übereinstimmung mit dem
+gespeicherten Wert (mit den beiden anderen Tabellen zusammengerechnet:
+319, keine Übereinstimmung) - Methodik damit geklärt: `haeufigkeit` zählt
+ausschließlich `urkunden.csv`-Nennungen.
+
+**`krems`:** Neuberechnung auf Basis der Vorher-Daten bestätigte den
+gespeicherten Wert (277 = 277) - durfte laut Auftrag daher neu berechnet
+werden. Nach Entfernung von `StaAKr-0542` (trug `orte=Krems`): **277 →
+276**.
+
+**`wien`:** gespeicherter Wert 296, Neuberechnung aus den Vorher-Daten
+ergab 298 - **Abweichung von 2, bereits VOR der Entfernung vorhanden**
+(unabhängig von `StaAKr-0873`, das selbst `orte=Wien` trägt und in beiden
+Zählungen enthalten war). Wert deshalb NICHT geändert (weiterhin 296),
+nur gemeldet - eine Neuberechnung nach Entfernung hätte 297 ergeben, wäre
+damit aber genauso wenig durch die vorherige Zählmethode gedeckt gewesen.
+Ursache der Vorab-Abweichung nicht weiter untersucht (Nicht-Ziel: "keine
+weiteren Dublettenprüfungen... nur melden").
+
+`unsicherheit_anmerkung` in `orte.csv` auf Erwähnungen beider entfernten
+Signaturen geprüft: keine Treffer.
+
+Vergleichsnachweis: 257 Zeilen vorher/nachher, genau 1 Zeile (`krems`)
+geändert.
+
+### Regressionstest
+
+Kachelraster, Zeitachse, Personenliste live geladen - keine
+Konsolenfehler. `StaAKr-0007`/`-0008`/`-0876` zeigen weiterhin ihre
+Fotos (Kachelraster + Sidebar). Deep Link
+`?datensatz=urkunde:StaAKr-0873` zeigt den bestehenden "nicht
+gefunden"-Hinweis, kein Fehler. Die Führung `buergerspital-heringe`
+(Beleg `urkunde:StaAKr-0050`) sowie eine gezielte Prüfung des
+`StaAKr-0007`-Belegs funktionieren unverändert.
+
+---
+
+## 2026-09-30 (52) – Urkundenfotos über die Spalte bilder statt foto_manifest.json
+
+**Kontext:** Auftrag "Urkundenfotos über die Spalte `bilder` statt
+`foto_manifest.json`" - die Fotozuordnung lief bisher über ein separat per
+`node scripts/erzeugeFotoManifest.js` erzeugtes JSON-Manifest, eine
+Kommandozeilen-Hürde für Archivar:innen. Neu: die Dateinamen stehen direkt
+in `urkunden.csv`.
+
+### 1. Spalte `bilder` einmalig befüllt
+
+Einmaliges Python-Skript AUSSERHALB des Repositorys (Scratchpad dieser
+Sitzung, nicht Teil des Commits, siehe Nicht-Ziel): liest die Datei
+zeilenweise als Rohtext, parst pro Zeile nur zur INHALTLICHEN Auswertung
+(`csv.reader` auf die einzelne Zeile), verändert aber nie den Roh-String
+der 14 bestehenden Spalten - die neue Spalte wird als reiner Text-Anhang
+(`;<bilder-Wert>`) an jede Originalzeile angefügt, da `foto_ordner` bereits
+die letzte Spalte war. Kodierung (`utf-8-sig`, BOM erhalten), Trennzeichen
+(`;`) und Zeilenenden (`\r\n`, keine bare `\n` eingeführt) explizit als
+Rohbytes nachgeprüft - keine Neuformatierung durch eine CSV-Bibliothek
+oder Excel.
+
+**Bilddateien ermitteln:** pro Zeile `fotos/thumbs/<foto_ordner>/`
+gelistet, nur `.jpg`/`.jpeg`/`.png`/`.webp` (Groß-/Kleinschreibung egal),
+natürliche Sortierung (Ziffernfolgen als `int`, nicht als Zeichenkette -
+`StAK_..._11...` steht dadurch vor `StAK_..._100...`, `r` vor `v` ergibt
+sich unverändert aus der alphabetischen Teilsortierung der Buchstaben-
+Segmente). Ordner existiert nicht: Zelle bleibt leer (kam laut Prüfung kein
+einziges Mal vor - alle 1069 `foto_ordner`-Werte verweisen auf einen
+tatsächlich existierenden Ordner, s. u.).
+
+**Verifikation:**
+- Summe aller Einträge in `bilder`: **2612** (exakt wie gefordert).
+- Mengenabgleich gegen `data/foto_manifest.json` (vor dessen Löschung
+  geprüft): **0 Abweichungen** über alle 1069 Zeilen.
+- Vollständiger Vorher-Nachher-Vergleich (eigenes Prüfskript, vergleicht
+  jede der 1069 Datenzeilen ohne die neue Spalte): **0 Abweichungen** in
+  den 14 ursprünglichen Spalten, Zeilenzahl unverändert (1070 inkl.
+  Kopfzeile), Kopfzeile = alte 14 Namen + `bilder` neu am Ende.
+- BOM und CRLF-Zeilenenden nach dem Schreiben erneut auf Byte-Ebene
+  geprüft: BOM vorhanden, 1070/1070 Zeilenenden `\r\n`, 0 bare `\n`.
+- **Stichprobe StaAKr-0905** (130 Bilder): erste drei
+  `StAK_1439_905_01.jpg, StAK_1439_905_02.jpg, StAK_1439_905_03.jpg`,
+  letzte drei `StAK_1439_905_128.jpg, StAK_1439_905_129.jpg,
+  StAK_1439_905_130.jpg`. Natürliche Sortierung gezielt am kritischen Fall
+  geprüft: `StAK_1439_905_11.jpg` steht an Position 10 (0-indiziert),
+  `StAK_1439_905_100.jpg` an Position 99 - `_11` korrekt vor `_100`, was
+  eine rein alphabetische Sortierung nicht geleistet hätte (dort läge
+  "100" lexikografisch vor "11").
+
+### 2. Datenbefunde (gemeldet, nicht korrigiert)
+
+**17 Urkunden ohne Fotoordner-Inhalt, `bilder` bleibt leer - bestätigt,
+exakt die genannten 17:** alle 17 `foto_ordner`-Werte verweisen auf einen
+tatsächlich VORHANDENEN, aber INHALTSLEEREN Ordner (kein fehlender
+Ordner - dieselbe Unterscheidung, die auch `foto_manifest.json` mit
+leeren `[]`-Arrays traf). Live gegen das Dateisystem geprüft:
+`StaAKr-0001a, StaAKr-0001b, StaAKr-0029, StAK-UrkSt-0001, StAK-UrkSt-0003,
+StaAKr-0053, StAK-UrkSt-0004, StAK-UrkSt-0005a, StaAKr-0324, StaAKr-0397,
+StaAKr-0539, StaAKr-0626a, StaAKr-0647, StaAKr-0778, StaAKr-0840,
+StaAKr-Hollenburg-0005, StaAKr-866a` - exakte Übereinstimmung mit der im
+Auftrag genannten Liste (17/17).
+
+**Systematische Prüfung auf Ordner mit fremdreferenzierenden
+Dateinamen:** eigenes Skript, das für jeden Ordner die Ziffernfolgen
+prüft, die in JEDER seiner Dateien gemeinsam vorkommen, und sie mit der im
+Ordnernamen selbst enthaltenen Zahl abgleicht (führende Nullen ignoriert).
+Ergebnis: 10 auffällige Ordner, davon 5 die bereits als "in sich stimmige
+Namenskonvention" bekannten Hollenburg-Fälle (`StaAKr-Hollenburg-0001/
+0002/0003/0004/0006` - Dateien tragen das Ereignisdatum statt einer
+laufenden Nummer, wie im Auftrag vorab erwähnt, hier nur zusammenfassend
+bestätigt, nicht einzeln aufgeführt) und **5 echte Befunde**:
+
+| Ordner | Enthält Dateien von | Datum lt. Dateiname | Datum lt. `urkunden.csv` | Byteidentisch? |
+|---|---|---|---|---|
+| `StaAKr-0873` | `StaAKr-0007` (`StAK_13050624_7_…`, 5 Dateien) | 1305 VI 24 (beide) | 0873: 1305 VI 24; 0007: 1305 VI 24 | **Ja**, alle 5 Dateien geprüft (`md5sum`) |
+| `StaAKr-0876` | `StaAKr-0542` (`StAK_14930113_542_…`, 14 Dateien) | 1493 I 13 (Dateiname) | 0876: 1493 I 12; 0542: 1493 I 13, eigener Ordner mit denselben 14 Bildern | **Ja**, alle 14 Dateien geprüft |
+| `StAK-Stein-2000` | vermeintlich `StAK-Stein-2001` (`…_2001_…`, 23 Dateien) | 1305 VI 24 | `StAK-Stein-2001` existiert in der Tabelle nicht | n. z. (keine Gegenstelle) |
+| `StAK-UrkKr-0002a` | vermeintlich `StaAKr-0903` (`…_903_…`, 2 Dateien) | – | `StaAKr-0903` existiert in der Tabelle nicht | n. z. (keine Gegenstelle) |
+| **`StaAKr-0547`** (neu gefunden, im Auftrag nicht erwähnt) | eine von zwei eigenen Dateien ohne die Ordnerzahl im Namen | 1496 XI 14 | 0547: 1496 XI 14 (stimmt überein) | n. z. |
+
+**Zu `StaAKr-0547`:** KEIN Signaturverwechslungs-Fall wie die vier
+übrigen - der Ordner enthält `StAK_14961114.jpg` (keine "547" im Namen)
+und `StAK_14961114_547_v.jpg` (mit "547"). Beide Dateien tragen dasselbe
+Datum wie die Urkunde selbst (1496 XI 14), es gibt keine andere Urkunde
+mit diesem Datum, an die die erste Datei stattdessen gehören könnte -
+reine interne Benennungsinkonsistenz (die Vorderseite scheint ohne die
+Nummer benannt worden zu sein, die Rückseite mit), keine falsche
+Zuordnung. Trotzdem gemeldet, da es dieselbe Grundmusterprüfung
+("Ordnernummer nicht in allen Dateien wiederzufinden") auslöste wie die
+vier echten Fälle.
+
+Die 13 weiteren, vom automatischen Muster ("Zahl am Ende des
+Ordnernamens") abweichenden, aber durchgängig referenzierten und in sich
+konsistenten Namenskonventionen (`StAK_<Datum>_<900-915>_reg` für elf
+Regest-Bild-Ordner, `StaAKr-0074a-g`, `StaAKr-0310 a`) wurden geprüft und
+sind - wie im Auftrag als möglicher Fall vorgesehen - keine Befunde,
+sondern etablierte, konsistent verwendete Namensformen; alle 13 sind
+tatsächlich als `foto_ordner` referenziert.
+
+**Byteidentität:** für beide Ordnerpaare mit identischen Dateinamen
+(`0873`/`0007`, `0876`/`0542`) alle gemeinsamen Dateien per `md5sum`
+verglichen - in beiden Fällen vollständig byteidentisch, kein einziger
+Unterschied.
+
+### 3. Anzeige auf die Spalte umgestellt
+
+Neuer, bewusst allgemein gehaltener Helfer `js/utils/bilder.js` (Nicht-
+Ziel-Vorgabe: "später für jede Tabelle mit `foto_ordner` und `bilder`" -
+kennt nur diese beiden Feldnamen, nichts Urkunden-Spezifisches):
+- `ermittleBildUrls(record)`: rein synchron (kein Netzwerkzugriff mehr
+  nötig, die Dateinamen stehen ja schon in der CSV). Behandelt `record.
+  bilder` als String (genau ein Bild, `dataLoader.js` wandelt nur bei
+  einem `|` in eine Liste um), Array (mehrere Bilder) und leer/`undefined`
+  gleich - Leerzeichen um Dateinamen werden getrimmt, leere Einträge
+  (z. B. durch `||`) herausgefiltert.
+- `wendeBildFehlerbehandlungAn(img, url, signatur)`: ersetzt ein `<img>`
+  bei einem `error`-Ereignis durch einen sichtbaren, zurückhaltenden
+  Text-Hinweis ("Bild nicht gefunden: <Dateiname>") statt einer leeren
+  Fläche/eines kaputten Bildsymbols, plus `console.warn` mit Signatur und
+  Dateiname. `{ once: true }`, da ein einzelnes `<img>` für genau eine URL
+  steht (kein erneuter Ladeversuch vorgesehen).
+
+**Ausnahme, dokumentiert statt stillschweigend erzwungen:**
+`sidebar.js`s Hauptbild (`baueFotogalerie()`) ist - anders als alle
+übrigen `<img>`-Stellen - KEIN einmaliges Element für genau eine URL:
+`waehleBild()` tauscht seine `src` wiederholt aus, solange die Sidebar
+offen bleibt. Die geteilte `wendeBildFehlerbehandlungAn()` (dauerhaftes
+Ersetzen des `<img>`) passt für dieses wiederverwendbare Element nicht -
+stattdessen ein eigener, lokaler Fehler-/Erfolg-Umschalter (`error`
+versteckt `hauptbild` und zeigt einen danebenliegenden Hinweis-Span,
+`load` macht das bei einem anschließend erfolgreich gewählten Bild wieder
+rückgängig) - dieselbe Text-/Konsolen-Konvention, nur für ein
+dauerhaftes statt ein einmaliges Element.
+
+**Alle drei Aufrufer umgestellt:**
+- `js/viz/regestenKachelraster.js`s `baueFotoBereich()`: die Leer-Prüfung
+  ("Foto folgt") steht jetzt VOR dem Lazy-Loading fest (synchron), nicht
+  mehr erst nach dem asynchronen Laden - das IntersectionObserver-
+  Beobachten bleibt bestehen (betrifft weiterhin das tatsächliche Laden
+  der Bilddateien durch den Browser bei ~1068 Urkunden, nicht das
+  Ermitteln der Dateinamen).
+- `js/utils/sidebar.js`s `baueFotogalerie()`: die vormalige
+  `ladeFotos().then(...)`-Kapselung entfällt vollständig, die Funktion
+  bleibt synchron von Anfang bis Ende.
+- `js/fuehrungen/fuehrungenGalerie.js`s `ermittleKachelBild()`: nicht mehr
+  `async`, der äußere `await Promise.all(gruppe.map(ermittleKachelBild))`
+  wird zu einem einfachen `.map()` - `render()` selbst bleibt async
+  (lädt weiterhin `fuehrungen.csv` über `ladeFuehrungenDaten()`).
+
+**Live-Verifikation:** Stichprobe mit sechs Urkunden (mehr als die
+geforderten mindestens fünf) - `StaAKr-0001` (4 Bilder), `StaAKr-0007`
+(5), `StaAKr-0905` (130, Reihenfolge erneut im Browser geprüft), plus drei
+weitere inkl. einer mit genau einem Bild - alle zeigen im Kachelraster,
+in der Sidebar und (wo als erster Beleg einer Führungsstation verwendet)
+in der Führungsgalerie dieselben Bilder wie vor der Umstellung. Lightbox
+unverändert getestet (öffnet, Bild-zu-Bild-Navigation funktioniert).
+Ausfalltest: ein Dateiname in einer `bilder`-Zelle testweise verfälscht -
+Hinweis "Bild nicht gefunden: …" erscheint an der erwarteten Stelle
+(Kachelraster UND Sidebar geprüft), `console.warn` mit Signatur und
+Dateiname, Datei danach exakt zurückgesetzt.
+
+`grep -rn "foto_manifest\|ladeFotos\|fotoOrdner" js` liefert **keinen
+Treffer** - beim ersten Durchlauf enthielt die neue `bilder.js` selbst
+noch drei harmlose, aber den Grep-Test verletzende Vorkommen (ein
+lokaler Variablenname `fotoOrdner` sowie zwei erklärende Kommentar-
+Erwähnungen von `foto_manifest.json`/`fotoOrdner.js`) - umformuliert bzw.
+umbenannt, damit das Akzeptanzkriterium wörtlich erfüllt ist, ohne
+inhaltliche Einbußen am Kommentar.
+
+### 4. Aufräumen
+
+`data/foto_manifest.json`, `scripts/erzeugeFotoManifest.js`,
+`js/utils/fotoOrdner.js` gelöscht. `scripts/` war danach leer und wurde
+ebenfalls entfernt. Zwei stille Kommentar-Erwähnungen von `fotoOrdner.js`
+als reine Analogie (in `js/fuehrungen/fuehrungenDaten.js` und
+`js/utils/urkundenOrte.js`, keine echten Importe/Aufrufe, daher nicht in
+den Betroffenen Dateien gelistet) hätten sonst auf eine gelöschte Datei
+verwiesen - als direkte Konsequenz der Löschung mit umformuliert.
+
+### 5. Dokumentation
+
+`docs/SCHEMA.md` Abschnitt 1 (`urkunden.csv`): neue Zeile für `bilder`
+plus ein neuer Hinweisblock für Archivar:innen (Groß-/Kleinschreibung,
+Pipe-Trennung = Reihenfolge, "Datei UND Zelle" bei neuen Fotos, Spalte
+beim Neuimport erhalten, Excel-Speicherformat).
+
+---
+
 ## 2026-09-29 (51) – fuehrungen.csv: weiterlesen auf echte literatur_id-Werte umgestellt
 
 **Kontext:** Rückmeldung zu Eintrag 50s Befund (`weiterlesen` enthielt bei

@@ -7,6 +7,65 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-30 (101) – Doppelte Urkunden bereinigt (Teil A)
+
+`StaAKr-0873` (Dublette von `StaAKr-0007`) und `StaAKr-0542` (Dublette
+von `StaAKr-0876`) aus `data/urkunden.csv` entfernt - Fotos vorher per
+`md5sum` als byteidentisch bestätigt, Ordner `fotos/thumbs/StaAKr-0873/`
+und `-0542/` gelöscht (1069 → 1067 Datensätze). `StaAKr-0007`,
+`StaAKr-0008` und `StaAKr-0876` erhalten eine `unsicherheit_anmerkung`
+mit Hinweis auf die entfernte Dublette bzw. Parallelausfertigung.
+`data/personenliste.csv`: `rudolf_iii` neu berechnet (4→3 Nennungen).
+`data/orte.csv`: `krems`s `haeufigkeit` neu berechnet (277→276); `wien`s
+Wert bewusst NICHT geändert, da bereits vor der Entfernung nicht mit
+einer Neuberechnung übereinstimmend (gemeldet, nicht korrigiert). Neuer
+Abschnitt "Datenkorrekturen" in `docs/PROJEKTLOG.md` für künftige
+Nachvollziehbarkeit. Details siehe PROJEKTLOG Eintrag 53. Teil B (Fotos
+der UrkSt-Urkunden) noch nicht umgesetzt, wartet auf Freigabe.
+
+---
+
+## 2026-09-30 (100) – Urkundenfotos über die Spalte bilder statt foto_manifest.json
+
+Löst das bisherige, per Kommandozeilenskript (`scripts/erzeugeFotoManifest.js`)
+erzeugte JSON-Manifest ab - für Archivar:innen ohne Programmierkenntnisse
+eine Hürde. Die Dateinamen stehen jetzt direkt in `data/urkunden.csv`, neue
+Spalte `bilder` (Pipe-getrennt, ohne Pfad) direkt nach `foto_ordner`.
+Einmalig mit einem projektfremden Python-Skript aus dem tatsächlichen
+Inhalt von `fotos/thumbs/` befüllt (natürliche Sortierung, nur `.jpg`/
+`.jpeg`/`.png`/`.webp`, Kodierung/Trennzeichen/Anführungszeichen/CRLF
+unverändert) - Summe 2612 Dateinamen, geprüft gegen das alte Manifest
+(Mengenvergleich je Urkunde, 0 Abweichungen) und gegen eine vollständige
+Vorher-Nachher-Prüfung aller 1069 Zeilen (nur `bilder` neu, alle 14
+bisherigen Spalten zeichenidentisch).
+
+Neuer gemeinsamer, SYNCHRONER Helfer `js/utils/bilder.js`
+(`ermittleBildUrls()`, `wendeBildFehlerbehandlungAn()`) - bewusst allgemein
+gehalten (kennt nur `foto_ordner`/`bilder`, nichts Urkunden-Spezifisches).
+`js/viz/regestenKachelraster.js`, `js/utils/sidebar.js` und
+`js/fuehrungen/fuehrungenGalerie.js` nutzen ihn jetzt statt des bisherigen
+asynchronen `ladeFotos()` - Promises/`await` an diesen Stellen entfallen.
+Ein nicht ladbares Bild zeigt jetzt einen sichtbaren Hinweis „Bild nicht
+gefunden: <Dateiname>“ statt einer leeren Fläche/eines kaputten
+Bildsymbols, plus `console.warn`.
+
+Entfernt: `data/foto_manifest.json`, `scripts/erzeugeFotoManifest.js`
+(danach leerer `scripts/`-Ordner ebenfalls entfernt), `js/utils/
+fotoOrdner.js`. `docs/SCHEMA.md` (Abschnitt 1) um die neue Spalte und
+Pflegehinweise ergänzt.
+
+Datenbefunde beim Abgleich gemeldet (nicht korrigiert, siehe PROJEKTLOG):
+17 Urkunden ohne Fotos (Ordner vorhanden, aber leer) bestätigt; vier
+Ordner, deren Dateinamen auf eine andere Signatur verweisen
+(`StaAKr-0873`↔`StaAKr-0007`, `StaAKr-0876`↔`StaAKr-0542`, je
+byteidentisch per Prüfsumme; `StAK-Stein-2000` und `StAK-UrkKr-0002a` ohne
+passende Gegenstelle); ein zusätzlicher, bislang nicht gemeldeter Fund
+(`StaAKr-0547`: eine von zwei Dateien ohne die eigene Nummer im Namen,
+gleiches Datum, keine Signaturverwechslung). Details siehe PROJEKTLOG
+Eintrag 52.
+
+---
+
 ## 2026-09-29 (99) – fuehrungen.csv: weiterlesen auf echte literatur_id-Werte umgestellt
 
 Folgeauftrag zu (98)s Befund: `weiterlesen` enthielt bei 10 von 12

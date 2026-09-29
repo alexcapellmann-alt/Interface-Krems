@@ -64,7 +64,7 @@
 
 import { passendeTextfarbe } from './kategorieFarben.js';
 import { CAT_COLORS } from '../config/constants.js';
-import { ladeFotos } from './fotoOrdner.js';
+import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from './bilder.js';
 import { oeffneLightbox } from './lightbox.js';
 import { baueUnsicherheitAbsatz } from './unsicherAbsatz.js';
 import { baueGenanntePersonenZeile } from './genanntePersonen.js';
@@ -222,15 +222,15 @@ export function baueUrkundenListeInhalt(records, { onEintragKlick } = {}) {
 // Punkt 2: eigene, schlanke Fotogalerie-Umsetzung statt der geteilten
 // Lightbox (js/utils/lightbox.js) - Auftrag ausdrücklich "kein Lightbox-
 // Overlay nötig, Wechsel bleibt innerhalb der Sidebar". Nutzt dieselbe
-// URL-Quelle (ladeFotos()/data/foto_manifest.json) wie
-// regestenKachelraster.js' baueFotoBereich(), aber EIGENE, nicht
-// identische Umsetzung: dort ist zusätzlich Lazy-Loading per
-// IntersectionObserver nötig (bis zu ~1000 gleichzeitig gerenderte
+// URL-Quelle (js/utils/bilder.js' ermittleBildUrls(), synchron aus
+// `foto_ordner`/`bilder`) wie regestenKachelraster.js' baueFotoBereich(),
+// aber EIGENE, nicht identische Umsetzung: dort ist zusätzlich Lazy-Loading
+// per IntersectionObserver nötig (bis zu ~1000 gleichzeitig gerenderte
 // Kacheln), hier wird immer nur EINE Urkunde auf einmal angezeigt
-// (Sidebar-Detailansicht) - ein einfacher async-Aufruf beim Öffnen reicht,
-// kein Beobachter nötig. Gibt den Bereich SOFORT (synchron, ggf. leer)
-// zurück und befüllt ihn nach - konsistent mit baueUrkundenDetailInhalt(),
-// die selbst synchron bleiben muss (Aufrufer hängt den Rückgabewert
+// (Sidebar-Detailansicht) - kein Beobachter nötig. Gibt den Bereich SOFORT
+// (synchron, ggf. leer) zurück und befüllt ihn - konsistent mit
+// baueUrkundenDetailInhalt(), die selbst synchron bleiben muss (Aufrufer
+// hängt den Rückgabewert
 // direkt per appendChild() ein, siehe oeffneUrkundenListe()-Analogon in
 // kalenderHeatmap.js).
 // Auftrag "Sidebar-Lightbox & app-weite Vereinheitlichung", Punkt 1: das
@@ -248,10 +248,11 @@ export function baueUrkundenListeInhalt(records, { onEintragKlick } = {}) {
 function baueFotogalerie(record) {
   const bereich = document.createElement('div');
   bereich.className = 'bestand-sidebar-fotogalerie';
-  if (!record.foto_ordner) return bereich;
 
-  ladeFotos(record.foto_ordner).then((urls) => {
-    if (urls.length === 0) return;
+  const urls = ermittleBildUrls(record);
+  if (urls.length === 0) return bereich;
+
+  {
     const altText = `Foto zu Urkunde ${record.signatur || '(ohne Signatur)'}`;
     const lightboxBilder = urls.map((url) => ({ url, alt: altText }));
     let aktuellerIndex = 0;
@@ -271,9 +272,31 @@ function baueFotogalerie(record) {
         oeffneHauptbildLightbox();
       }
     });
-    bereich.appendChild(hauptbild);
+    // `hauptbild` ist - anders als die Thumbnails und die Kachelraster-Fotos -
+    // KEIN einmaliges Element für genau eine URL: waehleBild() unten tauscht
+    // `src` wiederholt aus, solange die Sidebar offen bleibt. Die geteilte
+    // wendeBildFehlerbehandlungAn() (ersetzt ein <img> dauerhaft durch einen
+    // Text-Hinweis) passt dafür nicht - hier stattdessen ein eigener,
+    // wiederverwendbarer Fehler-/Erfolg-Umschalter (versteckt `hauptbild` und
+    // zeigt `hauptbildFehler` bei einem fehlgeschlagenen Bild, macht das bei
+    // einem anschließend erfolgreich geladenen Bild wieder rückgängig).
+    const hauptbildFehler = document.createElement('span');
+    hauptbildFehler.className = 'bestand-sidebar-foto-fehler';
+    hauptbildFehler.hidden = true;
+    hauptbild.addEventListener('error', () => {
+      const dateiname = hauptbild.src.split('/').pop();
+      console.warn(`Bild nicht gefunden: ${dateiname}${record.signatur ? ` (Urkunde ${record.signatur})` : ''}`);
+      hauptbild.hidden = true;
+      hauptbildFehler.textContent = `Bild nicht gefunden: ${dateiname}`;
+      hauptbildFehler.hidden = false;
+    });
+    hauptbild.addEventListener('load', () => {
+      hauptbild.hidden = false;
+      hauptbildFehler.hidden = true;
+    });
+    bereich.append(hauptbild, hauptbildFehler);
 
-    if (urls.length <= 1) return;
+    if (urls.length <= 1) return bereich;
 
     const thumbs = document.createElement('div');
     thumbs.className = 'bestand-sidebar-foto-thumbs';
@@ -303,10 +326,11 @@ function baueFotogalerie(record) {
           waehleBild();
         }
       });
+      wendeBildFehlerbehandlungAn(thumb, url, record.signatur);
       thumbs.appendChild(thumb);
     });
     bereich.appendChild(thumbs);
-  });
+  }
 
   return bereich;
 }
@@ -607,6 +631,12 @@ export function fuegeSidebarStyleEin(container) {
     .bestand-sidebar-foto-haupt { display: block; width: 100%; border-radius: var(--radius); margin-bottom: var(--space-2);
       cursor: pointer; }
     .bestand-sidebar-foto-haupt:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    /* AUFTRAG "Urkundenfotos über die Spalte bilder": Ersatz-Hinweis, wenn
+       das Hauptbild nicht lädt (siehe baueFotogalerie()) - zurückhaltend
+       (kursiv, gedämpfte Farbe), dieselbe Konvention wie regestenKachelraster.js'
+       .regk-foto-platzhalter. */
+    .bestand-sidebar-foto-fehler { display: block; font-style: italic; color: var(--text-muted); font-size: var(--fs-sm);
+      margin-bottom: var(--space-2); }
     .bestand-sidebar-foto-thumbs { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-3); }
     .bestand-sidebar-foto-thumbs img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius);
       cursor: pointer; border: 2px solid transparent; }

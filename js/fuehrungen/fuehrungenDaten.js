@@ -1,8 +1,7 @@
 // js/fuehrungen/fuehrungenDaten.js
 // AUFTRAG "Führungen, Teil 2a", Punkt 1+2: lädt fuehrungen.csv PLUS alle fünf
 // Quell-CSVs aus der beleg-Präfixtabelle (docs/SCHEMA.md Abschnitt 10) lazy
-// (erst bei erstem Aufruf, memoisiert - dasselbe Promise-Cache-Muster wie
-// js/utils/fotoOrdner.js' ladeManifest()) und baut daraus eine geprüfte,
+// (erst bei erstem Aufruf, memoisiert) und baut daraus eine geprüfte,
 // gruppierte Datenstruktur: eine Zeile pro Station, Führungsangaben nur aus
 // der Zeile mit der niedrigsten station_nr, Reihenfolge nach erstem
 // Auftreten in der Datei (Auftrag wörtlich, Punkt 2).

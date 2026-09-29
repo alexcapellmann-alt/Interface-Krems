@@ -7,10 +7,13 @@
 // Freitext und interaktiven Namen/Orten passen besser zu HTML als zu SVG), verändert
 // keinen übergebenen Record.
 //
-// Fotoanzeige: siehe js/utils/fotoOrdner.js (liest data/foto_manifest.json, kein
-// Live-Verzeichnislisting mehr). Fotos werden trotzdem lazy geladen
-// (IntersectionObserver), um bei ~1068 Urkunden nicht alle Bilder sofort zu laden
-// (Abschnitt 2: Lazy Loading).
+// Fotoanzeige: siehe js/utils/bilder.js (Dateinamen stehen direkt in
+// urkunden.csv, `foto_ordner`+`bilder`, kein Manifest mehr). Fotos werden
+// trotzdem lazy geladen (IntersectionObserver), um bei ~1068 Urkunden nicht
+// alle Bilder sofort zu laden (Abschnitt 2: Lazy Loading) - das bezieht sich
+// auf das Laden der BILDDATEIEN selbst (per Browser, sobald das <img> im
+// DOM hängt), nicht auf das Ermitteln der Dateinamen (das ist jetzt
+// synchron, da schon in `record.bilder` vorhanden).
 //
 // Kontext-erhaltender Wechsel (Abschnitt 4.2/7): Klick auf Person/Ort ruft bereits
 // state.js: setFilterEntity() auf. Die Zielansicht, die diesen Filter ausliest,
@@ -77,7 +80,7 @@
 // s.u.), sind dadurch immer synchron, ohne eigenen Abgleichs-Code.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
-import { ladeFotos } from '../utils/fotoOrdner.js';
+import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
 import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
 import { setFilterEntity, getZustand, clearZielSignatur } from '../core/state.js';
@@ -321,28 +324,26 @@ function baueRegestBereich(text) {
   return absatz;
 }
 
-// Fehlt der Ordner oder ist er leer, erscheint "Foto folgt" statt eines kaputten
-// Bild-Symbols (Abschnitt 3) - sowohl sofort (kein foto_ordner) als auch nach dem
-// lazy geladenen Ergebnis (Ordner existiert nicht/ist leer).
+// Fehlt der Ordner oder ist die `bilder`-Zelle leer, erscheint sofort "Foto
+// folgt" statt eines kaputten Bild-Symbols (Abschnitt 3) - ermittleBildUrls()
+// ist synchron, diese Entscheidung steht daher schon vor dem Lazy-Loading
+// fest (das IntersectionObserver-Beobachten bleibt trotzdem bestehen: es
+// betrifft das tatsächliche Laden der Bilddateien durch den Browser, nicht
+// das Ermitteln der Dateinamen).
 function baueFotoBereich(record, beobachter) {
   const bereich = document.createElement('div');
   bereich.className = 'regk-foto-bereich';
 
-  if (!record.foto_ordner) {
+  const urls = ermittleBildUrls(record);
+  if (urls.length === 0) {
     bereich.textContent = 'Foto folgt';
     bereich.classList.add('regk-foto-platzhalter');
     return bereich;
   }
 
   bereich.textContent = 'Fotos werden geladen…';
-  beobachter.beobachte(bereich, async () => {
-    const urls = await ladeFotos(record.foto_ordner);
+  beobachter.beobachte(bereich, () => {
     bereich.textContent = '';
-    if (urls.length === 0) {
-      bereich.textContent = 'Foto folgt';
-      bereich.classList.add('regk-foto-platzhalter');
-      return;
-    }
     // Punkt 7 (Lightbox): dieselbe Liste + derselbe Alt-Text, die/den auch
     // die Vorschaubilder selbst tragen, wird komplett an oeffneLightbox()
     // weitergereicht (nicht nur die angeklickte URL) - dadurch funktioniert
@@ -385,6 +386,7 @@ function baueFotoBereich(record, beobachter) {
           oeffneLightbox(lightboxBilder, index);
         }
       });
+      wendeBildFehlerbehandlungAn(img, url, record.signatur);
       bereich.appendChild(img);
     });
   });
