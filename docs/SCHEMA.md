@@ -1,5 +1,25 @@
 # SCHEMA.md – Datentabellen Interface Krems
 
+**Wichtigster Hinweis zuerst – CSV-Export aus Excel:** beim Speichern einer
+CSV-Datei in Excel unbedingt **„CSV UTF-8 (durch Trennzeichen getrennt)"**
+wählen, **nicht** „CSV (Trennzeichen-getrennt)". Der Unterschied ist beim
+Speichern nicht offensichtlich, verursacht aber stille Datenschäden: bei
+„CSV (Trennzeichen-getrennt)" bleiben Umlaute (ä/ö/ü/ß) zwar erhalten, aber
+alle anderen Sonderzeichen außerhalb der Windows-„ANSI"-Kodierung – etwa
+`ř`, `č`, `ů` in Ortsnamen wie „Jindřichův Hradec" oder übergeschriebene
+Buchstaben in Transkriptionen (`v[er]retnu[ß]` u. ä.) – werden lautlos
+durch `?` ersetzt. So geschehen am 2026-09-30 in `data/urkunden.csv`: 106
+verlorene Zeichen in 38 Zellen (siehe `docs/PROJEKTLOG.md`, Abschnitt
+„Datenkorrekturen"). Der Fehler fällt beim Öffnen der Datei nicht auf, da
+`?` wie ein normales Zeichen aussieht – deshalb vor jedem Export die
+Dialogauswahl bewusst prüfen.
+
+Zusätzlich: eine in Excel **geöffnete** CSV-Datei ist für andere Programme
+gesperrt (auch für automatisiertes Bearbeiten) - Excel vor dem Export/vor
+Änderungen durch andere Werkzeuge schließen.
+
+---
+
 Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen des Projekts. Es ergänzt den Masterprompt (allgemeine, archivübergreifende Regeln) um die Krems-spezifischen Details und wächst mit dem Projekt mit. Pflegeregel: neue Spalten dürfen ergänzt werden, bestehende, bereits dokumentierte Spalten nicht ohne Rückfrage geändert werden (siehe Masterprompt Abschnitt 12).
 
 **Allgemeine Konventionen** (siehe Masterprompt Abschnitt 12 für Details): CSV, UTF-8, Semikolon als Spaltentrenner, Pipe `|` für Mehrfachwerte innerhalb einer Zelle, `kleinschreibung_mit_unterstrich`, Unsicherheit pro Feld über `<feldname>_unsicher` (`ja`/`nein`), `unsicherheit_anmerkung` für die Hover-Tooltip-Erklärung, Datumsfelder als Freitext mit automatischer Präzisionserkennung, DataLoader entfernt UTF-8-BOM automatisch. `erschliessungsstatus` ist seit v3.8 optional (siehe Masterprompt Abschnitt 12).

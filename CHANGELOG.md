@@ -7,6 +7,27 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-09-30 (102) – Datenkorrekturen und Fotos der UrkSt-Urkunden
+
+Ersetzt Teil B aus Eintrag 101. Ursache der beschädigten Zeichen:
+vermutlich Excel-Export als „CSV (Trennzeichen-getrennt)" statt „CSV
+UTF-8" - Umlaute bleiben erhalten, andere Zeichen (`ř`, `č`, `ů`,
+übergeschriebene Buchstaben) werden zu `?`. `data/urkunden.csv`: manuelle
+Vorkorrektur bei `StaAKr-0239` (`orte`) geprüft; 105 verlorene `?` in 37
+Regesten nach festen Regeln entfernt/ersetzt (10 legitime/zu klärende `?`
+bewusst unverändert); Spalte `bilder` bei `StAK-UrkSt-0001`, `-0003`,
+`-0004`, `-0005a` mit 13 neuen Vorschaubildern (320 px, JPEG, EXIF
+entfernt) befüllt, `StAK-UrkSt-0004` erhält eine `unsicherheit_anmerkung`
+zu den enthaltenen Original-/Abschrift-Aufnahmen. `data/personenliste.csv`:
+12 beschädigte Signaturverweise bei 9 Personen repariert, betroffene sowie
+3 bereits bekannte Zeilen mit abweichender Nennungszahl neu berechnet.
+`data/orte.csv`: `wien` 296 → 297, danach 0 verbleibende Abweichungen.
+"Urkunden ohne Fotos" von 17 auf 13 aktualisiert. `docs/SCHEMA.md`: Hinweis
+zum korrekten CSV-Export an den Anfang gestellt. Details siehe PROJEKTLOG
+Eintrag 54. Kein Commit durch Claude Code.
+
+---
+
 ## 2026-09-30 (101) – Doppelte Urkunden bereinigt (Teil A)
 
 `StaAKr-0873` (Dublette von `StaAKr-0007`) und `StaAKr-0542` (Dublette
