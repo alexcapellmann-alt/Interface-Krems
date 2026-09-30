@@ -14,6 +14,138 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-09-30 – Verlorene Zeichen in Regesten/Orten repariert, Personen-/Ortsliste bereinigt, Fotos für vier UrkSt-Urkunden ergänzt (Auftrag "Datenkorrekturen und Fotos der UrkSt-Urkunden")
+
+**Ursache der beschädigten Zeichen:** vermutlich Speichern einer UTF-8-
+Datei in Excel als „CSV (Trennzeichen-getrennt)" statt „CSV UTF-8 (durch
+Trennzeichen getrennt)". Dabei bleiben Umlaute (ä/ö/ü/ß) erhalten, aber
+andere Zeichen (`ř`, `č`, `ů`, übergeschriebene Buchstaben in
+Transkriptionen) werden lautlos zu `?`. Siehe `docs/SCHEMA.md`, das diesen
+Hinweis jetzt an den Anfang gestellt bekommen hat.
+
+**Punkt 0 – Manuelle Vorkorrektur geprüft:** `data/urkunden.csv`,
+`StaAKr-0239`, Spalte `orte`: `Jind?ich?v Hradec, Südböhmen` →
+`Jindřichův Hradec, Südböhmen` (vom Auftraggeber von Hand korrigiert, vor
+Beginn dieses Auftrags per `git diff` gegen den letzten Commit geprüft -
+betraf ausschließlich diese eine Zelle, Datei weiterhin UTF-8 mit BOM,
+Anzahl `?` in der Datei um genau 2 gesunken, keine anderen Zeichen
+verändert). Bestätigt, keine Korrektur nötig.
+
+**Punkt 1 – 105 verlorene `?` in 37 Regesten entfernt/ersetzt:**
+Regeln R1–R6 aus dem Auftrag angewendet (Auszug: `?` zwischen zwei
+Buchstaben entfernt, `?` nach `u`/`o` vor Leerzeichen/`)` entfernt,
+`StAK-UrkKr-0567` zusätzlich Leerzeichen+`?` innerhalb eines Worts
+entfernt, `StaAKr-Hollenburg-0002` zwei Wort-Sonderfälle `?u?ngster` →
+`iungster` und `?eder zeit` → `ieder zeit`, `StaAKr-866a` `Kel? (` →
+`Kelč (`). Betroffene Signaturen (37, je mit Anzahl entfernter `?`):
+`StAK-UrkKr-0003` (3), `StaAK-UrkKr-0005` (2), `StAK-UrkKr-0016` (3),
+`StAK-UrkKr-0017` (3), `StAKr-UrkKr-0025` (1), `StAK-UrkKr-0032` (1),
+`StAK-UrkKr-0051` (5), `StAK-UrkSt-0004` (1), `StAK-UrkKr-0068` (3),
+`StAK-UrkKr-0076` (1), `StAK-UrkKr-0085` (2), `StAK-UrkKr-0086` (6),
+`StAK-UrkKr-0123` (4), `StAK-UrkKr-0140` (3), `StAK-UrkKr-0143` (2),
+`StAK-UrkKr-0148` (1), `StAK-UrkKr-0151` (1), `StAK-UrkKr-0152` (1),
+`StAK-UrkKr-0153` (2), `StAK-UrkKr-0154` (4), `StAK-UrkKr-0162` (13),
+`StAK-UrkKr-0181` (1), `StAK-UrkKr-0182` (6), `StAK-UrkKr-0215` (1),
+`StAK-UrkKr-0222` (2), `StAK-UrkKr-0224` (1), `StAK-UrkKr-0226` (3),
+`StAK-UrkKr-0228` (3), `StAK-UrkKr-0232` (1), `StAK-UrkKr-0233` (1),
+`StAK-UrkKr-0416` (2), `StAK-UrkKr-0520` (2), `StAK-UrkKr-0541` (3),
+`StAK-UrkKr-0567` (6), `StaAKr-0648` (4), `StaAKr-Hollenburg-0002` (6),
+`StaAKr-866a` (1) - Summe 105, wie im Auftrag erwartet. Nur die Spalte
+`regest` geändert, Vergleichsskript bestätigt: 1067 Zeilen, exakt diese 37
+verändert, alle anderen byteidentisch, BOM/CRLF erhalten.
+
+**Bewusst NICHT verändert (10 verbleibende `?` in Regesten):**
+legitime Unsicherheitsangaben - `StAK-UrkKr-0011` (`[1322 IV 24?]`),
+`StaAKr-0874` (`[?]`); vom Auftraggeber noch zu entscheiden -
+`StaAKr-0044` (`Sälden ?Tochter`), `StaAKr-0435` (`Gersten ? und`),
+`StaAKr-0696a` (`Pauriß?.`), `StaAKr-0719a` (`Körner ?`), `StAK-Stein-2020`
+(`"Sehkart"?`), `StAK-Stein-2053` (`7 ß ? 15 p`), `StAK-Stein-2059`
+(`"Garttenzainer".?`), `StAK-Stein-2061` (`Sterseck.?`).
+
+**Weitere Spalten/Dateien geprüft (nur gemeldet, nichts geändert):** in
+`urkunden.csv` außerhalb `regest` ein einziges `?`, `StaAKr-0874`, Spalte
+`datum` (`1454 XII 7 ?`) - steht nicht zwischen zwei Buchstaben, keine
+Verlust-Signatur wie oben, unverändert gelassen. In `bestandsverzeichnis.
+csv`, `buergerbuch.csv`, `fuehrungen.csv`, `literatur.csv` und
+`personenliste.csv` (Spalte `schreibweisen`) kommen weitere `?` vor -
+durchgehend echte, beabsichtigte Fragezeichen (rhetorische Stationstitel/
+Leitfragen der Führungen, Literaturtitel, oder in der Quelle selbst mit
+Fragezeichen notierte unsichere Lesungen wie `Georg (Irnfridt?)`) - kein
+einziges davon zwischen zwei Buchstaben, also kein Fall der obigen
+Schadensmuster.
+
+**Punkt 2 – Personenliste und Ortsliste:**
+- `data/personenliste.csv`: 12 durch ein fehlendes/verrutschtes Leerzeichen
+  beschädigte Signaturverweise in `nennung_in_urkunden` bei 9 Personen
+  repariert (`albrecht_iv`, `albrecht_v` [2×], `andre_schilcher`,
+  `bernhard_karlinger`, `dorothe_schilcher`, `konrad_lindenfels`,
+  `martha_karlinger`, `maximilian_i` [2×], `wilhelm_der_freundliche`) -
+  z. B. `StAK- Stein-2016` → `StAK-Stein-2016`. Systematisch auf weitere
+  Fälle in allen drei Verweis-Spalten geprüft: ein weiterer Treffer
+  (`angnesen_weinburgerin`, `StaAKr-0310 a`) erwies sich NICHT als
+  Beschädigung, sondern als real existierende Signatur mit Leerzeichen
+  (`StaAKr-0310 a`, eigener Datensatz, siehe bereits PROJEKTLOG Eintrag 52)
+  - unverändert gelassen. `anzahl_nennungen`/`erste_nennung`/
+  `letzte_nennung`/`nennungsspanne_jahre` für alle 9 reparierten Zeilen
+  sowie für die 3 aus dem letzten Audit bekannten Abweichungen
+  (`elisabeth_1411` 2→1, `hanns_pair` 2→1, `hans_peierl` 4→3 bei
+  `anzahl_nennungen`) neu berechnet. Referenzielle Integrität aller drei
+  Verweis-Spalten gegen `urkunden.csv`/`buergerbuch.csv`/
+  `verlassenschaftsinventare.csv` geprüft - 0 unauflösbare Verweise.
+  12 Zeilen geändert, alle anderen 4176 byteidentisch.
+- `data/orte.csv`: `wien`s `haeufigkeit` 296 → 297 (Neuberechnung aus
+  `urkunden.csv` bestätigt 297). `jindrichuv_hradec_suedboehmen` stimmte
+  nach der Punkt-0-Korrektur bereits mit 1 überein. Danach alle 256 Orte
+  erneut gegengeprüft: 0 verbleibende Abweichungen. 1 Zeile geändert.
+
+**Punkt 3 – Vorschaubilder für vier UrkSt-Urkunden ergänzt:**
+Vollbilder aus `C:\Users\ali\Desktop\Master-Vis\fotos\AAA` (von
+monasterium.net, vom Auftraggeber heruntergeladen), Zuordnung eindeutig
+(vier Signatur-Unterordner, je Datei einer Signatur zuordenbar). Erzeugt
+mit einem projektfremden, nicht committeten Python-Skript: längste Seite
+320 px, Seitenverhältnis erhalten, JPEG, EXIF entfernt, RGB (kein
+eingebettetes Farbprofil, wie bei den bestehenden Vorschaubildern), 13
+Dateien, Ø 11.101 Byte (bestehende Vorschaubilder Ø 11.046 Byte, siehe
+Vergleich unten).
+
+| Signatur | Quelldatei(en) | Pixelmaße | Vorschaubild | Größe |
+|---|---|---|---|---|
+| `StAK-UrkSt-0001` | `..._2002a_r.jpg` (3705×3550) | → 320×307 | `StAK-UrkSt-0001_r.jpg` | 14.244 B |
+| | `..._2002a_v.jpg` (3629×3594) | → 320×317 | `StAK-UrkSt-0001_v.jpg` | 11.230 B |
+| `StAK-UrkSt-0003` | `..._2003_r.jpg` (5686×3894) | → 320×219 | `StAK-UrkSt-0003_r.jpg` | 11.132 B |
+| | `..._2003_v.jpg` (6328×4284) | → 320×217 | `StAK-UrkSt-0003_v.jpg` | 8.894 B |
+| `StAK-UrkSt-0004` | `..._2004a_r.jpg` (5870×3709) | → 320×202 | `StAK-UrkSt-0004_a_r.jpg` | 9.727 B |
+| | `..._2004a_v.jpg` (6134×3598) | → 320×188 | `StAK-UrkSt-0004_a_v.jpg` | 7.254 B |
+| | `..._2004b_r.jpg` (5294×3610) | → 320×218 | `StAK-UrkSt-0004_b_r.jpg` | 14.133 B |
+| | `..._2004b_v.jpg` (5210×3633) | → 320×223 | `StAK-UrkSt-0004_b_v.jpg` | 9.543 B |
+| | `..._2004_01.jpg` (5272×5933) | → 284×320 | `StAK-UrkSt-0004_01.jpg` | 12.509 B |
+| | `..._2004_02.jpg` (5212×5909) | → 282×320 | `StAK-UrkSt-0004_02.jpg` | 9.393 B |
+| | `..._2004_03.jpg` (4317×4794) | → 288×320 | `StAK-UrkSt-0004_03.jpg` | 17.083 B |
+| `StAK-UrkSt-0005a` | `..._2005b_r.jpg` (7176×4077) | → 320×182 | `StAK-UrkSt-0005a_r.jpg` | 10.911 B |
+| | `..._2005b_v.jpg` (7170×4089) | → 320×182 | `StAK-UrkSt-0005a_v.jpg` | 8.257 B |
+
+`data/urkunden.csv`, Spalte `bilder` bei allen vier Signaturen in obiger
+Reihenfolge befüllt (nicht natürliche Sortierung, wie im Auftrag
+verlangt). `StAK-UrkSt-0004` zusätzlich `unsicherheit_anmerkung`: „Die
+Fotos zeigen das Original sowie Abschriften derselben Urkunde aus dem 18.
+Jahrhundert. Welche Aufnahmen das Original zeigen, ist nicht einzeln
+zugeordnet." 4 Zeilen geändert (davon `StAK-UrkSt-0004` bereits in Punkt 1
+gezählt), alle anderen byteidentisch.
+
+**„Urkunden ohne Fotos" aktualisiert:** von 17 (PROJEKTLOG Eintrag 52) auf
+13, da vier der 17 (die hier bearbeiteten UrkSt-Signaturen) jetzt Fotos
+haben. Aktuelle Liste der 13 verbleibenden: `StaAKr-0001a, StaAKr-0001b,
+StaAKr-0029, StaAKr-0053, StaAKr-0324, StaAKr-0397, StaAKr-0539,
+StaAKr-0626a, StaAKr-0647, StaAKr-0778, StaAKr-0840,
+StaAKr-Hollenburg-0005, StaAKr-866a`.
+
+**Gemeldet, nicht behoben (Umfangserweiterung, Code-Datei - laut Auftrag
+"Keine Änderung an Code"):** `js/config/archivalienRegistry.js` beschreibt
+das Regesten-Kachelraster statisch mit „aller 1.069 Urkunden" - seit Teil A
+(1069 → 1067) nicht mehr korrekt. Nur gemeldet, nicht geändert.
+
+---
+
 ### 2026-09-30 – Zwei doppelt erfasste Urkunden entfernt (Auftrag "Doppelte Urkunden bereinigen (Teil A)")
 
 **Entfernt:**
@@ -46,6 +178,72 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   (296) stimmte schon VOR der Entfernung nicht mit einer Neuberechnung aus
   `urkunden.csv` überein (298, Abweichung 2) und wird deshalb laut Auftrag
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
+
+---
+
+## 2026-09-30 (54) – Datenkorrekturen und Fotos der UrkSt-Urkunden
+
+**Kontext:** Auftrag "Datenkorrekturen und Fotos der UrkSt-Urkunden"
+(ersetzt Teil B aus dem Teil-A/Teil-B-Auftrag, Eintrag 53 - Teil A war zu
+diesem Zeitpunkt bereits geprüft und committet). Ausführliche
+Vorher-Nachher-Werte, Signaturlisten und die Bildzuordnungstabelle stehen
+im Abschnitt "Datenkorrekturen" oben, hier nur die Kurzfassung je Punkt.
+
+### 0. Manuelle Vorkorrektur geprüft
+`StaAKr-0239`, Spalte `orte`: `Jind?ich?v Hradec, Südböhmen` →
+`Jindřichův Hradec, Südböhmen`, vom Auftraggeber von Hand korrigiert.
+Geprüft: UTF-8 mit BOM weiterhin gegeben, `git diff` betrifft nur diese
+Zelle, Anzahl `?` in der Datei um genau 2 gesunken, keine anderen Zeichen
+verändert. Bestätigt.
+
+### 1. Verlorene Zeichen in Regesten entfernt
+105 `?` in 37 Regesten nach den Regeln R1–R6 entfernt/ersetzt (erwartete
+Zahl laut Auftrag, exakt getroffen). 10 verbleibende `?` bewusst nicht
+verändert (legitime Unsicherheitsangaben bzw. vom Auftraggeber noch zu
+entscheiden). Andere Spalten/Dateien auf `?` zwischen zwei Buchstaben
+geprüft - keine weiteren Funde. Details und vollständige Signaturliste im
+Abschnitt "Datenkorrekturen" oben.
+
+### 2. Personenliste und Ortsliste korrigiert
+`data/personenliste.csv`: 12 beschädigte Signaturverweise (fehlendes/
+verrutschtes Leerzeichen) bei 9 Personen repariert, `anzahl_nennungen`/
+`erste_nennung`/`letzte_nennung`/`nennungsspanne_jahre` für diese sowie
+für die 3 bereits bekannten Abweichungen neu berechnet (12 Zeilen
+geändert). Referenzielle Integrität aller Verweis-Spalten geprüft - 0
+unauflösbare Verweise. `data/orte.csv`: `wien` 296 → 297, danach 0
+verbleibende Abweichungen bei allen 256 Orten.
+
+### 3. Vorschaubilder der vier UrkSt-Urkunden
+`StAK-UrkSt-0001`, `-0003`, `-0004`, `-0005a`: 13 Vorschaubilder aus den
+Vollbildern in `C:\Users\ali\Desktop\Master-Vis\fotos\AAA` erzeugt (320 px
+längste Seite, JPEG, EXIF entfernt, Ø 11.101 Byte), `data/urkunden.csv`
+Spalte `bilder` befüllt (Sonderreihenfolge bei `StAK-UrkSt-0004`, nicht
+natürliche Sortierung), `unsicherheit_anmerkung` bei `StAK-UrkSt-0004`
+ergänzt. "Urkunden ohne Fotos" damit von 17 auf 13.
+
+### 4. Dokumentation
+`docs/SCHEMA.md`: Hinweis zum korrekten Excel-Export ("CSV UTF-8 (durch
+Trennzeichen getrennt)" statt „CSV (Trennzeichen-getrennt)") an den Anfang
+gestellt, mit diesem Schadensfall als Begründung, plus Hinweis auf die
+Dateisperre bei in Excel geöffneten CSV-Dateien. `docs/PROJEKTLOG.md`:
+dieser Eintrag sowie der Abschnitt "Datenkorrekturen" oben.
+`CHANGELOG.md`: Kurzfassung ergänzt.
+
+### Regressionstest
+Kachelraster, Seitenleiste, Zeitachse, Karte, Personenliste und Führungen:
+Ladeverhalten und Konsolenfehler konnten in dieser Sitzung **nicht per
+Screenshot verifiziert werden** - die Browser-Vorschau dieser Umgebung
+liefert nachweislich einen veralteten Dateistand (`Last-Modified` vom
+20.09., 404 auf soeben erzeugte Dateien wie die neuen UrkSt-Vorschaubilder,
+obwohl der reale `data/urkunden.csv`-Stand über direkte Dateizugriffe
+bestätigt korrekt ist) - vermutlich ein von der echten Arbeitskopie
+getrenntes Snapshot-Dateisystem dieser Vorschau-Sandbox. Empfehlung: bitte
+selbst über `python nocache_server.py ... 8845` im eigenen Browser prüfen,
+insbesondere `StAK-UrkKr-0162`/`StaAKr-Hollenburg-0002` (Kachelraster-Text
+ohne `?`) und `StAK-UrkSt-0004` (7 Vorschaubilder, Lightbox). Die Karte
+sollte `Jindřichův Hradec` zeigen, die Personenliste bei
+`bernhard_karlinger`/`wilhelm_der_freundliche` die korrekt verknüpften
+Zeiträume (1470–1492 bzw. 1396–1412).
 
 ---
 
