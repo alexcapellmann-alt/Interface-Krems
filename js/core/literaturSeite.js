@@ -35,6 +35,7 @@ import { ladeCSV } from './dataLoader.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from './archivKonfiguration.js';
 import { baueHash } from './router.js';
+import { erzeugeLinkOderText } from '../utils/sichereUrl.js';
 
 const LITERATUR_CSV = 'data/literatur.csv';
 const RECHERCHE_CSV = 'data/recherche_links.csv';
@@ -213,12 +214,14 @@ function baueRechercheKarten(records) {
       karte.appendChild(p);
     }
     if (r.link) {
-      const link = document.createElement('a');
-      link.href = r.link;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = `${r.titel} ↗`;
-      link.setAttribute('aria-label', `${r.titel}, externer Link, öffnet in neuem Tab`);
+      // AUFTRAG A (Sicherheit): Linkziel aus recherche_links.csv nur mit erlaubtem Schema.
+      const { element: link, istLink } = erzeugeLinkOderText(r.link);
+      if (istLink) {
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = `${r.titel} ↗`;
+        link.setAttribute('aria-label', `${r.titel}, externer Link, öffnet in neuem Tab`);
+      }
       karte.appendChild(link);
     }
     karten.appendChild(karte);
@@ -248,12 +251,13 @@ function baueEintrag(record, ruecklinkeNachId) {
     const meta = document.createElement('p');
     meta.className = 'literatur-meta';
     if (record.link) {
-      const link = document.createElement('a');
-      link.href = record.link;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = 'online ↗';
-      link.setAttribute('aria-label', `${record.titel || record.zitation}, online verfügbar, externer Link, öffnet in neuem Tab`);
+      const { element: link, istLink } = erzeugeLinkOderText(record.link);
+      if (istLink) {
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = 'online ↗';
+        link.setAttribute('aria-label', `${record.titel || record.zitation}, online verfügbar, externer Link, öffnet in neuem Tab`);
+      }
       meta.appendChild(link);
     }
     if (record.verfuegbarkeit) {
