@@ -7,6 +7,33 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-03 (106) – Führungen: fehlende oder leere Belegquelle
+
+Auftrag B3 (Scope-Meldung aus B2).
+- **`js/fuehrungen/fuehrungenDaten.js`** (`ladeQuellKarten()`, `parseBeleg()`):
+  - Fehlt eine der sechs Belegquellen (404) oder ist sie leer, bricht das
+    Laden der Führungen nicht mehr ab. Vorher waren dann alle Führungen
+    unbenutzbar.
+  - Nur die Belege dieser Quelle zeigen „Beleg nicht verfügbar: Quelle
+    `<datei>` fehlt“ bzw. „… ist leer“, in der bestehenden Belegfehler-Box.
+  - Bürgerbuch-Belege mit Bürgen zeigen ohne `personenliste.csv` zusätzlich
+    „Bürgennamen nicht verfügbar: …“; der Beleg selbst bleibt sichtbar.
+- **`docs/SCHEMA.md`** (Abschnitt 10): Belegquellen sind optional; was bei
+  Fehlen geschieht.
+- Keine Änderung der Anzeige bei vollständigen Daten, keine neuen
+  Abhängigkeiten.
+
+**Ergebnis:**
+- Je fehlende Quelle (alle sechs, dazu leeres `buergerbuch.csv`):
+  - vorher: 114 von 114 Führungsseiten kaputt;
+  - nachher: keine Seiten- und keine Konsolenfehler; alle betroffenen Belege
+    zeigen den Hinweis; alle übrigen Seiten sind textgleich mit dem Original.
+- Originaldaten: 114/114 Führungsseiten und Referenz 47/47 textgleich.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (105) – Pflichtspalten und Hinweisbalken bei Datenproblemen
 
 Prüfbericht 2026-10-03, Punkt 3, Auftrag B2. Die Pflichtspalten sind

@@ -181,6 +181,109 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-03 (58) – Auftrag B3: Fehlende Belegquelle in den Führungen
+
+**Kontext:** Scope-Meldung aus B2 (Eintrag 57). B2 ist als `3729e20`
+committet; das ist der Vorher-Stand. Rohdaten und Werkzeuge liegen in
+`Pruefung_2026-10-03/Nachher_B3/` bzw. `Pruefung_2026-10-03/tools/pB3_*`,
+außerhalb des Repositorys.
+
+### Ist
+`ladeQuellKarten()` lud alle sechs Belegquellen über `Promise.all`. Ein 404
+bei einer einzigen Quelle ließ `ladeFuehrungenDaten()` ablehnen. Damit
+funktionierten Übersicht, alle Stationen und alle Abschlussseiten nicht
+mehr: Die Messung zeigt vorher für jede der sechs Quellen 114 von 114
+Führungsseiten ohne Inhalt.
+
+### Punkt 1 – Fehlende Quelle abfangen (`js/fuehrungen/fuehrungenDaten.js`)
+- `ladeQuellKarten()`: Ein Ladefehler ergibt eine leere Karte statt einer
+  Ablehnung. Unter `nichtVerfuegbar` steht je Belegtyp der Grund: „fehlt“
+  (Datei nicht ladbar) oder „ist leer“ (0 Datensätze, auch nur Kopfzeile).
+- `parseBeleg()`: Belege einer nicht verfügbaren Quelle bekommen
+  `fehler = "Beleg nicht verfügbar: Quelle <datei> fehlt"` bzw. „… ist leer“
+  (neue Hilfsfunktion `quellenHinweis()`).
+- **Bürgerbuch-Belege** hängen zusätzlich von `personenliste.csv` ab (die
+  Bürgennamen kommen aus der Personenkarte). Fehlt diese, bleibt der Beleg
+  sichtbar, die Bürgen erscheinen als ID, und der Beleg trägt „Bürgennamen
+  nicht verfügbar: Quelle personenliste.csv fehlt“. Nur bei Belegen, die
+  überhaupt `buergen_id` haben.
+- **Darstellung über das bestehende Feld `fehler`:**
+  - `belegDarstellung.js` und `fuehrungenGalerie.js` bleiben unverändert
+    (kein Eingriff außerhalb des Auftragsumfangs).
+  - Folge: Der Hinweis steht in der vorhandenen Belegfehler-Box und trägt
+    deren CSS-Präfix „Fehler:“.
+  - Die Galerie zeigt für eine Führung, deren erster Beleg betroffen ist,
+    wie bei jedem Belegfehler die neutrale Kachel.
+- **Zusätzlicher Hinweis aus B2:** Die betroffene Station zeigt außerdem den
+  Hinweisbalken aus Auftrag B2 („Die Datei … fehlt. Diese Ansicht ist
+  deshalb unvollständig.“). Das ist unverändertes B2-Verhalten. Für
+  Bürgerbuch-Stationen ohne `personenliste.csv` erscheint der Balken nicht,
+  weil B2 nur die Quelle des Belegtyps selbst prüft.
+- `hinweisBalken.js` wurde nicht geändert.
+
+### Punkt 2 – Dokumentation
+`docs/SCHEMA.md`, Abschnitt 10, nach der Präfixtabelle: neuer Absatz
+„Belegquellen sind optional“. Er nennt den Hinweistext, den
+Sonderfall Bürgerbuch/Personenliste und den zusätzlichen B2-Balken;
+`fuehrungen.csv` bleibt Pflicht.
+
+### Verifikation
+**Führungsvarianten** (`tools/pB3_fuehrungen.mjs`):
+- Je Fall und Stand die Übersicht, alle Stationen aller Führungen und alle
+  Abschlussseiten: 114 Routen.
+- Vorher ist `kopie_B3v`, gleich `3729e20` (per `git archive` und
+  `diff --strip-trailing-cr` belegt); nachher ist `kopie_B3n`, gleich dem
+  Arbeitsbaum.
+- Fehlfall heißt: Datei entfernt, also 404.
+- Zusätzlich zur Vorgabe (sechs Fehlfälle plus Original) ein Fall „leeres
+  `buergerbuch.csv`“ für die Variante „ist leer“.
+- Drei Browser parallel, Gesamtdauer 2 287 s.
+- Auswertung: `Nachher_B3/auswertung_fuehrungen.txt`.
+
+| Fall | Routen mit Bezug | vorher kaputt | nachher: Hinweis korrekt | nachher: ohne Bezug textgleich | nachher: Seiten-/Konsolenfehler |
+|---|---|---|---|---|---|
+| Originaldaten | – | 0 | – | 114/114 (zu vorher) | 0 / 0* |
+| ohne `urkunden.csv` | 26 | 114 | 26/26 | 88/88 | 0 / 0 |
+| ohne `buergerbuch.csv` | 8 | 114 | 8/8 | 106/106* | 0 / 0* |
+| ohne `verlassenschaftsinventare.csv` | 5 | 114 | 5/5 | 109/109 | 0 / 0 |
+| ohne `bestandsverzeichnis.csv` | 24 | 114 | 24/24 | 90/90 | 0 / 0 |
+| ohne `personenliste.csv` | 4 | 114 | 4/4 | 110/110 | 0 / 0* |
+| ohne `familien.csv` | 2 | 114 | 2/2 | 112/112* | 0 / 0* |
+| leeres `buergerbuch.csv` | 8 | 0 (vorher Fehlerbox „ID nicht gefunden“) | 8/8 | 106/106 | 0 / 0 |
+
+\* **Einzelnachprüfung** (`Nachher_B3/nachpruefung.json`):
+- Im parallelen Lauf brach auf 8 Routen (beide Stände) das Laden mit
+  `net::ERR_NO_BUFFER_SPACE` ab, einem Engpass der Windows-Sockets unter
+  paralleler Last, ohne Bezug zum Code.
+- Einzeln wiederholt waren alle 5 Nachher-Routen textgleich mit dem Original
+  und ohne Fehler; die 3 Vorher-Routen blieben, wie erwartet, kaputt.
+- Eine dabei gemeldete 404 war `favicon.ico`, vorher wie nachher (dem
+  Nachprüfskript fehlte der Favicon-Filter).
+- Die 404-Meldung der absichtlich entfernten Datei selbst schreibt der
+  Browser in die Konsole. Sie ist unvermeidbar und nicht mitgezählt.
+
+**Referenzlauf** (47 Ansichten, 108 s): Text 47/47 identisch zu B2, keine
+Seiten- oder Konsolenfehler (`Nachher_B3/vergleich_referenz.tsv`).
+Laufzeitregel: keine Matrix, keine Zeitmessung, weil Startgraph und
+Ladepfad der übrigen Ansichten unverändert sind.
+
+Rückbau aller Testdaten in beiden Kopien per `diff -rq` belegt.
+
+### Scope-Meldungen
+- **`literatur.csv` hat dieselbe Schwäche:** Sie wird in
+  `ladeFuehrungenDaten()` im selben `Promise.all` geladen. Fehlt sie (404),
+  fallen weiterhin alle Führungen aus. Nicht behoben, weil sie keine
+  Belegquelle ist.
+- **Hinweis mit „Fehler:“-Präfix:** Ein neutraler Hinweis ohne dieses
+  Präfix bräuchte eine Änderung in `belegDarstellung.js` (z. B. Hinweisbalken
+  statt Fehlerbox).
+- **Doppelter Hinweis je Station** (B2-Balken oben, Belegbox unten).
+  Bewusst so belassen.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (57) – Auftrag B2: Pflichtspalten und sichtbare Hinweise (Prüfbericht Punkt 3)
 
 **Kontext:** B1 ist als `d8ccea5` committet. Vorher-Stand sind die gesicherten
