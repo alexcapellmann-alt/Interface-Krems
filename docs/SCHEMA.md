@@ -391,6 +391,12 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `familie` | `familien.csv` (Habsburg-Stammbaum) | `id` |
 | `bild` | Bildpfad | – |
 
+**Belegquellen sind optional (Auftrag B3, 2026-10-03):** Keine der sechs Quell-Dateien der Präfixtabelle ist für die Führungen Pflicht. Ein Archiv ohne z. B. `buergerbuch.csv` kann alle Führungen weiter nutzen. Fehlt eine Quelle ganz oder enthält sie keine Datensätze (leer oder nur Kopfzeile), gilt:
+- Nur die Belege mit diesem Präfix zeigen statt des Inhalts den Hinweis „Beleg nicht verfügbar: Quelle `<datei>` fehlt“ bzw. „… ist leer“. Er erscheint in derselben Box wie die übrigen Belegfehler (mit der Kennzeichnung „Fehler:“).
+- `buergerbuch`-Belege mit Bürgen brauchen zusätzlich `personenliste.csv`, um die Bürgen namentlich zu nennen. Fehlt sie, bleibt der Beleg sichtbar, die Bürgen erscheinen als ID, darüber steht „Bürgennamen nicht verfügbar: Quelle personenliste.csv fehlt“.
+- Alle anderen Stationen, Belege, die Übersicht und der Abschluss bleiben unverändert. Zusätzlich zeigt die betroffene Station den Hinweisbalken aus Auftrag B2 („… Diese Ansicht ist deshalb unvollständig.“).
+- `fuehrungen.csv` selbst bleibt Pflicht (siehe „Mindestspalten und was bei Problemen passiert“).
+
 **Unsicherheit:** bei datenbasierten Belegen (alle Präfixe außer `bild`) übernimmt die künftige Darstellung (Teil 2) die `_unsicher`-Felder/`unsicherheit_anmerkung` DIREKT aus der jeweiligen Quell-CSV der referenzierten ID - `unsicherheit_hinweis` in `fuehrungen.csv` ist ein davon UNABHÄNGIGER, zusätzlicher redaktioneller Text (z. B. eine Einordnung, warum eine Station gerade wegen der Unsicherheit erzählenswert ist), kein Ersatz.
 
 **Demo-Führung (`fuehrung_id = demo`, `status = entwurf`, vier Stationen, alle Texte als `[Platzhalter: …]` erkennbar):**

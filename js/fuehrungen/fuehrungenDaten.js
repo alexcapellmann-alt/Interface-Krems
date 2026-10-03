@@ -33,14 +33,30 @@ export const BELEG_QUELLEN = {
 
 let datenPromise = null;
 
+// AUFTRAG B3: Eine fehlende (404) oder leere Belegquelle bricht das Laden
+// NICHT mehr ab - vorher scheiterten damit alle Führungen. Die Quelle bekommt
+// eine leere Karte, und `nichtVerfuegbar` hält fest, warum sie fehlt; nur die
+// Belege, die darauf verweisen, zeigen dann einen Hinweis (parseBeleg()).
+// Der Schlüssel `nichtVerfuegbar` kollidiert nicht mit Belegtypen, weil
+// parseBeleg() den Typ vorher gegen BELEG_QUELLEN prüft.
 async function ladeQuellKarten() {
+  const nichtVerfuegbar = {};
   const eintraege = await Promise.all(
     Object.entries(BELEG_QUELLEN).map(async ([typ, { pfad, idFeld }]) => {
-      const records = await ladeGecachteCSV(pfad);
-      return [typ, new Map(records.map((r) => [r[idFeld], r]))];
+      const records = await ladeGecachteCSV(pfad).catch(() => null);
+      if (!records) nichtVerfuegbar[typ] = 'fehlt';
+      else if (records.length === 0) nichtVerfuegbar[typ] = 'ist leer';
+      return [typ, new Map((records || []).map((r) => [r[idFeld], r]))];
     })
   );
-  return Object.fromEntries(eintraege);
+  return { ...Object.fromEntries(eintraege), nichtVerfuegbar };
+}
+
+// AUFTRAG B3: Hinweistext für eine nicht verfügbare Quelle, oder null.
+function quellenHinweis(quellKarten, typ, anfang = 'Beleg nicht verfügbar') {
+  const grund = quellKarten.nichtVerfuegbar[typ];
+  if (!grund) return null;
+  return `${anfang}: Quelle ${BELEG_QUELLEN[typ].pfad.replace(/^data\//, '')} ${grund}`;
 }
 
 // Text (Punkt 2, Auftrag wörtlich): Absätze an `|` trennen, aufeinander-
@@ -78,6 +94,8 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
     if (!BELEG_QUELLEN[typ]) {
       return { typ, id, record: null, fehler: `Unbekannter Belegtyp „${typ}" (Eintrag „${eintrag}")` };
     }
+    const nichtVerfuegbar = quellenHinweis(quellKarten, typ);
+    if (nichtVerfuegbar) return { typ, id, record: null, fehler: nichtVerfuegbar };
     const record = quellKarten[typ].get(id);
     if (!record) {
       return { typ, id, record: null, fehler: `${typ}:${id} - ID nicht in ${BELEG_QUELLEN[typ].pfad} gefunden` };
@@ -94,7 +112,13 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
     // baueBuergerbuchInhalt()) - dieselbe Karte, die `person`-Belege ohnehin
     // schon referenzieren (`quellKarten.person`, BELEG_QUELLEN oben).
     if (typ === 'familie') return { typ, id, record, fehler: null, familienKarte: quellKarten.familie };
-    if (typ === 'buergerbuch') return { typ, id, record, fehler: null, personenKarte: quellKarten.person };
+    if (typ === 'buergerbuch') {
+      // AUFTRAG B3: Ohne personenliste.csv lassen sich die Bürgen nur als ID
+      // zeigen - der Beleg bleibt sichtbar, mit Hinweis darüber.
+      const buergen = Array.isArray(record.buergen_id) ? record.buergen_id : (record.buergen_id ? [record.buergen_id] : []);
+      const fehler = buergen.length > 0 ? quellenHinweis(quellKarten, 'person', 'Bürgennamen nicht verfügbar') : null;
+      return { typ, id, record, fehler, personenKarte: quellKarten.person };
+    }
     return { typ, id, record, fehler: null };
   });
 }
