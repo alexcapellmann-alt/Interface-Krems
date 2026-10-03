@@ -7,6 +7,27 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-03 (103) – Sicherheit: kein HTML und keine unsicheren Link-Schemata aus CSV-Daten
+
+Prüfbericht 2026-10-03, Befunde 5a, 5b und 5e.
+- `js/core/startseite.js`: Die Kontaktadresse wird aus Textknoten aufgebaut
+  statt per `innerHTML` mit Werten aus `archiv.csv`.
+- Neu ist `js/utils/sichereUrl.js` (`sichereUrl()`, `erzeugeLinkOderText()`).
+  Erlaubt sind `http`, `https`, `mailto`, `tel`, Hash-Links und relative
+  Pfade. Andere Werte ergeben keinen Link, sondern werden als Text
+  angezeigt.
+- Angewendet in `startseite.js` (Slide-, Kachel- und Download-Links),
+  `literaturSeite.js` (Recherche- und Online-Links),
+  `fuehrungAbschluss.js` (weiterlesen) und `kontaktLinks.js` (deckt
+  Telefon, E-Mail und Website auf Startseite und Über-Seite ab).
+- Mit den Originaldaten bleiben alle 703 `href`-Elemente in 47 Ansichten
+  unverändert.
+- Mit den Injektionsdaten gilt `xss=0` und es entsteht kein `javascript:`-Link.
+
+Details siehe PROJEKTLOG Eintrag 55. Kein Commit durch Claude Code.
+
+---
+
 ## 2026-09-30 (102) – Datenkorrekturen und Fotos der UrkSt-Urkunden
 
 Ersetzt Teil B aus Eintrag 101. Ursache der beschädigten Zeichen:

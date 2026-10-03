@@ -14,6 +14,8 @@
 // js/utils/vizIcons.js - KEINE externe Icon-Bibliothek (Nicht-Ziel laut
 // Auftrag), keine externe Anfrage (rein inline erzeugt).
 
+import { erzeugeLinkOderText } from './sichereUrl.js';
+
 const IKONEN = {
   telefon: '<path d="M6.6 3.5h2.4l1.5 3.6-1.6 1.3c1 2.3 2.8 4.1 5.1 5.1l1.3-1.6 3.6 1.5v2.4a1.6 1.6 0 0 1-1.7 1.6C11.3 17 6.8 12.5 6 6.6c-.1-.9.6-1.6 1.5-1.6z"/>',
   email: '<rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/><path d="M4.5 7l7.5 6 7.5-6"/>',
@@ -39,10 +41,14 @@ function erzeugeKontaktIcon(typ) {
 // typ: 'telefon' | 'email' | 'website' (bestimmt Icon).
 // optionen.neuesFenster: true bei website (target=_blank/rel=noopener),
 // dieselbe Konvention wie bisher in startseite.js/ueberSeite.js.
+// AUFTRAG A (Sicherheit): `href` stammt aus archiv.csv (website_link bzw.
+// tel:/mailto: + Wert) - zentral hier geprüft, damit beide Aufrufer
+// (startseite.js, ueberSeite.js) abgedeckt sind. Bei nicht erlaubtem Schema
+// entsteht kein Link, sondern der Rohwert als Text.
 export function erzeugeKontaktLink(typ, href, text, optionen = {}) {
-  const link = document.createElement('a');
+  const { element: link, istLink } = erzeugeLinkOderText(href);
+  if (!istLink) return link;
   link.className = 'kontakt-link';
-  link.href = href;
   if (optionen.neuesFenster) {
     link.target = '_blank';
     link.rel = 'noopener';

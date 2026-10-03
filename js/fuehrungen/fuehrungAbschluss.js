@@ -15,6 +15,7 @@ import { baueHash } from '../core/router.js';
 import { ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { loescheZustand } from './fuehrungFortsetzen.js';
 import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
+import { erzeugeLinkOderText } from '../utils/sichereUrl.js';
 
 const MOBIL_UMBRUCH_PX = 800;
 
@@ -139,12 +140,14 @@ function baueWeiterlesen(fuehrung) {
     p.appendChild(internerLink);
     if (record.link) {
       p.appendChild(document.createTextNode(' '));
-      const link = document.createElement('a');
-      link.href = record.link;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = '↗';
-      link.setAttribute('aria-label', `${record.zitation}, externer Link, öffnet in neuem Tab`);
+      // AUFTRAG A (Sicherheit): Linkziel aus literatur.csv nur mit erlaubtem Schema.
+      const { element: link, istLink } = erzeugeLinkOderText(record.link);
+      if (istLink) {
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = '↗';
+        link.setAttribute('aria-label', `${record.zitation}, externer Link, öffnet in neuem Tab`);
+      }
       p.appendChild(link);
     }
     abschnitt.appendChild(p);

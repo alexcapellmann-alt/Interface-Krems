@@ -22,6 +22,7 @@
 
 import { ladeSeitenBloecke, konfigurationswert } from './archivKonfiguration.js';
 import { erzeugeKontaktLink } from '../utils/kontaktLinks.js';
+import { erzeugeLinkOderText } from '../utils/sichereUrl.js';
 
 const KARUSSELL_INTERVALL_MS = 7000; // Auftrag: "alle 6-8 Sekunden", Mittelwert
 const STARTSEITE_CSV = 'data/startseite.csv';
@@ -72,10 +73,12 @@ function baueSlide(daten, index, anzahl) {
   inhalt.append(kicker, headline);
 
   if (daten.link_text && daten.link_ziel) {
-    const cta = document.createElement('a');
-    cta.className = 'startseite-slide-cta';
-    cta.href = daten.link_ziel;
-    cta.textContent = daten.link_text;
+    // AUFTRAG A (Sicherheit): Linkziel aus startseite.csv nur mit erlaubtem Schema.
+    const { element: cta, istLink } = erzeugeLinkOderText(daten.link_ziel);
+    if (istLink) {
+      cta.className = 'startseite-slide-cta';
+      cta.textContent = daten.link_text;
+    }
     inhalt.appendChild(cta);
   }
 
@@ -207,10 +210,11 @@ function baueKachelbereich(wurzel, kacheln) {
     });
 
     if (daten.link_text && daten.link_ziel) {
-      const cta = document.createElement('a');
-      cta.className = 'startseite-kachel-cta';
-      cta.href = daten.link_ziel;
-      cta.textContent = `${daten.link_text} →`;
+      const { element: cta, istLink } = erzeugeLinkOderText(daten.link_ziel);
+      if (istLink) {
+        cta.className = 'startseite-kachel-cta';
+        cta.textContent = `${daten.link_text} →`;
+      }
       kachel.appendChild(cta);
     }
 
@@ -236,7 +240,12 @@ function baueFooter(wurzel, downloads, footerHinweisBlock) {
   const name = konfigurationswert('archiv_name');
   const adresseStrasse = konfigurationswert('adresse_strasse');
   const adresseOrt = konfigurationswert('adresse_ort');
-  adresse.innerHTML = `${name}<br>${adresseStrasse}${adresseStrasse && adresseOrt ? ', ' : ''}${adresseOrt}<br>`;
+  // AUFTRAG A (Sicherheit): Textknoten statt innerHTML - Werte aus archiv.csv
+  // wurden sonst als HTML ausgewertet (Prüfbericht 5e). Gleiche Struktur wie
+  // zuvor: Name, <br>, Straße/Ort, <br>.
+  const adresszeile = `${adresseStrasse}${adresseStrasse && adresseOrt ? ', ' : ''}${adresseOrt}`;
+  adresse.append(document.createTextNode(name), document.createElement('br'),
+    document.createTextNode(adresszeile), document.createElement('br'));
   // AUFTRAG Punkt 2.5: Telefonlink aus `telefon_international` (behebt den
   // Fehler im bisherigen Code, dem dafür die letzte Ziffer fehlte -
   // `telefon_international` in archiv.csv ist bereits vollständig).
@@ -258,11 +267,12 @@ function baueFooter(wurzel, downloads, footerHinweisBlock) {
     downloadsListe.className = 'startseite-footer-links';
     downloads.forEach((eintrag) => {
       const li = document.createElement('li');
-      const link = document.createElement('a');
-      link.href = eintrag.link_ziel;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = eintrag.link_text;
+      const { element: link, istLink } = erzeugeLinkOderText(eintrag.link_ziel);
+      if (istLink) {
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = eintrag.link_text;
+      }
       li.appendChild(link);
       downloadsListe.appendChild(li);
     });

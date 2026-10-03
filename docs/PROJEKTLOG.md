@@ -181,6 +181,79 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-03 (55) – Auftrag A: Sicherheit (Prüfbericht Punkt 5)
+
+**Kontext:** Qualitätsprüfung vom 2026-10-03 am Commit `b7ea4ca`
+(Prüfbericht und Rohausgaben außerhalb des Repositorys in
+`Pruefung_2026-10-03/`). Behoben werden die Befunde 5a, 5b und 5e. Die
+Nachher-Messungen liegen in `Pruefung_2026-10-03/Nachher_A/`.
+
+### Punkt 1 – `innerHTML` mit CSV-Werten (`js/core/startseite.js`)
+Bisher wurden `archiv_name`, `adresse_strasse` und `adresse_ort` aus
+`archiv.csv` per `innerHTML` in die Kontaktadresse der Startseiten-Fußzeile
+eingesetzt. Im Test lief ein `onerror`-Handler aus diesen Feldern dreimal.
+Die Adresse wird jetzt aus Textknoten und `<br>` aufgebaut, mit derselben
+Struktur wie zuvor (Name, `<br>`, Straße/Ort, `<br>`).
+
+### Punkt 2 – Link-Schema (neu: `js/utils/sichereUrl.js`)
+Bisher wurden `href`-Werte aus CSV-Dateien ungeprüft übernommen. Im Test
+wurden alle 16 `javascript:`-Links beim Klick ausgeführt.
+
+**Neue Funktionen:**
+- `sichereUrl(wert)` erlaubt `http`, `https`, `mailto`, `tel` und Werte ohne
+  Schema (`#hash`, relative Pfade). Alle anderen Schemata ergeben `null`.
+- Das Schema wird an einer von Steuerzeichen und Leerraum bereinigten
+  Fassung bestimmt, weil Browser z. B. `java\tscript:` als `javascript:`
+  ausführen.
+- `erzeugeLinkOderText(wert)` liefert entweder ein `<a>` mit geprüftem
+  `href` oder ein `<span class="unzulaessiger-link-wert">` mit dem Rohwert
+  als Text. So wird ein fehlerhafter Eintrag sichtbar und nicht
+  stillschweigend ausgeblendet (Masterprompt Abschnitt 15).
+
+**Angewendet in:**
+- `js/core/startseite.js`: Slide-CTA, Kachel-CTA, Downloads.
+- `js/core/literaturSeite.js`: Recherche-Links, Literatur „online ↗“.
+- `js/fuehrungen/fuehrungAbschluss.js`: weiterlesen „↗“.
+- `js/utils/kontaktLinks.js`: `erzeugeKontaktLink()`. Damit sind die
+  Telefon-, E-Mail- und Website-Links in `js/core/startseite.js` und
+  `js/core/ueberSeite.js` abgedeckt; `ueberSeite.js` selbst ist unverändert.
+
+**Verhaltensänderung nur im Fehlerfall:** Ein leerer `website_link` ergab
+früher ein `<a href="">`, jetzt ein leeres `<span>`. In den aktuellen Daten
+ist der Wert gesetzt.
+
+**Unverändert (Nicht-Ziel):** die konstanten `innerHTML`-Stellen
+`js/utils/kontaktLinks.js` (`IKONEN`), `js/utils/vizIcons.js` und
+`js/viz/korrelationsmatrix.js`.
+
+### Verifikation (Testserver-Kopien, Chrome 154)
+- **Funktionstest `sichereUrl`:** 19 Werte, darunter `JavaScript:`,
+  `java\tscript:`, `\u0001javascript:`, `data:`, `vbscript:` und `file:`,
+  alle abgewiesen. Legitime Werte bleiben unverändert (`Nachher_A/sichereUrl_funktionstest.txt`).
+- **Test 5e** auf einer frischen Kopie mit denselben 379 Injektionen wie im
+  Prüfbericht (`Nachher_A/injektion/`):
+  - in allen 47 Ansichten `xss=0` und keine `javascript:`-Links;
+  - die 16 abgewiesenen Werte erscheinen als Text (12 Startseite,
+    3 Literatur, 1 Über; `Nachher_A/abgewiesene_linkwerte.json`);
+  - auf der Startseite erscheint das Markup jetzt 18-mal als Text statt
+    15-mal, weil die drei Adressfelder hinzukommen.
+- **`href`-Zählung mit Originaldaten**, vorher (`b7ea4ca`) und nachher:
+  - je Ansicht identisch, 703 = 703; auch die `href`-Listen sind identisch
+    (`Nachher_A/href_vergleich.tsv`);
+  - das `<address>`-HTML von Startseite und Über unterscheidet sich nur in
+    der Attributreihenfolge `href`/`class` (`Nachher_A/adresse_attributreihenfolge.txt`);
+  - der Element-Screenshot der Startseiten-Fußzeile ist byteidentisch.
+- **Referenzlauf aller 47 Ansichten:** keine neuen Konsolen- oder
+  Seitenfehler gegenüber dem Referenzlauf des Prüfberichts
+  (`Nachher_A/referenz_vergleich_konsole.txt`).
+
+**Regressionsschutz (Abschnitt 13):** `kontaktLinks.js` ist gemeinsam
+genutzt, betroffen sind Startseite und Über-Seite (beide geprüft).
+`sichereUrl.js` ist neu und wird nur an den oben genannten Stellen
+verwendet. Kein Commit durch Claude Code.
+
+---
+
 ## 2026-09-30 (54) – Datenkorrekturen und Fotos der UrkSt-Urkunden
 
 **Kontext:** Auftrag "Datenkorrekturen und Fotos der UrkSt-Urkunden"
