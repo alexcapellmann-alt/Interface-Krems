@@ -13,6 +13,25 @@
 
 const MUSTER_UNSICHER_SPALTE = /^(.+)_unsicher$/;
 
+// AUFTRAG B2 (Prüfbericht Punkt 3): Spaltenprüfung beim Laden. Der Loader
+// bleibt generisch - er hält je Datei nur fest, was beim Laden auffiel (Datei
+// fehlt, erkannte Spalten, Anzahl der Datensätze). Den Abgleich mit den
+// freigegebenen Pflicht- und Schlüsselspalten (js/config/datenAnforderungen.js)
+// macht js/core/datenVerfuegbarkeit.js - bewusst NICHT hier importiert: das
+// hätte die Importkette beim Start um eine Ebene verlängert und die erste
+// Darstellung messbar verzögert (siehe PROJEKTLOG Eintrag 57).
+const dateiZustaende = new Map(); // pfad -> { fehlt, anzahlDatensaetze, spalten }
+
+function haltePruefungFest(pfad, spaltennamen, anzahlDatensaetze) {
+  dateiZustaende.set(pfad, { fehlt: false, anzahlDatensaetze, spalten: spaltennamen });
+}
+
+// Prüfergebnis der zuletzt geladenen Fassung einer Datei, oder null, wenn
+// sie in dieser Sitzung noch nicht geladen wurde.
+export function holeDateiZustand(pfad) {
+  return dateiZustaende.get(pfad) || null;
+}
+
 function entferneBOM(text) {
   if (text.charCodeAt(0) === 0xfeff) {
     return text.slice(1);
@@ -130,8 +149,15 @@ function istLeereZeile(rohzeile, spaltennamen) {
 
 // Lädt eine CSV-Datei und liefert { records, schema, errors } (Abschnitt 6).
 export async function ladeCSV(pfad) {
-  const antwort = await fetch(pfad);
+  let antwort;
+  try {
+    antwort = await fetch(pfad);
+  } catch (fehler) {
+    dateiZustaende.set(pfad, { fehlt: true });
+    throw fehler;
+  }
   if (!antwort.ok) {
+    dateiZustaende.set(pfad, { fehlt: true });
     throw new Error(`CSV konnte nicht geladen werden: ${pfad} (${antwort.status})`);
   }
 
@@ -157,6 +183,7 @@ export async function ladeCSV(pfad) {
   });
 
   const schema = leiteSchemaAb(rohdaten, spaltennamen);
+  haltePruefungFest(pfad, spaltennamen || [], records.length);
 
   return { records, schema, errors };
 }

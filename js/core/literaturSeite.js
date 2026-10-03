@@ -31,7 +31,7 @@
 // echte Hash-Links würden vom App-weiten hashchange-Router
 // (js/core/router.js) als Tab-Navigation fehlinterpretiert.
 
-import { ladeCSV } from './dataLoader.js';
+import { ladeGecachteCSV } from './datenCache.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from './archivKonfiguration.js';
 import { baueHash } from './router.js';
@@ -60,7 +60,7 @@ function slugifiziere(text) {
 
 async function ladeRechercheLinks() {
   try {
-    const { records } = await ladeCSV(RECHERCHE_CSV);
+    const records = await ladeGecachteCSV(RECHERCHE_CSV);
     return mitTextfeldern(records, RECHERCHE_TEXTFELDER)
       .filter((r) => r.sichtbar === 'ja')
       .sort((a, b) => Number(a.reihenfolge) - Number(b.reihenfolge));
@@ -390,7 +390,7 @@ function baueSortierung() {
 export async function erzeugeLiteraturSeite(container) {
   let records = [];
   try {
-    ({ records } = await ladeCSV(LITERATUR_CSV));
+    records = await ladeGecachteCSV(LITERATUR_CSV); // AUFTRAG B2 (Cache-Umstellung)
     records = mitTextfeldern(records, LITERATUR_TEXTFELDER);
   } catch (fehler) {
     console.error(`${LITERATUR_CSV} konnte nicht geladen werden.`, fehler);

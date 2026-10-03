@@ -181,6 +181,338 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-03 (57) – Auftrag B2: Pflichtspalten und sichtbare Hinweise (Prüfbericht Punkt 3)
+
+**Kontext:** B1 ist als `d8ccea5` committet. Vorher-Stand sind die gesicherten
+Ergebnisse aus `Pruefung_2026-10-03/Nachher_B1/` (nicht neu erzeugt).
+Messungen und Rohdaten liegen in `Pruefung_2026-10-03/Nachher_B2/`, außerhalb
+des Repositorys.
+
+### Phase 1 (Vorschlag) und Freigabe
+- **Pflichtspalten gemessen statt aus SCHEMA.md übernommen:**
+  - Jede der 161 vom Code gelesenen Spalten wurde einzeln aus ihrer Datei
+    entfernt, und es wurden nur die Ansichten geöffnet, die sie nutzen
+    (597 Aufrufe, 778 s).
+  - Die 63 nicht-stabilen Ergebnisse wurden einzeln nachgeprüft (611 s).
+  - Ergebnis: 29 Pflichtspalten (je Ansicht) und 7 Grenzfälle.
+  - Vorschlag: `Nachher_B2/phase1/VORSCHLAG_PHASE1.md`.
+- **Freigabe des Autors** (2026-10-03):
+  - Pflichtliste wie vorgeschlagen.
+  - Grenzfälle: G1 `jahr` Pflicht (Zeitansichten); G2 `zeitraum_von`/`_bis`
+    Pflicht (Gantt); G3 `signatur` „empfohlen“; G4 `familien.id` Pflicht
+    (Familienbaum); G5 `archiv.csv` `schluessel`/`wert` Pflicht; G6 optional.
+  - `archiv.csv`: Balken nur auf Startseite und Über.
+  - Leere `personenliste.csv`: Personenliste wird ausgeblendet.
+  - Direkte Links auf ausgeblendete Ansichten zeigen einen Balken.
+  - Regel „keine bekannte Spalte erkannt“ ist freigegeben.
+  - Sankey-NaN wird über Pflichtspalten abgefangen.
+  - Kerndateien: `archiv.csv` und `startseite.csv`.
+  - SCHEMA-Pflichtmarkierungen werden durch die gemessene Liste ersetzt.
+- **Zwei Entscheidungen während Phase 2:**
+  1. **Hintergrund-Prüfung** nach dem ersten Bildaufbau (Abweichung von der
+     Lazy-Loading-Regel). Bedingungen:
+     - blockiert keine Ansicht,
+     - nur über den gemeinsamen Cache,
+     - erster Bildaufbau nicht messbar schlechter,
+     - Vermerk in Masterprompt, SCHEMA und PROJEKTLOG.
+  2. **Cache-Erweiterung**, damit keine Datei doppelt geladen wird. Nur die
+     Ladefunktionen werden umgestellt, ohne inhaltliche Änderung.
+
+### Punkt 1 – `js/utils/hinweisBalken.js` (neu)
+- `erzeugeHinweisBalken(texte)`: Text nur über `textContent`, Rolle `status`.
+- Erkennbar nicht nur an der Farbe: Symbol „!“ und Titel „Hinweis zu den Daten“.
+- Nicht fokussierbar, ohne Bedienelemente.
+- CSS in `css/components.css` (`.hinweis-balken*`, Bernstein, bewusst weder
+  Unsicherheits-Rot noch Führungs-Fehlerbox). Kontrast: Text 16:1, Symbol 5,9:1.
+- Über Visualisierungen sitzt der Balken in Grid-Zeile 3 (`.hinweis-balken-bereich`,
+  `css/layout.css`). Er entsteht nur im Problemfall; mit vollständigen Daten
+  bleibt das DOM unverändert.
+
+### Punkt 2 – Spaltenprüfung
+- **`js/core/dataLoader.js`:** hält je Datei fest: fehlt, Anzahl der
+  Datensätze, Spalten (`holeDateiZustand()`).
+- **`js/config/datenAnforderungen.js` (neu):** freigegebene Hauptdateien,
+  Pflichtspalten, Nebendateien und Teilpflicht (Schuldenprofil) je Ansicht,
+  Schlüsselspalten je Datei.
+- **`js/core/datenVerfuegbarkeit.js` (neu):** `pruefeAnsicht()` liefert
+  „zeichnen“, „zeichnen mit Balken“ oder „nur Balken“ in einfacher Sprache.
+- **Regel „keine bekannte Spalte erkannt“:** greift, wenn die Kopfzeile keine
+  Pflicht- und keine Schlüsselspalte der Datei enthält (vermutlich falsches
+  Trennzeichen).
+- **Nachkorrektur im Endlauf:** `personenliste.csv` hatte nur eine bekannte
+  Spalte (`personen_id`). Deren Fehlen meldete fälschlich „falsches
+  Trennzeichen“. Jetzt zusätzlich `schreibweisen`; jede Datei hat mindestens
+  zwei bekannte Spalten.
+
+### Punkt 3 – Leere Dateien und nur Kopfzeile
+- **Ausblenden:**
+  - Datei fehlt oder hat 0 Datensätze → `istAnsichtAusgeblendet()`/`istBereichAusgeblendet()`.
+  - Ausgeblendet werden Ansichten, die ausschließlich diese Datei nutzen, plus
+    die Personenliste.
+  - Betroffen sind Hauptnavigation, Bereichsleiste, Galerie und Flyouts.
+- **Direkter Link** auf eine ausgeblendete Ansicht: Balken „Für diese Ansicht
+  liegen keine Daten vor: …“.
+- **Ansichten mit mehreren Dateien:** Balken; gezeichnet wird nur, wenn die
+  Hauptdateien in Ordnung sind.
+- **Führungsstationen:** Balken, wenn eine Belegquelle der Station keine Daten
+  hat; die bestehende Fehlerbox je Beleg bleibt.
+- **Fehlende Nebendatei:** führt nicht mehr zum Abbruch. `ladeArchivalienDaten()`
+  gibt eine leere Liste weiter, der Balken nennt die Datei.
+- `ratsprotokolle.csv` bleibt unangetastet und ohne Tab oder Balken.
+
+### Punkt 4 – Dokumentation
+- **`docs/SCHEMA.md`:**
+  - neuer Abschnitt „Mindestspalten und was bei Problemen passiert“;
+  - Pflicht-Spalte aller Tabellen durch die gemessene Liste ersetzt
+    (Pflicht / Schlüssel / empfohlen, 63 Zeilen; `Nachher_B2/schema_aenderungen.txt`);
+  - die beiden Schuldenprofil-Spalten als „aus dem Code abgeleitet, nicht
+    gemessen“ gekennzeichnet;
+  - Berichtigungen: Zeile `id` in `urkunden.csv` entfernt (Spalte existiert
+    nicht), Abschnitt 3 heißt `bestandsverzeichnis.csv`;
+  - 13.1–13.3 nennen das neue Verhalten.
+- **Masterprompt v4.4, Abschnitt 2 und 13:** Abweichung von der
+  Lazy-Loading-Regel vermerkt, mit Begründung.
+
+### Cache-Umstellung (gesondert aufgeführt, für getrennte Prüfung)
+Neu ist `js/core/datenCache.js`: eine gemeinsame `ladeGecachteCSV()` über den
+bestehenden `state.js`-Datencache. Sie speichert jetzt das laufende Laden
+(Promise), damit gleichzeitige Aufrufe eine einzige Anfrage teilen.
+
+Umgestellt, nur in der Ladefunktion, ohne inhaltliche oder optische Änderung:
+- `js/core/app.js`: lokale Kopie entfernt; Nav-Prüfungen Über/Literatur
+- `js/core/archivKonfiguration.js`: lokale Kopie entfernt; `ladeSeitenBloecke()`
+- `js/fuehrungen/fuehrungenDaten.js`: Belegquellen, fuehrungen.csv, literatur.csv
+- `js/core/literaturSeite.js`: literatur.csv, recherche_links.csv
+
+### Verifikation
+**Laufzeiten:**
+
+| Lauf | Dauer |
+|---|---|
+| Phase 1: Spaltentest | 778 s |
+| Phase 1: Nachprüfung | 611 s |
+| Endlauf: Referenz (47 Ansichten) | 15:39–15:41 |
+| Endlauf: Matrix (595) | bis 16:21 (40 min) |
+| Endlauf: Einzelnachprüfung (120) | bis 16:33 |
+| Wiederholungen (97 × 3) | 1 525 s |
+
+Dazu kamen Teilläufe mit 9 und 23 Ansichten, eine Nachkorrektur mit 2
+Einträgen, axe auf 9 Ansichten und die Anfragenzählung. Für den Endlauf wurde
+die Wartezeit je Aufruf von 1,5 auf 4 s erhöht, damit die Hintergrund-Prüfung
+vor der Messung fertig ist.
+
+**Originaldaten:**
+- Sichtbarer Text in 47 von 47 Ansichten identisch; kein Balken, kein
+  ausgeblendeter Tab, keine zusätzlichen Konsolenfehler.
+- 41 Screenshots byteidentisch.
+- Die übrigen 6 wurden mit getrennten Kopien nachgeprüft:
+  - Personennetzwerk und Führungsstation byteidentisch;
+  - Zeitachse und die drei Karten schwanken schon innerhalb desselben Stands
+    gleich stark, nur in der Zeichenfläche (`Nachher_B2/screenshots_vergleich/pixeldiff.txt`).
+
+**Matrix** (595 Ladevorgänge, vorher = B1):
+
+| Einstufung | vorher | nachher |
+|---|---|---|
+| stabil | 517 | 481 |
+| stabil, Inhalt stark abweichend | 13 | 0 |
+| stabil, Konsolenfehler | 0 | 0 |
+| Fehlermeldung | 17 | 114 |
+| leer ohne Hinweis | 48 | 0 |
+| Absturz | 0 | 0 |
+
+- Die Fälle `unbekannte_spalte`, `leere_zeilen`, `mit_bom` und `ohne_bom` sind
+  unverändert, also ohne Balken.
+- Pflichtspalten-Varianten: 0 leer ohne Hinweis, 0 Abstürze.
+- **Messstreuung:** Alle 97 geänderten Einträge wurden dreimal einzeln
+  wiederholt (291 Läufe). Alle Einstufungen waren einheitlich, es gab keine
+  Messstreuung.
+
+**axe (Punkt 1):** 9 Ansichten mit denselben Problemdaten auf beiden Ständen.
+Keine neue Regelverletzung, 0 Verstöße an Balken-Knoten.
+
+**Keine Datei doppelt:** CSV-Anfragen je Einstieg, gezählt bis 8 s nach
+Netzwerkruhe.
+
+| Einstieg | vorher | nachher |
+|---|---|---|
+| Startseite | 8 | 11, ohne Doppel |
+| `#bestand/treemap` | 8 | 11, ohne Doppel |
+| Führung | 11 (`literatur.csv` 2×) | 10 |
+| Literatur | 18 (`literatur.csv` 3×, vier weitere 2×) | 12 |
+| Über | 8 (`ueber.csv` 2×) | 10 |
+
+Weitere Doppel-Loads sind dabei nicht aufgefallen. Der im Code vermutete
+Doppel-Load von `orte.csv` auf den Karten tritt in der Messung nicht auf.
+
+**Erster Bildaufbau (Akzeptanz „nicht messbar schlechter“) – nicht eindeutig
+erfüllt:**
+- **Blockweise Messung, je 2 × 15 Läufe** (`Nachher_B2/ladezeit/statistik_nur_abwechselnd.txt`):
+  - Startseite: ohne signifikanten Unterschied.
+  - Treemap: FCP +24 ms (p = 0,004), Inhalt +33 ms (p = 0,001).
+- **Je Lauf abwechselnd, mit frisch gestarteten Servern, 20 + 20 Läufe:** kein
+  signifikanter Unterschied (p 0,42–0,98). Die Umgebung war zu diesem Zeitpunkt
+  aber für beide Stände etwa zehnmal langsamer (Chrome-Start, nicht der Server).
+- **Vermutete Ursache:** 4 zusätzliche JS-Module beim Start (23 → 27). Die
+  Ladeebenen des Modulgraphen sind unverändert (3).
+- Ein erster Versuch, nur die Importkette zu verkürzen, war wirkungslos
+  (dieselben 3 Ebenen) und wurde zurückgenommen.
+
+### Entscheidung „erster Bildaufbau“ (2026-10-03) und Umsetzung
+- **Entscheidung des Autors:** weder hinnehmen noch Module zusammenlegen.
+  `datenVerfuegbarkeit.js`, `datenAnforderungen.js` und `hinweisBalken.js`
+  werden erst nach dem ersten Bildaufbau per dynamischem `import()` geladen,
+  `datenCache.js` bleibt im Start.
+- **Auslegung (Variante „Mit den Ansichtsdaten“, vom Autor gewählt):**
+  „Erster Bildaufbau“ bedeutet das Seitengerüst (FCP, DOMContentLoaded),
+  nicht den Inhalt der Ansicht. **Abweichung vom Wortlaut:** Öffnet man eine
+  Visualisierung, Über, Literatur oder eine Führung, wird das Prüfmodul
+  *parallel zu den Ansichtsdaten* geladen und vor dem Zeichnen abgewartet -
+  nicht erst danach. Begründung: Die Prüfung muss vor dem Zeichnen feststehen,
+  sonst würde eine gesperrte Ansicht (z. B. fehlende Pflichtspalte) erst
+  gezeichnet und dann wieder entfernt. Auf der Startseite wird das Modul erst
+  nach deren Aufbau geladen.
+- **Umsetzung (`js/core/app.js`):** `ladePruefModul()` lädt das Modul einmal
+  (geteiltes Promise). `istAnsichtAusgeblendet`/`istBereichAusgeblendet`
+  gelten als „nichts ausgeblendet“, solange es nicht geladen ist; die
+  Hintergrund-Prüfung startet erst nach dem ersten Aufbau
+  (`Promise.allSettled([erstesRendern]).then(ladePruefModul)`).
+  `datenVerfuegbarkeit.js` reicht `erzeugeHinweisBalken` weiter, damit alle
+  drei Dateien mit einem `import()` kommen.
+- **Dafür nötige Entkopplung** (Verhalten unverändert): `dataLoader.js` hält
+  nur noch generische Fakten fest (fehlt, Spalten, Anzahl) und importiert die
+  Konfiguration nicht mehr; der Abgleich mit Pflicht-/Schlüsselspalten
+  (`keineBekannteSpalte()`) liegt in `datenVerfuegbarkeit.js`.
+  `bereichsLeiste.js` importiert die Prüfung nicht mehr, sondern erhält sie
+  als Option `istAusgeblendet` von `app.js`.
+- **Startgraph** (statische Importe ab `app.js`, Werkzeug `pB2_modulebenen.js`):
+  B1 23 Module, B2 statisch 27, **jetzt 24** (zusätzlich nur `datenCache.js`),
+  3 Ebenen. Kein anderes Modul importiert die drei Dateien statisch
+  (`Nachher_B2/dynamisch/fundstellen_ausgeliefert.txt`).
+
+### Verifikation nach der Umstellung (`Pruefung_2026-10-03/Nachher_B2/dynamisch/`)
+| Lauf | Ergebnis | Dauer |
+|---|---|---|
+| Teillauf Originaldaten (9 Ansichten) | Text 9/9 identisch, kein Balken, keine Fehler | 32 s |
+| Teillauf Problemfälle (15 Fälle, 26 Aufrufe) | identisch mit dem Teillauf vor der Umstellung | 155 s |
+| Referenzlauf (47 Ansichten) | Text 47/47 identisch zu B2-Endlauf und B1, keine Seiten-/Konsolenfehler | 129 s |
+| 97 geänderte Matrixeinträge, je einmal | 97/97 dieselbe Einstufung wie im Endlauf (Fehlermeldung) | 531 s |
+| Anfragen je Einstieg (8 Einstiege) | jede CSV-Datei höchstens einmal, Zahlen wie vor der Umstellung | – |
+
+Rückbau der Testdaten jeweils per `diff -rq` belegt (diff-exit 0). Die
+übrige Matrix wurde laut Entscheidung nicht erneut ausgeführt.
+
+### Gedrosselte Ladezeitmessung
+- **Vorgesehen:** Startseite und Treemap, vorher (`d8ccea5`) gegen nachher,
+  100 ms RTT (CDP `Network.emulateNetworkConditions`, Latenz je Anfrage,
+  Durchsatz unbegrenzt, Cache aus), je Lauf abwechselnd, frischer Server und
+  frischer Browser je Ladevorgang, 20 Läufe je Stand; Kennzahlen
+  DOMContentLoaded, FCP und „Inhalt sichtbar“. Werkzeug:
+  `tools/pB2_ladezeit_gedrosselt.mjs`.
+- **Geschwindigkeitsprobe vorab** (ungedrosselt, Stand vorher, 5 Ladevorgänge
+  je Ansicht, gleiche Methode wie die Normalwerte von 13:11 Uhr):
+  - 17:59 Uhr: Faktor 7,8 (Startseite) und 11,0 (Treemap);
+  - 18:15 Uhr: Faktor 5,8 und 6,0.
+- Grenze für eine gültige Messung: Faktor 2. **Die Messung ist deshalb
+  verschoben** (`Nachher_B2/ladezeit_gedrosselt/messung.json`,
+  `messung_versuch2.json`). Sie startet mit demselben Befehl neu und ist
+  fortsetzbar.
+- **Hinweis zur Ursache:** Die Verlangsamung fiel zeitlich mit einem seit
+  14:04 Uhr laufenden, rechenintensiven Fremdprogramm zusammen.
+- **Versuch 3 (18:20 Uhr, Fremdprogramm beendet):** Probe Faktor 1,17
+  (Startseite) und 1,24 (Treemap), also gültig. 20 + 20 Läufe je Ansicht,
+  240 s (`Nachher_B2/ladezeit_gedrosselt/messung_versuch3.json`,
+  `statistik_versuch3.txt`).
+
+| Ansicht | Kennzahl | Median vorher | Median nachher | Differenz | p (Mann-Whitney) | nachher langsamer (paarweise) |
+|---|---|---|---|---|---|---|
+| Startseite | DOMContentLoaded | 959 ms | 963 ms | +4 ms | 0,74 | 9/20 |
+| Startseite | FCP | 444 ms | 432 ms | −12 ms | 0,68 | 9/20 |
+| Startseite | Inhalt sichtbar | 1 376 ms | 1 389 ms | +13 ms | 0,63 | 10/20 |
+| Treemap | DOMContentLoaded | 921 ms | 930 ms | +9 ms | 0,62 | 7/20 |
+| Treemap | FCP | 404 ms | 392 ms | −12 ms | 0,42 | 8/20 |
+| Treemap | Inhalt sichtbar | 1 606 ms | 1 724 ms | **+118 ms** | < 0,001 | **20/20** |
+
+- **Seitengerüst** (FCP, DOMContentLoaded) auf beiden Ansichten und Inhalt der
+  Startseite: kein messbarer Unterschied.
+- **Inhalt der Treemap: messbar verzögert, +118 ms im Median** (paarweise
+  Median +99 ms, in allen 20 Läufen langsamer), bei 100 ms RTT, ungedrosseltem
+  Durchsatz und leerem Cache. JS-Anfragen beim Einstieg: 34 → 38.
+- **Vermutete Ursache (nicht einzeln gemessen):** Das Prüfmodul wird zwar
+  parallel zu den Daten geladen, braucht aber zwei Ladeschritte nacheinander
+  (`datenVerfuegbarkeit.js`, danach `datenAnforderungen.js`/`hinweisBalken.js`),
+  die Treemap-Daten nur einen. Bei 100 ms je Anfrage wartet das Zeichnen
+  deshalb etwa eine Latenz länger.
+- **Entscheidung des Autors (2026-10-03): nicht hinnehmen**, Abhilfe umsetzen
+  und messen.
+
+### Abhilfe Treemap-Verzögerung – umgesetzt und gemessen
+- **Umsetzung (`js/core/app.js`, `ladePruefModul()`):** `datenVerfuegbarkeit.js`,
+  `datenAnforderungen.js` und `hinweisBalken.js` werden gleichzeitig per
+  `Promise.all` über drei `import()` angefordert. Der zweite Ladeschritt
+  entfällt. Keine Zusammenlegung der Module, Prüffunktion unverändert.
+  Startgraph unverändert 24 Module, 3 Ebenen.
+- **Referenzlauf (47 Ansichten, 111 s):** Text 47/47 identisch zur vorigen
+  Referenz und zu B1, keine Seiten- oder Konsolenfehler
+  (`Nachher_B2/parallel_import/vergleich_referenz.tsv`).
+- **Stichprobe gesperrter Ansichten (37 s):** Personennetzwerk ohne `Name`,
+  Sankey ohne `kategorien`, Sankey ohne `orte`. Jeweils Balken „… Diese
+  Ansicht kann nicht angezeigt werden.“, kein SVG gezeichnet, keine Fehler,
+  kein NaN. Rückbau der Testdaten belegt.
+- Die 97 geänderten Matrixeinträge wurden laut Entscheidung nicht erneut
+  geprüft, weil die Prüffunktion unverändert ist.
+- **Erster Messversuch verschoben:** Die Vorabprüfung um 18:36 Uhr ergab
+  Faktor 7,16 (Startseite) und 8,53 (Treemap), über der Grenze 2; die Messung
+  wurde nicht durchgeführt (`Nachher_B2/ladezeit_gedrosselt/messung_versuch4.json`).
+  Ursache unklar (kein auffälliger Prozess, CPU-Last 19 %).
+- **Messung (Versuch 5, 18:41 Uhr):** Probe Faktor 1,16 und 1,17, also gültig.
+  Bedingungen wie Versuch 3: 100 ms RTT, 20 + 20 Läufe je Ansicht,
+  abwechselnde Reihenfolge, frischer Server und Browser je Ladevorgang,
+  Vergleich gegen `d8ccea5` (`messung_versuch5.json`, `statistik_versuch5.txt`).
+
+| Ansicht | Kennzahl | Median vorher | Median nachher | Differenz | p (Mann-Whitney) | nachher langsamer (paarweise) |
+|---|---|---|---|---|---|---|
+| Startseite | DOMContentLoaded | 976 ms | 948 ms | −28 ms | 0,62 | 9/20 |
+| Startseite | FCP | 420 ms | 416 ms | −4 ms | 0,85 | 11/20 |
+| Startseite | Inhalt sichtbar | 1 393 ms | 1 367 ms | −26 ms | 0,56 | 8/20 |
+| Treemap | DOMContentLoaded | 961 ms | 969 ms | +8 ms | 0,92 | 11/20 |
+| Treemap | FCP | 420 ms | 400 ms | −20 ms | 0,90 | 8/20 |
+| Treemap | Inhalt sichtbar | 1 641 ms | 1 638 ms | −3 ms | 0,74 | 8/20 |
+
+- **Ergebnis:** kein messbarer Unterschied mehr, weder beim Seitengerüst noch
+  beim Inhalt. Die Treemap-Verzögerung aus Versuch 3 (+118 ms, 20/20) ist
+  verschwunden. Die vermutete Ursache (zweiter Ladeschritt) ist damit bestätigt.
+- JS-Anfragen beim Einstieg unverändert gegenüber Versuch 3 (Startseite
+  25 → 29, Treemap 34 → 38). Sie kosten bei 100 ms RTT messbar nichts, weil
+  sie parallel laufen.
+- Die Akzeptanzbedingung „erster Bildaufbau nicht messbar schlechter“ ist
+  erfüllt, auch für den Inhalt der ersten Ansicht.
+
+### Scope-Meldungen
+- **Führungen bei fehlender Belegquelle:** Fehlt eine der sechs Belegquellen
+  ganz (404), lehnt `ladeFuehrungenDaten()` (`fuehrungenDaten.js`, `ladeQuellKarten()`)
+  vollständig ab. Führungsstationen brechen dann weiterhin ab. Nicht behoben,
+  die Matrix testet „Datei fehlt“ nicht.
+- **Bekannte Grenzen (laut Auftrag nicht geändert):**
+  - „Zeitachse mit 1067 undatiert“ bei unlesbarem Datumsformat bleibt ohne
+    Hinweis; der Balken greift nur, wenn die Spalte `jahr` fehlt.
+  - Zählwerte `{n_…}` zeigen bei leerer Datei „0“, z. B. „Über-Seite mit 0 Urkunden“.
+- **Personenliste:** Bei leerer `buergerbuch`/`urkunden`/`verlassenschaftsinventare.csv`
+  erscheint der Balken „… Diese Ansicht ist deshalb unvollständig.“ (Nebendatei).
+
+**Regressionsschutz (Abschnitt 13):**
+- `app.js`, `dataLoader.js` und `bereichsLeiste.js` sind gemeinsam genutzt.
+  Betroffen sind alle Ansichten, Galerien und Navigation; geprüft über die
+  vollständige Matrix und den Referenzlauf.
+- Neue Dateien: `js/config/datenAnforderungen.js`, `js/core/datenCache.js`,
+  `js/core/datenVerfuegbarkeit.js`, `js/utils/hinweisBalken.js`.
+- Durch die Umstellung auf dynamisches `import()` zusätzlich geprüft über
+  Referenzlauf, 97 geänderte Matrixeinträge, Teilläufe und Anfragenzählung
+  (siehe oben).
+- Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (56) – Auftrag B1: Robustheit gegenüber Pipe-Zeichen und leeren Daten (Prüfbericht Punkt 3)
 
 **Kontext:** Prüfbericht vom 2026-10-03; Auftrag A ist als `9a40ef7`

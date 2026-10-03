@@ -136,8 +136,8 @@
 // (nach der Pause) gegen den dann aktuellen Stand geprüft.
 
 import { starteRouter, navigiereZu, aktuelleRoute } from './router.js';
-import { getZustand, getDatenCacheEintrag, setDatenCacheEintrag, setUnsicherheitModus } from './state.js';
-import { ladeCSV } from './dataLoader.js';
+import { getZustand, setUnsicherheitModus } from './state.js';
+import { ladeGecachteCSV } from './datenCache.js';
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeStartseite } from './startseite.js';
@@ -150,6 +150,32 @@ import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.
 import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke } from './archivKonfiguration.js';
 import { erzeugeUeberSeite } from './ueberSeite.js';
 import { erzeugeLiteraturSeite } from './literaturSeite.js';
+
+// AUFTRAG B2 (Entscheidung "erster Bildaufbau", 2026-10-03): Prüfung,
+// Anforderungen und Hinweisbalken (js/core/datenVerfuegbarkeit.js samt
+// datenAnforderungen.js/hinweisBalken.js) stehen NICHT im Start-Modulgraphen -
+// sie verzögerten dort messbar die erste Darstellung. Nachgeladen per
+// dynamischem import(): parallel zu den Daten einer Ansicht (vor deren
+// Zeichnen abgewartet) bzw. nach dem ersten Bildaufbau für die Hintergrund-
+// Prüfung. Solange das Modul nicht geladen ist, gilt nichts als ausgeblendet.
+let pruefModul = null;
+let pruefModulLaden = null;
+function ladePruefModul() {
+  // Alle drei Dateien gleichzeitig anfordern: sonst fordert der Browser die
+  // statischen Importe von datenVerfuegbarkeit.js erst an, wenn diese Datei
+  // geladen ist - ein zweiter Ladeschritt, der die Treemap bei 100 ms Latenz
+  // messbar verzögerte (PROJEKTLOG Eintrag 57). Funktion unverändert.
+  if (!pruefModulLaden) {
+    pruefModulLaden = Promise.all([
+      import('./datenVerfuegbarkeit.js'),
+      import('../config/datenAnforderungen.js'),
+      import('../utils/hinweisBalken.js')
+    ]).then(([m]) => { pruefModul = m; return m; });
+  }
+  return pruefModulLaden;
+}
+const istAnsichtAusgeblendet = (ansichtId) => (pruefModul ? pruefModul.istAnsichtAusgeblendet(ansichtId) : false);
+const istBereichAusgeblendet = (bereich) => (pruefModul ? pruefModul.istBereichAusgeblendet(bereich) : false);
 
 // Abschnitt 4.2: Personennetzwerk/Gantt-Diagramm werden auch auf kleinen
 // Bildschirmen geladen, aber mit sichtbarem Hinweis versehen. Schwellenwert ist
@@ -186,16 +212,39 @@ function aktualisiereKleinerBildschirmHinweis(hinweisElement, ansichtId) {
   hinweisElement.textContent = brauchtHinweis ? 'Diese Ansicht ist für größere Bildschirme optimiert.' : '';
 }
 
+// AUFTRAG B2 (Prüfbericht Punkt 3): Hinweisbalken bei Problemen mit den
+// Datendateien (js/core/datenVerfuegbarkeit.js entscheidet, was gemeldet wird).
+// Über einer Visualisierung: eigener Grid-Bereich (Zeile 3, layout.css), der
+// NUR im Problemfall entsteht - mit vollständigen Daten bleibt das DOM gleich.
+function setzeVizHinweisBalken(kontext, texte) {
+  kontext.hinweisBalkenBereich?.remove();
+  kontext.hinweisBalkenBereich = null;
+  if (!texte.length) return;
+  const bereich = document.createElement('div');
+  bereich.className = 'hinweis-balken-bereich';
+  bereich.appendChild(pruefModul.erzeugeHinweisBalken(texte));
+  contentRoot.insertBefore(bereich, kontext.vizContainer);
+  kontext.hinweisBalkenBereich = bereich;
+}
+
+// Seiten (Startseite, Über, Literatur, Führungen): Balken als erstes Element
+// im Seitencontainer. Kann die Seite nicht angezeigt werden (pruefung.blockiert),
+// ersetzt der Balken ihren Inhalt; entferneModul() baut das Seitenmodul ab.
+function zeigeSeitenPruefung(container, pruefung, entferneModul) {
+  if (!pruefung.texte.length) return;
+  if (pruefung.blockiert) {
+    entferneModul();
+    container.innerHTML = '';
+  }
+  container.prepend(pruefModul.erzeugeHinweisBalken(pruefung.texte));
+}
+
 // state.js' datenCache (Abschnitt 7) hält bereits geladene CSV-Records fest, damit
 // wiederholtes Wechseln zwischen Ansichten desselben Archivalientyps (z.B. mehrfach
 // hin und her zum Personennetzwerk) nicht jedes Mal neu lädt/parst.
-async function ladeGecachteCSV(pfad) {
-  const gecacht = getDatenCacheEintrag(pfad);
-  if (gecacht) return gecacht;
-  const { records } = await ladeCSV(pfad);
-  setDatenCacheEintrag(pfad, records);
-  return records;
-}
+// AUFTRAG B2 (Cache-Umstellung): die bisher hier stehende lokale
+// ladeGecachteCSV()-Kopie ist nach js/core/datenCache.js gewandert (gemeinsam
+// mit archivKonfiguration.js, siehe dortiger Dateikopf).
 
 // AUFTRAG "Neue Kacheln Bürgerbuch/Verlassenschaften/Personen": archivalienRegistry.js'
 // `datenDatei` ist bei den meisten Archivalientypen weiterhin ein einzelner
@@ -211,10 +260,14 @@ async function ladeGecachteCSV(pfad) {
 // [...] }`) - das künftige Personen-Modul liest die beiden Listen darüber
 // unter denselben Schlüsseln wieder aus, ohne dass app.js irgendetwas über
 // deren fachlichen Inhalt wissen muss.
+// AUFTRAG B2: fehlt bei mehreren Quellen EINE Datei, bricht nicht mehr das
+// ganze Laden ab (bisher Absturz der Ansicht) - die fehlende Quelle wird als
+// leere Liste weitergegeben, pruefeAnsicht() meldet sie im Hinweisbalken bzw.
+// sperrt die Ansicht, wenn es eine ihrer Hauptdateien ist.
 async function ladeArchivalienDaten(datenDatei) {
   if (typeof datenDatei === 'string') return ladeGecachteCSV(datenDatei);
   const eintraege = await Promise.all(
-    Object.entries(datenDatei).map(async ([schluessel, pfad]) => [schluessel, await ladeGecachteCSV(pfad)])
+    Object.entries(datenDatei).map(async ([schluessel, pfad]) => [schluessel, await ladeGecachteCSV(pfad).catch(() => [])])
   );
   return Object.fromEntries(eintraege);
 }
@@ -285,7 +338,8 @@ function renderBestandTab() {
 // "Übersicht" nur bei hatGalerie (ergibt sonst keinen Sinn - ohne Galerie
 // gibt es auch keine "Übersicht", zu der man zurückkehren könnte).
 function baueVizVorschauTabs(archivalientyp) {
-  const tabs = archivalientyp.ansichten.map((a) => ({ id: a.id, label: a.label }));
+  // AUFTRAG B2: Ansichten ohne Daten erscheinen nicht in der Tab-Liste.
+  const tabs = archivalientyp.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id)).map((a) => ({ id: a.id, label: a.label }));
   return archivalientyp.hatGalerie ? [{ id: null, label: 'Übersicht', istUebersicht: true }, ...tabs] : tabs;
 }
 
@@ -337,7 +391,8 @@ function erzeugeBereichsLeisteFuerTab(aktiverTyp) {
     // einen eigenen Visualisierungs-Tab-Flyout - bereichsLeiste.js selbst
     // entscheidet, den aktiven Link dabei auszusparen (siehe dortiger
     // Kommentar), hier wird nur noch übergeben, WIE so ein Flyout gebaut wird.
-    verankereVizFlyout: (link, typ) => erzeugeVizVorschauFlyout(link, typ)
+    verankereVizFlyout: (link, typ) => erzeugeVizVorschauFlyout(link, typ),
+    istAusgeblendet: istBereichAusgeblendet // AUFTRAG B2
   });
 }
 
@@ -373,8 +428,7 @@ async function renderVisualisierungenTab() {
       zusaetzlichBeimZerstoeren: () => bereichsLeiste.destroy()
     });
     aktuellerKontext = kontext;
-    aktualisiereGalerieFlyoutAnsicht(kontext);
-    return;
+    return aktualisiereGalerieFlyoutAnsicht(kontext); // AUFTRAG B2: Promise fuer "erster Bildaufbau"
   }
 
   const unsicherheitsContainer = erzeugeUnterContainer('werkzeugleiste-unsicherheit');
@@ -507,6 +561,7 @@ function erzeugeGalerieFlyoutKontext({ tab, typ, hatGalerie, bereich, ausloeser,
       kontext.unsicherheitsButton?.destroy();
       kontext.galerieContainer?.remove();
       kontext.kleinerBildschirmHinweis?.remove();
+      kontext.hinweisBalkenBereich?.remove(); // AUFTRAG B2
       kontext.vizContainer?.remove();
       zusaetzlichBeimZerstoeren();
     }
@@ -529,8 +584,17 @@ function zeigeGalerie(kontext) {
   kontext.modus = 'galerie';
   const galerieContainer = erzeugeUnterContainer('galerie-bereich');
   kontext.galerieContainer = galerieContainer;
+  // AUFTRAG B2: Ansichten ohne Daten erscheinen nicht als Kachel; sind alle
+  // ausgeblendet (direkter Link auf einen leeren Bereich), steht dort der Balken.
+  const sichtbareAnsichten = kontext.bereich.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id));
+  if (sichtbareAnsichten.length === 0) {
+    // nur erreichbar, wenn etwas ausgeblendet ist - das Prüfmodul ist dann geladen
+    galerieContainer.appendChild(pruefModul.erzeugeHinweisBalken(pruefModul.texteFuerLeerenBereich(kontext.bereich)));
+    kontext.galerie = null;
+    return;
+  }
   kontext.galerie = erzeugeVisualisierungsGalerie(galerieContainer, {
-    archivalientyp: kontext.bereich, // {label, ansichten} - erzeugeVisualisierungsGalerie() kennt nur diese Form, nicht den Namen "archivalientyp"
+    archivalientyp: { ...kontext.bereich, ansichten: sichtbareAnsichten }, // {label, ansichten} - erzeugeVisualisierungsGalerie() kennt nur diese Form, nicht den Namen "archivalientyp"
     onAuswahl: (ansicht) => navigiereZu(kontext.routeSegmente(ansicht.id))
   });
 }
@@ -565,7 +629,7 @@ function stelleVizFlyoutSicher(kontext) {
 function baueTabListe(kontext) {
   return [
     { id: null, label: 'Übersicht', istUebersicht: true },
-    ...kontext.bereich.ansichten.map((a) => ({ id: a.id, label: a.label }))
+    ...kontext.bereich.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id)).map((a) => ({ id: a.id, label: a.label })) // AUFTRAG B2
   ];
 }
 
@@ -576,6 +640,8 @@ function raeumeVizAnsichtAuf(kontext) {
   kontext.flyout?.destroy();
   kontext.unsicherheitsButton?.destroy();
   kontext.kleinerBildschirmHinweis?.remove();
+  kontext.hinweisBalkenBereich?.remove(); // AUFTRAG B2
+  kontext.hinweisBalkenBereich = null;
   kontext.vizContainer?.remove();
   kontext.flyout = null;
   kontext.unsicherheitsButton = null;
@@ -595,9 +661,31 @@ async function wechsleZuAnsicht(kontext, eintrag) {
   kontext.wirdGewechselt = true;
   const meineGeneration = generation;
   try {
-    if (!kontext.records) {
-      kontext.records = await ladeArchivalienDaten(kontext.bereich.datenDatei);
-      if (meineGeneration !== generation) return;
+    // AUFTRAG B2: Daten und Prüfmodul PARALLEL laden. Fehlt die (einzige)
+    // Datei, meldet pruefeAnsicht() das unten im Hinweisbalken, statt dass der
+    // Ladefehler die Ansicht abbricht.
+    const [records, pm] = await Promise.all([
+      kontext.records ? Promise.resolve(kontext.records) : ladeArchivalienDaten(kontext.bereich.datenDatei).catch(() => null),
+      ladePruefModul()
+    ]);
+    kontext.records = records;
+    if (meineGeneration !== generation) return;
+    // AUFTRAG B2 (Prüfbericht Punkt 3): Pflichtspalten/leere Dateien prüfen,
+    // BEVOR das Modul zeichnet - eine gesperrte Ansicht zeigt nur den Balken.
+    await pm.stelleDateienSicher(eintrag.id);
+    if (meineGeneration !== generation) return;
+    const pruefung = pm.pruefeAnsicht(eintrag.id);
+    if (pruefung.blockiert || !kontext.records) {
+      if (kontext.aktuellesVizModul) {
+        try { kontext.aktuellesVizModul.destroy(); } finally { kontext.aktuellesVizModul = null; }
+      }
+      kontext.vizContainer.innerHTML = '';
+      setzeVizHinweisBalken(kontext, pruefung.texte);
+      kontext.records = null;
+      kontext.ansichtId = eintrag.id;
+      kontext.kleinerBildschirmHinweis.hidden = true;
+      kontext.flyout?.aktualisiere({ tabs: baueTabListe(kontext), aktiverId: kontext.ansichtId });
+      return;
     }
     const mod = await import(eintrag.modulPfad);
     if (meineGeneration !== generation) return;
@@ -612,6 +700,7 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     // Kommentar in renderVisualisierungenTab()'s ladeModulUndRender() oben.
     const datenFuerModul = eintrag.datenSchluessel ? kontext.records[eintrag.datenSchluessel] : kontext.records;
     mod.render(kontext.vizContainer, datenFuerModul, { showUncertainty: false });
+    setzeVizHinweisBalken(kontext, pruefung.texte); // AUFTRAG B2: nur bei Problemen in Nebendateien
 
     kontext.ansichtId = eintrag.id;
     kontext.aktuellesVizModul = mod;
@@ -677,9 +766,14 @@ function renderUeberTab() {
   const container = erzeugeUnterContainer('ueber-bereich');
   const kontext = { tab: 'ueber', modul: null, destroy: () => kontext.modul?.destroy() };
   aktuellerKontext = kontext;
-  erzeugeUeberSeite(container).then((modul) => {
-    if (aktuellerKontext === kontext) kontext.modul = modul;
-    else modul.destroy();
+  return erzeugeUeberSeite(container).then(async (modul) => {
+    if (aktuellerKontext !== kontext) { modul.destroy(); return; }
+    kontext.modul = modul;
+    // AUFTRAG B2: Hinweisbalken (ueber.csv, Kerndatei archiv.csv)
+    const pm = await ladePruefModul();
+    await pm.stelleDateienSicher('ueber');
+    if (aktuellerKontext !== kontext) return;
+    zeigeSeitenPruefung(container, pm.pruefeAnsicht('ueber'), () => { modul.destroy(); kontext.modul = null; });
   });
 }
 
@@ -703,17 +797,32 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
   // Visualisierungsmodul (siehe Dateikopf-Kommentar "LAZY LOADING"), hier nur
   // manuell nachgebaut, weil Führungen (anders als die Visualisierungen)
   // nicht über archivalienRegistry.js/ladeModulUndRender() läuft.
-  const [{ ladeFuehrungenDaten }, galerieModul, stationModul, abschlussModul] = await Promise.all([
+  const [{ ladeFuehrungenDaten, BELEG_QUELLEN }, galerieModul, stationModul, abschlussModul, pm] = await Promise.all([
     import('../fuehrungen/fuehrungenDaten.js'),
     import('../fuehrungen/fuehrungenGalerie.js'),
     import('../fuehrungen/fuehrungStation.js'),
-    import('../fuehrungen/fuehrungAbschluss.js')
+    import('../fuehrungen/fuehrungAbschluss.js'),
+    ladePruefModul() // AUFTRAG B2: Prüfmodul parallel, nicht im Startgraphen
   ]);
   if (meineGeneration !== generation) return; // Tab während des Ladens bereits gewechselt
+
+  // AUFTRAG B2 (Prüfbericht Punkt 3): fuehrungen.csv vor dem Aufbau prüfen -
+  // fehlt sie, ist sie leer, unlesbar oder fehlt eine Pflichtspalte, steht dort
+  // nur der Hinweisbalken (bisher leere Übersicht bzw. "nicht gefunden").
+  const pruefAnsicht = !fuehrungId ? 'fuehrungenUebersicht' : (stationNrRoh === 'ende' ? 'fuehrungAbschluss' : 'fuehrungStation');
+  await pm.stelleDateienSicher(pruefAnsicht);
+  if (meineGeneration !== generation) return;
+  const vorabPruefung = pm.pruefeAnsicht(pruefAnsicht);
 
   kontext.modul?.destroy();
   kontext.container.innerHTML = '';
   kontext.aktuellesVizModul = null; // vor jedem Neuaufbau zurücksetzen, s.u.
+
+  if (vorabPruefung.blockiert) {
+    kontext.modul = null;
+    kontext.container.appendChild(pm.erzeugeHinweisBalken(vorabPruefung.texte));
+    return;
+  }
 
   if (!fuehrungId) {
     kontext.modul = await galerieModul.render(kontext.container);
@@ -731,6 +840,7 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
   if (fuehrung && stationNrRoh === 'ende') {
     kontext.modul = abschlussModul.render(kontext.container, fuehrung);
     kontext.aktuellesVizModul = kontext.modul;
+    zeigeSeitenPruefung(kontext.container, pm.pruefeAnsicht('fuehrungAbschluss'), () => {}); // AUFTRAG B2: literatur.csv
     return;
   }
 
@@ -743,6 +853,10 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
     return;
   }
   kontext.modul = stationModul.render(kontext.container, fuehrung, stationNr);
+  // AUFTRAG B2: Hinweis, wenn eine Belegquelle dieser Station keine Daten hat
+  // (die einzelnen Belege zeigen zusätzlich weiterhin ihre eigene Fehlerbox).
+  const belegDateien = (station.belege || []).map((b) => BELEG_QUELLEN[b.typ]?.pfad).filter(Boolean);
+  zeigeSeitenPruefung(kontext.container, pm.pruefeAnsicht('fuehrungStation', belegDateien), () => {});
   // KORREKTURAUFTRAG "Führungen, Teil 2a-K": nur die Stationsansicht braucht
   // die zentrale, 200ms-debouncte resize()-Verdrahtung (fuehrungStation.js
   // misst darüber ihre bildschirmfüllende Höhe neu) - die Galerie oben
@@ -760,7 +874,7 @@ function renderFuehrungenTab() {
     destroy: () => kontext.modul?.destroy()
   };
   aktuellerKontext = kontext;
-  aktualisiereFuehrungenAnsicht(kontext);
+  return aktualisiereFuehrungenAnsicht(kontext); // AUFTRAG B2: Promise fuer "erster Bildaufbau"
 }
 
 // Startseite (Landingpage, siehe startseite.js): erscheint bei leerem Hash
@@ -780,9 +894,14 @@ function renderStartTab() {
   const wurzelContainer = erzeugeUnterContainer('startseite-container');
   const kontext = { tab: null, startseite: null, destroy: () => kontext.startseite?.destroy() };
   aktuellerKontext = kontext;
-  erzeugeStartseite(wurzelContainer).then((startseite) => {
-    if (aktuellerKontext === kontext) kontext.startseite = startseite;
-    else startseite.destroy();
+  return erzeugeStartseite(wurzelContainer).then(async (startseite) => {
+    if (aktuellerKontext !== kontext) { startseite.destroy(); return; }
+    kontext.startseite = startseite;
+    // AUFTRAG B2: Kerndateien startseite.csv und archiv.csv - Hinweisbalken
+    const pm = await ladePruefModul(); // erst NACH dem Aufbau der Startseite nachgeladen
+    await pm.stelleDateienSicher('startseite');
+    if (aktuellerKontext !== kontext) return;
+    zeigeSeitenPruefung(wurzelContainer, pm.pruefeAnsicht('startseite'), () => { startseite.destroy(); kontext.startseite = null; });
   });
 }
 
@@ -799,13 +918,16 @@ function renderLiteraturTab() {
   const kontext = { tab: 'literatur', modul: null, destroy: () => kontext.modul?.destroy() };
   aktuellerKontext = kontext;
   const route = aktuelleRoute();
-  erzeugeLiteraturSeite(container).then((modul) => {
-    if (aktuellerKontext === kontext) {
-      kontext.modul = modul;
-      verarbeiteDatensatzAufruf(modul, route);
-    } else {
-      modul.destroy();
-    }
+  return erzeugeLiteraturSeite(container).then(async (modul) => {
+    if (aktuellerKontext !== kontext) { modul.destroy(); return; }
+    kontext.modul = modul;
+    // AUFTRAG B2: literatur.csv prüfen (leer, unlesbar, Spalte 'zitation')
+    const pm = await ladePruefModul();
+    await pm.stelleDateienSicher('literatur');
+    if (aktuellerKontext !== kontext) return;
+    const pruefung = pm.pruefeAnsicht('literatur');
+    zeigeSeitenPruefung(container, pruefung, () => { modul.destroy(); kontext.modul = null; });
+    if (!pruefung.blockiert) verarbeiteDatensatzAufruf(modul, route);
   });
 }
 
@@ -902,8 +1024,9 @@ function handleRouteChange() {
   }
 
   raeumeSeiteAuf();
-  renderTab(route.tab);
+  const aufbau = renderTab(route.tab);
   contentRoot.focus();
+  return aufbau; // AUFTRAG B2: fuer pruefeDatenImHintergrund() ("nach dem ersten Bildaufbau")
 }
 
 // FOLGEAUFTRAG "Hover-Flyouts in der Hauptnavigation" (siehe Dateikopf-
@@ -948,7 +1071,8 @@ function verankereHauptnavFlyouts() {
         // Punkt 3 auch HIER (verschachtelt): siehe Dateikopf-Kommentar -
         // schließt zusätzlich diesen äußeren Flyout, wenn ein Klick in der
         // verschachtelten Vorschau navigiert.
-        verankereVizFlyout: (link, typ) => erzeugeVizVorschauFlyout(link, typ, () => vizFlyout.schliesse())
+        verankereVizFlyout: (link, typ) => erzeugeVizVorschauFlyout(link, typ, () => vizFlyout.schliesse()),
+        istAusgeblendet: istBereichAusgeblendet // AUFTRAG B2
       });
       fuegeFlyoutStyleEin(panel);
     }
@@ -1032,13 +1156,16 @@ function wendeFaviconAn() {
 // archivKonfiguration.js) - ladeSeitenBloecke() cacht das Ergebnis, ein
 // späterer echter Aufruf der Über-Seite lädt die Datei dadurch nicht
 // erneut. Nur eine leere Blockliste bei vorhandener, aber inhaltsleerer
-// Datei blendet die Navigation NICHT aus (das ist kein Fehlerfall) -
+// Datei blendet die Navigation NICHT aus (das ist kein Fehlerfall) - SEIT
+// AUFTRAG B2 überholt: eine Datei ohne Datensätze gilt als "nicht vorhanden"
+// und wird von wendeAusblendungenAn() nach der Hintergrund-Prüfung ebenfalls
+// ausgeblendet (Entscheidung des Autors vom 2026-10-03) -
 // unterschieden über denselben Cache-Eintrag, indem ladeCSV() selbst bei
 // fehlender Datei wirft (siehe ladeSeitenBloecke()s try/catch) und hier
 // separat, nur für die Ausblenden-Entscheidung, erneut geprüft wird.
 async function pruefeUeberSeiteVerfuegbarkeit() {
   try {
-    await ladeCSV('data/ueber.csv');
+    await ladeGecachteCSV('data/ueber.csv');
   } catch {
     document.getElementById('nav-ueber-link')?.setAttribute('hidden', '');
   }
@@ -1052,10 +1179,32 @@ async function pruefeUeberSeiteVerfuegbarkeit() {
 // ladeCSV() nicht wirft.
 async function pruefeLiteraturVerfuegbarkeit() {
   try {
-    const { records } = await ladeCSV('data/literatur.csv');
+    const records = await ladeGecachteCSV('data/literatur.csv');
     if (records.length === 0) throw new Error('data/literatur.csv hat keine Datenzeilen.');
   } catch {
     document.getElementById('nav-literatur-link')?.setAttribute('hidden', '');
+  }
+}
+
+// AUFTRAG B2 (Prüfbericht Punkt 3): Ergebnis der Hintergrund-Prüfung anwenden -
+// nur aufgerufen, wenn tatsächlich etwas ausgeblendet wird. Hauptnavigation:
+// Punkte ohne Daten verschwinden; ist gerade eine Seite mit Bereichsleiste
+// oder Galerie offen, wird sie neu aufgebaut, damit auch dort nichts Leeres
+// mehr angeboten wird. Ein direkter Link auf eine ausgeblendete Ansicht zeigt
+// weiterhin den Hinweisbalken (Freigabe Punkt 5).
+function wendeAusblendungenAn() {
+  const navAusblenden = {
+    bestand: istBereichAusgeblendet({ ansichten: BESTAND_ANSICHTEN }),
+    visualisierungen: ARCHIVALIENTYPEN.every((typ) => istBereichAusgeblendet(typ)),
+    fuehrungen: istAnsichtAusgeblendet('fuehrungenUebersicht'),
+    literatur: istAnsichtAusgeblendet('literatur'),
+    ueber: istAnsichtAusgeblendet('ueber')
+  };
+  navLinks.forEach((link) => { if (navAusblenden[link.dataset.tab]) link.setAttribute('hidden', ''); });
+  const route = aktuelleRoute();
+  if (route.tab === 'bestand' || route.tab === 'visualisierungen') {
+    raeumeSeiteAuf();
+    renderTab(route.tab);
   }
 }
 
@@ -1087,4 +1236,12 @@ await ladeArchivKonfiguration();
 wendeArchivIdentitaetAn();
 pruefeUeberSeiteVerfuegbarkeit();
 pruefeLiteraturVerfuegbarkeit();
-handleRouteChange();
+const erstesRendern = handleRouteChange();
+// AUFTRAG B2 (Entscheidung des Autors, 2026-10-03): erst NACH dem ersten
+// Bildaufbau im Hintergrund prüfen, welche Dateien fehlen oder keine
+// Datensätze haben, und deren Tabs/Ansichten ausblenden - siehe
+// js/core/datenVerfuegbarkeit.js (Abweichung von der Lazy-Loading-Regel).
+// Das Prüfmodul selbst wird erst NACH dem ersten Aufbau geladen (nicht beim Start).
+Promise.allSettled([erstesRendern])
+  .then(() => ladePruefModul())
+  .then((pm) => pm.pruefeDatenImHintergrund(erstesRendern, wendeAusblendungenAn));

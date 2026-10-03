@@ -25,7 +25,7 @@
 // Seite laden nicht erneut).
 
 import { ladeCSV } from './dataLoader.js';
-import { getDatenCacheEintrag, setDatenCacheEintrag } from './state.js';
+import { ladeGecachteCSV } from './datenCache.js';
 
 // Punkt 2.1, Ausfallverhalten "archiv.csv fehlt": neutrale Ersatzwerte statt
 // Absturz - jedes Modul, das konfigurationswert() aufruft, bekommt so immer
@@ -84,13 +84,8 @@ export function konfigurationswert(schluessel) {
   return quelle[schluessel] ?? ARCHIV_ERSATZWERTE[schluessel] ?? '';
 }
 
-async function ladeGecachteCSV(pfad) {
-  const gecacht = getDatenCacheEintrag(pfad);
-  if (gecacht) return gecacht;
-  const { records } = await ladeCSV(pfad);
-  setDatenCacheEintrag(pfad, records);
-  return records;
-}
+// AUFTRAG B2 (Cache-Umstellung): ladeGecachteCSV() kommt jetzt aus
+// js/core/datenCache.js (bisher eine lokale, gleichlautende Kopie hier).
 
 // Punkt 2.2: Zählwerte aus den bereits vorhandenen Archivalien-Tabellen -
 // über denselben Datencache wie app.js' eigenes Laden (state.js), kostet
@@ -182,7 +177,9 @@ export async function ladeSeitenBloecke(pfad) {
   if (seitenBloeckeCache.has(pfad)) return seitenBloeckeCache.get(pfad);
   let ergebnis;
   try {
-    const [{ records }, globaleWerte] = await Promise.all([ladeCSV(pfad), ermittleGlobaleWerte()]);
+    // AUFTRAG B2 (Cache-Umstellung): Laden über den gemeinsamen Cache
+    // (js/core/datenCache.js), damit keine Datei doppelt angefragt wird.
+    const [records, globaleWerte] = await Promise.all([ladeGecachteCSV(pfad), ermittleGlobaleWerte()]);
     const sichtbare = records.filter((r) => r.sichtbar === 'ja');
     ergebnis = sichtbare
       .map((r) => ersetzePlatzhalterInRecord(r, globaleWerte, r.block_id || pfad))

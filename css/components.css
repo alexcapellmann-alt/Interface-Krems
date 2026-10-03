@@ -30,6 +30,42 @@
 
 .kleiner-bildschirm-hinweis[hidden] { display: none; }
 
+/* AUFTRAG B2 (Prüfbericht Punkt 3): Hinweisbalken für Probleme mit den
+   Datendateien (js/utils/hinweisBalken.js). Bewusst eigene Farbe (Bernstein),
+   weder das Unsicherheits-Rot (--unsicher) noch die Führungs-Fehlerbox -
+   Masterprompt Abschnitt 11/15: Daten-/Fehlerhinweis optisch unterscheidbar.
+   Kontrast: Text #1a1a1a auf #fdf3e1 ca. 16:1; weißes "!" auf #8a5a00 ca. 5,9:1.
+   Nicht allein über Farbe erkennbar: Symbol "!" und Titel "Hinweis zu den Daten". */
+.hinweis-balken {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  background: #fdf3e1;
+  color: #1a1a1a;
+  border: 1px solid #8a5a00;
+  border-left-width: 6px;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.hinweis-balken-symbol {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: #8a5a00;
+  color: #ffffff;
+  font-weight: 700;
+}
+.hinweis-balken-text p { margin: 0; }
+.hinweis-balken-text p + p { margin-top: var(--space-1); }
+.hinweis-balken-titel { font-weight: 700; }
+
 /* Platzhalterseiten (Führungen/Literatur/Über) - bewusst als "hier fehlt noch
    etwas" erkennbar (gestrichelter Rand), nicht wie ein regulärer Inhalt. */
 .platzhalter-seite {

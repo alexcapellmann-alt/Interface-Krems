@@ -25,6 +25,7 @@ Ein interaktives, browserbasiertes Interface zur Exploration der Bestände des S
 - **Content-driven, mit Einschränkung:** Archivarische Inhalte (Bestandseinträge, Literatur, Führungen) ergeben sich automatisch aus den Datentabellen im `data/`-Ordner. Das gilt nicht automatisch für Visualisierungen: Eine neue CSV-Datei erzeugt eine neue Kachel im Visualisierungen-Tab nur, wenn bereits ein passendes Visualisierungsmodul für diesen Archivalientyp existiert. Ohne passendes Modul erscheint kein Fehler, sondern ein Hinweis "noch nicht visualisierbar".
 - **Fetch, nie einbetten.** Keine archivarischen Inhalte als feste Werte im JavaScript-Code. Rein technische Konstanten (Farbpalette, Layout-Werte) dürfen im Code stehen, siehe Abschnitt 3.
 - **Lazy Loading.** Eine Visualisierung wird erst geladen (Code und Daten), wenn sie erstmals tatsächlich aufgerufen wird – nicht beim Start der gesamten Anwendung. Das begrenzt die Ladezeit trotz über 30 möglicher Visualisierungen.
+  - **Vermerkte Abweichung (Auftrag B2, Entscheidung des Autors vom 2026-10-03):** Damit Tabs und Ansichten ohne Daten (Datei fehlt, leer oder nur Kopfzeile) gar nicht erst angeboten werden, lädt das Interface **nach dem ersten Bildaufbau im Hintergrund** die Datendateien, die über das Ausblenden entscheiden (`js/core/datenVerfuegbarkeit.js`). Begründung: Ein Archiv, das seine CSV-Dateien selbst pflegt, soll keine leeren Bereiche anbieten. Bedingungen: Die Prüfung blockiert keine Ansicht, nutzt ausschließlich den gemeinsamen Cache (`js/core/datenCache.js`, keine Datei wird doppelt angefragt), und die Zeit bis zum ersten Bildaufbau wird nicht messbar schlechter (Messung im PROJEKTLOG, Eintrag 57). Das Prüfmodul selbst (`datenVerfuegbarkeit.js` mit `datenAnforderungen.js` und `hinweisBalken.js`) gehört nicht zum Start-Modulgraphen, sondern wird per dynamischem `import()` nachgeladen - parallel zu den Daten einer geöffneten Ansicht bzw. nach dem ersten Bildaufbau. **Die Ansichten selbst (Code und Darstellung) laden weiterhin erst beim Öffnen.**
 - **Mobile-First als Entwicklungsprinzip, nicht als Theorie.** Das Interface wird von Anfang an so gebaut, dass es auf Smartphones und Tablets funktioniert. Die inhaltliche Begründung für zugängliches Design liefert nicht "Mobile First" selbst, sondern WCAG/Inclusive Design (siehe Abschnitt 10).
 
 ---
@@ -413,7 +414,7 @@ Konkrete Spaltenlisten pro Archivalientyp werden in `docs/SCHEMA.md` gepflegt.
 - Icicle-Diagramm immer vertikal.
 - Tooltips immer mit Rand-Clamping.
 - Farben ausschließlich aus `CAT_COLORS`.
-- Lazy Loading: Visualisierungscode und -daten erst bei erstmaligem Aufruf laden.
+- Lazy Loading: Visualisierungscode und -daten erst bei erstmaligem Aufruf laden. (Abweichung für die Hintergrund-Prüfung der Datenverfügbarkeit seit Auftrag B2, siehe Abschnitt 2.)
 
 ### Regressionsschutz
 Nach jeder Änderung an einer gemeinsam genutzten Datei kurz erwähnen, welche anderen Visualisierungen betroffen sein könnten.
