@@ -26,6 +26,61 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
 
 **Das Zeichen `|` ist reserviert – in allen Spalten.** Der senkrechte Strich `|` trennt mehrere Werte in einer Zelle. Das gilt für jede Spalte jeder Tabelle, nicht nur für die als „Liste“ beschriebenen. Beispiele aus `urkunden.csv`: In der Spalte `kategorien` steht bei `StaAKr-0001` `Religion|Vermögen und Finanzen` – das sind zwei Kategorien. In der Spalte `personen` steht bei `StaAKr-0001a` `Manegold von Passau|Konrad von Krems` – das sind zwei Personen. Darum darf `|` in Freitext (z. B. `regest`, `name`, `titel`, `kurzbeschreibung`) nicht vorkommen. Steht es trotzdem in einem Freitext, liest das Interface den Text als Liste von mehreren Teilen. Die Anzeige zeigt dann die Teile mit ` | ` dazwischen an. Für Trennungen innerhalb eines Freitexts stattdessen Komma oder Gedankenstrich verwenden.
 
+### Mindestspalten und was bei Problemen passiert
+
+*Stand: Auftrag B2, 2026-10-03.* Die Angaben in der Spalte „Pflicht“ der Tabellen unten sind **gemessen**: Jede Spalte wurde einzeln aus ihrer Datei entfernt, dann wurde geprüft, welche Ansicht danach nichts mehr zeigt. Die Begriffe bedeuten:
+
+- **Pflicht (Ansicht):** Ohne diese Spalte kann die genannte Ansicht nichts zeigen. Fehlt sie, erscheint dort ein Hinweisbalken, z. B. „In urkunden.csv fehlt die Spalte 'jahr'. Diese Ansicht kann nicht angezeigt werden.“ Alle anderen Ansichten laufen weiter.
+- **Schlüssel:** Die Spalte verbindet Zeilen untereinander oder mit anderen Dateien, z. B. `id` oder `block_id`. Ohne sie bleibt keine Ansicht leer; Verweise und Sortierung können aber fehlen. Sollte geliefert werden.
+- **empfohlen:** Ohne die Spalte bleibt keine Ansicht leer, sie zeigt aber weniger an.
+- **nein / –:** Die Spalte ist freiwillig.
+
+**Mindestspalten je Datei (so wenig muss ein Archiv mindestens liefern):**
+
+| Datei | Pflichtspalten | Ansicht |
+|---|---|---|
+| `archiv.csv` (Kerndatei) | `schluessel`, `wert` | Startseite, Über |
+| `startseite.csv` (Kerndatei) | `typ`, `sichtbar` | Startseite |
+| `ueber.csv` | `text`, `sichtbar` | Über |
+| `urkunden.csv` | `jahr` | Zeitachse, Kalender-Heatmap, Dot Plot, Swimlanes, Ridgeline, Horizon Chart |
+| | `kategorien` | Horizon Chart, Sankey |
+| | `orte` | Karte, Verbindungskarte, Sankey |
+| | `personen` | Adjazenzmatrix, Arc-Diagramm |
+| | `regest` | Wortwolke |
+| `orte.csv` | `orte`, `lat`, `lon` | Karte, Verbindungskarte, Bipartite Flow Map |
+| `bestandsverzeichnis.csv` | `zeitraum_von`, `zeitraum_bis` | Gantt-Diagramm |
+| `buergerbuch.csv` | `Datum` | Trellis, Bump Chart |
+| | `Wirtschaftssektor` | Trellis |
+| | `Name`, `buergen_id` | Personennetzwerk |
+| `verlassenschaftsinventare.csv` | `Realvermoegen_fl`, `Gesamtvermoegen_fl`, `Anteil Grundstuecke am RV (%)`, `Anteil Bargeld am RV (%)`, `Anteil Wertgegenstaende am RV (%)`, `Anteil Sonderbestand am RV (%)` | Parallelkoordinaten |
+| | `Anteil SchzG an Aktiva (%)`, `Anteil SchvG an Aktiva (%)` – *aus dem Code abgeleitet, nicht gemessen* | Parallelkoordinaten, nur Darstellung „Forderungs-/Schuldenprofil“ (fehlt eine, erscheint ein Hinweis; die übrige Ansicht bleibt nutzbar) |
+| | `Jahrzehnt` | Vermögensschichtung |
+| `familien.csv` | `familie`, `id` | Habsburg-Zeitleistenbaum |
+| `fuehrungen.csv` | `fuehrung_id` | Führungen: Übersicht, Station, Ende |
+| | `station_nr`, `text` | Führungsstation |
+| `literatur.csv` | `zitation` | Literatur |
+
+`personenliste.csv`, `recherche_links.csv` und `infotexte.csv` haben keine Pflichtspalte. `ratsprotokolle.csv` wird derzeit von keiner Ansicht gelesen; die Datei erzeugt keinen Tab und keinen Hinweis.
+
+**Was passiert, wenn …**
+
+- **… eine Pflichtspalte fehlt:** Die betroffene Ansicht zeigt einen Hinweisbalken mit Dateiname und Spaltenname, statt leer zu bleiben oder abzustürzen. Andere Ansichten laufen weiter.
+- **… die Spalten nicht erkannt werden:** Das ist meist ein falsches Trennzeichen, etwa Komma statt Semikolon beim Speichern. Jede Ansicht, die die Datei nutzt, zeigt dann: „In … wurden keine bekannten Spalten erkannt. Vermutlich wurde die Datei mit einem falschen Trennzeichen gespeichert.“ Abhilfe: in Excel als „CSV UTF-8 (durch Trennzeichen getrennt)“ speichern, siehe ganz oben.
+- **… eine Datei fehlt, leer ist oder nur aus der Kopfzeile besteht:** Die Datei gilt als „nicht vorhanden“.
+  - **Ansichten, die nur diese Datei nutzen, werden ausgeblendet**, ebenso Navigationspunkte, Bereiche und Galerie-Kacheln, die dadurch leer würden. Ein Beispiel: Ist `buergerbuch.csv` leer, verschwindet der Bereich „Bürgerbuch“; ist `fuehrungen.csv` leer, verschwindet „Führungen“.
+  - Wer eine solche Ansicht über einen gespeicherten Link öffnet, sieht einen Balken: „Für diese Ansicht liegen keine Daten vor: … enthält keine Datensätze.“
+  - **Ansichten, die mehrere Dateien nutzen,** bleiben sichtbar und zeigen einen Balken. Ein Beispiel: Die Personenliste meldet „buergerbuch.csv enthält keine Datensätze. Diese Ansicht ist deshalb unvollständig.“ Die Karten werden bei leerer `orte.csv` gar nicht gezeichnet.
+  - Die Personenliste wird bei leerer `personenliste.csv` ausgeblendet, obwohl sie mehrere Dateien nutzt (Entscheidung des Autors).
+- **… eine Kerndatei fehlt oder leer ist:**
+  - `startseite.csv`: Statt der Startseite erscheint ein Balken mit dem Dateinamen.
+  - `archiv.csv`: Startseite und Über-Seite zeigen einen Balken; Name, Logo und Kontaktangaben fehlen dann.
+- **Ohne Hinweis entfallen** nur die Recherche-Links (`recherche_links.csv`) und die „?“-Info-Texte (`infotexte.csv`), wie bisher (siehe Abschnitte 9.1 und 13.4).
+- **Bekannte Grenzen:**
+  - Steht in einem Datumsfeld nur ein unlesbarer Wert (z. B. bei falschem Datenformat statt fehlender Spalte), landen die Urkunden weiterhin ohne Hinweis unter „undatiert“.
+  - Zählwerte wie `{n_urkunden}` zeigen bei leerer Datei „0“.
+
+**Technischer Hinweis (Abweichung vom Lazy Loading):** Damit leere Bereiche gar nicht erst in der Navigation erscheinen, lädt das Interface nach dem ersten Bildaufbau im Hintergrund die Dateien, die über das Ausblenden entscheiden. Das betrifft `bestandsverzeichnis`, `urkunden`, `buergerbuch`, `verlassenschaftsinventare`, `personenliste`, `familien`, `fuehrungen`, `literatur` und `ueber`. Jede Datei wird dabei höchstens einmal angefragt. Die Ansichten selbst (Code und Darstellung) laden weiterhin erst beim Öffnen. Die Liste der Pflicht- und Schlüsselspalten steht technisch in `js/config/datenAnforderungen.js`.
+
 **Präzisierung zu `unsicherheit_anmerkung` (nach Etappe-1-Praxisfund):** Ist bei einer Zeile nur ein Feld unsicher, steht dort einfacher Freitext. Sind mehrere Felder derselben Zeile unsicher, werden die einzelnen, feldspezifisch benannten Erklärungen mit Pipe `|` getrennt (z. B. `Datum: keine Jahresangabe erkennbar|Orte: Namensform mehrdeutig`) – der DataLoader zerlegt das dann, der allgemeinen Pipe-Konvention folgend, automatisch in eine Liste einzelner Erklärungen. Das ist beabsichtigtes Verhalten, keine Ausnahme und kein Sonderfall im Code nötig.
 
 **Wichtiger Hinweis zum Dateiformat:** Die Quelldateien werden als Excel (.xlsx) gepflegt (Arbeits-/Erfassungsformat). Vor dem Einsatz im Interface werden sie als CSV (UTF-8, Semikolon-getrennt) exportiert und in `data/` abgelegt – der `dataLoader.js` liest ausschließlich CSV. Pipe-Zeichen innerhalb von Zellen sind beim Export unproblematisch, da sie sich vom Spalten-Trennzeichen (Semikolon) unterscheiden; Zellen mit zufälligen Semikolons im Freitext werden von Excel automatisch in Anführungszeichen gesetzt und von `d3.csvParse()` korrekt gelesen.
@@ -38,19 +93,18 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `id` | Text | ja | **Altsignatur** (nicht generische Zeilen-ID, wie zuvor fälschlich beschrieben) |
-| `signatur` | Text | ja | aktuelle/neue Signatur, eindeutig |
+| `signatur` | Text | empfohlen (Schlüssel) | aktuelle/neue Signatur, eindeutig |
 | `datum` | Text (Freitext) | nein | Datierung wie überliefert, Präzisionsstufe automatisch abgeleitet |
 | `datum_normiert` | Text/Datum | nein | normierte Form (Herkunft/Zweck weiterhin nicht abschließend geklärt) |
 | `datum_unsicher` | ja/nein | – | neu ergänzt |
-| `jahr` | Zahl | für Zeitachse zwingend | |
-| `orte` | Liste (Pipe-getrennt) | nein | |
+| `jahr` | Zahl | **Pflicht** (Zeitachse, Kalender-Heatmap, Dot Plot, Swimlanes, Ridgeline, Horizon Chart) | |
+| `orte` | Liste (Pipe-getrennt) | **Pflicht** (Karte, Verbindungskarte, Sankey) | |
 | `orte_unsicher` | ja/nein | – | |
-| `regest` | Volltext | nein | |
-| `personen` | Liste (Pipe-getrennt) | nein | |
+| `regest` | Volltext | **Pflicht** (Wortwolke) | |
+| `personen` | Liste (Pipe-getrennt) | **Pflicht** (Adjazenzmatrix, Arc-Diagramm) | |
 | `personen_id` | Text/Liste | nein | Verweis auf `personenliste.csv` (siehe Tabelle 8) |
 | `personen_unsicher` | ja/nein | – | |
-| `kategorien` | Liste (Pipe-getrennt) | nein | |
+| `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | |
 | `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
 | `unsicherheit_anmerkung` | Text | nein | für Hover-Tooltip |
 | `bilder` | Liste (Pipe-getrennt) | nein | **neu (Auftrag "Urkundenfotos über die Spalte `bilder`", 2026-09-30):** die tatsächlichen Dateinamen der Fotos zu dieser Urkunde, ohne Pfad - der vollständige Bildpfad ergibt sich aus `fotos/thumbs/<foto_ordner>/<Dateiname>`. Letzte Spalte der Tabelle, direkt nach `foto_ordner` eingefügt. Löst das bisherige, separat per Kommandozeilenskript erzeugte JSON-Manifest ab (siehe PROJEKTLOG) - Foto-Zuordnung ist damit ohne Programmierkenntnisse direkt in der Tabelle pflegbar. |
@@ -72,8 +126,8 @@ Unverändert gegenüber letzter Prüfung.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `id` | Text | ja | |
-| `signatur` | Text | ja | |
+| `id` | Text | Schlüssel (Datei wird derzeit nicht gelesen) | |
+| `signatur` | Text | Schlüssel (Datei wird derzeit nicht gelesen) | |
 | `datum` | Text (Freitext) | nein | |
 | `datum_unsicher` | ja/nein | – | |
 | `orte` | Liste (Pipe-getrennt) | nein | |
@@ -95,20 +149,20 @@ Unverändert gegenüber letzter Prüfung.
 
 ---
 
-## 3. bestand.csv (aus bestandsverzeichnis.xlsx, Sheet LookupListe_Becker15)
+## 3. bestandsverzeichnis.csv (aus bestandsverzeichnis.xlsx, Sheet LookupListe_Becker15)
 
 329 Bestandsdatensätze (verifiziert in Etappe 2 durch den tatsächlichen D3-Parser; frühere Angabe "330" war eine grobe Schätzung). **Hierarchie (korrigiert):** Gesamtbestand → `bkk_kategorie` → `bkk_unterkategorie` → einzelner Bestand (Zeile) – vier Ebenen, nicht drei wie zuvor dokumentiert. Frühere Fassung hatte die Unterkategorie-Ebene fälschlich mit der Bestands-Ebene gleichgesetzt. `kuerzel` bleibt Sortierschlüssel innerhalb der untersten Ebene, keine eigene Hierarchietiefe.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `name` | Text | ja | |
-| `kuerzel` | Text | ja | Sortierschlüssel |
+| `name` | Text | empfohlen | |
+| `kuerzel` | Text | Schlüssel | Sortierschlüssel |
 | `zitierweise` | Text | nein | für Sidebar |
 | `umfang` | Text (Rohangabe) | nein | |
-| `umfang_lfm` | Zahl | für Kachelgröße | |
-| `zeitraum_von` / `zeitraum_bis` | Zahl (Jahr) | nein | |
+| `umfang_lfm` | Zahl | empfohlen (Kachelgröße) | |
+| `zeitraum_von` / `zeitraum_bis` | Zahl (Jahr) | **Pflicht** (Gantt-Diagramm) | |
 | `zeitraum_text` | Text | nein | |
-| `bkk_kategorie` | Text | ja | Oberkategorie nach Becker |
+| `bkk_kategorie` | Text | empfohlen | Oberkategorie nach Becker |
 | `bkk_unterkategorie` | Text | nein | |
 | `daten_unsicher` | ja/nein | – | ersetzt die frühere, verworfene Buchstaben-Codierung (A/B1/B2/D/F/G) |
 | `unsicherheit_anmerkung` | Text | nein | erklärt die Art der Unsicherheit, für Hover-Tooltip |
@@ -139,16 +193,16 @@ Unverändert gegenüber letzter Prüfung.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `id` | Text | ja | neu ergänzt |
-| `Datum` | Text (Freitext) | nein | |
+| `id` | Text | Schlüssel | neu ergänzt |
+| `Datum` | Text (Freitext) | **Pflicht** (Trellis, Bump Chart) | |
 | `Datum_unsicher` | ja/leer | – | reines Flag, sauber (33 von 2791 = ja) |
-| `Name` | Text | ja | |
+| `Name` | Text | **Pflicht** (Personennetzwerk) | |
 | `personen_id` | Text | nein | neu, Verweis auf `personenliste.csv` |
 | `Beruf` | Text | nein | |
 | `Beruf_unsicher` | ja/leer | – | |
-| `Wirtschaftssektor` | Text | nein | |
+| `Wirtschaftssektor` | Text | **Pflicht** (Trellis) | |
 | `Buergen` | Text/Liste | nein | |
-| `buergen_id` | Text/Liste | nein | neu, vermutlich Verweis auf `personenliste.csv` (zu bestätigen) |
+| `buergen_id` | Text/Liste | **Pflicht** (Personennetzwerk) | neu, vermutlich Verweis auf `personenliste.csv` (zu bestätigen) |
 | `Buergen_Berufe` | Text/Liste | nein | |
 | `Anmerkungen` | Text | – | allgemein, NICHT für Unsicherheits-Tooltip |
 | `Ort` | Text | nein | Zielort, nicht Herkunft |
@@ -165,24 +219,24 @@ Unverändert gegenüber letzter Prüfung.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `id` | Text | ja | neu ergänzt |
-| `Jahrzehnt` | Text | nein | |
-| `Jahr` | Zahl | ja | |
-| `Name` | Text | ja | |
+| `id` | Text | Schlüssel | neu ergänzt |
+| `Jahrzehnt` | Text | **Pflicht** (Vermögensschichtung) | |
+| `Jahr` | Zahl | empfohlen | |
+| `Name` | Text | empfohlen | |
 | `Beruf/Funktion/Stand` | Text | nein | Originaltext |
 | `Beruf` | Text | nein | bereinigt |
 | `Ort (Schaetzung)` | Text | nein | |
 | `Geschlecht (Schaetzung)` | Text | nein | |
 | `Vermoegensgruppe` | Text (A–E, S) | nein | |
-| `Realvermoegen_fl` | Zahl | nein | |
-| `Gesamtvermoegen_fl` | Zahl | nein | |
-| `Anteil SchzG an Aktiva (%)` | Zahl | nein | Forderungen |
-| `Anteil SchvG an Aktiva (%)` | Zahl | nein | eigene Schulden |
-| `Anteil Grundstuecke am RV (%)` | Zahl | nein | |
-| `Anteil Bargeld am RV (%)` | Zahl | nein | |
-| `Anteil Wertgegenstaende am RV (%)` | Zahl | nein | |
+| `Realvermoegen_fl` | Zahl | **Pflicht** (Parallelkoordinaten) | |
+| `Gesamtvermoegen_fl` | Zahl | **Pflicht** (Parallelkoordinaten) | |
+| `Anteil SchzG an Aktiva (%)` | Zahl | **Pflicht** (Parallelkoordinaten, Darstellung „Forderungs-/Schuldenprofil“) – aus dem Code abgeleitet, nicht gemessen | Forderungen |
+| `Anteil SchvG an Aktiva (%)` | Zahl | **Pflicht** (Parallelkoordinaten, Darstellung „Forderungs-/Schuldenprofil“) – aus dem Code abgeleitet, nicht gemessen | eigene Schulden |
+| `Anteil Grundstuecke am RV (%)` | Zahl | **Pflicht** (Parallelkoordinaten) | |
+| `Anteil Bargeld am RV (%)` | Zahl | **Pflicht** (Parallelkoordinaten) | |
+| `Anteil Wertgegenstaende am RV (%)` | Zahl | **Pflicht** (Parallelkoordinaten) | |
 | `Beruflicher Sonderbestand` | Text | nein | |
-| `Anteil Sonderbestand am RV (%)` | Zahl | nein | |
+| `Anteil Sonderbestand am RV (%)` | Zahl | **Pflicht** (Parallelkoordinaten) | |
 | `personen_id` | Text | nein | neu (Auftrag "Teil 2h", Punkt 4b, 2026-09-25) – Verweis auf `personenliste.csv` (Abschnitt 8), für alle 68 Zeilen befüllt. Zwei Zeilenpaare teilen sich dieselbe `personen_id` (`VI-0024`/`VI-0028` = `bartholomaeus_eggartner`, `VI-0032`/`VI-0033` = `anna_catharina_schoenthanin_hievor_leutmanslehnerin`) – bestätigte Zweitinventarisierungen derselben Person (Dietrich 2025), siehe `unsicherheit_anmerkung` unten und PROJEKTLOG. |
 | `personen_id_unsicher` | ja/nein | – | neu (2026-09-25), analog zu `buergerbuch.csv`s Muster – aktuell für alle 68 Zeilen `nein`, auch für die beiden Zweitinventarisierungs-Paare (die Zuordnung selbst ist gesichert, nicht die Unsicherheit). |
 | `unsicherheit_anmerkung` | Text | nein | neu ergänzt (Spalte), inhaltlich seit 2026-09-25 für vier Zeilen befüllt (die beiden Zweitinventarisierungs-Paare) – Hinweistext dort unabhängig von `personen_id_unsicher` (s. o.), löst trotzdem `baueUnsicherheitAbsatz()`s generische "Angaben unsicher"-Anzeige aus (die Komponente kennzeichnet jede befüllte `unsicherheit_anmerkung` so, unabhängig vom Grund - bewusst in Kauf genommen statt eines Sonderfalls im Code, siehe PROJEKTLOG). |
@@ -195,10 +249,10 @@ Unverändert gegenüber letzter Prüfung.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `id` | Text | ja | Name + Ordnungszahl |
-| `name` | Text | ja | |
+| `id` | Text | **Pflicht** (Habsburg-Zeitleistenbaum), Schlüssel | Name + Ordnungszahl |
+| `name` | Text | empfohlen | |
 | `titel` | Text/Liste (Pipe) | nein | |
-| `familie` | Text | ja | |
+| `familie` | Text | **Pflicht** (Habsburg-Zeitleistenbaum) | |
 | `geburtsdatum` | Text (Freitext) | nein | |
 | `geburtsdatum_unsicher` | ja/nein | – | |
 | `sterbedatum` | Text (Freitext) | nein | |
@@ -222,10 +276,10 @@ Unverändert gegenüber letzter Prüfung.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `orte_id` | Text | ja | neu, eindeutiger Schlüssel (ersetzt namensbasierte Referenz) |
-| `orte` | Text | ja | Ortsname |
-| `lat` | Zahl | ja | |
-| `lon` | Zahl | ja | |
+| `orte_id` | Text | Schlüssel | neu, eindeutiger Schlüssel (ersetzt namensbasierte Referenz) |
+| `orte` | Text | **Pflicht** (Karte, Verbindungskarte, Bipartite Flow Map) | Ortsname |
+| `lat` | Zahl | **Pflicht** (Karte, Verbindungskarte, Bipartite Flow Map) | |
+| `lon` | Zahl | **Pflicht** (Karte, Verbindungskarte, Bipartite Flow Map) | |
 | `haeufigkeit` | Zahl | nein | |
 | `orte_unsicher` | ja/nein | – | |
 | `unsicherheit_anmerkung` | Text | nein | |
@@ -240,7 +294,7 @@ Unverändert gegenüber letzter Prüfung.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `personen_id` | Text | ja | eindeutiger Schlüssel, referenziert von `urkunden.personen_id`, `buergerbuch.personen_id`, `buergerbuch.buergen_id`. Für neu ergänzte Verlassenschaftsinventar-Personen als Namens-Slug vergeben (Kleinschreibung, Umlaute→ae/oe/ue/ss), bei Kollision mit einer bestehenden ID mit `_2`/`_3`/… durchnummeriert. |
+| `personen_id` | Text | Schlüssel | eindeutiger Schlüssel, referenziert von `urkunden.personen_id`, `buergerbuch.personen_id`, `buergerbuch.buergen_id`. Für neu ergänzte Verlassenschaftsinventar-Personen als Namens-Slug vergeben (Kleinschreibung, Umlaute→ae/oe/ue/ss), bei Kollision mit einer bestehenden ID mit `_2`/`_3`/… durchnummeriert. |
 | `schreibweisen` | Liste (Pipe-getrennt) | nein | bekannte Namensvarianten derselben Person |
 | `quelle` | Text | nein | `Urkunden` / `Bürgerbuch` / `Verlassenschaftsinventare` (seit 2026-09-21) |
 | `anzahl_nennungen` | Zahl | nein | |
@@ -267,8 +321,8 @@ Speist den Literatur-Tab (`js/core/literaturSeite.js`); neue Zeile = neuer Eintr
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `literatur_id` | Text | ja | Kurzschlüssel Autor+Jahr (z. B. `kuehnel1960`), s. o. - **kein** Zotero-Key |
-| `zitation` | Text | ja | fertige Literaturangabe, wird UNVERÄNDERT als Haupttext des Eintrags angezeigt (keine Kürzung) |
+| `literatur_id` | Text | Schlüssel | Kurzschlüssel Autor+Jahr (z. B. `kuehnel1960`), s. o. - **kein** Zotero-Key |
+| `zitation` | Text | **Pflicht** (Literatur) | fertige Literaturangabe, wird UNVERÄNDERT als Haupttext des Eintrags angezeigt (keine Kürzung) |
 | `autor` | Text | nein | Kurzform, nur für die Sortierung "nach Autor" und kompakte Verweise verwendet - nicht das, was angezeigt wird (das ist `zitation`) |
 | `titel` | Text | nein | Kurzform, wie `autor` - dient zusätzlich als Sortier-Rückfall, wenn `autor` leer ist |
 | `jahr` | Zahl | nein | für die Sortierung "nach Jahr"; leer erlaubt, solche Einträge erscheinen bei dieser Sortierung am Ende |
@@ -291,11 +345,11 @@ Speist den Bereich "Weiter recherchieren" oben auf der Literaturseite (externe E
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `reihenfolge` | Zahl | ja | Anzeigereihenfolge der Karten |
-| `titel` | Text | ja | Kartentitel, zugleich Linktext |
+| `reihenfolge` | Zahl | empfohlen | Anzeigereihenfolge der Karten |
+| `titel` | Text | empfohlen | Kartentitel, zugleich Linktext |
 | `beschreibung` | Text | nein | kurzer Erklärtext auf der Karte |
-| `link` | Text (URL) | ja | öffnet in neuem Tab, mit "↗"-Symbol und `aria-label` als extern gekennzeichnet - dieselbe Konvention wie "Zum Weiterlesen" in den Führungen (Abschnitt 12) |
-| `sichtbar` | Text (Enum: `ja`/`nein`) | ja | nur `sichtbar=ja`-Zeilen erscheinen |
+| `link` | Text (URL) | empfohlen | öffnet in neuem Tab, mit "↗"-Symbol und `aria-label` als extern gekennzeichnet - dieselbe Konvention wie "Zum Weiterlesen" in den Führungen (Abschnitt 12) |
+| `sichtbar` | Text (Enum: `ja`/`nein`) | empfohlen | nur `sichtbar=ja`-Zeilen erscheinen |
 
 ---
 
@@ -307,7 +361,7 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `fuehrung_id` | Text | ja | eindeutiger Schlüssel, in jeder Zeile befüllt |
+| `fuehrung_id` | Text | **Pflicht** (Führungen: Übersicht, Station, Ende) | eindeutiger Schlüssel, in jeder Zeile befüllt |
 | `fuehrung_titel` | Text | nur 1. Station | |
 | `leitfrage` | Text | nur 1. Station | die übergeordnete Frage, die die Führung beantwortet |
 | `kurzbeschreibung` | Text | nur 1. Station | für eine künftige Führungs-Übersicht/Kachel |
@@ -315,10 +369,10 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `zeitraum` | Text | nur 1. Station | der von der Führung abgedeckte Gesamtzeitraum |
 | `status` | Text (Enum) | nur 1. Station | `entwurf` (sichtbar, aber gekennzeichnet) oder `veroeffentlicht` |
 | `weiterlesen` | Liste (Pipe-getrennt) | nur 1. Station | `literatur_id`-Werte (siehe Abschnitt 9, kein Zotero-Key mehr) - manuell zu pflegen. **Stand 2026-09-29:** bei den meisten Führungen bereits befüllt, allerdings mit vollständigen Literaturangaben statt `literatur_id`-Kurzschlüsseln (Altbestand aus der Zeit vor Abschnitt 9s Schema-Umstellung) - diese Werte lösen sich gegen die jetzt echten `literatur.csv`-Einträge NICHT auf und erscheinen als sichtbarer Fehlerhinweis (s. Abschnitt 12). Betrifft alle Führungen außer `buergerspital-heringe`/`wer-fehlt` (dort leer). Nicht Teil des Auftrags "Literaturseite" (Nicht-Ziel: keine Änderung an `fuehrungen.csv`) - der Archivarin zur Kenntnis gebracht. |
-| `station_nr` | Zahl | ja | Reihenfolge der Stationen innerhalb einer Führung |
-| `station_titel` | Text | ja | |
+| `station_nr` | Zahl | **Pflicht** (Führungsstation) | Reihenfolge der Stationen innerhalb einer Führung |
+| `station_titel` | Text | empfohlen | |
 | `station_zeitraum` | Text | nein | |
-| `text` | Liste (Pipe-getrennt) | ja | ein Absatz pro Listenelement; ein Absatz, der mit `- ` beginnt, ist ein Aufzählungspunkt - mehrere AUFEINANDERFOLGENDE `- `-Absätze bilden gemeinsam eine Liste |
+| `text` | Liste (Pipe-getrennt) | **Pflicht** (Führungsstation) | ein Absatz pro Listenelement; ein Absatz, der mit `- ` beginnt, ist ein Aufzählungspunkt - mehrere AUFEINANDERFOLGENDE `- `-Absätze bilden gemeinsam eine Liste |
 | `beleg` | Liste (Pipe-getrennt, 0-2 Einträge) | nein | Format `typ:id`, Trennung am ERSTEN Doppelpunkt (IDs selbst enthalten keinen). Zwei Einträge ergeben eine Vergleichsslide. Bleibt der Wert leer, entfällt der Belegbereich vollständig - kein Fehler/Prüfhinweis, der Erzähltext steht dann über die volle verfügbare Breite (begrenzt auf die übliche Zeilenlänge, mittig angeordnet; Teil 2e, Punkt 1). Präfixtabelle: |
 | `bild_text` | Text | nur bei `beleg`-Typ `bild` | Bildunterschrift UND Alt-Text zugleich - muss beschreiben, was zu sehen ist |
 | `unsicherheit_hinweis` | Text | nein | zusätzlicher, REDAKTIONELLER Text - kein Ersatz für die aus der Quell-CSV übernommenen `_unsicher`-Felder/`unsicherheit_anmerkung` (siehe unten) |
@@ -403,8 +457,8 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `schluessel` | Text | ja | fester Name der Einstellung, siehe Tabelle unten - nicht verändern, nicht übersetzen |
-| `wert` | Text | ja | der tatsächliche Wert |
+| `schluessel` | Text | **Pflicht** (Startseite, Über – Kerndatei) | fester Name der Einstellung, siehe Tabelle unten - nicht verändern, nicht übersetzen |
+| `wert` | Text | **Pflicht** (Startseite, Über – Kerndatei) | der tatsächliche Wert |
 | `anmerkung` | Text | nein | rein für die eigene Dokumentation, wird im Interface nirgends angezeigt |
 
 **Vorgesehene Schlüssel** (jede fehlende Zeile bekommt einen neutralen Ersatzwert, siehe unten):
@@ -432,7 +486,7 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `karte_zoom` | 7 | Start-Zoomstufe der Karten (kleinere Zahl = weiter herausgezoomt) |
 | `footer_text` | Interface des Stadtarchivs … | Fußzeile ALLER Seiten AUSSER der Startseite (die hat ihre eigene, siehe `startseite.csv`s `footer_hinweis` unten) |
 
-**Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe, Kremser Kartenausschnitt als Rückfall), eine Fehlermeldung in der Browser-Konsole, kein Absturz.
+**Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe, Kremser Kartenausschnitt als Rückfall), eine Fehlermeldung in der Browser-Konsole, kein Absturz. **Seit Auftrag B2 (2026-10-03):** `archiv.csv` ist eine Kerndatei - fehlt sie, ist sie leer oder fehlt `schluessel`/`wert`, zeigen Startseite und Über-Seite zusätzlich einen Hinweisbalken mit dem Dateinamen (siehe „Mindestspalten und was bei Problemen passiert" oben).
 
 **Zum mitgelieferten Favicon:** Die drei Standarddateien (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`) zeigen ein weißes σ auf einem abgerundeten Quadrat in der Interface-Akzentfarbe - dasselbe Zeichen, das im Interface bereits für Unsicherheit steht. Es kennzeichnet das Interface selbst (die Anwendung), nicht ein bestimmtes Archiv. Andere Archive können es unverändert beibehalten oder durch ein eigenes Symbol ersetzen (einfach die drei Dateien gleichen Namens in `data/` austauschen, die Schlüssel in `archiv.csv` bleiben gleich).
 
@@ -442,16 +496,16 @@ Eine Zeile pro Baustein ("Block") der Startseite. Die Reihenfolge auf der Seite 
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `block_id` | Text | ja | frei wählbarer, eindeutiger Name der Zeile (nur zur eigenen Orientierung) |
-| `reihenfolge` | Zahl | ja | bestimmt die Anzeigereihenfolge (aufsteigend), auch typübergreifend |
-| `typ` | Text (Enum) | ja | einer von `slide` / `einleitung` / `kachel` / `download` / `footer_hinweis`, siehe unten |
+| `block_id` | Text | Schlüssel | frei wählbarer, eindeutiger Name der Zeile (nur zur eigenen Orientierung) |
+| `reihenfolge` | Zahl | empfohlen | bestimmt die Anzeigereihenfolge (aufsteigend), auch typübergreifend |
+| `typ` | Text (Enum) | **Pflicht** (Startseite – Kerndatei) | einer von `slide` / `einleitung` / `kachel` / `download` / `footer_hinweis`, siehe unten |
 | `kicker` | Text | nur bei `slide` | kurzer Vorspann über der Slide-Überschrift |
 | `titel` | Text | bei `slide`/`kachel` | Überschrift |
 | `text` | Text (Pipe-getrennt bei mehreren Absätzen) | bei `einleitung`/`kachel`/`footer_hinweis` | Fließtext |
 | `link_text` | Text | nein | Beschriftung des Buttons/Links (bei `slide`/`kachel`: nur sichtbar, wenn `link_ziel` ebenfalls befüllt ist; bei `download`: Pflicht) |
 | `link_ziel` | Text (URL oder `#anker`) | nein | Linkziel - `#visualisierungen`, `#fuehrungen` usw. für interne Sprünge, `https://…` für externe Seiten/PDFs |
 | `bild` | Text (Dateiname) | nein, nur bei `slide` | Dateiname eines Bilds in `data/` als Slide-Hintergrund - bleibt die Zelle leer, zeigt die Slide stattdessen einen Verlaufshintergrund mit der Kennzeichnung "Platzhalterbild" |
-| `sichtbar` | `ja`/`nein` | ja | nur Zeilen mit `ja` werden angezeigt - `nein` lässt eine Zeile in der Datei stehen, ohne sie zu löschen (z. B. um sie später wieder zu aktivieren) |
+| `sichtbar` | `ja`/`nein` | **Pflicht** (Startseite – Kerndatei) | nur Zeilen mit `ja` werden angezeigt - `nein` lässt eine Zeile in der Datei stehen, ohne sie zu löschen (z. B. um sie später wieder zu aktivieren) |
 
 **Typen im Detail:**
 - `slide`: ein Bild/Verlauf im Karussell oben. Beliebig viele Zeilen möglich (bei mehr als vier zyklische Wiederholung der vier Hintergrundverläufe).
@@ -462,7 +516,7 @@ Eine Zeile pro Baustein ("Block") der Startseite. Die Reihenfolge auf der Seite 
 
 Kontaktangaben (Adresse/Telefon/E-Mail/Website) stehen NICHT hier, sondern in `archiv.csv` (dort einmal für die ganze Seite gepflegt).
 
-**Verhalten bei fehlender Datei:** die Startseite zeigt nur die immer vorhandene Kopf- und Fußzeile der Anwendung, keine Slides/Kacheln/Downloads, eine Warnung in der Browser-Konsole.
+**Verhalten bei fehlender Datei:** **seit Auftrag B2 (2026-10-03)** zeigt die Startseite statt ihres Inhalts einen Hinweisbalken mit dem Dateinamen (Kerndatei) - ebenso bei leerer Datei, nur Kopfzeile oder fehlender Spalte `typ`/`sichtbar`. Bisher blieb sie bis auf Kopf- und Fußzeile leer.
 
 ### 13.3 ueber.csv - Inhalte der Über-Seite
 
@@ -470,18 +524,18 @@ Eine Zeile pro Textabschnitt, wie `startseite.csv` nach `reihenfolge` sortiert u
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `block_id` | Text | ja | frei wählbarer, eindeutiger Name (nur zur eigenen Orientierung) |
-| `reihenfolge` | Zahl | ja | Anzeigereihenfolge |
-| `ebene` | `1`/`2` | ja | `1` = eigene Zwischenüberschrift (größer), `2` = Unterpunkt innerhalb des zuletzt vorangegangenen `1`-Abschnitts (kleiner) |
-| `titel` | Text | ja | Überschrift des Abschnitts |
-| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | ja | Fließtext |
-| `sichtbar` | `ja`/`nein` | ja | wie bei `startseite.csv` |
+| `block_id` | Text | Schlüssel | frei wählbarer, eindeutiger Name (nur zur eigenen Orientierung) |
+| `reihenfolge` | Zahl | empfohlen | Anzeigereihenfolge |
+| `ebene` | `1`/`2` | empfohlen | `1` = eigene Zwischenüberschrift (größer), `2` = Unterpunkt innerhalb des zuletzt vorangegangenen `1`-Abschnitts (kleiner) |
+| `titel` | Text | empfohlen | Überschrift des Abschnitts |
+| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | **Pflicht** (Über) | Fließtext |
+| `sichtbar` | `ja`/`nein` | **Pflicht** (Über) | wie bei `startseite.csv` |
 
 Am Ende der Seite erscheint automatisch ein Kontaktblock (Name/Adresse/Telefon/E-Mail/Website aus `archiv.csv`) - dafür ist keine eigene Zeile in `ueber.csv` nötig.
 
 Das Unsicherheits-Symbol σ, an beliebiger Stelle im Fließtext verwendet, wird automatisch in derselben Warnfarbe hervorgehoben wie überall sonst im Interface.
 
-**Verhalten bei fehlender Datei:** der Navigationspunkt "Über" wird oben in der Kopfzeile komplett ausgeblendet (keine leere Seite erreichbar).
+**Verhalten bei fehlender Datei:** der Navigationspunkt "Über" wird oben in der Kopfzeile komplett ausgeblendet (keine leere Seite erreichbar). **Seit Auftrag B2 (2026-10-03)** gilt das auch bei leerer Datei oder nur Kopfzeile; ein gespeicherter Link auf die Über-Seite zeigt dann einen Hinweisbalken.
 
 ### 13.4 infotexte.csv - Texte der "?"-Info-Buttons
 
@@ -489,9 +543,9 @@ Eine Zeile pro Visualisierung/Modul, das einen Info-Button ("?" oben rechts) bes
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `modul_id` | Text | ja | fester technischer Name der Visualisierung (= Dateiname ohne `.js` in `js/viz/`, z. B. `treemap`, `sankey`, `karte`) - NICHT verändern, sonst findet das Interface den Text nicht mehr |
-| `aria_label` | Text | ja | barrierefreie Bezeichnung des Buttons (wird von Screenreadern vorgelesen), z. B. "Erklärung zur Treemap" |
-| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | ja | der eigentliche Erklärtext im aufklappbaren Popover |
+| `modul_id` | Text | Schlüssel | fester technischer Name der Visualisierung (= Dateiname ohne `.js` in `js/viz/`, z. B. `treemap`, `sankey`, `karte`) - NICHT verändern, sonst findet das Interface den Text nicht mehr |
+| `aria_label` | Text | empfohlen | barrierefreie Bezeichnung des Buttons (wird von Screenreadern vorgelesen), z. B. "Erklärung zur Treemap" |
+| `text` | Text (Pipe-getrennt bei mehreren Absätzen) | empfohlen | der eigentliche Erklärtext im aufklappbaren Popover |
 | `anmerkung` | Text | nein | rein für die eigene Dokumentation, wird nirgends angezeigt |
 
 **Vollständige Liste der 26 `modul_id`-Werte** (jede muss einmal vorkommen, damit die jeweilige Ansicht einen Info-Button hat): `adjazenzmatrix`, `bipartiteFlowMap`, `bumpChart`, `chordDiagramm`, `circlePacking`, `dotPlot`, `familienbaum`, `ganttDiagramm`, `icicle`, `kalenderHeatmap`, `karte`, `korrelationsmatrix`, `marimekkoVerlassenschaften`, `parallelKoordinaten`, `personenliste`, `personennetzwerk`, `regestenKachelraster`, `sankey`, `streamgraph`, `sunburst`, `treemap`, `trellis`, `verbindungskarte`, `vermoegensschichtung`, `wortwolke`, `zeitachse`.

@@ -147,6 +147,10 @@ body {
 .werkzeugleiste-unsicherheit { grid-column: 1; grid-row: 2; }
 .werkzeugleiste-wechseln { grid-column: 2; grid-row: 2; }
 .kleiner-bildschirm-hinweis { grid-column: 1 / -1; grid-row: 3; }
+/* AUFTRAG B2: Hinweisbalken über der Visualisierung - dieselbe (sonst leere)
+   Zeile 3 wie der Kleiner-Bildschirm-Hinweis. Der Bereich entsteht nur im
+   Problemfall (app.js), mit vollständigen Daten ändert sich am Grid nichts. */
+.hinweis-balken-bereich { grid-column: 1 / -1; grid-row: 3; }
 
 /* Randfall (Schritt 3): 480px war bereits treemap.js' eigener, etablierter
    Wert für die alte, feste .treemap-svg-bereich-Mindesthöhe - hier als

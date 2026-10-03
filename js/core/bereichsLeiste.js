@@ -133,15 +133,20 @@ function synchronisiereXPosition(nav) {
 // options.verankereVizFlyout(link, archivalientyp): optional, einmal pro
 // NICHT-aktivem Link aufgerufen (siehe Dateikopf-Kommentar, Punkt 3) - der
 // Rückgabewert (falls vorhanden) wird beim Abbau über .destroy() entsorgt.
-function baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout }) {
+// options.istAusgeblendet(archivalientyp): AUFTRAG B2 - von app.js übergeben
+// (statt Import, kürzere Importkette beim Start); fehlt sie, ist nichts ausgeblendet.
+function baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout, istAusgeblendet = () => false }) {
   let aktiverLink = null;
   const abzubauendeFlyouts = [];
 
   ARCHIVALIENTYPEN.forEach((archivalientyp) => {
+    const istAktiv = archivalientyp.typ === aktiverTyp;
+    // AUFTRAG B2: Bereiche ohne Daten erscheinen nicht (außer dem gerade per
+    // direktem Link geöffneten - dort erklärt der Hinweisbalken den Grund).
+    if (!istAktiv && istAusgeblendet(archivalientyp)) return;
     const link = document.createElement('a');
     link.href = '#';
     link.textContent = archivalientyp.label;
-    const istAktiv = archivalientyp.typ === aktiverTyp;
     if (istAktiv) {
       link.setAttribute('aria-current', 'page');
       aktiverLink = link;
@@ -169,7 +174,7 @@ function baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout }) 
 // Bereichs, oder null (noch keiner gewählt) - bestimmt aria-current.
 // options.onAuswahl(archivalientyp): bei Klick auf einen Eintrag aufgerufen.
 // options.verankereVizFlyout: siehe baueBereichsPillen() oben.
-export function erzeugeBereichsLeiste(container, { aktiverTyp = null, onAuswahl, verankereVizFlyout } = {}) {
+export function erzeugeBereichsLeiste(container, { aktiverTyp = null, onAuswahl, verankereVizFlyout, istAusgeblendet } = {}) {
   container.innerHTML = '';
   fuegeStyleEin(container);
 
@@ -186,7 +191,7 @@ export function erzeugeBereichsLeiste(container, { aktiverTyp = null, onAuswahl,
   // andocken kann - dieses Modul kennt selbst nichts vom Flyout (bleibt beim
   // Baustein-Vertrag "kennt weder router.js noch die Visualisierungsmodule"),
   // es liefert nur den fertigen Link-Knoten.
-  const { aktiverLink, abbauen } = baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout });
+  const { aktiverLink, abbauen } = baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout, istAusgeblendet });
 
   huelle.appendChild(nav);
   container.appendChild(huelle);
@@ -227,7 +232,7 @@ export function erzeugeBereichsLeiste(container, { aktiverTyp = null, onAuswahl,
 // dessen Rahmen/Ecken hinausschieben) und OHNE synchronisiereXPosition()
 // (aus demselben Grund unnötig: das Panel selbst ist schon relativ zu
 // #app-content positioniert, siehe visualisierungsTabs.js' erzeugeFlyoutPanel()).
-export function erzeugeBereichsLeistenVorschau(container, { aktiverTyp = null, onAuswahl, verankereVizFlyout } = {}) {
+export function erzeugeBereichsLeistenVorschau(container, { aktiverTyp = null, onAuswahl, verankereVizFlyout, istAusgeblendet } = {}) {
   container.innerHTML = '';
   fuegeStyleEin(container); // dieselben Regeln, .bereichs-leiste-huelle bleibt hier einfach ungenutzt
 
@@ -235,7 +240,7 @@ export function erzeugeBereichsLeistenVorschau(container, { aktiverTyp = null, o
   nav.className = 'bereichs-leiste';
   nav.setAttribute('aria-label', 'Bereich wählen');
 
-  const { abbauen } = baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout });
+  const { abbauen } = baueBereichsPillen(nav, { aktiverTyp, onAuswahl, verankereVizFlyout, istAusgeblendet });
   container.appendChild(nav);
 
   return {

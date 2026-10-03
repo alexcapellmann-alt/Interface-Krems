@@ -7,6 +7,61 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-03 (105) – Pflichtspalten und Hinweisbalken bei Datenproblemen
+
+Prüfbericht 2026-10-03, Punkt 3, Auftrag B2. Die Pflichtspalten sind
+gemessen und vom Autor freigegeben.
+- **Neue Dateien:**
+  - `js/utils/hinweisBalken.js`: Hinweisbalken, Rolle `status`, Text und
+    Symbol, Kontrast mindestens 4,5:1.
+  - `js/config/datenAnforderungen.js`: Pflichtspalten und Dateien je Ansicht.
+  - `js/core/datenVerfuegbarkeit.js`: Prüfung je Ansicht, Ausblenden,
+    Hintergrund-Prüfung.
+  - `js/core/datenCache.js`: gemeinsamer Cache, in dem gleichzeitige Aufrufe
+    eine Anfrage teilen.
+- **Fehlt eine Pflichtspalte oder ist die Datei unlesbar** (vermutlich
+  falsches Trennzeichen), zeigt die Ansicht einen Balken mit Datei- und
+  Spaltennamen statt einer leeren Fläche oder eines Absturzes.
+- **Ist eine Datei leer, fehlt sie oder hat sie nur eine Kopfzeile,**
+  verschwinden Ansichten, Bereiche und Navigationspunkte, die nur diese Datei
+  nutzen. Ein direkter Link zeigt einen Balken.
+- **Kerndateien:** `archiv.csv` (Balken auf Startseite und Über) und
+  `startseite.csv`.
+- **Lazy Loading:** Nach dem ersten Bildaufbau prüft das Interface im
+  Hintergrund die Datendateien. Die Abweichung ist in Masterprompt und
+  SCHEMA.md vermerkt; keine Datei wird doppelt angefragt.
+- **Prüfmodul nicht im Start:** `datenVerfuegbarkeit.js`,
+  `datenAnforderungen.js` und `hinweisBalken.js` werden per dynamischem
+  `import()` geladen (parallel zu den Daten einer Ansicht bzw. nach dem
+  ersten Bildaufbau). Der Startgraph hat 24 statt 27 Module (B1: 23).
+  `dataLoader.js` und `bereichsLeiste.js` importieren die Prüfung nicht mehr.
+- **Cache-Umstellung** (nur Ladefunktion): `app.js`, `archivKonfiguration.js`,
+  `fuehrungenDaten.js`, `literaturSeite.js`.
+- **`docs/SCHEMA.md`:** Pflicht-Markierungen gemessen statt geschätzt
+  (Pflicht / Schlüssel / empfohlen); neuer Abschnitt „Mindestspalten und was
+  bei Problemen passiert“; `id` in `urkunden.csv` und der Dateiname
+  `bestandsverzeichnis.csv` berichtigt.
+
+**Ergebnis:**
+- Matrix (595): „leer ohne Hinweis“ 48 → 0, Abstürze 0, Konsolenfehler 0.
+- Originaldaten: Text in 47 von 47 Ansichten identisch.
+- axe: keine neue Regelverletzung.
+- Nach der Umstellung: Referenz 47/47 identisch, die 97 geänderten
+  Matrixeinträge unverändert eingestuft, jede Datei höchstens einmal angefragt.
+- Gedrosselte Ladezeitmessung (100 ms RTT, 20 + 20 Läufe): Seitengerüst (FCP,
+  DOMContentLoaded) ohne messbaren Unterschied; Inhalt der Treemap +118 ms
+  (p < 0,001), Startseite ohne Unterschied.
+- **Abhilfe:** Die drei Prüfmodule werden gleichzeitig angefordert
+  (`Promise.all`), ohne Zusammenlegung und ohne Änderung der Funktion.
+  Referenz 47/47 identisch, Stichprobe gesperrter Ansichten unverändert.
+  Danach gedrosselt gemessen (100 ms RTT, 20 + 20 Läufe): kein messbarer
+  Unterschied mehr, auf der Treemap beim Inhalt −3 ms (p = 0,74), auf der
+  Startseite −26 ms (PROJEKTLOG Eintrag 57).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (104) – Robustheit: Pipe-Zeichen in Freitext, leere Dateien, NaN-Attribute
 
 Prüfbericht 2026-10-03, Punkt 3. Die Zerlegung von `|` im Loader bleibt

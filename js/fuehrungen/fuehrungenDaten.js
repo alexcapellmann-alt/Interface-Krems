@@ -12,7 +12,7 @@
 // (fuehrungenGalerie.js/fuehrungStation.js/belegDarstellung.js) müssen die
 // Quell-CSVs selbst nicht kennen.
 
-import { ladeCSV } from '../core/dataLoader.js';
+import { ladeGecachteCSV } from '../core/datenCache.js';
 import { ermittleVertiefungsLink } from '../utils/datensatzAufruf.js';
 
 // Präfixtabelle aus docs/SCHEMA.md Abschnitt 10 - gegen die tatsächlichen
@@ -20,7 +20,9 @@ import { ermittleVertiefungsLink } from '../utils/datensatzAufruf.js';
 // AUFTRAG "Teil 2f", Punkt 2: neuer Belegtyp `familie` -> data/familien.csv
 // (derselbe Habsburg-Stammbaum-Datensatz, den js/viz/familienbaum.js/
 // chordDiagramm.js bereits als `familien` laden), id-Spalte `id`.
-const BELEG_QUELLEN = {
+// AUFTRAG B2: exportiert (unverändert), damit js/core/app.js die Belegquellen einer
+// Station für den Hinweisbalken kennt.
+export const BELEG_QUELLEN = {
   urkunde: { pfad: 'data/urkunden.csv', idFeld: 'signatur' },
   buergerbuch: { pfad: 'data/buergerbuch.csv', idFeld: 'id' },
   inventar: { pfad: 'data/verlassenschaftsinventare.csv', idFeld: 'id' },
@@ -34,7 +36,7 @@ let datenPromise = null;
 async function ladeQuellKarten() {
   const eintraege = await Promise.all(
     Object.entries(BELEG_QUELLEN).map(async ([typ, { pfad, idFeld }]) => {
-      const { records } = await ladeCSV(pfad);
+      const records = await ladeGecachteCSV(pfad);
       return [typ, new Map(records.map((r) => [r[idFeld], r]))];
     })
   );
@@ -189,10 +191,11 @@ function gruppiereNachFuehrung(zeilen) {
 export function ladeFuehrungenDaten() {
   if (!datenPromise) {
     datenPromise = (async () => {
-      const [{ records: fuehrungenZeilen }, quellKarten, { records: literaturZeilen }] = await Promise.all([
-        ladeCSV('data/fuehrungen.csv'),
+      // AUFTRAG B2 (Cache-Umstellung): über den gemeinsamen Cache statt ladeCSV().
+      const [fuehrungenZeilen, quellKarten, literaturZeilen] = await Promise.all([
+        ladeGecachteCSV('data/fuehrungen.csv'),
         ladeQuellKarten(),
-        ladeCSV('data/literatur.csv')
+        ladeGecachteCSV('data/literatur.csv')
       ]);
       const literaturKarte = new Map(literaturZeilen.map((r) => [r.literatur_id, r]));
       const gruppen = gruppiereNachFuehrung(fuehrungenZeilen);
