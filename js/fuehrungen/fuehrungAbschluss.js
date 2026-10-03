@@ -124,10 +124,11 @@ function baueWeiterlesen(fuehrung) {
   const titel = document.createElement('h3');
   titel.textContent = 'Zum Weiterlesen';
   abschnitt.appendChild(titel);
-  fuehrung.weiterlesen.forEach(({ record, fehler }) => {
+  fuehrung.weiterlesen.forEach(({ record, fehler, quelleFehlt }) => {
     if (fehler) {
       const box = document.createElement('p');
-      box.className = 'fuehrung-fehler';
+      // AUFTRAG C3, Punkt 7/8: fehlende/leere literatur.csv -> "Hinweis:" statt "Fehler:"
+      box.className = quelleFehlt ? 'fuehrung-fehler fuehrung-quelle-fehlt' : 'fuehrung-fehler';
       box.textContent = fehler;
       abschnitt.appendChild(box);
       return;

@@ -53,10 +53,12 @@ async function ladeQuellKarten() {
 }
 
 // AUFTRAG B3: Hinweistext für eine nicht verfügbare Quelle, oder null.
+// AUFTRAG C3, Punkt 8: Komma statt Doppelpunkt - die Darstellung setzt
+// "Hinweis: " davor (Beleg mit `quelleFehlt`, siehe belegDarstellung.js).
 function quellenHinweis(quellKarten, typ, anfang = 'Beleg nicht verfügbar') {
   const grund = quellKarten.nichtVerfuegbar[typ];
   if (!grund) return null;
-  return `${anfang}: Quelle ${BELEG_QUELLEN[typ].pfad.replace(/^data\//, '')} ${grund}`;
+  return `${anfang}, Quelle ${BELEG_QUELLEN[typ].pfad.replace(/^data\//, '')} ${grund}`;
 }
 
 // Text (Punkt 2, Auftrag wörtlich): Absätze an `|` trennen, aufeinander-
@@ -95,7 +97,7 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
       return { typ, id, record: null, fehler: `Unbekannter Belegtyp „${typ}" (Eintrag „${eintrag}")` };
     }
     const nichtVerfuegbar = quellenHinweis(quellKarten, typ);
-    if (nichtVerfuegbar) return { typ, id, record: null, fehler: nichtVerfuegbar };
+    if (nichtVerfuegbar) return { typ, id, record: null, fehler: nichtVerfuegbar, quelleFehlt: true };
     const record = quellKarten[typ].get(id);
     if (!record) {
       return { typ, id, record: null, fehler: `${typ}:${id} - ID nicht in ${BELEG_QUELLEN[typ].pfad} gefunden` };
@@ -117,7 +119,7 @@ function parseBeleg(rohbeleg, quellKarten, bildText) {
       // zeigen - der Beleg bleibt sichtbar, mit Hinweis darüber.
       const buergen = Array.isArray(record.buergen_id) ? record.buergen_id : (record.buergen_id ? [record.buergen_id] : []);
       const fehler = buergen.length > 0 ? quellenHinweis(quellKarten, 'person', 'Bürgennamen nicht verfügbar') : null;
-      return { typ, id, record, fehler, personenKarte: quellKarten.person };
+      return { typ, id, record, fehler, quelleFehlt: Boolean(fehler), personenKarte: quellKarten.person };
     }
     return { typ, id, record, fehler: null };
   });
@@ -165,8 +167,13 @@ function baueStation(zeile, quellKarten, ersteZeile) {
 // literatur_id - neue Pruefregel im Stil von 2a: ID nicht in literatur.csv
 // gefunden -> fehler statt record (fuehrungAbschluss.js zeigt dann den
 // Fehlerhinweis an dieser Stelle).
-function parseWeiterlesen(rohWeiterlesen, literaturKarte) {
+// AUFTRAG C3, Punkt 7: `literaturGrund` ("fehlt"/"ist leer") - dann trägt
+// jeder Eintrag nur den Hinweis, die Führung selbst bleibt bedienbar.
+function parseWeiterlesen(rohWeiterlesen, literaturKarte, literaturGrund) {
   const eintraege = (Array.isArray(rohWeiterlesen) ? rohWeiterlesen : (rohWeiterlesen ? [rohWeiterlesen] : []));
+  if (literaturGrund) {
+    return eintraege.map(() => ({ record: null, fehler: `Literaturangabe nicht verfügbar, Quelle literatur.csv ${literaturGrund}`, quelleFehlt: true }));
+  }
   return eintraege.map((id) => {
     const record = literaturKarte.get(id);
     return record ? { record, fehler: null } : { record: null, fehler: `weiterlesen: literatur_id „${id}" nicht in literatur.csv gefunden` };
@@ -174,7 +181,7 @@ function parseWeiterlesen(rohWeiterlesen, literaturKarte) {
 }
 
 // Baut eine Führung aus all ihren Rohzeilen (bereits in Datei-Reihenfolge).
-function baueFuehrung(fuehrungId, zeilen, quellKarten, literaturKarte) {
+function baueFuehrung(fuehrungId, zeilen, quellKarten, literaturKarte, literaturGrund) {
   const kopfFehler = [];
   const nummern = zeilen.map((z) => z.station_nr);
   const doppelte = nummern.filter((n, i) => nummern.indexOf(n) !== i);
@@ -195,7 +202,7 @@ function baueFuehrung(fuehrungId, zeilen, quellKarten, literaturKarte) {
     status: ersteZeile.status || 'entwurf',
     kopfFehler,
     kurzbeschreibungZuLang: kurzbeschreibung.length > 300,
-    weiterlesen: parseWeiterlesen(ersteZeile.weiterlesen, literaturKarte),
+    weiterlesen: parseWeiterlesen(ersteZeile.weiterlesen, literaturKarte, literaturGrund),
     stationen: sortiert.map((zeile) => baueStation(zeile, quellKarten, ersteZeile))
   };
 }
@@ -219,11 +226,14 @@ export function ladeFuehrungenDaten() {
       const [fuehrungenZeilen, quellKarten, literaturZeilen] = await Promise.all([
         ladeGecachteCSV('data/fuehrungen.csv'),
         ladeQuellKarten(),
-        ladeGecachteCSV('data/literatur.csv')
+        // AUFTRAG C3, Punkt 7: fehlt literatur.csv, fallen die Führungen nicht
+        // mehr aus - nur "Zum Weiterlesen" zeigt dann den Hinweis.
+        ladeGecachteCSV('data/literatur.csv').catch(() => null)
       ]);
-      const literaturKarte = new Map(literaturZeilen.map((r) => [r.literatur_id, r]));
+      const literaturGrund = !literaturZeilen ? 'fehlt' : (literaturZeilen.length === 0 ? 'ist leer' : null);
+      const literaturKarte = new Map((literaturZeilen || []).map((r) => [r.literatur_id, r]));
       const gruppen = gruppiereNachFuehrung(fuehrungenZeilen);
-      const fuehrungen = gruppen.map(([id, zeilen]) => baueFuehrung(id, zeilen, quellKarten, literaturKarte));
+      const fuehrungen = gruppen.map(([id, zeilen]) => baueFuehrung(id, zeilen, quellKarten, literaturKarte, literaturGrund));
       return { fuehrungen };
     })();
   }

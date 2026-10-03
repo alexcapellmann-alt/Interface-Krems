@@ -125,9 +125,11 @@ function alsText(wert) {
   return Array.isArray(wert) ? wert.join('; ') : (wert || '');
 }
 
-function baueFehlerBox(fehlertext) {
+// AUFTRAG C3, Punkt 8: `quelleFehlt` - Quelle bewusst optional und fehlt/ist
+// leer: gleiche Box, aber Vorsatz "Hinweis:" statt "Fehler:" (components.css).
+function baueFehlerBox(fehlertext, quelleFehlt = false) {
   const box = document.createElement('p');
-  box.className = 'fuehrung-fehler';
+  box.className = quelleFehlt ? 'fuehrung-fehler fuehrung-quelle-fehlt' : 'fuehrung-fehler';
   box.textContent = fehlertext;
   return box;
 }
@@ -314,7 +316,7 @@ export function baueBelegBereich(beleg, bildText) {
   const bereich = document.createElement('div');
   bereich.className = 'fuehrung-beleg';
 
-  if (beleg.fehler) bereich.appendChild(baueFehlerBox(beleg.fehler));
+  if (beleg.fehler) bereich.appendChild(baueFehlerBox(beleg.fehler, beleg.quelleFehlt));
 
   if (beleg.typ === 'bild') {
     const scroll = baueScrollWrapper();
