@@ -392,10 +392,11 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `bild` | Bildpfad | – |
 
 **Belegquellen sind optional (Auftrag B3, 2026-10-03):** Keine der sechs Quell-Dateien der Präfixtabelle ist für die Führungen Pflicht. Ein Archiv ohne z. B. `buergerbuch.csv` kann alle Führungen weiter nutzen. Fehlt eine Quelle ganz oder enthält sie keine Datensätze (leer oder nur Kopfzeile), gilt:
-- Nur die Belege mit diesem Präfix zeigen statt des Inhalts den Hinweis „Beleg nicht verfügbar: Quelle `<datei>` fehlt“ bzw. „… ist leer“. Er erscheint in derselben Box wie die übrigen Belegfehler (mit der Kennzeichnung „Fehler:“).
-- `buergerbuch`-Belege mit Bürgen brauchen zusätzlich `personenliste.csv`, um die Bürgen namentlich zu nennen. Fehlt sie, bleibt der Beleg sichtbar, die Bürgen erscheinen als ID, darüber steht „Bürgennamen nicht verfügbar: Quelle personenliste.csv fehlt“.
+- Nur die Belege mit diesem Präfix zeigen statt des Inhalts den Hinweis „Hinweis: Beleg nicht verfügbar, Quelle `<datei>` fehlt“ bzw. „… ist leer“. Er steht in derselben Box wie die übrigen Belegfehler, aber mit „Hinweis:“ statt „Fehler:“, weil eine fehlende optionale Quelle kein Datenfehler ist (Auftrag C3).
+- `buergerbuch`-Belege mit Bürgen brauchen zusätzlich `personenliste.csv`, um die Bürgen namentlich zu nennen. Fehlt sie, bleibt der Beleg sichtbar, die Bürgen erscheinen als ID, darüber steht „Hinweis: Bürgennamen nicht verfügbar, Quelle personenliste.csv fehlt“.
 - Alle anderen Stationen, Belege, die Übersicht und der Abschluss bleiben unverändert. Zusätzlich zeigt die betroffene Station den Hinweisbalken aus Auftrag B2 („… Diese Ansicht ist deshalb unvollständig.“).
 - `fuehrungen.csv` selbst bleibt Pflicht (siehe „Mindestspalten und was bei Problemen passiert“).
+- **`literatur.csv` ist für die Führungen ebenfalls optional (Auftrag C3):** Fehlt sie oder ist sie leer, bleiben alle Führungen bedienbar. Nur die Einträge unter „Zum Weiterlesen“ zeigen dann „Hinweis: Literaturangabe nicht verfügbar, Quelle literatur.csv fehlt“ bzw. „… ist leer“; dazu erscheint auf der Abschlussseite der Hinweisbalken aus Auftrag B2. Die eigene Literaturseite verhält sich wie in B2 beschrieben.
 
 **Unsicherheit:** bei datenbasierten Belegen (alle Präfixe außer `bild`) übernimmt die künftige Darstellung (Teil 2) die `_unsicher`-Felder/`unsicherheit_anmerkung` DIREKT aus der jeweiligen Quell-CSV der referenzierten ID - `unsicherheit_hinweis` in `fuehrungen.csv` ist ein davon UNABHÄNGIGER, zusätzlicher redaktioneller Text (z. B. eine Einordnung, warum eine Station gerade wegen der Unsicherheit erzählenswert ist), kein Ersatz.
 

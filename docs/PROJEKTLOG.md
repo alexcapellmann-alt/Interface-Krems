@@ -181,6 +181,101 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-03 (59) – Auftrag C3: literatur.csv optional, „Hinweis“ statt „Fehler“
+
+**Kontext:** Auftrag C (Prüfbericht Punkt 6, Übertragbarkeit).
+- Phase 1 ist vom Autor freigegeben, mit Teilung C3 → C1 → C2.
+- Vorschlag: `Pruefung_2026-10-03/Nachher_C/phase1/VORSCHLAG_PHASE1.md`.
+- C3 übernimmt die zwei Funde aus B3 (Eintrag 58, Scope-Meldungen): Punkt 7
+  `literatur.csv` und Punkt 8 Wortlaut des Beleghinweises.
+- Vorher-Stand ist `6a97482` (B3).
+- Rohdaten liegen in `Pruefung_2026-10-03/Nachher_C/C3/`.
+
+**Entscheidungen zu Phase 1** (gelten für C1/C2, hier nur festgehalten):
+- Urkundenzahl berechnet (1.067; die 1.069 stammten aus der Zeit vor der
+  Dublettenbereinigung).
+- Farbeintrag „Bevölkerung“ wird auf „Bevölkerung und Bevölkerungsgruppen“
+  korrigiert (`#952323`). Das ist eine bewusste Änderung der Krems-Anzeige,
+  zu belegen in C2.
+- `ratsprotokolle.csv`: Suche nach Dateiname und Code-Bezeichnern;
+  Ausnahmen CHANGELOG, PROJEKTLOG, Masterprompt 4.0–4.3.
+- Chord und Flow Map ausblenden, wenn `rollen.csv` fehlt.
+- Listenwerte mit `|` in `archiv.csv` sind zulässig und in SCHEMA zu
+  dokumentieren.
+- In der Anleitung offen nennen: Ein neuer Bereichstyp ist allein über Daten
+  nicht möglich.
+
+### Punkt 7 – literatur.csv fehlt oder ist leer (`js/fuehrungen/fuehrungenDaten.js`)
+- `ladeFuehrungenDaten()`: `literatur.csv` wird mit `.catch(() => null)`
+  geladen; daraus entsteht `literaturGrund` („fehlt“ / „ist leer“).
+- `parseWeiterlesen()`: Ist `literaturGrund` gesetzt, wird jeder Eintrag zum
+  Hinweis „Literaturangabe nicht verfügbar, Quelle literatur.csv …“. Die
+  Führung selbst bleibt vollständig.
+- Die Abschlussseite zeigt zusätzlich den unveränderten Hinweisbalken aus B2
+  („… Diese Ansicht ist deshalb unvollständig.“).
+
+### Punkt 8 – Wortlaut des Beleghinweises
+- **`fuehrungenDaten.js`:**
+  - Beleg- und Literaturhinweise auf eine nicht verfügbare Quelle tragen
+    `quelleFehlt: true`.
+  - Text mit Komma: „Beleg nicht verfügbar, Quelle buergerbuch.csv fehlt“.
+- **`belegDarstellung.js` (`baueFehlerBox()`) und `fuehrungAbschluss.js`
+  (`baueWeiterlesen()`):** setzen bei `quelleFehlt` zusätzlich die Klasse
+  `fuehrung-quelle-fehlt`.
+- **`css/components.css`:** eine Regel
+  `.fuehrung-fehler.fuehrung-quelle-fehlt::before { content: "Hinweis: "; }`.
+  - Gleiche Box (Farbe, Rahmen); echte Datenfehler behalten „Fehler:“.
+  - Kleine Erweiterung über `belegDarstellung.js` hinaus, im Phase-1-Vorschlag
+    angekündigt: Die CSS-Regel ist nötig, weil der Vorsatz per CSS entsteht.
+    `fuehrungAbschluss.js` ist nötig, weil dort die Literaturhinweise
+    gezeichnet werden.
+- Die Galerie ist unverändert (sie prüft weiter `fehler`).
+
+### Punkt 10 – Dokumentation (Anteil C3)
+`docs/SCHEMA.md`, Abschnitt 10:
+- neuer Hinweiswortlaut;
+- neuer Absatz: `literatur.csv` ist für die Führungen optional.
+
+### Verifikation (Prüfumfang laut Entscheidung des Autors)
+- **Keine Vorher-Läufe der Fälle:** Der Ausgangszustand ist aus B3 bekannt.
+  Vorher fielen bei fehlender `literatur.csv` alle Führungen aus (gleiche
+  Ursache wie die Belegquellen, Eintrag 58). Der B3-Hinweis trug „Fehler:“.
+- **Keine Geschwindigkeitsprobe**, weil das eine reine Funktionsprüfung ist.
+  Ein erster, breiter angelegter Lauf war vorher an der Probe abgebrochen
+  (Faktor 8,8, `Nachher_C/C3/fuehrungen/probe_abbruch_*.json`); der
+  Prüfumfang wurde danach vom Autor ersetzt.
+- **Fälle nur nachher** (`tools/pC3_faelle.mjs`, 1 Browser, 77 s): Original,
+  `literatur.csv` fehlt, `literatur.csv` leer, `buergerbuch.csv` fehlt.
+- **Je Fall dieselben 5 Seiten:**
+  - die Übersicht;
+  - drei Stationen: `buergerrecht-krems/1` (Bürgerbuch-Beleg),
+    `wer-fehlt/9` (Vergleich Stammbaum + Bürgerbuch),
+    `buergerspital-heringe/2` (ohne Bezug);
+  - die Abschlussseite `buergerrecht-krems/ende` (3 aufgelöste
+    Literaturangaben).
+
+| Fall | Seiten textgleich mit Original | betroffene Seiten | Hinweis | Fehler |
+|---|---|---|---|---|
+| `literatur.csv` fehlt | 4/5 | Abschluss | 3 × „Hinweis: Literaturangabe nicht verfügbar, Quelle literatur.csv fehlt“ + B2-Balken | 0 |
+| `literatur.csv` leer | 4/5 | Abschluss | 3 × „… ist leer“ + B2-Balken | 0 |
+| `buergerbuch.csv` fehlt | 3/5 | 2 Stationen | „Hinweis: Beleg nicht verfügbar, Quelle buergerbuch.csv fehlt“ + B2-Balken; der Stammbaum-Beleg auf `wer-fehlt/9` bleibt | 0 |
+
+- Auf den betroffenen Seiten fehlen nur die Zeilen der jeweiligen Literatur-
+  bzw. Belegangabe. Auswertung: `Nachher_C/C3/auswertung_faelle.txt`.
+- Rückbau der Testdaten per `diff -rq` belegt.
+
+**Referenzlauf** (47 Ansichten, Originaldaten, 108 s): Text 47/47 identisch zu
+B3, keine Seiten- oder Konsolenfehler (`Nachher_C/C3/vergleich_referenz.tsv`).
+
+### Scope-Meldungen
+- Keine neuen. Die Box bleibt optisch eine Fehlerbox (Amber, gestrichelt);
+  nur der Vorsatz ist neutral. Eine eigene, ruhigere Gestaltung wäre eine
+  optische Änderung und war nicht verlangt.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (58) – Auftrag B3: Fehlende Belegquelle in den Führungen
 
 **Kontext:** Scope-Meldung aus B2 (Eintrag 57). B2 ist als `3729e20`

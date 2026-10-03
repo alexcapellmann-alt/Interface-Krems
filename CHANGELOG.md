@@ -7,6 +7,36 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-03 (107) – Führungen: literatur.csv optional, „Hinweis“ statt „Fehler“
+
+Auftrag C3 (Teil von Auftrag C, Prüfbericht Punkt 6; Funde aus B3).
+- **`js/fuehrungen/fuehrungenDaten.js`:**
+  - Fehlt `literatur.csv` oder ist sie leer, fallen die Führungen nicht mehr
+    aus.
+  - Nur die Einträge unter „Zum Weiterlesen“ zeigen „Literaturangabe nicht
+    verfügbar, Quelle literatur.csv fehlt“ bzw. „… ist leer“.
+  - Die Hinweise aus B3 haben jetzt ein Komma statt eines Doppelpunkts.
+- **`js/fuehrungen/belegDarstellung.js`, `js/fuehrungen/fuehrungAbschluss.js`,
+  `css/components.css`:** Hinweise auf eine fehlende oder leere *optionale*
+  Quelle tragen den Vorsatz „Hinweis:“ statt „Fehler:“. Beispiel: „Hinweis:
+  Beleg nicht verfügbar, Quelle buergerbuch.csv fehlt“.
+  - Die Box selbst sieht gleich aus.
+  - Echte Datenfehler (z. B. „ID nicht gefunden“) behalten „Fehler:“.
+- **`docs/SCHEMA.md`** (Abschnitt 10): neuer Wortlaut; `literatur.csv` für die
+  Führungen optional.
+- Keine Änderung der Anzeige bei vorhandenen Quellen.
+
+**Ergebnis:**
+- Fälle `literatur.csv` fehlt/leer und `buergerbuch.csv` fehlt: keine Seiten-
+  und keine Konsolenfehler.
+- Nur die betroffenen Literaturangaben bzw. Belege zeigen den neuen Hinweis;
+  alle übrigen geprüften Seiten sind textgleich.
+- Referenz 47/47 textgleich mit B3.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (106) – Führungen: fehlende oder leere Belegquelle
 
 Auftrag B3 (Scope-Meldung aus B2).
