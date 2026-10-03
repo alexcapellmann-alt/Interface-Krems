@@ -481,6 +481,15 @@ function zeichneParallelKoordinaten() {
   container.appendChild(kopfzeile);
   baueLegende(kopfzeile, vollstaendig);
 
+  // AUFTRAG B1 (Prüfbericht Punkt 3): ohne vollständige Datensätze liefert
+  // d3.extent() [undefined, undefined] - die Skalen hatten keinen Wertebereich,
+  // Referenzlinien bekamen y = NaN (und maxSchvg unten wäre undefined). Ohne
+  // Linien nichts zeichnen; Kopfzeile/Umschalter bleiben, Meldung regelt B2.
+  if (vollstaendig.length === 0) {
+    instanz.linienAuswahl = null;
+    return;
+  }
+
   // Punkt 5: Fußnote zur "stark gestreckten" SchvG-Skala, nur im
   // Forderungs-/Schuldenprofil - Maximum live aus den Daten berechnet
   // (nicht hart codiert), damit der Text auch bei künftigen Datenänderungen

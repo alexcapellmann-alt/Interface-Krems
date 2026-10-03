@@ -56,6 +56,12 @@ import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { mitTextfeldern } from '../utils/textwert.js';
+
+// AUFTRAG B1 (Prüfbericht Punkt 3): "|" macht im Loader jedes Feld zur Liste,
+// auch Freitext - diese Felder werden hier als Text (Liste mit " | ") verarbeitet,
+// sonst brach das Modul an zeileUmbrechenOhneSilbentrennung() (text.split) ab.
+const TEXTFELDER = ['name', 'kuerzel', 'zitierweise', 'umfang', 'bkk_kategorie', 'bkk_unterkategorie'];
 
 const RAND_AUSSEN = 6;
 const RAND_OBEN_WURZEL = 22; // nur für Tiefe 1 in der Wurzel-Ansicht (Kategorie-Pille), siehe topPaddingFuer()
@@ -690,7 +696,7 @@ export function render(container, data, options = {}) {
   const sidebar = baueSidebarGeruest(container);
   sidebar.schliessenBtn.addEventListener('click', schliesseSidebar);
 
-  const hierarchieDaten = baueBestandsHierarchie(data, MINDESTGROESSE_ROH_TREEMAP);
+  const hierarchieDaten = baueBestandsHierarchie(mitTextfeldern(data, TEXTFELDER), MINDESTGROESSE_ROH_TREEMAP);
   const kategorienNamen = hierarchieDaten.children.map((k) => k.name).filter((name) => name !== OHNE_KATEGORIE).sort((a, b) => a.localeCompare(b));
 
   instanz = {

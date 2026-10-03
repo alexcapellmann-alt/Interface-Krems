@@ -42,6 +42,12 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueBuergschaftsNetzwerk, baueNamensverzeichnis, baueSektorFarbSkala } from '../utils/buergerbuchZeit.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { mitTextfeldern } from '../utils/textwert.js';
+
+// AUFTRAG B1 (Prüfbericht Punkt 3): "|" macht im Loader jedes Feld zur Liste,
+// auch Freitext - diese Felder werden hier als Text (Liste mit " | ") verarbeitet,
+// sonst brach das Modul an der Namenssortierung (localeCompare) bzw. buergerbuchZeit.js' .replace() auf Buergen ab.
+const TEXTFELDER = ['Name', 'Beruf', 'Buergen'];
 
 const TOP_HUB_ANZAHL = 15;
 const VORBERECHNUNGS_TICKS = 300;
@@ -286,6 +292,7 @@ export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
+  const datensaetze = mitTextfeldern(data, TEXTFELDER);
   container.innerHTML = '';
   fuegeStyleEin(container);
 
@@ -296,14 +303,14 @@ export function render(container, data, options = {}) {
   instanz = {
     container,
     wurzel,
-    records: data,
+    records: datensaetze,
     options: { showUncertainty: true, width: null, height: null, ...options },
     infoButton: null,
     simulation: null,
     egoId: null,
-    netzwerk: baueBuergschaftsNetzwerk(data),
-    namenNachId: baueNamensverzeichnis(data),
-    farbeFuerSektor: baueSektorFarbSkala(data)
+    netzwerk: baueBuergschaftsNetzwerk(datensaetze),
+    namenNachId: baueNamensverzeichnis(datensaetze),
+    farbeFuerSektor: baueSektorFarbSkala(datensaetze)
   };
   zeichneNetzwerk();
 }

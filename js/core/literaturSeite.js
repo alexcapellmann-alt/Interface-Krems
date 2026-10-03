@@ -36,6 +36,13 @@ import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from './archivKonfiguration.js';
 import { baueHash } from './router.js';
 import { erzeugeLinkOderText } from '../utils/sichereUrl.js';
+import { alsText, mitTextfeldern } from '../utils/textwert.js';
+
+// AUFTRAG B1 (Prüfbericht Punkt 3): "|" macht im Loader jedes Feld zur Liste,
+// auch Freitext - diese Felder werden hier als Text (Liste mit " | ") verarbeitet,
+// sonst brach das Modul an vergleicheNachAutor() (localeCompare) ab.
+const LITERATUR_TEXTFELDER = ['autor', 'titel', 'zitation', 'kurzbeschreibung', 'verfuegbarkeit'];
+const RECHERCHE_TEXTFELDER = ['titel', 'beschreibung'];
 
 const LITERATUR_CSV = 'data/literatur.csv';
 const RECHERCHE_CSV = 'data/recherche_links.csv';
@@ -54,7 +61,7 @@ function slugifiziere(text) {
 async function ladeRechercheLinks() {
   try {
     const { records } = await ladeCSV(RECHERCHE_CSV);
-    return records
+    return mitTextfeldern(records, RECHERCHE_TEXTFELDER)
       .filter((r) => r.sichtbar === 'ja')
       .sort((a, b) => Number(a.reihenfolge) - Number(b.reihenfolge));
   } catch (fehler) {
@@ -78,7 +85,8 @@ async function ermittleRuecklinke() {
         if (fehler || !record) return;
         const id = record.literatur_id;
         if (!karte.has(id)) karte.set(id, []);
-        karte.get(id).push({ fuehrung_id: fuehrung.fuehrung_id, fuehrung_titel: fuehrung.fuehrung_titel });
+        // AUFTRAG B1: fuehrung_titel (aus fuehrungen.csv) kann durch "|" eine Liste sein.
+        karte.get(id).push({ fuehrung_id: fuehrung.fuehrung_id, fuehrung_titel: alsText(fuehrung.fuehrung_titel) });
       });
     });
     return karte;
@@ -383,6 +391,7 @@ export async function erzeugeLiteraturSeite(container) {
   let records = [];
   try {
     ({ records } = await ladeCSV(LITERATUR_CSV));
+    records = mitTextfeldern(records, LITERATUR_TEXTFELDER);
   } catch (fehler) {
     console.error(`${LITERATUR_CSV} konnte nicht geladen werden.`, fehler);
   }
