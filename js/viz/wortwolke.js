@@ -29,6 +29,7 @@ import { CAT_COLORS } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { alsText } from '../utils/textwert.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
 
@@ -48,8 +49,10 @@ const STOPWOERTER = new Set([
   'ohne', 'unter', 'zwischen', 'gegen', 'vor', 'seit', 'jahr', 'jahre', 'jahres'
 ]);
 
+// AUFTRAG B1 (Prüfbericht Punkt 3): `regest` kann durch "|" eine Liste sein
+// (Loader-Konvention) - als Text mit " | " verarbeiten statt an .split() abzubrechen.
 function bereinigeRegestText(regest) {
-  return (regest || '').split(/(?:Source|Quelle) Regest\s*:/i)[0];
+  return alsText(regest).split(/(?:Source|Quelle) Regest\s*:/i)[0];
 }
 
 function zaehleWorthaeufigkeit(records) {

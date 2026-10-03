@@ -796,6 +796,14 @@ export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
+  // AUFTRAG B1 (Prüfbericht Punkt 3): ohne Datensätze ist die Wurzel der
+  // Hierarchie selbst ein "Blatt" ohne `record` - teileUndSortiere() griff
+  // darauf zu und brach ab. Kontrolliert beenden, nichts zeichnen (ob und wie
+  // das gemeldet wird, regelt Auftrag B2).
+  if (!Array.isArray(data) || data.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
   const hierarchieDaten = baueBestandsHierarchie(data);
   const kategorienNamen = hierarchieDaten.children
     .map((k) => k.name)

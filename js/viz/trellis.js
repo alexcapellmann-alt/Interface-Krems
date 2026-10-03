@@ -220,6 +220,12 @@ function zeichneTrellis() {
   const matrix = gruppiereProBinUndSektor(mitJahr, sektoren, bins);
   const maxAnzahl = d3.max(matrix.flatMap((zeile) => sektoren.map((s) => zeile[s].anzahl))) || 1;
 
+  // AUFTRAG B1 (Prüfbericht Punkt 3): ohne datierte Einträge gibt es keinen
+  // Sektor und damit zeilenAnzahl = 0 - die Höhenrechnung unten ergab dann
+  // 0 * Infinity = NaN in <svg height>/viewBox. Ohne Panels nichts zeichnen
+  // (Werkzeugleiste bleibt; Meldung regelt Auftrag B2).
+  if (sektoren.length === 0) return;
+
   // Punkt 3 (siehe Dateikopf-Kommentar): verfügbare Breite/Höhe JETZT messen
   // - plotBereich ist gerade wieder im DOM eingehängt (append() oben) und
   // bereits nach der Werkzeugleiste bemessen (flex:1 1 auto gegenüber deren

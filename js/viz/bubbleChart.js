@@ -95,6 +95,13 @@ export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
+  // AUFTRAG B1 (Prüfbericht Punkt 3): ohne Datensätze ist die Wurzel von
+  // d3.hierarchy() selbst ein "Blatt" ohne `schreibweisen` - die Beschriftung
+  // brach daran ab. Kontrolliert beenden, nichts zeichnen (Meldung: Auftrag B2).
+  if (!Array.isArray(data) || data.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
   instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options } };
   zeichneBubbleChart();
 }

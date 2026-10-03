@@ -181,6 +181,130 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-03 (56) – Auftrag B1: Robustheit gegenüber Pipe-Zeichen und leeren Daten (Prüfbericht Punkt 3)
+
+**Kontext:** Prüfbericht vom 2026-10-03; Auftrag A ist als `9a40ef7`
+committet. Entscheidung des Autors: `|` bleibt in jeder Spalte das
+Listentrennzeichen. Die Zerlegung in `js/core/dataLoader.js` ist
+unverändert (der Auftrag nennt den Pfad `js/utils/dataLoader.js`, die Datei
+liegt aber unter `js/core/`). Messungen und Rohdaten liegen außerhalb des
+Repositorys in `Pruefung_2026-10-03/Nachher_B1/`.
+
+### Punkt 1 – Listen in Textfeldern
+**Neu:** `js/utils/textwert.js` mit zwei Funktionen.
+- `alsText(wert)` gibt eine Liste mit ` | ` zusammengefügt aus, sonst den
+  unveränderten Wert.
+- `mitTextfeldern(records, felder)` kopiert nur die Datensätze, in denen
+  eines der genannten Felder eine Liste ist. Alle anderen bleiben dieselben
+  Objekte (Masterprompt Abschnitt 5: Rohdaten nicht verändern).
+
+**Angewendet in den fünf Modulen des Prüfberichts.** Gewählt wurden die
+Felder, auf die das Modul Zeichenketten-Methoden anwendet oder die es als
+Text anzeigt:
+
+| Modul | Felder | bisherige Absturzstelle |
+|---|---|---|
+| `js/viz/treemap.js` | `name`, `kuerzel`, `zitierweise`, `umfang`, `bkk_kategorie`, `bkk_unterkategorie` | `text.split` in `zeileUmbrechenOhneSilbentrennung()` |
+| `js/viz/wortwolke.js` | `regest` | `bereinigeRegestText()` |
+| `js/viz/personennetzwerk.js` | `Name`, `Beruf`, `Buergen` | `localeCompare` beim Sortieren; `.replace()` auf `Buergen` in `buergerbuchZeit.js:179` |
+| `js/viz/familienbaum.js` | `name`, `titel` | `ermittleKurzname()` |
+| `js/core/literaturSeite.js` | `autor`, `titel`, `zitation`, `kurzbeschreibung`, `verfuegbarkeit`; Recherche-Links: `titel`, `beschreibung`; Rücklinks: `fuehrung_titel` | `vergleicheNachAutor()` |
+
+In den echten Daten enthält keines dieser Felder ein `|`. Die Anzeige
+ändert sich dadurch nicht (siehe Verifikation).
+
+### Punkt 2 – Leere Datei
+- **`js/viz/ganttDiagramm.js` und `js/viz/bubbleChart.js`:** Ohne Datensätze
+  ist die Wurzel von `d3.hierarchy()` selbst ein „Blatt“ ohne Datensatz.
+  Darauf griffen `teileUndSortiere()` (`record.zeitraum_von`) bzw. die
+  Beschriftung (`name.length`) zu. Beide Module beenden `render()` jetzt bei
+  0 Datensätzen und zeichnen nichts.
+- Eine Meldung an die Nutzer folgt erst mit Auftrag B2.
+
+### Punkt 3 – NaN-Attribute
+Laut den Matrix-Rohdaten des Prüfberichts gibt es zwei Quellen:
+- **`js/viz/trellis.js`:** Ohne datierte Einträge gibt es 0 Sektoren, also
+  `zeilenAnzahl = 0`. Die Höhenrechnung ergab daraus `0 * Infinity = NaN`.
+  Ohne Panels wird jetzt nichts gezeichnet.
+- **`js/viz/parallelKoordinaten.js`:** Ohne vollständige Datensätze liefert
+  `d3.extent()` `[undefined, undefined]`. Die Referenzlinien bekamen dadurch
+  `y = NaN`.
+  - Ohne Linien wird jetzt nichts gezeichnet; Kopfzeile und Umschalter
+    bleiben.
+  - Damit entfällt auch ein bisher ungetesteter Absturz:
+    `maxSchvg.toLocaleString()` in der Ansicht „Schuldenprofil“.
+
+### Punkt 4 – Dokumentation
+`docs/SCHEMA.md` enthält jetzt einen Absatz direkt nach den Allgemeinen
+Konventionen: „`|` ist reserviert – in allen Spalten“. Er nennt zwei
+Beispiele aus `urkunden.csv` (`kategorien` bei `StaAKr-0001`, `personen` bei
+`StaAKr-0001a`) und erklärt, dass ein `|` im Freitext als Listentrennung
+gilt.
+
+### Verifikation (Chrome 154, no-store-Testserver, Kopien)
+**Pipe-Test:** In dieselben 364 Freitextfelder wie in Lauf 1 des
+Prüfberichts wurde `PIPE-A|PIPE-B` geschrieben, dann alle 47 Ansichten
+geöffnet.
+- **Vorher (`9a40ef7`):** Genau die fünf Abstürze des Prüfberichts.
+- **Nachher:** 0 Seitenfehler, 0 Konsolenfehler, 0 NaN-Attribute.
+- **Sichtbar mit ` | `:**
+  - Treemap (Beschriftung),
+  - Literatur (Titel, Rücklinks),
+  - Personennetzwerk (Suchliste),
+  - Familienbaum (Kasten, `aria-label`).
+- Die Wortwolke zeigt keine Regesten, sondern Einzelwörter; dort ist nur das
+  Ausbleiben des Absturzes prüfbar.
+- Auch der unveränderte Lauf 1 des Prüfberichts ergibt nachher keinen
+  Seitenfehler.
+
+**Referenzlauf (Originaldaten):** Der sichtbare Text ist in 47 von 47
+Ansichten zeichengleich vorher/nachher. Für `startseite` und
+`bestand/treemap` wurde die Messung je zweimal einzeln wiederholt, weil im
+Vorher-Lauf die DOM-Auswertung durch ein Navigationsartefakt fehlschlug.
+
+**Matrix (595 Aufrufe, alle nicht-stabilen Einträge einzeln
+nachgeprüft):**
+
+| Einstufung | vorher | nachher |
+|---|---|---|
+| stabil | 520 | 517 |
+| stabil, Inhalt stark abweichend | 12 | 13 |
+| stabil, Konsolenfehler | 2 | 0 |
+| Fehlermeldung | 17 | 17 |
+| leer ohne Hinweis | 42 | 48 |
+| Absturz | 2 | 0 |
+
+- **Beabsichtigte Änderungen (4):**
+  - Gantt und Bubble Chart: von Absturz zu „leer ohne Hinweis“.
+  - Parallelkoordinaten (`leer`, `falsches_trennzeichen`): von „stabil,
+    Konsolenfehler (NaN)“ zu „leer ohne Hinweis“.
+- **Messstreuung (3):** Weitere 3 Änderungen (Startseite 2×, Treemap 1×)
+  betreffen Code, den B1 nicht berührt. Je drei Einzelläufe auf beiden
+  Ständen ergaben identische Werte, die dem Prüfbericht entsprechen; die
+  abweichenden Werte stammten aus dem Vorher-Lauf.
+- **NaN:** in keinem der 675 Nachher-Aufrufe (Konsole und DOM-Attribute).
+
+**Auswertungsdetail:** Das Etikett „Platzhalterbild“ der Startseite
+(`startseite-platzhalter-hinweis`) erscheint je nach Karussell-Folie. Es
+wird in der Auswertung nicht mehr als Fehlerhinweis gezählt, für vorher und
+nachher gleichermaßen.
+
+### Scope-Meldungen (nicht umgesetzt)
+- **Listen mit Komma:** Weitere Module zeigen Listen aus Freitextfeldern mit
+  Komma (`Array.toString()`), ohne abzustürzen. Betroffen sind u. a.
+  Kopf- und Fußzeile (`archiv.csv`), Startseite, Über-Seite, Führungen und
+  Info-Texte. Im Pipe-Test stand „PIPE-A,PIPE-B“ in jeder Ansicht zweimal:
+  `logo_untertitel` in der Kopfzeile und `footer_text` in der Fußzeile.
+- **Leere Ansichten:** Die 48 „leer ohne Hinweis“-Fälle betreffen
+  Auftrag B2.
+
+**Regressionsschutz (Abschnitt 13):** `js/utils/textwert.js` ist neu und
+wird nur von den fünf Modulen genutzt. Die Änderungen an Gantt, Bubble
+Chart, Trellis und Parallelkoordinaten greifen nur bei 0 Datensätzen bzw.
+0 vollständigen Datensätzen. Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (55) – Auftrag A: Sicherheit (Prüfbericht Punkt 5)
 
 **Kontext:** Qualitätsprüfung vom 2026-10-03 am Commit `b7ea4ca`

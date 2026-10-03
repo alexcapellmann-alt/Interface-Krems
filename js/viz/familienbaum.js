@@ -344,6 +344,12 @@ import {
   fuegeBildschirmHinweisStyleEin
 } from '../utils/bildschirmHinweis.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { mitTextfeldern } from '../utils/textwert.js';
+
+// AUFTRAG B1 (Prüfbericht Punkt 3): "|" macht im Loader jedes Feld zur Liste,
+// auch Freitext - diese Felder werden hier als Text (Liste mit " | ") verarbeitet,
+// sonst brach das Modul an ermittleKurzname() (name.split) ab.
+const TEXTFELDER = ['name', 'titel'];
 
 // Punkt 1 (4. Folgeauftrag): 20→13 (moderat verringert, siehe Dateikopf-
 // Kommentar - Gegengewicht zur nochmals größeren Schrift, Kästchen wirken
@@ -1432,8 +1438,9 @@ export function render(container, data, options = {}) {
   fuegeStyleEin(container);
   fuegeBildschirmHinweisStyleEin(container);
 
-  const { kreisIds } = ermittleHabsburgKreis(data);
-  const kreisRecords = data.filter((r) => kreisIds.has(r.id));
+  const datensaetze = mitTextfeldern(data, TEXTFELDER);
+  const { kreisIds } = ermittleHabsburgKreis(datensaetze);
+  const kreisRecords = datensaetze.filter((r) => kreisIds.has(r.id));
   const { byId, kinderIndex } = baueDatenIndex(kreisRecords);
   const { jahrMin, jahrMax } = ermittleJahresSpanne(kreisRecords);
   // Punkt 1/2 (2. Folgeauftrag): Kästchenbreite aus den tatsächlichen

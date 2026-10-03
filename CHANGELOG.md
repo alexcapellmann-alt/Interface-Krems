@@ -7,6 +7,30 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-03 (104) – Robustheit: Pipe-Zeichen in Freitext, leere Dateien, NaN-Attribute
+
+Prüfbericht 2026-10-03, Punkt 3. Die Zerlegung von `|` im Loader bleibt
+unverändert.
+- **Neu: `js/utils/textwert.js`** (`alsText()`, `mitTextfeldern()`). Damit
+  verarbeiten `treemap.js`, `wortwolke.js`, `personennetzwerk.js`,
+  `familienbaum.js` und `literaturSeite.js` Listen in Textfeldern als Text
+  mit ` | ` statt abzustürzen.
+- **Leere Datei:** `ganttDiagramm.js` und `bubbleChart.js` beenden sich bei
+  0 Datensätzen kontrolliert.
+- **NaN-Attribute:** `trellis.js` (0 Sektoren) und `parallelKoordinaten.js`
+  (0 vollständige Datensätze) zeichnen in diesen Fällen nichts mehr.
+- **`docs/SCHEMA.md`:** Absatz „`|` ist reserviert – in allen Spalten“.
+
+**Ergebnis:**
+- Pipe-Test in 47 Ansichten: 0 Seiten- und Konsolenfehler (vorher 5
+  Abstürze).
+- Sichtbarer Text mit Originaldaten in 47 von 47 Ansichten identisch.
+- Matrix: Absturz 2 → 0, NaN-Konsolenfehler 2 → 0.
+
+Details siehe PROJEKTLOG Eintrag 56. Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (103) – Sicherheit: kein HTML und keine unsicheren Link-Schemata aus CSV-Daten
 
 Prüfbericht 2026-10-03, Befunde 5a, 5b und 5e.
