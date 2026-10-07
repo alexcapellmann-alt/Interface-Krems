@@ -23,6 +23,18 @@ import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN } from '../config/archivalienRegist
 
 export const ANSICHTEN_PFAD = 'data/ansichten.csv';
 
+// AUFTRAG C2 (Restpunkt aus C1): was mit anbieten=nein weggelassen wurde -
+// app.js zeigt bei einem direkten Link darauf den Hinweisbalken (wie bei
+// ausgeblendeten Ansichten, B2) statt stillschweigend die Galerie.
+const nichtAngeboten = { bereiche: new Set(), ansichten: new Set() };
+export function istNichtAngeboten(bereichId, ansichtId = null) {
+  return ansichtId ? nichtAngeboten.ansichten.has(`${bereichId}/${ansichtId}`) : nichtAngeboten.bereiche.has(bereichId);
+}
+export const NICHT_ANGEBOTEN_TEXTE = {
+  ansicht: 'Diese Ansicht wird in diesem Interface nicht angeboten (Einstellung „anbieten“ in ansichten.csv).',
+  bereich: 'Dieser Bereich wird in diesem Interface nicht angeboten (Einstellung „anbieten“ in ansichten.csv).'
+};
+
 export function ladeAnsichtenKonfiguration() {
   return ladeGecachteCSV(ANSICHTEN_PFAD).catch(() => []);
 }
@@ -82,7 +94,10 @@ export function wendeAnsichtenKonfigurationAn(zeilen) {
       ansicht.beschreibung = beschreibung;
     }
     reihenfolgeAnsicht.set(ansicht, alsText(zeile.reihenfolge));
-    if (!anbieten) nichtAnbieten.add(ansicht);
+    if (!anbieten) {
+      nichtAnbieten.add(ansicht);
+      nichtAngeboten.ansichten.add(`${bereichId}/${ansichtId}`);
+    }
   });
 
   bereiche.forEach((bereich) => {
@@ -94,6 +109,7 @@ export function wendeAnsichtenKonfigurationAn(zeilen) {
     }
   });
   const behalteneTypen = ARCHIVALIENTYPEN.filter((typ) => !nichtAnbieten.has(typ) && typ.ansichten.length > 0);
+  ARCHIVALIENTYPEN.filter((typ) => !behalteneTypen.includes(typ)).forEach((typ) => nichtAngeboten.bereiche.add(typ.typ));
   ARCHIVALIENTYPEN.splice(0, ARCHIVALIENTYPEN.length, ...behalteneTypen);
   sortiereAnOrt(ARCHIVALIENTYPEN, (typ) => reihenfolgeBereich.get(typ) ?? '');
 }

@@ -271,7 +271,7 @@
 // wurden ausschließlich für die jetzt entfernte Sidebar-Anzeige befüllt,
 // nirgends sonst gelesen (siehe CHANGELOG).
 
-import { CAT_COLORS } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ersteKategorie, ermittleKategorienSortiertNachHaeufigkeit } from '../utils/urkundenZeit.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
@@ -331,7 +331,7 @@ const TITEL_TEXT = 'Kategorie → Ort';
 let instanz = null; // { container, records, options, auswahl, hover } – ein aktives Sankey-Diagramm pro Modul-Ladung
 
 function farbeFuerKategorie(kategorie) {
-  return CAT_COLORS[kategorie] || CAT_COLORS.default;
+  return farbeFuerUrkundenKategorie(kategorie);
 }
 
 // Pro Urkunde ein SET von Ort-"Buckets" (echter Ortsname, falls nicht in

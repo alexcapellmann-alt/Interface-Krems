@@ -418,7 +418,7 @@ Konkrete Spaltenlisten pro Archivalientyp werden in `docs/SCHEMA.md` gepflegt.
 - Längere blockierende Hauptthread-Berechnungen sind nach Möglichkeit zu vermeiden – dies ist ein Entwicklungsziel, keine technisch hart garantierbare Eigenschaft (die tatsächliche Dauer hängt von Gerät, Browser und Datenmenge ab). D3-Force-Simulationen (Personennetzwerk) werden schrittweise über `requestAnimationFrame` statt in einem Rutsch berechnet; bei großen Netzwerken kann eine niedrigere Start-Alpha (`simulation.alpha(0.3)` statt Standardwert) helfen, die Berechnung spürbar zu entzerren.
 - Icicle-Diagramm immer vertikal.
 - Tooltips immer mit Rand-Clamping.
-- Farben ausschließlich aus `CAT_COLORS`.
+- Farben ausschließlich aus `CAT_COLORS`. Seit Auftrag C2 (2026-10-07) für Urkundenkategorien über `js/utils/urkundenKategorieFarben.js`: feste Farbe aus `CAT_COLORS`, für Kategorien eines anderen Archivs eine automatische, deterministische Farbe aus einer festen 24er-Palette (Kontrast geprüft, siehe `docs/SCHEMA.md` Abschnitt 14).
 - Lazy Loading: Visualisierungscode und -daten erst bei erstmaligem Aufruf laden. (Abweichung für die Hintergrund-Prüfung der Datenverfügbarkeit seit Auftrag B2, siehe Abschnitt 2.)
 
 ### Regressionsschutz

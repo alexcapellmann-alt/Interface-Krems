@@ -14,6 +14,26 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-10-07 – Kategorie „Bevölkerung“ wiederhergestellt (Auftrag C2, Entscheidung des Autors)
+
+**Quelle:** CHANGELOG Eintrag 9 (2026-09-07): Die Kategorie „Bevölkerung und
+Bevölkerungsgruppen“ wurde auf Anweisung zu „Bevölkerung“ gekürzt (Daten und
+Farbtabelle). Die Daten waren seit dem ersten Commit des Repositorys
+(`243aae6`, 2026-09-22) wieder auf dem langen Namen - vermutlich ein Rückfall
+beim Umzug aus dem früheren Ordner. Die Farbtabelle trug weiter
+„Bevölkerung“, die 100 Urkunden erschienen dadurch grau.
+
+**Geändert** (nur ganze Listenwerte, Trennzeichen `|` beachtet, keine
+Teilstring-Ersetzung; per CSV-Parser nachgewiesen, dass sich nur die
+Zielspalte geändert hat, `git diff` belegt):
+- `data/urkunden.csv`, Spalte `kategorien`: **100 Zeilen**.
+- `data/bestandsverzeichnis.csv`, Spalte `bkk_kategorie`: **29 Zeilen**.
+
+Werkzeug: `Pruefung_2026-10-03/tools/pC2_bevoelkerung.py`. Übrige Dateien in
+`data/` (inkl. `fuehrungen.csv`) enthalten den langen Namen nicht.
+**Taucht „Bevölkerung und Bevölkerungsgruppen“ bei einem Import wieder auf,
+ist das ein erneuter Rückfall.**
+
 ### 2026-09-30 – Verlorene Zeichen in Regesten/Orten repariert, Personen-/Ortsliste bereinigt, Fotos für vier UrkSt-Urkunden ergänzt (Auftrag "Datenkorrekturen und Fotos der UrkSt-Urkunden")
 
 **Ursache der beschädigten Zeichen:** vermutlich Speichern einer UTF-8-
@@ -178,6 +198,171 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   (296) stimmte schon VOR der Entfernung nicht mit einer Neuberechnung aus
   `urkunden.csv` überein (298, Abweichung 2) und wird deshalb laut Auftrag
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
+
+---
+
+## 2026-10-07 (61) – Auftrag C2: automatische Kategorienfarben, Restpunkte aus C1, Kategorie „Bevölkerung“
+
+**Kontext:** Auftrag C, Teil C2, gemäß Freigabe von Phase 1 (Eintrag 59).
+- C1 ist als `741187a` committet; das ist der Vorher-Stand.
+- Prüfumfang laut Vorgabe des Autors:
+  - Referenzlauf;
+  - Farb- und Pixelvergleich der Ansichten mit Kategorienfarben;
+  - Zweitarchiv-Test;
+  - Farbtabelle mit Kontrastprüfung per Skript;
+  - Reihenfolge- und Kollisionstest;
+  - axe nur für Ansichten mit geänderten Farben;
+  - keine Matrix, keine Zeitmessung, keine Geschwindigkeitsprobe.
+- Rohdaten: `Pruefung_2026-10-03/Nachher_C/C2/`.
+
+### Neuer Fund während der Umsetzung und Entscheidung
+- **Fund:** Die Phase-1-Freigabe sah vor, den Farbschlüssel „Bevölkerung“
+  auf den langen Namen umzustellen. Beim Umsetzen fiel CHANGELOG 9
+  (2026-09-07) auf: Die Kürzung auf „Bevölkerung“ war damals eine bewusste
+  Entscheidung; die Daten waren nur zurückgefallen.
+- **Entscheidung des Autors:** Möglichkeit 2.
+  - Die Farbtabelle bleibt unverändert („Bevölkerung“).
+  - Die Daten werden zurückgestellt: 100 Zeilen `urkunden.csv`, 29 Zeilen
+    `bestandsverzeichnis.csv` (siehe „Datenkorrekturen“ oben).
+- **Abweichung von „Krems-Anzeige unverändert“:**
+  - Die 100 Urkunden der Kategorie „Bevölkerung“ erscheinen in `#952323`
+    statt grau.
+  - Alle Beschriftungen heißen „Bevölkerung“ statt „Bevölkerung und
+    Bevölkerungsgruppen“.
+  - Das betrifft auch Treemap, Sunburst, Icicle, Circle Packing und Gantt;
+    deren Farben bleiben unverändert.
+
+### Zusatzprüfung (nur lesen): frühere Datenänderungen gegen den aktuellen Stand
+- Alle vor dem 2026-09-22 protokollierten Datenänderungen in CHANGELOG und
+  PROJEKTLOG wurden mit den aktuellen CSV-Dateien verglichen: 47 Kandidaten,
+  davon 10 Einträge mit konkreten Datenänderungen.
+- Tabelle: `Nachher_C/C2/datenabgleich_vor_2026-09-22.md`.
+- **Drei weitere Rückfälle** (gemeldet, **nicht geändert**, Freigabe offen):
+  - `urkunden.csv` `StaAKr-0566b`: Die `unsicherheit_anmerkung` aus
+    CHANGELOG 2 fehlt.
+  - `familien.csv` `joseph_ii`: Die `unsicherheit_anmerkung` aus CHANGELOG 26
+    fehlt.
+  - `orte.csv` `bogget_belgien`: Die Koordinaten aus CHANGELOG 62 fehlen.
+- **Durch spätere Einträge erklärt:**
+  - `personenliste.csv` hat 4176 statt 4179 Zeilen und 66 statt 68
+    Inventar-Zeilen: PROJEKTLOG 43, Zusammenführung von zwei Zweitinventaren.
+  - Vier Personen-IDs ohne Zusatz: vor Beginn des Repositorys umbenannt,
+    Verweise stimmig.
+
+### Umsetzung
+- **`js/utils/urkundenKategorieFarben.js` (neu):**
+  - Feste Farbe aus `CAT_COLORS`, sonst eine automatische Farbe aus einer
+    festen 24er-Palette.
+  - Die Palette ist per Skript hergeleitet (`tools/pC2_palette.mjs`):
+    Kontrast ≥ 3:1 gegen `#f7f5f0`, ≥ 4,5:1 mit weißer Beschriftung,
+    Abstand zu jeder festen Farbe ΔE ≥ 21.
+  - Der Platz ergibt sich aus der Prüfsumme FNV-1a des Namens, Rest
+    durch 24.
+  - Kollision: Die alphabetisch spätere Kategorie rückt in Schritten von 7
+    weiter. Die erste Ausweichfarbe hat damit mindestens ΔE 20,4 Abstand;
+    beim direkten Nachbarn wären es nur 11,5. Die Schrittweite wurde nach
+    dem ersten Kollisionstest angepasst.
+  - Die Vergabe läuft über alle Kategorien von `urkunden.csv`, alphabetisch
+    sortiert. Damit ist sie unabhängig von der Zeilenreihenfolge.
+  - Namen, die nicht in den Daten stehen (z. B. „(ohne Kategorie)“,
+    „Andere Kategorien“), bleiben grau wie bisher.
+  - Filter und Legenden zeigen nur Kategorien, die in den Daten vorkommen.
+- **`app.js` (`ladeArchivalienDaten()`):**
+  - Sobald `urkunden.csv` zu den Bereichsdaten gehört, vergibt die Funktion
+    die Farben vor dem Zeichnen. Alle Ansichten und die Sidebar nutzen so
+    dieselbe Zuordnung.
+  - Das Modul kommt per `import()` gleichzeitig mit den Daten. Der Startgraph
+    ist unverändert: 25 Module, 3 Ebenen.
+- **Umgestellt** (Aufruf `farbeFuerUrkundenKategorie()` statt
+  `CAT_COLORS[k] || CAT_COLORS.default`): `sidebar.js`, `alluvial.js`,
+  `horizonChart.js`, `kalenderHeatmap.js`, `marimekko.js`,
+  `regestenKachelraster.js`, `ridgeline.js`, `sankey.js`, `swimlanes.js`,
+  `zeitachse.js`.
+  - Kategorienlisten in Regesten-Kachelraster und Zeitachse kommen jetzt aus
+    den Daten.
+  - In der Zeitachse wird die Anzahl bei Bedarf ermittelt statt beim Laden
+    des Moduls.
+  - Nicht mehr benötigte `CAT_COLORS`-Importe entfernt.
+  - Bewusst neutrales Grau (`CAT_COLORS.default` in Wortwolke, Adjazenzmatrix,
+    Arc-Diagramm, Bubble Chart) bleibt unverändert.
+- **Restpunkt Favicon:**
+  - `index.html` enthält ein leeres Ersatz-Favicon (`data:,`), das `app.js`
+    entfernt, sobald `archiv.csv` ein Favicon nennt.
+  - Ein erster Versuch, den Ersatz erst per Skript zu setzen, wirkte nicht:
+    Der Browser fragt `favicon.ico` beim Laden ab, also vor dem Lesen von
+    `archiv.csv`.
+  - Krems: Die Favicon-Links sind nach dem Laden identisch. Auch Krems hatte
+    in einem frischen Browser vorher eine `favicon.ico`-404-Anfrage, jetzt
+    keine mehr.
+- **Restpunkt `anbieten=nein`:**
+  - `ansichtenKonfiguration.js` merkt sich weggelassene Ansichten und
+    Bereiche.
+  - Ein direkter Link zeigt den Hinweisbalken: „Diese Ansicht wird in diesem
+    Interface nicht angeboten (Einstellung „anbieten“ in ansichten.csv).“
+    Bei der Ansicht steht er über der Galerie, beim Bereich auf der
+    Bereichswahl.
+- **`constants.js`:** unverändert (Schlüssel „Bevölkerung“, Entscheidung des
+  Autors).
+
+### Verifikation
+- **Referenzlauf (abschließend, 1 Browser, 265 s):**
+  - 47 Ansichten: 36 textgleich mit C1, 11 nur mit der Umbenennung
+    „Bevölkerung“, 0 Fehler.
+  - Ein früherer Lauf mit 2 Browsern hatte beim Icicle `ERR_NO_BUFFER_SPACE`.
+    Einzeln wiederholt: nur die Umbenennung, 0 Fehler. Deshalb läuft der
+    Referenzlauf jetzt mit 1 Browser.
+- **Farbvergleich C1 ↔ C2** (Anzahl Elemente je Farbe, `farbvergleich.txt`):
+  - Einzige Änderung ist `#888888` → `#952323`: Zeitachse 100, Swimlanes 30,
+    Ridgeline 2, Horizon Chart 114, Marimekko 6, Alluvial 7, Sankey 10.
+  - In der Zeitachse wechselt bei denselben 100 Punkten die Konturfarbe von
+    `#1a1a1a` auf `#ffffff`, automatisch passend zur dunkleren Füllung.
+  - Ohne Farbänderung: Regesten (erste Seite), Kalender, Dot Plot und alle
+    fünf Bestandsansichten.
+- **Pixelvergleich** (`pixeldiff.txt`, Screenshots und Vergleichsseite
+  `Nachher_C/C2/farbvergleich/vergleich.html`):
+  - Regesten und Kalender: 0 Pixel.
+  - Bestand und Dot Plot: nur schmale Beschriftungsstreifen, beim Gantt die
+    Legendenzeile (kürzerer Name).
+  - Kategorienansichten: 0,4–7,9 % der Fläche.
+- **Zweitarchiv-Test** (47 Ansichten, 1 Browser, 260 s):
+  - Code, CSS und `index.html` per `diff` identisch mit dem Arbeitsbaum; 0
+    Fehler, keine Reste des Erstarchivs, kein Favicon-404.
+  - Kategorien automatisch gefärbt: Gemeinde `#216cb8` (Platz 11),
+    Grundherrschaft `#1b5252` (5), Pfarre `#9c5c1c` (13), kein Grau.
+  - Graue Elemente nur dort, wo gewollt: Sankey bündelt Kategorien unter 10
+    Urkunden zu „Andere Kategorien“; im Alluvial sind die
+    Jahrhundert-Knoten grau.
+- **Eingriffe außerhalb der CSV-Dateien: 9 → 0.**
+- **Farbtabelle** (`farbtabelle.md`):
+  - 0 Verletzungen der Grenzen 3:1 / 4,5:1 bei den automatischen Farben und
+    der ganzen Palette.
+  - Fünf feste Krems-Farben erreichen 3:1 gegen den Hintergrund nicht (z. B.
+    `#cbda62` 1,40:1). Sie bleiben laut Entscheidung des Autors.
+- **Reihenfolgetest:** 50 gemischte Reihenfolgen je Archiv, Zuordnung 50/50
+  identisch.
+- **Kollision:** „Testkategorie 1“ und „Testkategorie 12“ haben beide
+  Ausgangsplatz 7.
+  - Bei beiden Reihenfolgen: 1 → Platz 7 `#d02525`, 12 → Platz 14 `#6f6f25`.
+  - Ist nur „Testkategorie 12“ vorhanden, bekommt sie Platz 7. Das ist die
+    dokumentierte Grenze.
+- **axe** (`axe.txt`; 15 Ansichtspaare, Krems C1↔C2 und Zweitarchiv
+  C1↔C2): keine neue Regel, keine zusätzlichen Knoten.
+- **Restpunkte** (`pruefungen.txt`):
+  - Favicon: Krems-Links identisch, 0 × 404 in Krems und im Zweitarchiv.
+  - `anbieten=nein`, Ansicht und Bereich (Bereich temporär getestet,
+    Rückbau identisch): Balken wie beschrieben.
+
+### Scope-Meldungen
+- **Drei weitere Daten-Rückfälle** (siehe oben): Freigabe des Autors für
+  eine Korrektur offen.
+- **`ERR_NO_BUFFER_SPACE`** trat auch mit 2 parallelen Browsern auf. Für
+  Funktionsläufe ist 1 Browser zu empfehlen; das kostet etwa 1,5-mal so
+  viel Laufzeit.
+- **Fünf feste Krems-Farben** unter 3:1 gegen den Hintergrund: unverändert
+  laut Entscheidung, hier nur festgehalten.
+- **Keine Funktionsaufteilung** (Punkt F).
+
+Kein Commit durch Claude Code.
 
 ---
 

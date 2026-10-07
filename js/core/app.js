@@ -148,7 +148,7 @@ import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegist
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
 import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke, ersetzePlatzhalterImText } from './archivKonfiguration.js';
-import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn } from './ansichtenKonfiguration.js';
+import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn, istNichtAngeboten, NICHT_ANGEBOTEN_TEXTE } from './ansichtenKonfiguration.js';
 import { erzeugeUeberSeite } from './ueberSeite.js';
 import { erzeugeLiteraturSeite } from './literaturSeite.js';
 
@@ -265,12 +265,30 @@ function zeigeSeitenPruefung(container, pruefung, entferneModul) {
 // ganze Laden ab (bisher Absturz der Ansicht) - die fehlende Quelle wird als
 // leere Liste weitergegeben, pruefeAnsicht() meldet sie im Hinweisbalken bzw.
 // sperrt die Ansicht, wenn es eine ihrer Hauptdateien ist.
+// AUFTRAG C2: Sobald urkunden.csv zu den Daten gehört, werden die Farben
+// unbekannter Kategorien aus der GESAMTEN Datei vergeben (unabhängig von der
+// Zeilenreihenfolge), bevor eine Ansicht zeichnet - so nutzen alle Ansichten
+// und die Sidebar dieselbe Zuordnung. Das Farbmodul kommt per import()
+// gleichzeitig mit den Daten (nicht im Startgraphen, kein zusätzlicher Schritt).
+const URKUNDEN_DATEI = 'data/urkunden.csv';
+
 async function ladeArchivalienDaten(datenDatei) {
-  if (typeof datenDatei === 'string') return ladeGecachteCSV(datenDatei);
+  const mitUrkunden = typeof datenDatei === 'string' ? datenDatei === URKUNDEN_DATEI : Object.values(datenDatei).includes(URKUNDEN_DATEI);
+  const farbModul = mitUrkunden ? import('../utils/urkundenKategorieFarben.js') : null;
+  if (typeof datenDatei === 'string') {
+    const records = await ladeGecachteCSV(datenDatei);
+    if (farbModul) (await farbModul).vergibKategorieFarben(records);
+    return records;
+  }
   const eintraege = await Promise.all(
     Object.entries(datenDatei).map(async ([schluessel, pfad]) => [schluessel, await ladeGecachteCSV(pfad).catch(() => [])])
   );
-  return Object.fromEntries(eintraege);
+  const ergebnis = Object.fromEntries(eintraege);
+  if (farbModul) {
+    const urkundenSchluessel = Object.keys(datenDatei).find((k) => datenDatei[k] === URKUNDEN_DATEI);
+    (await farbModul).vergibKategorieFarben(ergebnis[urkundenSchluessel] || []);
+  }
+  return ergebnis;
 }
 
 function aktualisiereNavHervorhebung(tab) {
@@ -405,6 +423,12 @@ async function renderVisualisierungenTab() {
 
   if (!archivalientyp) {
     const hinweisContainer = erzeugeUnterContainer('visualisierungen-hinweis-bereich');
+    // AUFTRAG C2 (Restpunkt aus C1): direkter Link auf einen Bereich mit anbieten=nein
+    if (route.segmente[0] && istNichtAngeboten(route.segmente[0])) {
+      const pm = await ladePruefModul();
+      if (meineGeneration !== generation) return;
+      hinweisContainer.appendChild(pm.erzeugeHinweisBalken([NICHT_ANGEBOTEN_TEXTE.bereich]));
+    }
     const hinweis = document.createElement('p');
     hinweis.className = 'visualisierungen-hinweis';
     hinweis.textContent = 'Bitte oben einen Bereich wählen.';
@@ -728,9 +752,19 @@ async function wechsleZuAnsicht(kontext, eintrag) {
 // oder eine bestimmte aktive Visualisierung) gezeigt wird.
 async function aktualisiereGalerieFlyoutAnsicht(kontext) {
   const route = aktuelleRoute();
-  const eintrag = kontext.bereich.ansichten.find((a) => a.id === kontext.ermittleAnsichtId(route));
+  const ansichtId = kontext.ermittleAnsichtId(route);
+  const eintrag = kontext.bereich.ansichten.find((a) => a.id === ansichtId);
   if (!eintrag) {
     zeigeGalerie(kontext);
+    // AUFTRAG C2 (Restpunkt aus C1): direkter Link auf eine Ansicht mit
+    // anbieten=nein - Hinweisbalken über der Galerie statt stillschweigend.
+    if (ansichtId && istNichtAngeboten(kontext.typ ?? 'bestand', ansichtId)) {
+      const pm = await ladePruefModul();
+      const container = kontext.galerieContainer;
+      if (aktuellerKontext === kontext && container && !container.querySelector('.hinweis-balken')) {
+        container.prepend(pm.erzeugeHinweisBalken([NICHT_ANGEBOTEN_TEXTE.ansicht]));
+      }
+    }
     return;
   }
   stelleVizFlyoutSicher(kontext);
@@ -1168,6 +1202,13 @@ function wendeFaviconAn() {
     link.href = `data/${datei}`;
     document.head.appendChild(link);
   });
+  // AUFTRAG C2 (Restpunkt aus C1): index.html enthält ein leeres Ersatz-Favicon
+  // (#app-favicon-leer), damit der Browser beim Laden nicht von sich aus
+  // /favicon.ico anfragt (404 in der Konsole, wenn das Archiv kein Favicon
+  // hat). Nennt archiv.csv ein Favicon (Krems), wird der Ersatz entfernt.
+  if (konfigurationswert('favicon_datei') || konfigurationswert('favicon_png_datei')) {
+    document.getElementById('app-favicon-leer')?.remove();
+  }
 }
 
 // Punkt 2.1, Ausfallverhalten "ueber.csv fehlt": Navigationspunkt "Über"

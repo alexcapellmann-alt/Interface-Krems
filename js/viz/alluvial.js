@@ -13,7 +13,7 @@
 // Knoten (Abschnitt 12: nie stillschweigend ausblenden), siehe
 // gruppiereNachJahrhundertUndKategorie().
 
-import { CAT_COLORS } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ermittleKategorienSortiertNachHaeufigkeit, gruppiereNachJahrhundertUndKategorie } from '../utils/urkundenZeit.js';
 
@@ -24,7 +24,7 @@ const KNOTEN_ABSTAND = 4;
 let instanz = null; // { container, records, options } – ein aktives Alluvial-Diagramm pro Modul-Ladung
 
 function farbeFuerKategorie(kategorie) {
-  return CAT_COLORS[kategorie] || CAT_COLORS.default;
+  return farbeFuerUrkundenKategorie(kategorie);
 }
 
 function baueRibbonPfad(x0, x1, y0Top, y0Bottom, y1Top, y1Bottom) {
