@@ -14,6 +14,24 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-10-07 – Zwei protokollierte Korrekturen wiederhergestellt (Auftrag D, Teil 0, Freigabe des Autors)
+
+**Hintergrund:** Der Abgleich in Auftrag C2 (`Pruefung_2026-10-03/Nachher_C/C2/datenabgleich_vor_2026-09-22.md`)
+fand drei Korrekturen aus der Zeit vor dem Repository-Beginn, die in den heutigen Daten fehlten
+(vermutlich derselbe Rückfall beim Umzug wie bei „Bevölkerung“). Wiederhergestellt wird nur, was im
+Protokolleintrag wörtlich steht.
+
+| Datei | Zeile | Spalte | vorher | nachher | Quelle |
+|---|---|---|---|---|---|
+| `urkunden.csv` | `StaAKr-0566b` | `unsicherheit_anmerkung` | (leer) | `kategorien: Keine inhaltliche Kategorisierung möglich – Regest beschreibt reine Ausstellungshandlung ohne erkennbaren thematischen Schwerpunkt` | CHANGELOG 2 (2026-09-06) |
+| `orte.csv` | `bogget_belgien` | `lat` | (leer) | `51,1667` | CHANGELOG 62 (2026-09-16) |
+| `orte.csv` | `bogget_belgien` | `lon` | (leer) | `5,5833` | CHANGELOG 62 |
+| `orte.csv` | `bogget_belgien` | `unsicherheit_anmerkung` | `Koordinaten noch nicht ermittelt (Bocholt, belgisch Limburg).` | `(Bocholt, belgisch Limburg).` | CHANGELOG 62 nennt nur die Teilersetzung; Entscheidung des Autors (2026-10-07): nur den Vermerk entfernen |
+
+- **Nicht geändert:** `familien.csv` `joseph_ii` (`unsicherheit_anmerkung`): CHANGELOG 26 nennt keinen Wortlaut – Entscheidung des Autors: unverändert. `orte_unsicher` bei `bogget_belgien` bleibt `ja`.
+- Je Datei genau eine geänderte Zeile (`git diff`), alle übrigen Zellen per CSV-Parser unverändert nachgewiesen (`tools/pD_teil0.py`).
+- **Taucht eine der drei Zellen bei einem Import wieder leer bzw. mit „Koordinaten noch nicht ermittelt“ auf, ist das ein erneuter Rückfall.**
+
 ### 2026-10-07 – Kategorie „Bevölkerung“ wiederhergestellt (Auftrag C2, Entscheidung des Autors)
 
 **Quelle:** CHANGELOG Eintrag 9 (2026-09-07): Die Kategorie „Bevölkerung und
@@ -198,6 +216,54 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   (296) stimmte schon VOR der Entfernung nicht mit einer Neuberechnung aus
   `urkunden.csv` überein (298, Abweichung 2) und wird deshalb laut Auftrag
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
+
+---
+
+## 2026-10-07 (62) – Auftrag D: Datenrückfälle (Teil 0), Barrierefreiheit, Dokumentationsabgleich (Punkt G)
+
+**Kontext:** Phase 1 (Vorschlag: `Pruefung_2026-10-03/Nachher_D/phase1/VORSCHLAG_PHASE1.md`) vom Autor
+freigegeben, als ein Auftrag ohne Teilung. Reihenfolge: Teil 0, Punkt 1 und 2, Punkt 4 und 5, Punkt 3,
+Punkt 6. Vorher-Stand ist `ca00d0a` (C2). Rohdaten: `Pruefung_2026-10-03/Nachher_D/`.
+
+### Messumstellung (Prüfwerkzeug, außerhalb des Repositorys)
+- Der erste Referenzlauf nach Teil 0 war trotz nur einem Browser gestört (`ERR_NO_BUFFER_SPACE`
+  beim Familienbaum). Vor dem Lauf gab es 7, nach dem Lauf 1 014 TIME_WAIT-Verbindungen, 958 davon
+  zum Prüfserver. Der Lauf wurde abgebrochen, seine Zahlen werden nicht verwendet
+  (`Nachher_D/laufprotokoll.txt`).
+- **Ursache:** Der Prüf-Wrapper sprach HTTP/1.0, also eine neue Verbindung je Anfrage.
+- **Freigabe des Autors:** `tools/server_pruefung.py` spricht jetzt HTTP/1.1 (Verbindungen werden
+  wiederverwendet).
+  - `nocache_server.py` und `Cache-Control: no-store` bleiben unverändert.
+  - Der alte Wrapper liegt als `tools/server_pruefung_http10.py` vor, für die Zeitmessung gegen B1.
+- **Nachweis:** Ein Referenzlauf mit dem C2-Stand und dem neuen Wrapper gegen den C2-Referenzlauf
+  mit dem alten Wrapper ergab:
+  - Text: 47/47 identisch, 0 Fehler, 0 × `ERR_NO_BUFFER_SPACE`, 188 statt rund 1 000 TIME_WAIT.
+  - Pixel: 43/47 identisch.
+  - Die vier übrigen (Karte, Verbindungskarte, Bipartite Flow Map, Zeitachse) schwanken bei gleichem
+    Wrapper von Lauf zu Lauf genauso stark oder stärker (6–71 %, `wrapper_vergleich_rauschen.txt`).
+- **Laufregel:** Vor jedem Lauf wird gewartet, bis weniger als 100 TIME_WAIT-Verbindungen bestehen;
+  die Zahl wird protokolliert.
+
+### Teil 0 – Datenrückfälle
+Siehe „Datenkorrekturen“ oben (Eintrag vom 2026-10-07, Auftrag D).
+
+**Sichtbare Wirkung, einzeln geprüft** (`Nachher_D/teil0/`; vorher = C2-Daten, nachher =
+Teil-0-Daten, gleicher Code und Wrapper):
+- **Referenzlauf (47 Ansichten, Ausgangszustand):** Text 47/47 unverändert. Die Wirkungen zeigen sich
+  erst nach Interaktion.
+- **`StaAKr-0566b`, Regesten-Kachelraster:**
+  - Im Unsicherheiten-Modus trägt die Kachel jetzt **σ** und die Zeile „Unsicher: kategorien: Keine
+    inhaltliche Kategorisierung möglich – …“ (Screenshots `kachel_StaAKr-0566b_unsicher_*.png`).
+  - Der Unsicherheiten-Filter findet 190 statt 189 Urkunden.
+  - Im Normalmodus ist die Kachel unverändert.
+- **`bogget_belgien`:**
+  - Karte: 234 statt 233 Ortspunkte.
+  - Karte im Unsicherheiten-Modus: 64 statt 63 Punkte; „Völlig unklare Orte“ 22 statt 23.
+  - Bipartite Flow Map: 234 statt 233 Knoten, neuer Knoten „Ort Bógget, Belgien“.
+  - Verbindungskarte: keine neue Linie (die einzige Urkunde mit Bógget nennt keinen weiteren Ort).
+  - Kartenausschnitt unverändert.
+
+*(Die folgenden Punkte werden nach Freigabe des Messverfahrens ergänzt.)*
 
 ---
 
