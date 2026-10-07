@@ -181,6 +181,218 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-07 (60) – Auftrag C1: Archivspezifisches aus dem Code in die Daten
+
+**Kontext:** Auftrag C, Teil C1, gemäß Freigabe von Phase 1 (Eintrag 59).
+- C3 ist als `ca4657a` committet; das ist der Vorher-Stand.
+- Prüfumfang laut Vorgabe des Autors (risikoproportional):
+  - Referenzlauf nach jedem Teilschritt;
+  - erweiterter Zweitarchiv-Test;
+  - gezielte Varianten nur für die neuen Dateien;
+  - grep auf Krems-Konstanten;
+  - keine gedrosselte Zeitmessung (folgt einmalig nach dem letzten Auftrag);
+  - keine Geschwindigkeitsprobe.
+- Rohdaten liegen in `Pruefung_2026-10-03/Nachher_C/C1/`.
+
+### Teilschritt 1 – Punkt 5 (Kartenstartpunkt, Seitentitel, Wortmarke) und Punkt 9 (ratsprotokolle.csv)
+- **`archivKonfiguration.js`:**
+  - Die Ersatzwerte der Karte sind leer statt 48.42/15.6.
+  - Neue Funktion `kartenStartpunkt()`: Ein leerer Wert gilt als fehlend,
+    nicht als 0.
+- **`karte.js`:** Ohne Startpunkt zeigt die Karte den Ausschnitt aller Orte
+  aus `orte.csv` (`setzeStartansicht()`), ohne Orte eine Weltübersicht.
+- **`statischeKarte.js`:** Ohne Orte und ohne Startpunkt eine Weltübersicht.
+- **`app.js` (`wendeArchivIdentitaetAn()`) und `layout.css`:** Ohne
+  `logo_datei` steht `archiv_kurzname` als Text an der Logo-Stelle
+  (`.app-logo-text`).
+  - Die CSS-Kommentare zur Krems-Wortmarke (`layout.css`, `startseite.css`)
+    sind neutral formuliert.
+- **Seitentitel:** `index.html` trägt schon den neutralen Vorgabewert
+  „Archiv-Interface“; danach greift wie bisher `seitentitel`. Keine Änderung
+  nötig.
+- **`data/ratsprotokolle.csv` gelöscht.**
+  - SCHEMA: Abschnitt 2 als „(entfallen)“ ohne Dateinamen (die Nummerierung
+    bleibt, damit Verweise gültig bleiben), B2-Ausnahmesatz und offene Punkte
+    bereinigt.
+  - Masterprompt 4.4: Zeile im Dateibaum entfernt.
+  - Code: keine Verwendung.
+  - Prüfwerkzeuge außerhalb des Repos (`p4_zweitarchiv.py`) angepasst.
+- **Referenz t1:** 47/47 textgleich mit C3, 0 Fehler (111 s).
+
+### Teilschritt 2 – Punkt 1 (Urkundenzahl) und Punkt 2 (ansichten.csv)
+- **`data/ansichten.csv`** (38 Zeilen):
+  - Erzeugt aus der Registry von C3 (`tools/pC1_ansichten_csv.mjs`): exakt die
+    bisherigen Namen und Beschreibungen.
+  - Einzige Änderung: „1.069“ → `{n_urkunden_punkt}`.
+- **`js/core/ansichtenKonfiguration.js` (neu):**
+  - `wendeAnsichtenKonfigurationAn()` passt die Registry-Einträge an Ort und
+    Stelle an: Name, Beschreibung, Reihenfolge, `anbieten`.
+  - Unbekannte Bereiche/Ansichten übergeht sie mit einer Konsolen-Warnung.
+  - Fehlt die Spalte `bereich`, ignoriert sie die Datei.
+- **`app.js`:**
+  - Lädt `ansichten.csv` per `Promise.all` gleichzeitig mit `archiv.csv`.
+  - **Startgraph:** 25 Module (+1, auf derselben Ebene wie die übrigen
+    Importe von `app.js`), weiterhin 3 Ebenen; kein zusätzlicher sequentieller
+    Ladeschritt.
+  - **Galerie:** Beschreibungen mit Platzhaltern bleiben zuerst leer und werden
+    nachgetragen. So erscheint nie eine rohe oder falsche Zahl.
+- **`archivKonfiguration.js`:**
+  - Zählwerte zusätzlich mit Tausenderpunkt (`{n_…_punkt}`).
+  - `ersetzePlatzhalterImText()` lädt nur die nötigen Dateien. Ist ein
+    Platzhalter nicht auflösbar, gilt die neutrale Standardbeschreibung.
+- **Registry:** neutrale Vorgaben („aller Urkunden“, „Zeitleisten-Stammbaum
+  einer Herrscherfamilie“).
+- **B2-Mechanismus:** neue Gruppe `optional` in `datenAnforderungen.js`/
+  `datenVerfuegbarkeit.js`. Fehlt `ansichten.csv` oder ist sie leer, gibt es
+  keinen Hinweis; ist sie unbrauchbar, zeigt die Startseite einen Balken.
+- **Referenz t2:** 46/47 textgleich.
+  - Einzige Abweichung ist die gewollte: „aller 1.069 Urkunden“ → „aller
+    1.067 Urkunden“ (Entscheidung des Autors: tatsächliche Zahl).
+  - Im Lauf trat zweimal `ERR_NO_BUFFER_SPACE` auf (3 Browser). Einzeln
+    wiederholt war beides textgleich und fehlerfrei.
+  - Der Referenzlauf läuft seitdem mit 2 Browsern (`PRUEF_PARALLEL`).
+
+### Teilschritt 3 – Punkt 3 (Habsburg) und Punkt 4 (rollen.csv, Regest-Zitierformat)
+- **`archiv.csv`:** neue Schlüssel `dynastie_familien`, `dynastie_name`,
+  `dynastie_gruppenname`, `regest_quellenvermerk`.
+  - Listen mit `|`; neue Funktion `konfigurationsliste()`.
+  - **Abweichung vom Phase-1-Vorschlag:** ein zusätzlicher Schlüssel
+    `dynastie_gruppenname`, weil der Chord-Gruppenname die Form „Habsburger“
+    braucht, die Stammbaum-Texte „Habsburg“. Mit nur einem Schlüssel hätte
+    sich der Krems-Text geändert.
+- **`familienbaum.js`:**
+  - Herrscherfamilie und Name kommen aus `archiv.csv`.
+  - Die Farbabstufung der Zweige folgt der Reihenfolge der Liste (Krems
+    identisch).
+  - Texte: Legende, Leerhinweis, `aria-label`, `<desc>`.
+- **Merkmal (`datenAnforderungen.js`, `datenVerfuegbarkeit.js`):**
+  - Der Stammbaum wird nur angeboten, wenn eine Person in `familien.csv` zu
+    `dynastie_familien` gehört; sonst ausgeblendet.
+  - Ein direkter Link zeigt den B2-Balken.
+- **`data/rollen.csv`** (98 Zeilen): erzeugt aus den bisherigen Listen
+  (`tools/pC1_rollen_csv.mjs`).
+  - **`chordDiagramm.js`:** `uebernehmeRollen()`; der Gruppenname „Dynastie“
+    kommt als Getter aus `archiv.csv`. Die Flow Map nutzt dieselbe Funktion.
+  - **`personenliste.js`:** liest die Titelwörter (`namenszusatz`) aus
+    `rollen.csv`.
+  - Die Datei kommt über die Bereichsdaten (`datenDatei.rollen` bei Personen
+    und Orte), weil die Render-Funktionen synchron sind. Das ist das
+    bestehende Muster für mehrere Dateien.
+  - Fehlt sie, werden Chord und Flow Map ausgeblendet (Freigabe Punkt 5).
+- **`wortwolke.js`:** Der Quellenvermerk kommt aus `regest_quellenvermerk`.
+  Die neue Regel liefert auf allen 1 069 Zeilen von `urkunden.csv` dasselbe
+  Ergebnis wie die alte.
+- **Referenz t3:** 46/47 textgleich, dieselbe gewollte Abweichung, 0 Fehler
+  (150 s).
+- **Detailvergleich C3 ↔ C1** (`tools/pC1_detail.mjs`, `detail_t3.txt`):
+  identisch in 11 Ansichten.
+  - Erfasst: `aria-label`, `title`/`desc`, SVG-Texte, Füll- und Strichfarben,
+    Kartenkacheln (Ausschnitt), Markerpfade, erste 100 Zeilen der
+    Personenliste.
+  - Geprüft: Familienbaum, Chord, Flow Map, Wortwolke, Personenliste, Karte,
+    Verbindungskarte, drei Galerien, Startseite.
+
+### Varianten (nur nachher, 1 Browser, `tools/pC1_varianten.mjs`, `varianten.txt`)
+| Fall | Ergebnis | Fehler |
+|---|---|---|
+| `ansichten.csv` fehlt | neutrale Standardnamen/-beschreibungen (z. B. „Zeitleisten-Stammbaum“, „aller Urkunden“), kein Balken | 0 |
+| `ansichten.csv` leer | wie fehlt | 0 |
+| `ansichten.csv` ohne `bereich` | Standardangaben + Balken auf der Startseite: „In ansichten.csv fehlt die Spalte 'bereich'. Es gelten deshalb …“ | 0 |
+| `rollen.csv` fehlt | Chord und Flow Map nicht in den Galerien; direkter Link: „Für diese Ansicht liegen keine Daten vor: Die Datei rollen.csv fehlt.“; Personenliste läuft (100 Zeilen) | 0 |
+| `dynastie_familien` fehlt | Stammbaum nicht in der Galerie; direkter Link: Balken mit Merkmal-Text; Chord läuft | 0 |
+| `regest_quellenvermerk` fehlt | Wortwolke läuft | 0 |
+
+Keine Vorher-Läufe (Ausgangszustand bekannt). Rückbau per `diff -rq` belegt.
+
+### Zweitarchiv-Test (Punkt 6 des Prüfberichts, erweitert)
+- **`p4_zweitarchiv.py` erweitert, nicht neu geschrieben:**
+  - neue `archiv.csv`-Schlüssel (leer);
+  - eigene `ansichten.csv`: Bereich „Urkunden und Akten“, Ansicht
+    „Urkundenliste“ mit `{n_urkunden_punkt}`, Wortwolke `anbieten=nein`,
+    „Orte der Gemeinde“;
+  - eigene `rollen.csv`;
+  - `ratsprotokolle.csv` entfernt.
+- **`p4_test.mjs`:** Ausgabeordner per Umgebung.
+- **Kopie `kopie_C1z`:** Code, `index.html` und CSS sind per `diff`
+  identisch mit dem Arbeitsbaum, also kein Eingriff außerhalb der CSV.
+- **Ergebnis** (47 Ansichten, `Nachher_C/C1/zweitarchiv/`):
+  - keine Reste des Erstarchivs (Krems, Habsburg, 1.069, Körnermarkt …) in
+    Text, Titel und Attributen;
+  - keine Seitenfehler;
+  - „Kurzfassungen aller 5 Urkunden der Gemeinde Musterhausen.“;
+  - Stammbaum mit Balken (`familien.csv` leer);
+  - Wortmarke „Gemeindearchiv Musterhausen“ als Text;
+  - Karte ohne Kartenmitte: Ausschnitt um die Musterhausen-Orte
+    (`zweitarchiv_karte_ohne_zentrum.jpg`).
+- **Konsolenfehler:** nur `favicon.ico` 404 auf 3 Ansichten. Das Zweitarchiv
+  hat bewusst kein Favicon, der Browser fragt dann die Standardadresse an
+  (Scope-Meldung unten).
+
+**Eingriffe außerhalb der CSV-Dateien: 9 → 1.**
+
+| # | Eingriff | Stand |
+|---|---|---|
+| 1 | Kategorienfarben | offen → C2 |
+| 2 | Registry | erledigt (`ansichten.csv`; Leeres blendet B2 aus) |
+| 3 | „1.069 Urkunden“ | erledigt (berechnet) |
+| 4 | Habsburg-Ansichten | erledigt (`archiv.csv` + Merkmal) |
+| 5 | Rollenlisten | erledigt (`rollen.csv`) |
+| 6 | Regest-Zitierformat | erledigt (`archiv.csv`) |
+| 7 | Krems-Ersatzkoordinaten | erledigt (keine mehr im Code) |
+| 8 | Seitentitel | erledigt (war schon neutral, aus `archiv.csv`) |
+| 9 | Wortmarke | erledigt (Kurzname als Text, Kommentare neutral) |
+
+**grep auf die ausgelieferten Dateien** (`Nachher_C/C1/fundstellen_ausgeliefert.txt`):
+- Keine Code-Zeile mit „Krems“, „Körnermarkt“, 48.42/15.6 oder
+  „ratsprotokolle“.
+- `ratsprotokolle.csv` liefert 404 und kommt in SCHEMA und Masterprompt 4.4
+  nicht vor.
+- **Erlaubte Ausnahmen:**
+  - Kommentare: `archivalienRegistry.js:373`, `bipartiteFlowMap.js:313`,
+    `chordDiagramm.js:187`, `familienbaum.js:406, 426`,
+    `vermoegensschichtung.js:4, 49`, `wortwolke.js:12, 13, 15, 56`;
+  - CSS-Kommentare mit dem Repository-Namen „Interface-Krems“:
+    `base.css:4`, `startseite.css:4`;
+  - Archivdaten in `data/*.csv` (Inhalt, kein Code);
+  - historische Einträge in CHANGELOG, PROJEKTLOG und Masterprompt 4.0–4.3;
+  - das Wort „Ratsprotokolle“ als Bestandsname in `bestandsverzeichnis.csv`
+    und `fuehrungen.csv`.
+
+### Punkt 10 – Dokumentation
+- **`docs/SCHEMA.md`:**
+  - Mindestspalten-Tabelle (`rollen.csv`, Merkmal Stammbaum, `ansichten.csv`
+    optional);
+  - „Was passiert, wenn …“ (rollen, Herrscherfamilie, ansichten);
+  - technischer Hinweis zum Laden;
+  - Platzhalter `{n_…_punkt}`;
+  - 13.1 `archiv.csv`: Listenwerte mit `|` ausdrücklich, neue Schlüssel,
+    Karte/Logo-Rückfall;
+  - neu 13.5 `ansichten.csv` und 13.6 `rollen.csv`;
+  - neu 14 „Neues Archiv einrichten“, mit offen genannter Grenze: kein neuer
+    Bereichstyp allein über Daten. Die Anleitung wird in C2 um die Farben
+    ergänzt.
+- **Masterprompt 4.4:** Vermerk unter „Fetch, nie einbetten“, Dateibaum.
+
+### Laufzeiten
+- Referenzläufe: 111, 108 und 150 s.
+- Varianten: ca. 3 min. Zweitarchiv-Test: ca. 3 min. Detailvergleich: ca.
+  3 min.
+
+### Scope-Meldungen
+- **Favicon ohne Eintrag:** Ist `favicon_datei` leer, fragt der Browser
+  `/favicon.ico` an. Das ergibt eine 404-Konsolenmeldung (kein Absturz).
+  Abhilfe wäre ein leeres Ersatz-Favicon in `index.html`. Nicht umgesetzt.
+- **Direkter Link auf eine Ansicht mit `anbieten=nein`:** zeigt die Galerie
+  des Bereichs, ohne Hinweis. Das ist bewusst schlicht gehalten.
+- **axe** ist in C1 nicht gelaufen (nicht Teil des Prüfumfangs). Neue
+  sichtbare Elemente gibt es nur ohne Logo (Textmarke) und bei fehlenden
+  Dateien (B2-Balken). Folgt im Gesamtlauf.
+- **Keine Funktionsaufteilung** (Punkt F).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (59) – Auftrag C3: literatur.csv optional, „Hinweis“ statt „Fehler“
 
 **Kontext:** Auftrag C (Prüfbericht Punkt 6, Übertragbarkeit).
