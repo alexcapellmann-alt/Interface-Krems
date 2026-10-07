@@ -23,6 +23,7 @@
 import { ANSICHT_ANFORDERUNGEN, NEBENDATEI_FOLGE, AUSBLENDE_DATEIEN, SCHLUESSELSPALTEN } from '../config/datenAnforderungen.js';
 import { holeDateiZustand } from './dataLoader.js';
 import { ladeGecachteCSV } from './datenCache.js';
+import { konfigurationsliste } from './archivKonfiguration.js';
 
 // Mit diesem Modul nachgeladen (app.js braucht den Balken erst, wenn die Prüfung
 // ein Problem gefunden hat) - so kommen alle drei Dateien mit EINEM dynamischen
@@ -49,7 +50,7 @@ function ladeFuerPruefung(pfad) {
 function pflichtspaltenDerDatei(pfad) {
   const spalten = new Set();
   Object.values(ANSICHT_ANFORDERUNGEN).forEach((anforderung) => {
-    [anforderung.dateien, anforderung.neben].forEach((gruppe) => (gruppe?.[pfad] || []).forEach((s) => spalten.add(s)));
+    [anforderung.dateien, anforderung.neben, anforderung.optional].forEach((gruppe) => (gruppe?.[pfad] || []).forEach((s) => spalten.add(s)));
     (anforderung.teilpflicht || []).filter((t) => t.datei === pfad).forEach((t) => t.spalten.forEach((s) => spalten.add(s)));
   });
   return spalten;
@@ -82,7 +83,22 @@ function beschreibeProblem(pfad, pflicht = []) {
 
 function alleDateien(anforderung) {
   return [...Object.keys(anforderung.dateien || {}), ...Object.keys(anforderung.neben || {}),
-    ...(anforderung.teilpflicht || []).map((t) => t.datei)];
+    ...Object.keys(anforderung.optional || {}), ...(anforderung.teilpflicht || []).map((t) => t.datei)];
+}
+
+// AUFTRAG C1, Punkt 3: Ansichten, deren `merkmal` in den Daten fehlt (z. B.
+// keine Person der Herrscherfamilie aus archiv.csv in familien.csv). Wird wie
+// eine leere Datei behandelt: Ansicht ausgeblendet, direkter Link zeigt Balken.
+const merkmalFehlt = new Set();
+
+async function pruefeMerkmal(ansichtId) {
+  const merkmal = ANSICHT_ANFORDERUNGEN[ansichtId]?.merkmal;
+  if (!merkmal) return;
+  const records = await ladeFuerPruefung(merkmal.datei);
+  const werte = konfigurationsliste(merkmal.konfiguration);
+  const erfuellt = Array.isArray(records) && records.some((r) => werte.includes(String(r[merkmal.spalte] ?? '').trim()));
+  if (erfuellt) merkmalFehlt.delete(ansichtId);
+  else merkmalFehlt.add(ansichtId);
 }
 
 // Lädt (über die vorhandenen Cache-Wege) alle Dateien einer Ansicht, damit
@@ -91,6 +107,7 @@ export async function stelleDateienSicher(ansichtId, zusatzDateien = []) {
   const anforderung = ANSICHT_ANFORDERUNGEN[ansichtId];
   const pfade = [...new Set([...(anforderung ? alleDateien(anforderung) : []), ...zusatzDateien])];
   await Promise.all(pfade.map(ladeFuerPruefung));
+  await pruefeMerkmal(ansichtId);
 }
 
 // Ergebnis: { blockiert, texte } - blockiert = Ansicht nicht zeichnen, nur den
@@ -112,11 +129,24 @@ export function pruefeAnsicht(ansichtId, zusatzNeben = []) {
       : `${problem.text} Diese Ansicht kann nicht angezeigt werden.`);
   });
 
+  // AUFTRAG C1, Punkt 3: Merkmal fehlt (nur wenn die Dateien selbst in Ordnung sind)
+  if (!blockiert && merkmalFehlt.has(ansichtId)) {
+    blockiert = true;
+    texte.push(`Für diese Ansicht liegen keine Daten vor: ${anforderung.merkmal.text}`);
+  }
+
   const neben = { ...(anforderung.neben || {}) };
   zusatzNeben.forEach((pfad) => { if (!(pfad in neben) && !(pfad in (anforderung.dateien || {}))) neben[pfad] = []; });
   Object.entries(neben).forEach(([pfad, pflicht]) => {
     const problem = beschreibeProblem(pfad, pflicht);
     if (problem) texte.push(`${problem.text} ${NEBENDATEI_FOLGE[pfad] || 'Diese Ansicht ist deshalb unvollständig.'}`);
+  });
+
+  // AUFTRAG C1: optionale Dateien - Fehlen oder 0 Datensätze ist kein Problem
+  // (es gelten Vorgaben), nur eine vorhandene, aber unbrauchbare Datei.
+  Object.entries(anforderung.optional || {}).forEach(([pfad, pflicht]) => {
+    const problem = beschreibeProblem(pfad, pflicht);
+    if (problem && !problem.leer) texte.push(`${problem.text} ${NEBENDATEI_FOLGE[pfad] || ''}`.trim());
   });
 
   if (!blockiert) {
@@ -134,7 +164,7 @@ let ausgeblendeteDateien = new Set(); // bis zum Ende der Hintergrund-Prüfung l
 
 export function istAnsichtAusgeblendet(ansichtId) {
   const pfad = ANSICHT_ANFORDERUNGEN[ansichtId]?.ausblenden;
-  return Boolean(pfad && ausgeblendeteDateien.has(pfad));
+  return Boolean(pfad && ausgeblendeteDateien.has(pfad)) || merkmalFehlt.has(ansichtId);
 }
 
 // Ein Bereich (Archivalientyp bzw. Bestand) verschwindet, wenn ALLE seine
@@ -172,7 +202,8 @@ export async function pruefeDatenImHintergrund(erstesRendern, beiNeuenAusblendun
     const zustand = holeDateiZustand(pfad);
     return zustand && (zustand.fehlt || zustand.anzahlDatensaetze === 0);
   });
-  if (leer.length === 0) return;
+  await Promise.all(Object.keys(ANSICHT_ANFORDERUNGEN).filter((id) => ANSICHT_ANFORDERUNGEN[id].merkmal).map(pruefeMerkmal));
+  if (leer.length === 0 && merkmalFehlt.size === 0) return;
   ausgeblendeteDateien = new Set(leer);
   beiNeuenAusblendungen();
 }

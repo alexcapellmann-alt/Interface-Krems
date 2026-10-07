@@ -147,7 +147,8 @@ import { erzeugeFlyoutPanel, verankereFlyout, verankereVorschauFlyout, verankere
 import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegistry.js';
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
-import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke } from './archivKonfiguration.js';
+import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke, ersetzePlatzhalterImText } from './archivKonfiguration.js';
+import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn } from './ansichtenKonfiguration.js';
 import { erzeugeUeberSeite } from './ueberSeite.js';
 import { erzeugeLiteraturSeite } from './literaturSeite.js';
 
@@ -593,9 +594,20 @@ function zeigeGalerie(kontext) {
     kontext.galerie = null;
     return;
   }
+  // AUFTRAG C1, Punkt 1/2: Beschreibungen mit Platzhaltern (z. B. die
+  // berechnete Urkundenzahl) stehen zunächst leer und werden nachgetragen,
+  // sobald der Wert feststeht - so erscheint nie ein falscher oder roher Text.
+  const mitPlatzhalter = (a) => /\{[a-zA-Z0-9_]+\}/.test(a.beschreibung || '');
   kontext.galerie = erzeugeVisualisierungsGalerie(galerieContainer, {
-    archivalientyp: { ...kontext.bereich, ansichten: sichtbareAnsichten }, // {label, ansichten} - erzeugeVisualisierungsGalerie() kennt nur diese Form, nicht den Namen "archivalientyp"
+    archivalientyp: { ...kontext.bereich, ansichten: sichtbareAnsichten.map((a) => (mitPlatzhalter(a) ? { ...a, beschreibung: '\u00a0' } : a)) }, // {label, ansichten} - erzeugeVisualisierungsGalerie() kennt nur diese Form, nicht den Namen "archivalientyp"
     onAuswahl: (ansicht) => navigiereZu(kontext.routeSegmente(ansicht.id))
+  });
+  sichtbareAnsichten.forEach(async (ansicht, index) => {
+    if (!mitPlatzhalter(ansicht)) return;
+    const text = (await ersetzePlatzhalterImText(ansicht.beschreibung)) ?? ansicht.beschreibungStandard ?? '';
+    if (kontext.galerieContainer !== galerieContainer) return; // inzwischen gewechselt
+    const ziel = galerieContainer.querySelectorAll('.visualisierungs-galerie-beschreibung')[index];
+    if (ziel) ziel.textContent = text;
   });
 }
 
@@ -1110,6 +1122,14 @@ function wendeArchivIdentitaetAn() {
   const logoSub = document.getElementById('app-logo-sub');
   const logoDatei = konfigurationswert('logo_datei');
   if (logoImg && logoDatei) logoImg.src = `data/${logoDatei}`;
+  // AUFTRAG C1, Punkt 5: ohne Logo-Datei steht der Kurzname als Text an der
+  // Logo-Stelle (vorher blieb sie leer).
+  if (logoImg && !logoDatei) {
+    const text = document.createElement('span');
+    text.className = 'app-logo-text';
+    text.textContent = konfigurationswert('archiv_kurzname');
+    logoImg.replaceWith(text);
+  }
   if (logoSub) logoSub.textContent = konfigurationswert('logo_untertitel');
   if (logoLink) logoLink.setAttribute('aria-label', `${konfigurationswert('archiv_kurzname')}, Startseite`);
 
@@ -1232,7 +1252,11 @@ window.addEventListener('resize', planeResizeVerarbeitung);
 // <script type="module">, das unterstützt das nativ, kein Build-Step
 // nötig). pruefeUeberSeiteVerfuegbarkeit() bewusst NICHT mit awaited -
 // blockiert das erste Rendern nicht (siehe dortiger Kommentar).
-await ladeArchivKonfiguration();
+// AUFTRAG C1, Punkt 2: ansichten.csv GLEICHZEITIG mit archiv.csv (kein
+// zusätzlicher Ladeschritt), danach die Registry anpassen - vor dem ersten
+// Aufbau, damit Navigation und Galerie sofort die Angaben des Archivs zeigen.
+const [, ansichtenZeilen] = await Promise.all([ladeArchivKonfiguration(), ladeAnsichtenKonfiguration()]);
+wendeAnsichtenKonfigurationAn(ansichtenZeilen);
 wendeArchivIdentitaetAn();
 pruefeUeberSeiteVerfuegbarkeit();
 pruefeLiteraturVerfuegbarkeit();

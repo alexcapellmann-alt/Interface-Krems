@@ -55,12 +55,13 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
 | `verlassenschaftsinventare.csv` | `Realvermoegen_fl`, `Gesamtvermoegen_fl`, `Anteil Grundstuecke am RV (%)`, `Anteil Bargeld am RV (%)`, `Anteil Wertgegenstaende am RV (%)`, `Anteil Sonderbestand am RV (%)` | Parallelkoordinaten |
 | | `Anteil SchzG an Aktiva (%)`, `Anteil SchvG an Aktiva (%)` – *aus dem Code abgeleitet, nicht gemessen* | Parallelkoordinaten, nur Darstellung „Forderungs-/Schuldenprofil“ (fehlt eine, erscheint ein Hinweis; die übrige Ansicht bleibt nutzbar) |
 | | `Jahrzehnt` | Vermögensschichtung |
-| `familien.csv` | `familie`, `id` | Habsburg-Zeitleistenbaum |
+| `familien.csv` | `familie`, `id` | Zeitleisten-Stammbaum (Krems: „Habsburg-Zeitleistenbaum“); zusätzlich muss mindestens eine Person zur Herrscherfamilie aus `archiv.csv` (`dynastie_familien`) gehören |
+| `rollen.csv` | `liste`, `begriffe` | Chord-Diagramm, Bipartite Flow Map |
 | `fuehrungen.csv` | `fuehrung_id` | Führungen: Übersicht, Station, Ende |
 | | `station_nr`, `text` | Führungsstation |
 | `literatur.csv` | `zitation` | Literatur |
 
-`personenliste.csv`, `recherche_links.csv` und `infotexte.csv` haben keine Pflichtspalte. `ratsprotokolle.csv` wird derzeit von keiner Ansicht gelesen; die Datei erzeugt keinen Tab und keinen Hinweis.
+`personenliste.csv`, `recherche_links.csv` und `infotexte.csv` haben keine Pflichtspalte. `ansichten.csv` ist optional; ist sie vorhanden, braucht sie die Spalte `bereich` (Abschnitt 13.5).
 
 **Was passiert, wenn …**
 
@@ -71,6 +72,9 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
   - Wer eine solche Ansicht über einen gespeicherten Link öffnet, sieht einen Balken: „Für diese Ansicht liegen keine Daten vor: … enthält keine Datensätze.“
   - **Ansichten, die mehrere Dateien nutzen,** bleiben sichtbar und zeigen einen Balken. Ein Beispiel: Die Personenliste meldet „buergerbuch.csv enthält keine Datensätze. Diese Ansicht ist deshalb unvollständig.“ Die Karten werden bei leerer `orte.csv` gar nicht gezeichnet.
   - Die Personenliste wird bei leerer `personenliste.csv` ausgeblendet, obwohl sie mehrere Dateien nutzt (Entscheidung des Autors).
+  - **Seit Auftrag C1:** Fehlt `rollen.csv` oder ist sie leer, werden Chord-Diagramm und Bipartite Flow Map ausgeblendet (ohne Rollenlisten landeten sonst alle Personen außer der Dynastie im „Bürgertum“). Die Personenliste bleibt und sortiert dann ohne Titelwörter.
+- **… keine Person zur Herrscherfamilie gehört (seit Auftrag C1):** Der Zeitleisten-Stammbaum wird nur angeboten, wenn in `familien.csv` mindestens eine Person steht, deren `familie` in `dynastie_familien` (`archiv.csv`) genannt ist. Sonst wird er ausgeblendet; ein gespeicherter Link zeigt „Für diese Ansicht liegen keine Daten vor: In familien.csv gehört keine Person zur Herrscherfamilie …“.
+- **… `ansichten.csv` fehlt, leer oder unbrauchbar ist (seit Auftrag C1):** Fehlt sie oder ist sie leer, gelten die neutralen Standardnamen und -beschreibungen, ohne Hinweis. Ist sie vorhanden, aber unbrauchbar (Spalte `bereich` fehlt, falsches Trennzeichen), gelten ebenfalls die Standardangaben, und die Startseite zeigt einen Balken, z. B. „In ansichten.csv fehlt die Spalte 'bereich'. Es gelten deshalb die Standardnamen und -beschreibungen der Ansichten.“
 - **… eine Kerndatei fehlt oder leer ist:**
   - `startseite.csv`: Statt der Startseite erscheint ein Balken mit dem Dateinamen.
   - `archiv.csv`: Startseite und Über-Seite zeigen einen Balken; Name, Logo und Kontaktangaben fehlen dann.
@@ -79,7 +83,7 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
   - Steht in einem Datumsfeld nur ein unlesbarer Wert (z. B. bei falschem Datenformat statt fehlender Spalte), landen die Urkunden weiterhin ohne Hinweis unter „undatiert“.
   - Zählwerte wie `{n_urkunden}` zeigen bei leerer Datei „0“.
 
-**Technischer Hinweis (Abweichung vom Lazy Loading):** Damit leere Bereiche gar nicht erst in der Navigation erscheinen, lädt das Interface nach dem ersten Bildaufbau im Hintergrund die Dateien, die über das Ausblenden entscheiden. Das betrifft `bestandsverzeichnis`, `urkunden`, `buergerbuch`, `verlassenschaftsinventare`, `personenliste`, `familien`, `fuehrungen`, `literatur` und `ueber`. Jede Datei wird dabei höchstens einmal angefragt. Die Ansichten selbst (Code und Darstellung) laden weiterhin erst beim Öffnen. Die Liste der Pflicht- und Schlüsselspalten steht technisch in `js/config/datenAnforderungen.js`.
+**Technischer Hinweis (Abweichung vom Lazy Loading):** Damit leere Bereiche gar nicht erst in der Navigation erscheinen, lädt das Interface nach dem ersten Bildaufbau im Hintergrund die Dateien, die über das Ausblenden entscheiden. Das betrifft `bestandsverzeichnis`, `urkunden`, `buergerbuch`, `verlassenschaftsinventare`, `personenliste`, `familien`, `fuehrungen`, `literatur`, `ueber` und (seit Auftrag C1) `rollen`. Jede Datei wird dabei höchstens einmal angefragt. `ansichten.csv` wird schon vor dem ersten Bildaufbau geladen, gleichzeitig mit `archiv.csv` (kein zusätzlicher Ladeschritt), weil Navigation und Galerie die Namen sofort brauchen. Die Ansichten selbst (Code und Darstellung) laden weiterhin erst beim Öffnen. Die Liste der Pflicht- und Schlüsselspalten steht technisch in `js/config/datenAnforderungen.js`.
 
 **Präzisierung zu `unsicherheit_anmerkung` (nach Etappe-1-Praxisfund):** Ist bei einer Zeile nur ein Feld unsicher, steht dort einfacher Freitext. Sind mehrere Felder derselben Zeile unsicher, werden die einzelnen, feldspezifisch benannten Erklärungen mit Pipe `|` getrennt (z. B. `Datum: keine Jahresangabe erkennbar|Orte: Namensform mehrdeutig`) – der DataLoader zerlegt das dann, der allgemeinen Pipe-Konvention folgend, automatisch in eine Liste einzelner Erklärungen. Das ist beabsichtigtes Verhalten, keine Ausnahme und kein Sonderfall im Code nötig.
 
@@ -120,32 +124,9 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 
 ---
 
-## 2. ratsprotokolle.csv (geplant, weiterhin keine Dateninhalte)
+## 2. (entfallen)
 
-Unverändert gegenüber letzter Prüfung.
-
-| Spalte | Format | Pflicht | Beschreibung |
-|---|---|---|---|
-| `id` | Text | Schlüssel (Datei wird derzeit nicht gelesen) | |
-| `signatur` | Text | Schlüssel (Datei wird derzeit nicht gelesen) | |
-| `datum` | Text (Freitext) | nein | |
-| `datum_unsicher` | ja/nein | – | |
-| `orte` | Liste (Pipe-getrennt) | nein | |
-| `orte_unsicher` | ja/nein | – | |
-| `regest` | Volltext | nein | |
-| `personen` | Liste (Pipe-getrennt) | nein | |
-| `personen_unsicher` | ja/nein | – | |
-| `kategorien` | Liste (Pipe-getrennt) | nein | |
-| `sitzungsort` | Text | nein | |
-| `sitzungsnummer` | Text/Zahl | nein | |
-| `top_nummer` | Text/Zahl | nein | |
-| `quelltyp` | Text | nein | |
-| `personen_rollen` | Liste (Pipe-getrennt, Person:Rolle) | nein | |
-| `unsicherheit_anmerkung` | Text | nein | |
-
-**Weiterhin offen:** `kategorien_unsicher` fehlt, Entscheidung noch offen.
-
-**Korrektur (Auftrag "Führungen, Teil 1", Punkt 1, 2026-09-23):** die Datei trug eine fälschliche Platzhalter-Kopfzeile (`Column1;Column2;…`) VOR der echten Kopfzeile (derselbe Fund/dieselbe Ursache wie zuvor bei `buergerbuch.csv`, siehe CHANGELOG Eintrag 77) - entfernt, die echte Kopfzeile steht jetzt in Zeile 1. Es gab dafür keinen Umgehungs-Code (`js/core/dataLoader.js` liest immer Zeile 1 als Header), betraf aber bislang nichts Sichtbares: die Datei ist in `js/config/archivalienRegistry.js` nicht registriert und enthält weiterhin keine Datenzeilen.
+Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht; Datei und Beschreibung sind mit Auftrag C1 (2026-10-03) entfernt. Die Nummerierung der übrigen Abschnitte bleibt, damit Verweise wie „Abschnitt 10“ gültig bleiben.
 
 ---
 
@@ -444,7 +425,7 @@ Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (si
 
 ## 13. Archivspezifische Konfigurationsdateien (Auftrag "Archivspezifische Texte und Identität in CSV-Dateien", 2026-09-29)
 
-Diese vier Dateien machen das Interface für ANDERE Kommunalarchive nachnutzbar, ohne dass am Code etwas geändert werden muss - Name, Kontakt, Logo, Kartenausschnitt sowie alle Texte der Startseite, der Über-Seite und der "?"-Info-Buttons stehen hier, nicht mehr fest im Code. **Dieser Abschnitt richtet sich ausdrücklich an Archivar:innen ohne Programmierkenntnisse** - die vier Dateien lassen sich mit jedem Tabellenprogramm (Excel, LibreOffice Calc, Google Sheets) öffnen und bearbeiten, solange beim Speichern das Format "CSV UTF-8, Semikolon-getrennt" gewählt wird (bei Excel: "CSV UTF-8 (durch Trennzeichen getrennt)").
+Diese Dateien (seit Auftrag C1 zusätzlich `ansichten.csv` und `rollen.csv`, Abschnitte 13.5 und 13.6; Anleitung für ein neues Archiv: Abschnitt 14) machen das Interface für ANDERE Kommunalarchive nachnutzbar, ohne dass am Code etwas geändert werden muss - Name, Kontakt, Logo, Kartenausschnitt sowie alle Texte der Startseite, der Über-Seite und der "?"-Info-Buttons stehen hier, nicht mehr fest im Code. **Dieser Abschnitt richtet sich ausdrücklich an Archivar:innen ohne Programmierkenntnisse** - die vier Dateien lassen sich mit jedem Tabellenprogramm (Excel, LibreOffice Calc, Google Sheets) öffnen und bearbeiten, solange beim Speichern das Format "CSV UTF-8, Semikolon-getrennt" gewählt wird (bei Excel: "CSV UTF-8 (durch Trennzeichen getrennt)").
 
 **Gemeinsame Regeln für alle vier Dateien** (siehe auch die allgemeinen Konventionen ganz oben in diesem Dokument):
 
@@ -453,6 +434,7 @@ Diese vier Dateien machen das Interface für ANDERE Kommunalarchive nachnutzbar,
 - **Platzhalter** in geschweiften Klammern werden automatisch durch echte Werte ersetzt, z. B. `{archiv_kurzname}` oder `{n_urkunden}`. Verfügbare Platzhalter:
   - jeder Schlüssel aus `archiv.csv` (Spalte `schluessel`, z. B. `{archiv_kurzname}`, `{email}`)
   - `{n_bestaende}`, `{n_urkunden}`, `{n_buergerbuch}`, `{n_inventare}` - die jeweils aktuelle Zeilenzahl der entsprechenden Archivalien-Tabelle, wird bei jedem Seitenaufruf neu gezählt (muss nie von Hand aktualisiert werden)
+  - **seit Auftrag C1** dieselben Zählwerte mit Tausenderpunkt: `{n_bestaende_punkt}`, `{n_urkunden_punkt}`, `{n_buergerbuch_punkt}`, `{n_inventare_punkt}` (z. B. „1.067“ statt „1067“)
   - in `infotexte.csv` zusätzlich einzelne, vom jeweiligen Modul selbst mitgegebene Werte (aktuell nur beim Sankey-Diagramm, siehe dort)
   - **Wichtig:** eckige Klammern `[wie hier]` sind KEINE Platzhalter und bleiben unverändert stehen - so lassen sich eigene Erinnerungen/Lücken im Text markieren (z. B. `[AUTOR:IN, TITEL, JAHR]`), ohne dass das Interface versucht, sie zu ersetzen.
   - Tippt man sich bei einem Platzhalter-Namen (z. B. `{n_urkunde}` statt `{n_urkunden}`), erscheint der betroffene Textblock auf der Seite **gar nicht** (statt einer falschen/rohen Ausgabe) - das Öffnen der Browser-Konsole zeigt dann eine Warnung mit dem genauen, nicht erkannten Namen.
@@ -460,7 +442,9 @@ Diese vier Dateien machen das Interface für ANDERE Kommunalarchive nachnutzbar,
 
 ### 13.1 archiv.csv - Name, Kontakt, Logo, Kartenausschnitt
 
-Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. Ä.). Wird als einzige der vier Dateien bereits geladen, bevor die Seite zum ersten Mal etwas anzeigt.
+Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. Ä.). Wird zusammen mit `ansichten.csv` bereits geladen, bevor die Seite zum ersten Mal etwas anzeigt.
+
+**Listenwerte (seit Auftrag C1):** Einige Schlüssel nehmen mehrere Werte auf (`dynastie_familien`, `regest_quellenvermerk`). Die Werte stehen dann in der Spalte `wert` mit senkrechtem Strich `|` getrennt, z. B. `habsburg|habsburg_tirol`. Das ist dieselbe Regel wie in allen anderen Tabellen: `|` ist überall das reservierte Trennzeichen für Listen (Auftrag B1) und darf in keinem Wert als normales Zeichen vorkommen - auch nicht in der Spalte `anmerkung`.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
@@ -473,9 +457,9 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `schluessel` | Beispielwert | Wo sichtbar |
 |---|---|---|
 | `archiv_name` | Stadtarchiv Krems an der Donau | Fußzeile (Kontakt), Über-Seite |
-| `archiv_kurzname` | Stadtarchiv Krems | aria-Label des Logo-Links (barrierefreie Bezeichnung, nicht sichtbarer Text) |
+| `archiv_kurzname` | Stadtarchiv Krems | aria-Label des Logo-Links (barrierefreie Bezeichnung); seit Auftrag C1 auch sichtbar als Schriftzug an der Logo-Stelle, wenn `logo_datei` leer ist |
 | `seitentitel` | Interface Stadtarchiv Krems | Browser-Tab-Titel |
-| `logo_datei` | logo.svg | Dateiname des Logos, muss zusammen mit dieser CSV in `data/` liegen |
+| `logo_datei` | logo.svg | Dateiname des Logos, muss zusammen mit dieser CSV in `data/` liegen. Leer: an der Logo-Stelle steht `archiv_kurzname` als Text |
 | `logo_untertitel` | Stadtarchiv | kleiner Text neben dem Logo oben links |
 | `favicon_datei` | favicon.svg | Symbol im Browser-Tab - eine quadratische SVG-Datei (gleiche Breite wie Höhe), muss in `data/` liegen - leer lassen, wenn kein Favicon gesetzt werden soll (kein Fehler, es erscheint dann einfach keines) |
 | `favicon_png_datei` | favicon-32.png | Rückfall als 32×32-Pixel-PNG (ebenfalls quadratisch) für Browser, die ein SVG-Favicon nicht unterstützen - leer lassen, wenn nicht benötigt |
@@ -488,12 +472,16 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `website` | www.krems.gv.at/stadtarchiv | als lesbarer Text angezeigt |
 | `website_link` | https://www.krems.gv.at/stadtarchiv | NICHT sichtbar, vollständige URL für den Link hinter `website` |
 | `akzentfarbe` | #2c4a6e | Hauptfarbe der Oberfläche (Buttons, Links, Info-Buttons) - ein Hex-Farbcode wie in jedem Grafikprogramm, mit `#`. Kontrast zu Weiß sollte mindestens 4,5:1 betragen (in jedem Online-Kontrast-Prüfer eingeben) |
-| `karte_zentrum_lat` | 48.42 | Breitengrad, wo alle Karten beim Öffnen zentriert sind |
+| `karte_zentrum_lat` | 48.42 | Breitengrad, wo alle Karten beim Öffnen zentriert sind. Fehlt er (oder `karte_zentrum_lon`), zeigt die Karte den Ausschnitt aller Orte aus `orte.csv`, ohne Orte eine Weltübersicht (seit Auftrag C1; vorher galt ein fester Krems-Ausschnitt) |
 | `karte_zentrum_lon` | 15.6 | Längengrad, siehe oben |
-| `karte_zoom` | 7 | Start-Zoomstufe der Karten (kleinere Zahl = weiter herausgezoomt) |
+| `karte_zoom` | 7 | Start-Zoomstufe der Karten (kleinere Zahl = weiter herausgezoomt). Leer: 7 |
+| `dynastie_familien` | habsburg\|spanische_habsburger\|habsburg_tirol\|habsburg_lothringen | **Liste.** Werte der Spalte `familie` in `familien.csv`, die zur Herrscherfamilie gehören. Nur wenn mindestens eine Person dazugehört, wird der Zeitleisten-Stammbaum angeboten. Die Reihenfolge bestimmt die Farbabstufung der Zweige. Leer: kein Stammbaum (seit Auftrag C1) |
+| `dynastie_name` | Habsburg | Name der Herrscherfamilie in den Texten des Stammbaums („des Hauses Habsburg“, „Habsburg-Linie“). Leer: „Herrscherfamilie“ |
+| `dynastie_gruppenname` | Dynastie (Habsburger) | Name der Gruppe „Dynastie“ in Chord-Diagramm und Bipartite Flow Map. Leer: „Dynastie“ |
+| `regest_quellenvermerk` | Source Regest\|Quelle Regest | **Liste.** Vermerk, ab dem ein Regest-Text in der Wortwolke nicht mehr gezählt wird (die Quellenangabe), jeweils gefolgt von einem Doppelpunkt. Leer: das ganze Regest zählt |
 | `footer_text` | Interface des Stadtarchivs … | Fußzeile ALLER Seiten AUSSER der Startseite (die hat ihre eigene, siehe `startseite.csv`s `footer_hinweis` unten) |
 
-**Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe, Kremser Kartenausschnitt als Rückfall), eine Fehlermeldung in der Browser-Konsole, kein Absturz. **Seit Auftrag B2 (2026-10-03):** `archiv.csv` ist eine Kerndatei - fehlt sie, ist sie leer oder fehlt `schluessel`/`wert`, zeigen Startseite und Über-Seite zusätzlich einen Hinweisbalken mit dem Dateinamen (siehe „Mindestspalten und was bei Problemen passiert" oben).
+**Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe; Karten zeigen den Ausschnitt der Orte aus `orte.csv` - seit Auftrag C1 gibt es keinen festen Krems-Ausschnitt mehr), eine Fehlermeldung in der Browser-Konsole, kein Absturz. **Seit Auftrag B2 (2026-10-03):** `archiv.csv` ist eine Kerndatei - fehlt sie, ist sie leer oder fehlt `schluessel`/`wert`, zeigen Startseite und Über-Seite zusätzlich einen Hinweisbalken mit dem Dateinamen (siehe „Mindestspalten und was bei Problemen passiert" oben).
 
 **Zum mitgelieferten Favicon:** Die drei Standarddateien (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`) zeigen ein weißes σ auf einem abgerundeten Quadrat in der Interface-Akzentfarbe - dasselbe Zeichen, das im Interface bereits für Unsicherheit steht. Es kennzeichnet das Interface selbst (die Anwendung), nicht ein bestimmtes Archiv. Andere Archive können es unverändert beibehalten oder durch ein eigenes Symbol ersetzen (einfach die drei Dateien gleichen Namens in `data/` austauschen, die Schlüssel in `archiv.csv` bleiben gleich).
 
@@ -563,9 +551,82 @@ Eine Zeile pro Visualisierung/Modul, das einen Info-Button ("?" oben rechts) bes
 
 ---
 
+### 13.5 ansichten.csv - Namen, Beschreibungen und Reihenfolge der Bereiche und Ansichten (neu, Auftrag C1, 2026-10-03)
+
+Legt fest, wie die Bereiche (z. B. „Urkunden“, „Bürgerbuch“) und ihre Ansichten (z. B. „Zeitachse“) heißen, welche Beschreibung in der Galerie steht, in welcher Reihenfolge sie erscheinen und ob eine Ansicht angeboten wird. **Optional:** Fehlt die Datei, gelten neutrale Standardangaben aus dem Programm.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `bereich` | Text | **Pflicht**, wenn die Datei vorhanden ist | technischer Name des Bereichs: `bestand`, `urkunden`, `buergerbuch`, `verlassenschaften`, `personen`, `orte` - nicht übersetzen |
+| `ansicht` | Text | Schlüssel | technischer Name der Ansicht (z. B. `zeitachse`, siehe die mitgelieferte Datei). **Leer** = die Zeile beschreibt den Bereich selbst |
+| `name` | Text | nein | angezeigter Name. Leer: Standardname. Beim Bereich `bestand` bleibt der Name „Bestand“ (Hauptnavigation) |
+| `beschreibung` | Text | nein | Text unter der Kachel in der Galerie; Platzhalter wie `{n_urkunden_punkt}` erlaubt (Abschnitt 13). Leer: Standardbeschreibung |
+| `reihenfolge` | Zahl | nein | Reihenfolge der Bereiche bzw. der Ansichten innerhalb eines Bereichs. Ohne Zahl: hinter den nummerierten, in der Standardreihenfolge |
+| `anbieten` | ja/nein | nein | `nein` = Ansicht bzw. ganzer Bereich wird nicht angeboten, auch wenn Daten vorhanden sind. Leer: ja |
+
+Beispiel (Krems):
+```
+bereich;ansicht;name;beschreibung;reihenfolge;anbieten
+urkunden;;Urkunden;;1;ja
+urkunden;regestenKachelraster;Regesten-Kachelraster;Durchsuchbare Kurzfassungen (Regesten) aller {n_urkunden_punkt} Urkunden mit Foto, Kategorie und Volltextsuche.;1;ja
+personen;familienbaum;Habsburg-Zeitleistenbaum;Zeitleisten-Stammbaum des Hauses Habsburg von Rudolf I. bis Joseph II., mit Herrschaftszeiten von Kaisern und Königen.;3;ja
+```
+
+- Unbekannte Werte in `bereich` oder `ansicht` werden übergangen (Warnung in der Browser-Konsole).
+- Bereiche und Ansichten ohne Daten blendet das Interface ohnehin selbst aus (Abschnitt „Mindestspalten …“); `anbieten` ist nur für eine bewusste Auswahl nötig.
+- **Grenze:** Die Datei kann vorhandene Bereiche und Ansichten umbenennen, beschreiben, umsortieren und weglassen. Einen **neuen Bereichstyp** (z. B. „Akten“ mit eigenen Spalten) kann sie nicht anlegen - jede Ansicht ist für den Aufbau genau einer Datei programmiert.
+- Ein Platzhalter, der nicht aufgelöst werden kann (z. B. weil `urkunden.csv` fehlt), führt zur Standardbeschreibung.
+
+### 13.6 rollen.csv - Rollenlisten für die soziale Gruppierung (neu, Auftrag C1, 2026-10-03)
+
+Wörter, an denen das Interface in den Namen der Urkunden erkennt, ob eine Person zum Klerus oder zum Adel gehört (Chord-Diagramm, Bipartite Flow Map), und welche Wörter die Personenliste beim Sortieren nach Nachnamen überspringt. Eine Zeile je Begriff.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `liste` | Text | **Pflicht** (Chord-Diagramm, Bipartite Flow Map) | `klerus` (ganzes Wort im Namen → Klerus), `adel_titel` (ganzes Wort → Adel), `adel_familie` (Teil des Namens → Adel), `namenszusatz` (Personenliste: beim Sortieren übersprungen, Groß-/Kleinschreibung egal) |
+| `begriffe` | Liste (Pipe-getrennt) | **Pflicht** (Chord-Diagramm, Bipartite Flow Map) | ein Begriff; bei `adel_familie` mehrere Schreibweisen derselben Familie mit `\|`, z. B. `Eytzing\|Eytzingen\|Eyzing` |
+| `anmerkung` | Text | nein | wird nicht angezeigt (kein `\|`, kein `;`) |
+
+Beispiel (Krems, Auszug): `klerus;Bischof;` · `adel_titel;Graf;` · `adel_familie;Eytzing|Eytzingen|Eyzing;` · `namenszusatz;stadtschreiber;`
+
+Wer zur Gruppe „Dynastie“ gehört, steht nicht hier, sondern ergibt sich aus `familien.csv` (alle dort erfassten Personen); den Namen der Gruppe setzt `dynastie_gruppenname` in `archiv.csv`.
+
+**Verhalten bei fehlender oder leerer Datei:** Chord-Diagramm und Bipartite Flow Map werden nicht angeboten; ein gespeicherter Link zeigt „Für diese Ansicht liegen keine Daten vor: Die Datei rollen.csv fehlt.“ Die Personenliste bleibt und sortiert ohne Titelwörter.
+
+---
+
+## 14. Neues Archiv einrichten (Anleitung, Stand Auftrag C1, 2026-10-03)
+
+Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nutzen wollen. **Alles Archivspezifische steht in CSV-Dateien im Ordner `data/`** (dazu Logo, Favicon und Fotos); am Programm selbst muss nichts geändert werden. *Ausnahme bis Auftrag C2:* Farben für Urkundenkategorien, die es in Krems nicht gibt, erscheinen noch grau.
+
+**Schritt 1 - Pflicht: Name und Startseite**
+- `archiv.csv` (Abschnitt 13.1): Name, Kurzname, Seitentitel, Kontakt, Akzentfarbe, Fußzeile. Logo-Datei und Kartenmitte sind freiwillig.
+- `startseite.csv` (Abschnitt 13.2): Slides und Texte der Startseite.
+
+**Schritt 2 - Daten, soweit vorhanden** (fehlende oder leere Dateien blenden ihre Ansichten selbst aus)
+- `urkunden.csv` (Abschnitt 1), `orte.csv` (7), `bestandsverzeichnis.csv` (3), `buergerbuch.csv` (4), `verlassenschaftsinventare.csv` (5), `familien.csv` (6), `personenliste.csv` (8), `literatur.csv` und `recherche_links.csv` (9), `fuehrungen.csv` (10).
+- Die Spalten müssen genauso heißen wie hier beschrieben. Welche Spalten mindestens nötig sind, zeigt „Mindestspalten und was bei Problemen passiert“.
+
+**Schritt 3 - Freiwillig: Feinheiten**
+- `ueber.csv` (13.3): Texte der Über-Seite.
+- `infotexte.csv` (13.4): Erklärtexte der „?“-Knöpfe. Die mitgelieferten Texte erwähnen teils Krems - bei Bedarf anpassen.
+- `ansichten.csv` (13.5): andere Namen, Beschreibungen, Reihenfolge, Ansichten weglassen.
+- `rollen.csv` (13.6): Wörter für Klerus und Adel, Titelwörter der Personenliste. Ohne die Datei entfallen Chord-Diagramm und Bipartite Flow Map.
+- In `archiv.csv`: `dynastie_familien`, `dynastie_name`, `dynastie_gruppenname` (nur mit Herrscherfamilie in `familien.csv`), `regest_quellenvermerk`.
+
+**Grenzen der Anpassung**
+- Ein **neuer Bereichstyp** mit eigenen Spalten (z. B. „Akten“) lässt sich nicht allein über Daten anlegen; er braucht eigene Programmteile.
+- Spaltennamen, die technischen Namen in `ansichten.csv` (`bereich`, `ansicht`) und die Schlüssel in `archiv.csv` sind fest.
+- `|` ist in allen Dateien das Trennzeichen für Listen und darf nicht als normales Zeichen vorkommen.
+- Die Oberfläche ist deutschsprachig; Sprache und Füllwörter der Wortwolke sind nicht einstellbar.
+
+**Prüfen:** Seite öffnen; Hinweisbalken nennen Datei und Spalte, wenn etwas fehlt oder falsch gespeichert ist (meist: Excel-Format „CSV UTF-8 (durch Trennzeichen getrennt)“ wählen).
+
+---
+
 ## Zusammenfassung: offene Punkte über alle Tabellen hinweg
 
-1. `ratsprotokolle.csv`: `kategorien_unsicher` fehlt weiterhin, Entscheidung offen
+1. ~~Ratsprotokolle: `kategorien_unsicher` fehlt~~ – entfallen, die Tabelle wird nicht mehr gebraucht (Auftrag C1)
 2. `verlassenschaftsinventare.csv`: Spaltennamen mit Leerzeichen/Sonderzeichen nicht bereinigt; kein `_unsicher`-Flag (jetzt optional, aber zu erwägen)
 3. `buergerbuch.csv`: Großschreibungs-Konvention weicht ab; `buergen_id`-Verweisziel zu bestätigen
 4. `urkunden.csv`: Herkunft/Zweck von `datum_normiert` weiterhin nicht abschließend geklärt
@@ -578,5 +639,5 @@ Eine Zeile pro Visualisierung/Modul, das einen Info-Button ("?" oben rechts) bes
 11. `urkunden.csv`: `foto_ordner` erfolgreich befüllt (1068/1068, automatischer Abgleich über `id`/`signatur`), erledigt
 12. Ordner `StaAKr-0892` existiert unter `fotos/thumbs/`, hat aber keine entsprechende Zeile in `urkunden.csv` – zu klären, ob eine Urkunde in der CSV fehlt oder der Ordner veraltet ist
 13. **Datenintegrität/externe Datei-Operationen (2026-09-21):** `familien.csv` verlor zwischenzeitlich `hrr_status`/`herrschaft_von`/`herrschaft_bis` durch eine externe Datei-Operation (Dateizeitstempel lag vor deren ursprünglicher Einführung – kein CLI-Edit, sonst gäbe es einen CHANGELOG-Eintrag) und wurde wiederhergestellt; `buergerbuch.csv` hatte zusätzlich kurzzeitig eine fälschliche Platzhalter-Kopfzeile (`Column1;Column2;…`) vor dem echten Header, ebenfalls behoben. `orte.csv`/`verlassenschaftsinventare.csv` tragen denselben alten Dateizeitstempel wie `familien.csv` vor der Korrektur, wurden aber inhaltlich nie separat als beschädigt festgestellt – bei künftigen Aufträgen an diesen beiden Dateien vorsichtshalber Spalten-/Zeilenzahl gegen die hier dokumentierten Werte gegenprüfen. Siehe CHANGELOG Eintrag 77 für die volle Diagnose.
-14. **Dieselbe Platzhalter-Kopfzeilen-Korruption, zwei weitere Fälle (Auftrag "Führungen, Teil 1", 2026-09-23):** `literatur.csv` und `ratsprotokolle.csv` hatten dieselbe fälschliche `Column1;Column2;…`-Zeile wie zuvor `buergerbuch.csv` (Punkt 13) - behoben (siehe Abschnitte 2/9). Root-Cause-Bestätigung: `js/core/dataLoader.js` (Zeile 143-144) hat KEINEN Zeilen-Skip, liest immer Zeile 1 als Kopfzeile - eine solche Platzhalterzeile ist daher IMMER ein Fehler, nie eine absichtliche Umgehung. Bei künftigen Datei-Operationen an beliebigen `data/*.csv` vorsorglich Zeile 1 gegen die hier dokumentierte Kopfzeile prüfen.
+14. **Dieselbe Platzhalter-Kopfzeilen-Korruption, zwei weitere Fälle (Auftrag "Führungen, Teil 1", 2026-09-23):** `literatur.csv` und die (inzwischen entfernte) Ratsprotokoll-Tabelle hatten dieselbe fälschliche `Column1;Column2;…`-Zeile wie zuvor `buergerbuch.csv` (Punkt 13) - behoben (siehe Abschnitte 2/9). Root-Cause-Bestätigung: `js/core/dataLoader.js` (Zeile 143-144) hat KEINEN Zeilen-Skip, liest immer Zeile 1 als Kopfzeile - eine solche Platzhalterzeile ist daher IMMER ein Fehler, nie eine absichtliche Umgehung. Bei künftigen Datei-Operationen an beliebigen `data/*.csv` vorsorglich Zeile 1 gegen die hier dokumentierte Kopfzeile prüfen.
 15. **`fuehrungen.csv` (neu, Abschnitt 10):** aktuell nur die Demo-Führung, `status = entwurf` - Darstellung/Navigation/Zustands-URL (Stufe 3) sind ausdrücklich NICHT Teil dieses Auftrags, folgen in "Führungen, Teil 2". Vorbedingung für Teil 2, bereits im PROJEKTLOG vermerkt: `state.js`' `zielSignatur`-Mechanismus (einziger bisheriger Ansatz für "Datensatz per ID öffnen") ist aktuell bewusst stillgelegt (`setZielSignatur()` wird im gesamten Code nirgends mehr aufgerufen, siehe `js/viz/kalenderHeatmap.js:124-136`) - Teil 2 braucht dafür einen neuen, URL-fähigen Mechanismus.

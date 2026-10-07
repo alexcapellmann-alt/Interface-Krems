@@ -30,6 +30,9 @@ const LITERATUR = 'data/literatur.csv';
 const STARTSEITE = 'data/startseite.csv';
 const UEBER = 'data/ueber.csv';
 const ARCHIV = 'data/archiv.csv';
+const ANSICHTEN = 'data/ansichten.csv';
+const ROLLEN = 'data/rollen.csv';
+const ROLLEN_PFLICHT = ['liste', 'begriffe'];
 
 const JAHR = ['jahr']; // Grenzfall G1: ohne `jahr` landen alle Urkunden in "undatiert"
 const VERMOEGENSPROFIL = ['Realvermoegen_fl', 'Gesamtvermoegen_fl', 'Anteil Grundstuecke am RV (%)',
@@ -79,14 +82,22 @@ export const ANSICHT_ANFORDERUNGEN = {
   // Personen
   personenliste: { dateien: { [PERSONENLISTE]: [] }, neben: { [URKUNDEN]: [], [BUERGERBUCH]: [], [INVENTARE]: [] }, ausblenden: PERSONENLISTE },
   bubbleChart: { dateien: { [PERSONENLISTE]: [] }, ausblenden: PERSONENLISTE },
-  familienbaum: { dateien: { [FAMILIEN]: ['familie', 'id'] }, ausblenden: FAMILIEN }, // `id`: Grenzfall G4
-  chordDiagramm: { dateien: { [URKUNDEN]: [] }, neben: { [FAMILIEN]: [] } },
+  // AUFTRAG C1, Punkt 3: `merkmal` - nur angeboten, wenn mindestens eine Person
+  // zur Herrscherfamilie aus archiv.csv (`dynastie_familien`) gehört.
+  familienbaum: {
+    dateien: { [FAMILIEN]: ['familie', 'id'] }, ausblenden: FAMILIEN, // `id`: Grenzfall G4
+    merkmal: { datei: FAMILIEN, spalte: 'familie', konfiguration: 'dynastie_familien', text: 'In familien.csv gehört keine Person zur Herrscherfamilie (Eintrag dynastie_familien in archiv.csv).' }
+  },
+  // AUFTRAG C1, Punkt 4: ohne rollen.csv nicht angeboten (Freigabe Phase 1, Punkt 5)
+  chordDiagramm: { dateien: { [URKUNDEN]: [], [ROLLEN]: ROLLEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: ROLLEN },
   // Orte (mehrere Dateien: nie ausgeblendet, Balken)
   karte: { dateien: { [URKUNDEN]: ['orte'], [ORTE]: ['orte', 'lat', 'lon'] } },
   verbindungskarte: { dateien: { [URKUNDEN]: ['orte'], [ORTE]: ['orte', 'lat', 'lon'] } },
-  bipartiteFlowMap: { dateien: { [URKUNDEN]: [], [ORTE]: ['orte', 'lat', 'lon'] }, neben: { [FAMILIEN]: [] } },
+  bipartiteFlowMap: { dateien: { [URKUNDEN]: [], [ORTE]: ['orte', 'lat', 'lon'], [ROLLEN]: ROLLEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: ROLLEN },
   // Seiten
-  startseite: { dateien: { [STARTSEITE]: ['typ', 'sichtbar'] }, neben: { [ARCHIV]: ['schluessel', 'wert'] } }, // archiv: Grenzfall G5
+  // AUFTRAG C1: `optional` - Datei darf fehlen oder leer sein (dann gelten
+  // Vorgaben); nur wenn sie vorhanden, aber unbrauchbar ist, erscheint ein Balken.
+  startseite: { dateien: { [STARTSEITE]: ['typ', 'sichtbar'] }, neben: { [ARCHIV]: ['schluessel', 'wert'] }, optional: { [ANSICHTEN]: ['bereich'] } }, // archiv: Grenzfall G5
   ueber: { dateien: { [UEBER]: ['text', 'sichtbar'] }, neben: { [ARCHIV]: ['schluessel', 'wert'] }, ausblenden: UEBER },
   literatur: { dateien: { [LITERATUR]: ['zitation'] }, ausblenden: LITERATUR },
   fuehrungenUebersicht: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, ausblenden: FUEHRUNGEN },
@@ -114,13 +125,16 @@ export const SCHLUESSELSPALTEN = {
   [LITERATUR]: ['literatur_id'],
   [STARTSEITE]: ['block_id'],
   [UEBER]: ['block_id'],
-  [ARCHIV]: ['schluessel']
+  [ARCHIV]: ['schluessel'],
+  [ANSICHTEN]: ['bereich', 'ansicht'],
+  [ROLLEN]: ['liste', 'begriffe']
 };
 
 // Folge-Satz für Probleme in Nebendateien, wenn der allgemeine Satz zu
 // unbestimmt wäre (Kerndatei archiv.csv, Freigabe Punkt 3).
 export const NEBENDATEI_FOLGE = {
-  [ARCHIV]: 'Name, Logo und Kontaktangaben des Archivs können deshalb nicht angezeigt werden.'
+  [ARCHIV]: 'Name, Logo und Kontaktangaben des Archivs können deshalb nicht angezeigt werden.',
+  [ANSICHTEN]: 'Es gelten deshalb die Standardnamen und -beschreibungen der Ansichten.'
 };
 
 // Dateien, die die Hintergrund-Prüfung nach dem ersten Bildaufbau lädt

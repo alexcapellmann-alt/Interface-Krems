@@ -44,9 +44,11 @@ const ARCHIV_ERSATZWERTE = {
   website: '',
   website_link: '',
   akzentfarbe: '',
-  karte_zentrum_lat: '48.42',
-  karte_zentrum_lon: '15.6',
-  karte_zoom: '7',
+  // AUFTRAG C1, Punkt 5: kein fester Ort mehr als Ersatz - ohne Angabe
+  // richten sich die Karten nach den Orten in den Daten (kartenStartpunkt()).
+  karte_zentrum_lat: '',
+  karte_zentrum_lon: '',
+  karte_zoom: '',
   footer_text: ''
 };
 
@@ -84,6 +86,31 @@ export function konfigurationswert(schluessel) {
   return quelle[schluessel] ?? ARCHIV_ERSATZWERTE[schluessel] ?? '';
 }
 
+// AUFTRAG C1, Punkt 3/4: ein Wert aus archiv.csv als Liste - mehrere Werte
+// stehen dort mit `|` getrennt (der Loader macht daraus bereits eine Liste).
+// Leerer oder fehlender Eintrag: leere Liste.
+export function konfigurationsliste(schluessel) {
+  const wert = konfigurationswert(schluessel);
+  return (Array.isArray(wert) ? wert : String(wert ?? '').split('|'))
+    .map((teil) => String(teil).trim())
+    .filter((teil) => teil !== '');
+}
+
+// AUFTRAG C1, Punkt 5: Kartenstartpunkt aus archiv.csv, oder null, wenn
+// Breiten-/Längengrad fehlen oder keine Zahlen sind (leerer Wert zählt als
+// fehlend, nicht als 0). Ohne `karte_zoom` gilt Zoomstufe 7.
+export function kartenStartpunkt() {
+  const zahl = (schluessel) => {
+    const wert = String(konfigurationswert(schluessel) ?? '').trim();
+    return wert === '' ? NaN : Number(wert);
+  };
+  const lat = zahl('karte_zentrum_lat');
+  const lon = zahl('karte_zentrum_lon');
+  const zoom = zahl('karte_zoom');
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { zentrum: [lat, lon], zoom: Number.isFinite(zoom) ? zoom : 7 };
+}
+
 // AUFTRAG B2 (Cache-Umstellung): ladeGecachteCSV() kommt jetzt aus
 // js/core/datenCache.js (bisher eine lokale, gleichlautende Kopie hier).
 
@@ -101,15 +128,23 @@ const ZAEHLWERT_DATEIEN = {
   n_inventare: 'data/verlassenschaftsinventare.csv'
 };
 
-async function ermittleZaehlwerte() {
+// AUFTRAG C1, Punkt 1: zu jedem Zählwert zusätzlich `<schluessel>_punkt`
+// mit Tausenderpunkt (z. B. {n_urkunden_punkt} -> "1.067"); die bisherigen
+// Platzhalter (z. B. {n_urkunden} -> "1067" auf der Über-Seite) bleiben.
+const mitTausenderpunkt = (zahl) => String(zahl).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+// nurSchluessel: nur diese Zählwerte ermitteln (lädt nur deren Dateien).
+async function ermittleZaehlwerte(nurSchluessel = null) {
+  const gesucht = Object.entries(ZAEHLWERT_DATEIEN).filter(([schluessel]) => !nurSchluessel || nurSchluessel.includes(schluessel));
   const eintraege = await Promise.allSettled(
-    Object.entries(ZAEHLWERT_DATEIEN).map(async ([schluessel, pfad]) => [schluessel, (await ladeGecachteCSV(pfad)).length])
+    gesucht.map(async ([schluessel, pfad]) => [schluessel, (await ladeGecachteCSV(pfad)).length])
   );
   const werte = {};
   eintraege.forEach((ergebnis, i) => {
-    const [schluessel] = Object.entries(ZAEHLWERT_DATEIEN)[i];
+    const [schluessel] = gesucht[i];
     if (ergebnis.status === 'fulfilled') {
       werte[schluessel] = String(ergebnis.value[1]);
+      werte[`${schluessel}_punkt`] = mitTausenderpunkt(ergebnis.value[1]);
     } else {
       console.warn(`Zählwert "${schluessel}" konnte nicht ermittelt werden (Quelldatei fehlt).`, ergebnis.reason);
     }
@@ -135,6 +170,20 @@ function ersetzePlatzhalterInText(text, werte, fehlendeSammlung) {
     fehlendeSammlung.add(schluessel);
     return treffer;
   });
+}
+
+// AUFTRAG C1, Punkt 1/2: löst die Platzhalter EINES Texts auf (z. B. die
+// Beschreibung einer Ansicht aus ansichten.csv) und lädt dafür nur die
+// Dateien der tatsächlich vorkommenden Zählwerte. null, wenn ein Platzhalter
+// nicht auflösbar ist (der Aufrufer zeigt dann die neutrale Vorgabe).
+export async function ersetzePlatzhalterImText(text) {
+  await ladeArchivKonfiguration();
+  const schluessel = [...String(text).matchAll(PLATZHALTER_MUSTER)].map((treffer) => treffer[1].replace(/_punkt$/, ''));
+  const zaehlSchluessel = schluessel.filter((s) => s in ZAEHLWERT_DATEIEN);
+  const werte = { ...archivWerte, ...(zaehlSchluessel.length > 0 ? await ermittleZaehlwerte(zaehlSchluessel) : {}) };
+  const fehlend = new Set();
+  const ergebnis = ersetzePlatzhalterInText(String(text), werte, fehlend);
+  return fehlend.size > 0 ? null : ergebnis;
 }
 
 // Wendet die Platzhalter-Ersetzung auf JEDES Textfeld eines Records an

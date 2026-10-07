@@ -464,7 +464,7 @@ import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 // Wiederverwendung statt Neuimplementierung (unverändert seit dem
 // Gruppen-Umbau, s.o.).
-import { GRUPPEN, ermittleGruppe } from './chordDiagramm.js';
+import { GRUPPEN, ermittleGruppe, uebernehmeRollen } from './chordDiagramm.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module" - erste Textfassung
 // nannte fälschlich Urkunden/Orte als die zwei Knotenseiten statt Orte/
@@ -913,6 +913,7 @@ export function render(container, data, options = {}) {
   // `:has()`-Sichtbarkeitsregel in fuegeStyleEin() - dasselbe Muster wie
   // karte.js/verbindungskarte.js.
   container.classList.add('bipartiteflowmap-viz-container');
+  uebernehmeRollen(data.rollen || []); // AUFTRAG C1, Punkt 4: Rollenlisten aus rollen.csv
   // `data` ist das kombinierte `{urkunden, familien}`-Objekt
   // (archivalienRegistry.js' `orte.datenDatei`, s.o.) - dasselbe Muster wie
   // chordDiagramm.js' `data.familien || []`.

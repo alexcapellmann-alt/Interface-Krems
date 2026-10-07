@@ -106,8 +106,8 @@
    var(--accent) (dunkles Blau) hätte auf dem ohnehin dunklen Verlauf/Overlay
    zu wenig Kontrast/Signalwirkung - dieselbe Kontrast-Überlegung wie im alten
    Prototyp (dort ebenfalls ein separates Gold für Hero-CTAs, Blau nur auf
-   hellem Kartenhintergrund). Farbton an das Gelb der "krems"-Wortmarke
-   angelehnt, etwas gedeckter für die archivtypische Farbstimmung. */
+   hellem Kartenhintergrund). Farbton an das Gelb der ursprünglichen
+   Wortmarke angelehnt, etwas gedeckter für die archivtypische Farbstimmung. */
 .startseite-slide-cta {
   display: inline-flex;
   align-items: center;

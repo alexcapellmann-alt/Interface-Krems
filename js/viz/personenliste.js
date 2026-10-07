@@ -80,14 +80,12 @@ import {
 // zweiter Absatz wörtlich ergänzt (Transparenz über die Sortier-Heuristik,
 // siehe ermittleSortierNachname()).
 
-// Punkt 2 - Liste wörtlich wie im Auftrag vorgegeben (Groß-/Kleinschreibung
-// und Punkt werden beim Abgleich ignoriert, siehe istTitelwort()).
-const TITEL_WOERTER = [
-  'abt', 'pfleger', 'bürgermeister', 'richter', 'dechant', 'propst', 'bischof', 'herzog', 'graf',
-  'ritter', 'meister', 'frau', 'herr', 'pfarrer', 'kaplan', 'stadtschreiber', 'bürger', 'witwe',
-  'gräfin', 'herzogin', 'freiherr', 'vikar', 'kanoniker', 'domherr', 'landrichter', 'stadtrichter',
-  'kammerer', 'kämmerer', 'rat', 'ratsherr'
-];
+// Punkt 2 - Titelwörter (Groß-/Kleinschreibung und Punkt werden beim Abgleich
+// ignoriert, siehe istTitelwort()). AUFTRAG C1, Punkt 4: die Liste steht in
+// data/rollen.csv (`liste` = namenszusatz) statt fest im Code; gesetzt in
+// render(). Fehlt sie, sortiert die Liste ohne Titelwörter (kein Hinweis
+// nötig: es wird nichts Falsches angezeigt, nur gröber sortiert).
+let titelWoerter = [];
 const ARTIKEL_WOERTER = ['der', 'die', 'dem', 'des'];
 const VERWANDTSCHAFT_ENDUNGEN = ['sohn', 'sonn', 'tochter'];
 // Herkunfts-/Sitzangabe-Marker - AUFTRAG "Personenliste – Sonderfälle bei
@@ -113,7 +111,7 @@ const ROEMISCH_MUSTER = /^[ivxlcdm]+\.?$/i;
 const ROEMISCH_KLAMMER_MUSTER = /^\([ivxlcdm]+\.?\)$/i;
 
 function istTitelwort(wort) {
-  return TITEL_WOERTER.includes(wort.toLowerCase().replace(/\.$/, ''));
+  return titelWoerter.includes(wort.toLowerCase().replace(/\.$/, ''));
 }
 
 // Punkt 2: Heuristik, KEINE linguistisch gesicherte Nachnamen-Erkennung
@@ -860,6 +858,11 @@ export function render(container, data, options = {}) {
   // `verlassenschaften` (Teil 2h, Punkt 4b) werden hier EINMALIG zu
   // Nachschlage-Maps (Signatur/ID -> Record) aufbereitet statt bei jedem
   // Zeilen-Klick erneut linear durchsucht zu werden.
+  titelWoerter = (data.rollen || [])
+    .filter((record) => String(record.liste ?? '').trim() === 'namenszusatz')
+    .flatMap((record) => (Array.isArray(record.begriffe) ? record.begriffe : [record.begriffe]))
+    .map((wert) => String(wert ?? '').trim().toLowerCase().replace(/\.$/, ''))
+    .filter((wert) => wert !== '');
   const urkundenRecords = data.urkunden || [];
   const buergerbuchRecords = data.buergerbuch || [];
   const inventarRecords = data.verlassenschaften || [];
