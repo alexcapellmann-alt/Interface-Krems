@@ -84,7 +84,8 @@ import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.j
 import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
 import { setFilterEntity, getZustand, clearZielSignatur } from '../core/state.js';
-import { CAT_COLORS, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie, alleUrkundenKategorien } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { baueGenanntePersonenZeile } from '../utils/genanntePersonen.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
@@ -135,7 +136,7 @@ const SEITENGROESSE = 50;
 // einer Urkunde ist - ohne diesen Ausschluss wären es 17 statt der im Auftrag
 // geforderten 16 Einträge.
 function ermittleAlleKategorien() {
-  return Object.keys(CAT_COLORS).filter((schluessel) => schluessel !== 'default' && schluessel !== '__unbekannt__');
+  return alleUrkundenKategorien(); // AUFTRAG C2: Kategorien aus den Daten (feste Reihenfolge, dann automatische)
 }
 
 // Punkt 1 (Suchschlitz): durchsucht laut Auftrag genau die Felder signatur,
@@ -414,7 +415,7 @@ function baueKategorienFeld(record) {
   kategorienListe.forEach((kategorie) => {
     const badge = document.createElement('span');
     badge.className = 'regk-kategorie-badge';
-    const farbe = CAT_COLORS[kategorie] || CAT_COLORS.default;
+    const farbe = farbeFuerUrkundenKategorie(kategorie);
     badge.style.backgroundColor = farbe;
     badge.style.color = passendeTextfarbe(farbe);
     badge.textContent = kategorie;

@@ -11,7 +11,7 @@
 // separaten Bereich gezeigt, sondern als reguläre eigene Spalte (Abschnitt 12: nie
 // stillschweigend ausblenden) - siehe gruppiereNachJahrhundertUndKategorie().
 
-import { CAT_COLORS } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ermittleKategorienSortiertNachHaeufigkeit, gruppiereNachJahrhundertUndKategorie } from '../utils/urkundenZeit.js';
 
@@ -21,7 +21,7 @@ const SPALTENABSTAND = 2;
 let instanz = null; // { container, records, options } – ein aktives Marimekko pro Modul-Ladung
 
 function farbeFuerKategorie(kategorie) {
-  return CAT_COLORS[kategorie] || CAT_COLORS.default;
+  return farbeFuerUrkundenKategorie(kategorie);
 }
 
 function summeProBucket(zeile) {

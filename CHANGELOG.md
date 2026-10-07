@@ -7,6 +7,45 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-07 (109) – Automatische Kategorienfarben, Restpunkte, Kategorie „Bevölkerung“ (Teil C2)
+
+Auftrag C2 (Prüfbericht Punkt 6, Übertragbarkeit).
+- **Neu `js/utils/urkundenKategorieFarben.js`:**
+  - Die festen Krems-Farben bleiben.
+  - Andere Urkundenkategorien bekommen eine automatische, deterministische
+    Farbe aus einer festen 24er-Palette: Kontrast ≥ 3:1 gegen den
+    Hintergrund, ≥ 4,5:1 für die Beschriftung, unabhängig von der
+    Zeilenreihenfolge.
+  - Kein Grau-Fallback mehr für echte Kategorien.
+- **Umgestellt:** `app.js` (Farbvergabe beim Laden von `urkunden.csv`),
+  `sidebar.js`, `alluvial.js`, `horizonChart.js`, `kalenderHeatmap.js`,
+  `marimekko.js`, `regestenKachelraster.js`, `ridgeline.js`, `sankey.js`,
+  `swimlanes.js`, `zeitachse.js`.
+- **Favicon:** Ohne Eintrag gibt es kein 404 mehr (leeres Ersatz-Favicon in
+  `index.html`).
+- **`anbieten=nein`:** Ein direkter Link zeigt einen Hinweisbalken
+  (`ansichtenKonfiguration.js`, `app.js`).
+- **Daten (Entscheidung des Autors):** Die Kategorie „Bevölkerung und
+  Bevölkerungsgruppen“ heißt wieder „Bevölkerung“, wie schon in CHANGELOG 9
+  entschieden.
+  - Geändert: `urkunden.csv` 100 Zeilen, `bestandsverzeichnis.csv` 29 Zeilen.
+  - Die 100 Urkunden erscheinen jetzt in `#952323` statt grau.
+- **Doku:** SCHEMA.md (Abschnitt 14 „Farben der Kategorien“, `ansichten.csv`,
+  `urkunden.csv`), Masterprompt, Datenkorrekturverzeichnis.
+
+**Ergebnis:**
+- Referenz 47/47: 36 identisch, 11 nur mit der Umbenennung „Bevölkerung“,
+  0 Fehler.
+- Farbvergleich: einzige Änderung Grau → `#952323`.
+- Zweitarchiv: 0 Eingriffe außerhalb der CSV (vorher 9), 0 Fehler.
+- axe: keine neuen Befunde.
+- Farbtabelle: 0 Verletzungen der Kontrastgrenzen bei den automatischen
+  Farben.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-07 (108) – Archivspezifisches aus dem Code in die Daten (Teil C1)
 
 Auftrag C1 (Teil von Auftrag C, Prüfbericht Punkt 6, Übertragbarkeit).

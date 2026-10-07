@@ -146,7 +146,7 @@
 // siehe Akzeptanzkriterium des neuen Auftrags). Kein eigener Zurück-Button-
 // Handler mehr nötig (sidebar.js verdrahtet ihn selbst).
 
-import { CAT_COLORS } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
 import {
@@ -696,7 +696,7 @@ function zeichneTagModus(gefiltert, zeigeUnsicherheit) {
     ? zeichneUnbekanntBereich(svg, nichtDarstellbar, {
       breite: tatsaechlicheBreite,
       yStart: nichtDarstellbarStart,
-      farbeFn: (d) => CAT_COLORS[ersteKategorie(d.record)] || CAT_COLORS.default,
+      farbeFn: (d) => farbeFuerUrkundenKategorie(ersteKategorie(d.record)),
       tooltipTextFn: (d) => baueUrkundenTooltipText(d.record),
       container: plotBereich
     })
@@ -795,7 +795,7 @@ function zeichneJahrzehntModus(gefiltert, zeigeUnsicherheit) {
     ? zeichneUnbekanntBereich(svg, nichtDarstellbar, {
       breite: tatsaechlicheBreite,
       yStart: nichtDarstellbarStart,
-      farbeFn: (d) => CAT_COLORS[ersteKategorie(d.record)] || CAT_COLORS.default,
+      farbeFn: (d) => farbeFuerUrkundenKategorie(ersteKategorie(d.record)),
       tooltipTextFn: (d) => baueUrkundenTooltipText(d.record),
       container: plotBereich
     })

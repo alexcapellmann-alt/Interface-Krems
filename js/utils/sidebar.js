@@ -63,7 +63,7 @@
 // jeweiliger Dateikopf-Kommentar dort).
 
 import { passendeTextfarbe } from './kategorieFarben.js';
-import { CAT_COLORS } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie } from './urkundenKategorieFarben.js'; // AUFTRAG C2
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from './bilder.js';
 import { oeffneLightbox } from './lightbox.js';
 import { baueUnsicherheitAbsatz } from './unsicherAbsatz.js';
@@ -192,7 +192,7 @@ export function baueUrkundenListeInhalt(records, { onEintragKlick } = {}) {
       const badges = document.createElement('div');
       badges.className = 'bestand-sidebar-urkunden-badges';
       kategorienListe.forEach((kategorie) => {
-        const farbe = CAT_COLORS[kategorie] || CAT_COLORS.default;
+        const farbe = farbeFuerUrkundenKategorie(kategorie);
         const badge = document.createElement('span');
         badge.className = 'bestand-sidebar-badge';
         badge.textContent = kategorie;
@@ -352,7 +352,7 @@ function baueUrkundenKategorienFeld(record) {
   const badges = document.createElement('div');
   badges.className = 'bestand-sidebar-badges';
   kategorienListe.forEach((kategorie) => {
-    const farbe = CAT_COLORS[kategorie] || CAT_COLORS.default;
+    const farbe = farbeFuerUrkundenKategorie(kategorie);
     const badge = document.createElement('span');
     badge.className = 'bestand-sidebar-badge';
     badge.textContent = kategorie;

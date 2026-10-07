@@ -108,7 +108,7 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 | `personen` | Liste (Pipe-getrennt) | **Pflicht** (Adjazenzmatrix, Arc-Diagramm) | |
 | `personen_id` | Text/Liste | nein | Verweis auf `personenliste.csv` (siehe Tabelle 8) |
 | `personen_unsicher` | ja/nein | – | |
-| `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | |
+| `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | Farben: Die 16 Krems-Kategorien haben feste Farben; jede andere Kategorie bekommt automatisch eine Farbe (Abschnitt 14, „Farben der Kategorien“) |
 | `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
 | `unsicherheit_anmerkung` | Text | nein | für Hover-Tooltip |
 | `bilder` | Liste (Pipe-getrennt) | nein | **neu (Auftrag "Urkundenfotos über die Spalte `bilder`", 2026-09-30):** die tatsächlichen Dateinamen der Fotos zu dieser Urkunde, ohne Pfad - der vollständige Bildpfad ergibt sich aus `fotos/thumbs/<foto_ordner>/<Dateiname>`. Letzte Spalte der Tabelle, direkt nach `foto_ordner` eingefügt. Löst das bisherige, separat per Kommandozeilenskript erzeugte JSON-Manifest ab (siehe PROJEKTLOG) - Foto-Zuordnung ist damit ohne Programmierkenntnisse direkt in der Tabelle pflegbar. |
@@ -562,7 +562,7 @@ Legt fest, wie die Bereiche (z. B. „Urkunden“, „Bürgerbuch“) und ihre A
 | `name` | Text | nein | angezeigter Name. Leer: Standardname. Beim Bereich `bestand` bleibt der Name „Bestand“ (Hauptnavigation) |
 | `beschreibung` | Text | nein | Text unter der Kachel in der Galerie; Platzhalter wie `{n_urkunden_punkt}` erlaubt (Abschnitt 13). Leer: Standardbeschreibung |
 | `reihenfolge` | Zahl | nein | Reihenfolge der Bereiche bzw. der Ansichten innerhalb eines Bereichs. Ohne Zahl: hinter den nummerierten, in der Standardreihenfolge |
-| `anbieten` | ja/nein | nein | `nein` = Ansicht bzw. ganzer Bereich wird nicht angeboten, auch wenn Daten vorhanden sind. Leer: ja |
+| `anbieten` | ja/nein | nein | `nein` = Ansicht bzw. ganzer Bereich wird nicht angeboten, auch wenn Daten vorhanden sind. Ein gespeicherter Link darauf zeigt den Hinweisbalken „Diese Ansicht wird in diesem Interface nicht angeboten …“ (seit Auftrag C2). Leer: ja |
 
 Beispiel (Krems):
 ```
@@ -597,7 +597,7 @@ Wer zur Gruppe „Dynastie“ gehört, steht nicht hier, sondern ergibt sich aus
 
 ## 14. Neues Archiv einrichten (Anleitung, Stand Auftrag C1, 2026-10-03)
 
-Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nutzen wollen. **Alles Archivspezifische steht in CSV-Dateien im Ordner `data/`** (dazu Logo, Favicon und Fotos); am Programm selbst muss nichts geändert werden. *Ausnahme bis Auftrag C2:* Farben für Urkundenkategorien, die es in Krems nicht gibt, erscheinen noch grau.
+Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nutzen wollen. **Alles Archivspezifische steht in CSV-Dateien im Ordner `data/`** (dazu Logo, Favicon und Fotos); am Programm selbst muss nichts geändert werden - auch nicht für die Farben eigener Urkundenkategorien (seit Auftrag C2, siehe unten).
 
 **Schritt 1 - Pflicht: Name und Startseite**
 - `archiv.csv` (Abschnitt 13.1): Name, Kurzname, Seitentitel, Kontakt, Akzentfarbe, Fußzeile. Logo-Datei und Kartenmitte sind freiwillig.
@@ -619,6 +619,14 @@ Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nut
 - Spaltennamen, die technischen Namen in `ansichten.csv` (`bereich`, `ansicht`) und die Schlüssel in `archiv.csv` sind fest.
 - `|` ist in allen Dateien das Trennzeichen für Listen und darf nicht als normales Zeichen vorkommen.
 - Die Oberfläche ist deutschsprachig; Sprache und Füllwörter der Wortwolke sind nicht einstellbar.
+
+**Farben der Kategorien (seit Auftrag C2, 2026-10-07)**
+- Die 16 Kategorien der Krems-Urkunden (`kategorien` in `urkunden.csv`) haben feste Farben.
+- Jede andere Kategorie bekommt **automatisch** eine Farbe aus einer festen Liste von 24 Farben - kein Zufall: Der Name bestimmt den Platz in der Liste, gleicher Name ergibt gleiche Farbe, auch wenn die Zeilen anders sortiert sind.
+- Wollen zwei Namen denselben Platz, bekommt der alphabetisch spätere einen anderen, farblich deutlich verschiedenen Platz. Kommt später eine neue Kategorie hinzu, kann in diesem seltenen Fall eine bestehende ihre Farbe wechseln. Ab 25 eigenen Kategorien wiederholen sich Farben.
+- Jede automatische Farbe hat mindestens 3:1 Kontrast gegen den Seitenhintergrund und erlaubt eine Beschriftung mit mindestens 4,5:1.
+- Filter und Legenden zeigen nur Kategorien, die in den Daten vorkommen. Bestandskategorien (`bkk_kategorie`) wurden schon immer automatisch gefärbt.
+- Ohne eigenes Favicon (`favicon_datei` leer) erscheint kein Symbol; der Browser meldet dann keinen Fehler mehr (Auftrag C2).
 
 **Prüfen:** Seite öffnen; Hinweisbalken nennen Datei und Spalte, wenn etwas fehlt oder falsch gespeichert ist (meist: Excel-Format „CSV UTF-8 (durch Trennzeichen getrennt)“ wählen).
 

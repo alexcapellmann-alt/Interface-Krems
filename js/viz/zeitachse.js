@@ -101,7 +101,7 @@
 // dadurch jetzt zusätzlich die Fotogalerie samt Lightbox (siehe
 // oeffneSidebar() weiter unten für die Migrations-Details).
 
-import { CAT_COLORS } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie, alleUrkundenKategorien } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import {
@@ -211,7 +211,7 @@ const HERVORHEBUNG_DIM_OPAZITAET = 0.12;
 let instanz = null; // { container, wurzel, sidebar, infoButton, records, options, zoomVerhalten, zoomTransform, letzteBreite, ausgewaehltesRecord, punkteAuswahl, ausgewaehlteKategorien, kategorieMenuOffen, kategoriePanel, kategorieTriggerBtn } – eine aktive Zeitachse pro Modul-Ladung
 
 function farbeFuerKategorie(kategorie) {
-  return CAT_COLORS[kategorie] || CAT_COLORS.default;
+  return farbeFuerUrkundenKategorie(kategorie);
 }
 
 // Punkt 5, Kriterien wörtlich aus dem Auftrag - identisch zu
@@ -231,9 +231,11 @@ function istRecordUnsicher(record) {
 // ebenfalls nicht exportiert, daher auch hier eine kleine, bewusst
 // inhaltsgleiche Kopie).
 function ermittleAlleKategorien() {
-  return Object.keys(CAT_COLORS).filter((schluessel) => schluessel !== 'default' && schluessel !== '__unbekannt__');
+  return alleUrkundenKategorien(); // AUFTRAG C2: Kategorien aus den Daten (feste Reihenfolge, dann automatische)
 }
-const ANZAHL_KATEGORIEN = ermittleAlleKategorien().length; // CAT_COLORS ändert sich nicht zur Laufzeit - einmalig berechnet statt bei jedem Filter-Aufruf pro Record neu
+// AUFTRAG C2: die Kategorienliste kommt jetzt aus den Daten (steht erst nach
+// dem Laden fest) - deshalb bei Bedarf ermittelt statt einmalig beim Laden des Moduls.
+const anzahlKategorien = () => ermittleAlleKategorien().length;
 
 // Punkt 3, Feldauswahl: "gleiche Feldauswahl wie in der aufgeklappten
 // Kachelraster-Ansicht" (Signatur/Datum/Orte/Personen/Kategorien/Regest).
@@ -418,7 +420,7 @@ function wireZoom({ svgAuswahl, xSkalaBasis, achseGruppe, punkteAuswahl, breite,
 // Kategorie bleiben dann sichtbar, siehe passtKategorieFilter()).
 function kategorieFilterSchraenktEin() {
   const anzahl = instanz.ausgewaehlteKategorien.size;
-  return anzahl > 0 && anzahl < ANZAHL_KATEGORIEN;
+  return anzahl > 0 && anzahl < anzahlKategorien();
 }
 
 function passtKategorieFilter(record) {
@@ -534,7 +536,7 @@ function baueKategorieFilter() {
   const anzahlAusgewaehlt = instanz.ausgewaehlteKategorien.size;
   const beschriftung = anzahlAusgewaehlt === 0
     ? 'Kategorie: keine Auswahl (alle sichtbar)'
-    : anzahlAusgewaehlt >= ANZAHL_KATEGORIEN
+    : anzahlAusgewaehlt >= anzahlKategorien()
       ? 'Kategorie: alle ausgewählt'
       : `Kategorie: ${anzahlAusgewaehlt} ausgewählt`;
 

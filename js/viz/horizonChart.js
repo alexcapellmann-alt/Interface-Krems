@@ -16,7 +16,8 @@
 // Unsicherheits-Kennzeichnung: kleines rotes Dreieck am oberen Rand jedes
 // Zeitfensters mit mindestens einer unsicher datierten Urkunde dieser Kategorie.
 
-import { CAT_COLORS, ACHSEN_SCHRIFTGROESSE } from '../config/constants.js';
+import { ACHSEN_SCHRIFTGROESSE } from '../config/constants.js';
+import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import {
   teileNachJahr,
@@ -59,7 +60,7 @@ const RAND = { oben: 10, unten: 30, links: 160, rechts: 20 };
 let instanz = null; // { container, records, options } – ein aktiver Horizon Chart pro Modul-Ladung
 
 function farbeFuerKategorie(kategorie) {
-  return CAT_COLORS[kategorie] || CAT_COLORS.default;
+  return farbeFuerUrkundenKategorie(kategorie);
 }
 
 function bandHoehe(anzahl, bandIndex, schwellenwert, stripHoehe) {
