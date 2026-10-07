@@ -19,3 +19,7 @@ karte_zentrum_lat;48.42;Startmittelpunkt der Karten (Breitengrad, Dezimalpunkt)
 karte_zentrum_lon;15.6;Startmittelpunkt der Karten (Längengrad, Dezimalpunkt)
 karte_zoom;7;Startzoomstufe der Karten
 footer_text;Interface des Stadtarchivs Krems. Prototyp im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).;Fußzeile aller Seiten außer der Startseite
+dynastie_familien;habsburg|spanische_habsburger|habsburg_tirol|habsburg_lothringen;Werte der Spalte familie in familien.csv, die zur Herrscherfamilie gehören (mehrere mit senkrechtem Strich). Nur wenn mindestens eine Person dazu gehört, wird der Zeitleisten-Stammbaum angeboten. Reihenfolge = Farbabstufung der Zweige.
+dynastie_name;Habsburg;Name der Herrscherfamilie in den Texten des Zeitleisten-Stammbaums (z. B. „des Hauses Habsburg“)
+dynastie_gruppenname;Dynastie (Habsburger);Name der Gruppe Dynastie in Chord-Diagramm und Bipartite Flow Map. Leer: „Dynastie“
+regest_quellenvermerk;Source Regest|Quelle Regest;Vermerk, ab dem ein Regest-Text in der Wortwolke nicht mehr gezählt wird (Quellenangabe), jeweils gefolgt von einem Doppelpunkt. Mehrere Schreibweisen mit senkrechtem Strich. Leer: ganzes Regest zählt

@@ -336,7 +336,7 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
-import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { infotextFuerModul, konfigurationswert, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareHoehe, ermittleVerfuegbareBreite } from '../utils/viewportGroesse.js';
 import {
   istBildschirmZuKlein,
@@ -401,7 +401,15 @@ const TICK_MIN_PIXELABSTAND_Y = 40;
 // Kästchen/Linien bei Hover/Klick-Hervorhebung (Auftrag nennt "ca. 0,1-0,15").
 const HERVORHEBUNG_DIM_OPAZITAET = 0.12;
 
-const HABSBURG_FAMILIEN = ['habsburg', 'spanische_habsburger', 'habsburg_tirol', 'habsburg_lothringen'];
+// AUFTRAG C1, Punkt 3: welche Werte der Spalte `familie` zur Herrscherfamilie
+// gehören und wie sie heißt, steht in archiv.csv (`dynastie_familien`,
+// `dynastie_name`; Krems: Habsburg) - nicht mehr fest im Code. Ob die Ansicht
+// überhaupt angeboten wird, entscheidet datenVerfuegbarkeit.js (`merkmal`).
+const dynastieFamilien = () => konfigurationsliste('dynastie_familien');
+const dynastieName = () => {
+  const wert = konfigurationswert('dynastie_name');
+  return (Array.isArray(wert) ? wert.join(' ') : String(wert ?? '')).trim() || 'Herrscherfamilie';
+};
 
 // Farbsystem - Habsburg-Basis + 3 Varianten (dieselbe Technik wie zuvor:
 // d3.rgb().brighter()/.darker(), analog zu kategorieFarben.js'
@@ -414,12 +422,10 @@ const HABSBURG_FAMILIEN = ['habsburg', 'spanische_habsburger', 'habsburg_tirol',
 // neutralen/Familienfarbe") und nennt nur Habsburg-Varianten + Neutral,
 // keine weiteren Familienfarben mehr.
 const HABSBURG_BASIS_FARBE = '#7a1f2e';
-const HABSBURG_VARIANTEN = {
-  habsburg: 0,
-  spanische_habsburger: 0.8,
-  habsburg_tirol: -0.5,
-  habsburg_lothringen: 1.6
-};
+// AUFTRAG C1, Punkt 3: Helligkeitsabstufung je Zweig in der Reihenfolge von
+// `dynastie_familien` (Krems: habsburg 0, spanische_habsburger 0.8,
+// habsburg_tirol -0.5, habsburg_lothringen 1.6 - wie bisher fest im Code).
+const ZWEIG_ABSTUFUNGEN = [0, 0.8, -0.5, 1.6];
 const GRAU_EHEPARTNERFAMILIE = '#9a9a9a';
 
 // Politische Stellung - Rand/Symbol UND jetzt zusätzlich die
@@ -481,7 +487,8 @@ function baueDatenIndex(records) {
 // nicht hartcodiert (siehe Dateikopf-Kommentar).
 function ermittleHabsburgKreis(records) {
   const byId = new Map(records.map((r) => [r.id, r]));
-  const kern = new Set(records.filter((r) => HABSBURG_FAMILIEN.includes(r.familie)).map((r) => r.id));
+  const familien = dynastieFamilien();
+  const kern = new Set(records.filter((r) => familien.includes(r.familie)).map((r) => r.id));
   const zusaetzlich = new Set();
   kern.forEach((id) => {
     ehepartnerListe(byId.get(id)).forEach((eid) => {
@@ -495,7 +502,8 @@ function ermittleHabsburgKreis(records) {
 
 function berechneFamilienFarben() {
   const farben = new Map();
-  Object.entries(HABSBURG_VARIANTEN).forEach(([familie, faktor]) => {
+  dynastieFamilien().forEach((familie, index) => {
+    const faktor = ZWEIG_ABSTUFUNGEN[index % ZWEIG_ABSTUFUNGEN.length];
     const basis = d3.rgb(HABSBURG_BASIS_FARBE);
     const farbe = (faktor >= 0 ? basis.brighter(faktor) : basis.darker(-faktor)).formatHex();
     farben.set(familie, farbe);
@@ -1323,7 +1331,7 @@ function baueFarblegende() {
   wrapper.appendChild(titel);
 
   const eintraege = [
-    { farbe: HABSBURG_BASIS_FARBE, label: 'Familienfarbe (Habsburg-Linie, Farbton je Zweig leicht abweichend)' },
+    { farbe: HABSBURG_BASIS_FARBE, label: `Familienfarbe (${dynastieName()}-Linie, Farbton je Zweig leicht abweichend)` },
     { farbe: GRAU_EHEPARTNERFAMILIE, label: 'Ehepartner aus anderer Familie' },
     { farbe: GOLD_FARBE, label: 'Regierungszeit als Kaiser/König aus eigenem Recht' },
     { farbe: HEIRAT_FARBE, label: 'Kaiserin/König durch Heirat (ganzer Balken)' }
@@ -1382,7 +1390,7 @@ function zeichneFamilienbaum() {
   if (wurzeln.length === 0) {
     const hinweis = document.createElement('p');
     hinweis.className = 'familienbaum-leer-hinweis';
-    hinweis.textContent = 'Keine Personen im Habsburg-Kreis gefunden.';
+    hinweis.textContent = `Keine Personen im ${dynastieName()}-Kreis gefunden.`;
     plotBereich.appendChild(hinweis);
     return;
   }
@@ -1400,7 +1408,7 @@ function zeichneFamilienbaum() {
   const svg = d3.select(plotBereich).append('svg')
     .attr('width', breite).attr('height', hoehe)
     .attr('role', 'img')
-    .attr('aria-label', 'Habsburg-Zeitleistenbaum');
+    .attr('aria-label', `${dynastieName()}-Zeitleistenbaum`);
   // Punkt 3 (3. Folgeauftrag): Klick auf freie Fläche löst die eingefrorene
   // Hervorhebung - erreicht diesen Handler NUR, wenn der Klick nicht auf
   // einer Personen-Gruppe war (deren eigener Klick-Handler ruft
@@ -1411,7 +1419,7 @@ function zeichneFamilienbaum() {
     aktualisiereHervorhebung();
   });
   svg.append('desc').text(
-    'Zeitleisten-Stammbaum des Hauses Habsburg: jeder Balken reicht vom Geburts- bis zum Sterbejahr der Person. '
+    `Zeitleisten-Stammbaum des Hauses ${dynastieName()}: jeder Balken reicht vom Geburts- bis zum Sterbejahr der Person. `
     + 'Bei Kaisern und Königen aus eigenem Recht ist der Regierungszeitraum golden hervorgehoben, Kaiserinnen und '
     + 'Königinnen durch Heirat sind vollständig in einem helleren Goldton gefüllt. Gestrichelt umrandete Personen '
     + 'haben unsichere Angaben.'

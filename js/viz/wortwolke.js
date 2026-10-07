@@ -28,7 +28,7 @@
 import { CAT_COLORS } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
-import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { infotextFuerModul, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { alsText } from '../utils/textwert.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
@@ -51,8 +51,15 @@ const STOPWOERTER = new Set([
 
 // AUFTRAG B1 (Prüfbericht Punkt 3): `regest` kann durch "|" eine Liste sein
 // (Loader-Konvention) - als Text mit " | " verarbeiten statt an .split() abzubrechen.
+// AUFTRAG C1, Punkt 4: ab welchem Vermerk der Text als Quellenangabe gilt und
+// nicht mehr gezählt wird, steht in archiv.csv (`regest_quellenvermerk`,
+// Krems: "Source Regest|Quelle Regest", jeweils gefolgt von ":"). Leer: das
+// ganze Regest zählt.
+const alsMuster = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
 function bereinigeRegestText(regest) {
-  return alsText(regest).split(/(?:Source|Quelle) Regest\s*:/i)[0];
+  const vermerke = konfigurationsliste('regest_quellenvermerk');
+  if (vermerke.length === 0) return alsText(regest);
+  return alsText(regest).split(new RegExp(`(?:${vermerke.map(alsMuster).join('|')})\\s*:`, 'i'))[0];
 }
 
 function zaehleWorthaeufigkeit(records) {

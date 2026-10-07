@@ -38,14 +38,11 @@ body {
   gap: var(--space-4);
 }
 
-/* Schritt 6: zweizeilige Wortmarke statt reinem Textschriftzug - "krems"
-   (gelbes "k", Rest schwarz) als SVG, "STADTARCHIV" als kleinere Unterzeile
-   darunter (Großschreibung per CSS, Markup bleibt "Stadtarchiv" lesbarer).
-   Dieselbe SVG wie im alten Single-File-Prototyp (Desktop/GitHub/
-   Interface-Krems/index.html, dort #logo-link/.logo-mark) - reale, bereits
-   für dieses Projekt genutzte Wortmarke, keine neu erfundene Grafik. Verlinkt
-   auf die neue Startseite (leerer Hash), wie bei einem Logo/einer Wortmarke
-   allgemein üblich. */
+/* Zweizeilige Wortmarke: Logo-Grafik aus archiv.csv (`logo_datei`) und
+   darunter der kleinere Untertitel (`logo_untertitel`, Großschreibung per
+   CSS). Ohne Logo-Datei steht der Kurzname des Archivs als Text an der
+   Logo-Stelle (.app-logo-text, AUFTRAG C1). Verlinkt auf die Startseite
+   (leerer Hash), wie bei einem Logo allgemein üblich. */
 .app-logo {
   display: inline-flex;
   flex-direction: column;
@@ -57,6 +54,7 @@ body {
   text-decoration: none;
 }
 .app-logo-svg { height: 28px; width: auto; display: block; }
+.app-logo-text { font-weight: 700; font-size: 1.15rem; line-height: 28px; color: var(--text); }
 .app-logo-sub {
   font-size: .65rem;
   letter-spacing: .13em;

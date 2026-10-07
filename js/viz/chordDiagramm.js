@@ -145,35 +145,30 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
-import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { infotextFuerModul, konfigurationswert } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
 
-// Punkt 1.2 - Wortgrenzen-Prüfung (siehe Dateikopf-Kommentar).
-const KLERUS_WOERTER = [
-  'Bischof', 'Erzbischof', 'Abt', 'Äbtissin', 'Dechant', 'Propst', 'Pfarrer', 'Kaplan',
-  'Kanoniker', 'Domherr', 'Prior', 'Priorin', 'Guardian', 'Kardinal', 'Weihbischof',
-  'Offizial', 'Vikar', 'Chorherr', 'Stiftsherr', 'Pater', 'Frater', 'Konventual', 'Mönch', 'Nonne'
-];
+// AUFTRAG C1, Punkt 4: die Rollenlisten (Punkt 1.2 Klerus, 1.3a Adelstitel,
+// 1.3b Adelsfamilien mit Schreibvarianten) stehen in data/rollen.csv (Spalten
+// `liste`, `begriffe`) statt fest im Code. Geladen über die Bereichsdaten
+// (archivalienRegistry.js, `rollen`) und hier per uebernehmeRollen() gesetzt.
+// Fehlt die Datei, werden Chord-Diagramm und Flow Map nicht angeboten
+// (datenAnforderungen.js) - ohne Listen landeten sonst alle Personen außer
+// der Dynastie fälschlich im Bürgertum.
+let rollen = { klerus: [], adelTitel: [], adelFamilien: [] };
 
-// Punkt 1.3a - ebenfalls wortgrenzen-geprüft.
-const ADEL_TITEL_WOERTER = [
-  'Herzog', 'Herzogin', 'Graf', 'Gräfin', 'Ritter', 'Freiherr', 'Freifrau', 'Markgraf',
-  'Markgräfin', 'Fürst', 'Fürstin', 'Erzherzog', 'Erzherzogin', 'Baron', 'Junker',
-  'Landgraf', 'Pfalzgraf', 'Burggraf', 'Edler', 'Edle'
-];
-
-// Punkt 1.3b - je Familie alle im Auftrag genannten Schreibvarianten, als
-// Teilstring geprüft (siehe Dateikopf-Kommentar zur bewussten Abweichung von
-// der Wortgrenzen-Regel bei diesen Eigennamen).
-const ADEL_FAMILIEN_VARIANTEN = [
-  ['Wallsee'], ['Eytzing', 'Eytzingen', 'Eyzing'], ['Grafenegg'],
-  ['Puchhaim', 'Puchheim', 'Buchhaim'], ['Maissau'], ['Roggendorf'], ['Hardegg'], ['Zelking'],
-  ['Volkenstorf', 'Volkensdorf', 'Volkensdorff', 'Volkerstorff', 'Volkestorf'], ['Sternberg'],
-  ['Cunstat'], ['Podiebrad'], ['Starhemberg', 'Starchenberger'], ['Schaunberg'], ['Chuenring'],
-  ['Liechtenstein'], ['Eberstorff'], ['Brandis'], ['Zedwitz'], ['Pottendorf', 'Potendorf'],
-  ['Dachsperg', 'Dachsberg'], ['Rechberg'], ['Plankenstein'], ['Welz']
-];
+// Exportiert: bipartiteFlowMap.js nutzt dieselbe Einteilung (ermittleGruppe()).
+export function uebernehmeRollen(rollenRecords = []) {
+  const begriffe = (record) => (Array.isArray(record.begriffe) ? record.begriffe : [record.begriffe])
+    .map((wert) => String(wert ?? '').trim()).filter((wert) => wert !== '');
+  const liste = (name) => rollenRecords.filter((record) => String(record.liste ?? '').trim() === name);
+  rollen = {
+    klerus: liste('klerus').flatMap(begriffe),
+    adelTitel: liste('adel_titel').flatMap(begriffe),
+    adelFamilien: liste('adel_familie').map(begriffe).filter((varianten) => varianten.length > 0)
+  };
+}
 
 // Reihenfolge bestimmt sowohl die Segment-Anordnung im Kreis als auch die
 // Matrix-Indizierung. Farben: vier klar unterscheidbare, moderat gesättigte
@@ -188,7 +183,10 @@ const ADEL_FAMILIEN_VARIANTEN = [
 // änderte Klassifikationslogik für seine vier Kategoriebalken/Flussbänder,
 // statt sie ein zweites Mal zu implementieren (Auftrag wörtlich).
 export const GRUPPEN = [
-  { schluessel: 'dynastie', label: 'Dynastie (Habsburger)', farbe: '#8b1a2b' },
+  // AUFTRAG C1, Punkt 3: Name aus archiv.csv (`dynastie_gruppenname`,
+  // Krems: "Dynastie (Habsburger)"); Getter, weil archiv.csv erst beim Start
+  // geladen wird, dieses Modul aber schon vorher ausgewertet sein kann.
+  { schluessel: 'dynastie', get label() { return String(konfigurationswert('dynastie_gruppenname') || '').trim() || 'Dynastie'; }, farbe: '#8b1a2b' },
   { schluessel: 'adel', label: 'Adel', farbe: '#1f4e8c' },
   { schluessel: 'klerus', label: 'Klerus', farbe: '#5b2d82' },
   { schluessel: 'buerger', label: 'Bürgertum', farbe: '#2f7a45' }
@@ -207,7 +205,7 @@ function enthaeltGanzesWort(name, liste) {
 
 function enthaeltFamilienname(name) {
   const lower = String(name || '').toLowerCase();
-  return ADEL_FAMILIEN_VARIANTEN.some((varianten) => varianten.some((v) => lower.includes(v.toLowerCase())));
+  return rollen.adelFamilien.some((varianten) => varianten.some((v) => lower.includes(v.toLowerCase())));
 }
 
 // Punkt 1, EXAKT in der vorgegebenen Priorität (siehe Dateikopf-Kommentar).
@@ -215,8 +213,8 @@ function enthaeltFamilienname(name) {
 // wendung statt Neuimplementierung in bipartiteFlowMap.js.
 export function ermittleGruppe(name, personenId, familienIds) {
   if (personenId && familienIds.has(personenId)) return 'dynastie';
-  if (enthaeltGanzesWort(name, KLERUS_WOERTER)) return 'klerus';
-  if (enthaeltGanzesWort(name, ADEL_TITEL_WOERTER) || enthaeltFamilienname(name)) return 'adel';
+  if (enthaeltGanzesWort(name, rollen.klerus)) return 'klerus';
+  if (enthaeltGanzesWort(name, rollen.adelTitel) || enthaeltFamilienname(name)) return 'adel';
   return 'buerger';
 }
 
@@ -564,6 +562,7 @@ export function render(container, data, options = {}) {
   // urkunden}`-Objekt (siehe archivalienRegistry.js) und wählt sich hier
   // selbst die zwei benötigten Teile heraus. `personenliste` bleibt
   // ungenutzt (nur `familienbaum`/`personenliste`/`bubbleChart` brauchen sie).
+  uebernehmeRollen(data.rollen || []); // AUFTRAG C1, Punkt 4
   instanz = {
     container,
     wurzel,

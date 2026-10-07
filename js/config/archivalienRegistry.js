@@ -157,7 +157,9 @@ export const ARCHIVALIENTYPEN = [
     hatGalerie: true,
     ansichten: [
       { id: 'regestenKachelraster', label: 'Regesten-Kachelraster', modulPfad: '../viz/regestenKachelraster.js',
-        beschreibung: 'Durchsuchbare Kurzfassungen (Regesten) aller 1.069 Urkunden mit Foto, Kategorie und Volltextsuche.' },
+        // AUFTRAG C1, Punkt 1/2: neutrale Vorgabe - die archivspezifische
+        // Fassung (mit berechneter Urkundenzahl) steht in data/ansichten.csv.
+        beschreibung: 'Durchsuchbare Kurzfassungen (Regesten) aller Urkunden mit Foto, Kategorie und Volltextsuche.' },
       { id: 'zeitachse', label: 'Zeitachse', modulPfad: '../viz/zeitachse.js',
         beschreibung: 'Jede Urkunde als Punkt auf der Zeitachse, eingefärbt nach Kategorie.' },
       { id: 'kalenderHeatmap', label: 'Kalender-Heatmap', modulPfad: '../viz/kalenderHeatmap.js',
@@ -324,7 +326,8 @@ export const ARCHIVALIENTYPEN = [
     // `verlassenschaften` NEU (AUFTRAG "Teil 2h", Punkt 4b) - personenliste.js
     // löst `nennung_in_verlassenschaften` jetzt ebenso gegen
     // `verlassenschaftsinventare.csv`s `id` auf, fünfte Quelle.
-    datenDatei: { familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv' },
+    // AUFTRAG C1, Punkt 4: `rollen` (data/rollen.csv) für Chord-Diagramm und Personenliste
+    datenDatei: { familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv', rollen: 'data/rollen.csv' },
     primaeransicht: 'personenliste',
     // FOLGEAUFTRAG "Galerie+Flyout für Bürgerbuch und Personen": `hatGalerie`
     // + `beschreibung` wie bei buergerbuch oben. Zwei Abweichungen vom
@@ -366,8 +369,10 @@ export const ARCHIVALIENTYPEN = [
       { id: 'bubbleChart', label: 'Bubble Chart', modulPfad: '../viz/bubbleChart.js', datenSchluessel: 'personenliste',
         beschreibung: 'Ein Kreis pro Person, Fläche = Gesamt-Nennungshäufigkeit über Urkunden und Bürgerbuch (Circle-Packing, Farbe ohne inhaltliche Bedeutung).' },
       // Label umbenannt, siehe Kommentar oben (Punkt 1).
-      { id: 'familienbaum', label: 'Habsburg-Zeitleistenbaum', modulPfad: '../viz/familienbaum.js', datenSchluessel: 'familien',
-        beschreibung: 'Zeitleisten-Stammbaum des Hauses Habsburg von Rudolf I. bis Joseph II., mit Herrschaftszeiten von Kaisern und Königen.' },
+      // AUFTRAG C1, Punkt 2/3: neutrale Vorgabe - Name und Beschreibung des
+      // Archivs (Krems: Habsburg) stehen in data/ansichten.csv.
+      { id: 'familienbaum', label: 'Zeitleisten-Stammbaum', modulPfad: '../viz/familienbaum.js', datenSchluessel: 'familien',
+        beschreibung: 'Zeitleisten-Stammbaum einer Herrscherfamilie, mit Herrschaftszeiten von Kaisern und Königen.' },
       // AUFTRAG "Chord-Diagramm – soziale Gruppen (Dynastie/Adel/Klerus/
       // Bürger), Umzug nach Personen": vierter Eintrag, von
       // `urkunden.ansichten` hierher UMGEZOGEN (`id`/`modulPfad` unverändert -
@@ -408,7 +413,8 @@ export const ARCHIVALIENTYPEN = [
     // `bipartiteFlowMap` bekommt bewusst KEINEN datenSchluessel (erhält das
     // gesamte `{urkunden, familien}`-Objekt) - exakt dasselbe Muster wie
     // chordDiagramm.js unter `personen` oben.
-    datenDatei: { urkunden: 'data/urkunden.csv', familien: 'data/familien.csv' },
+    // AUFTRAG C1, Punkt 4: `rollen` für die Bipartite Flow Map
+    datenDatei: { urkunden: 'data/urkunden.csv', familien: 'data/familien.csv', rollen: 'data/rollen.csv' },
     primaeransicht: 'karte',
     hatGalerie: true,
     ansichten: [

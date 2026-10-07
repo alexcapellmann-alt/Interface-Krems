@@ -1,0 +1,39 @@
+﻿bereich;ansicht;name;beschreibung;reihenfolge;anbieten
+bestand;treemap;Treemap;Zeigt Bestände als verschachtelte Flächen nach Kategorie, Größe = Umfang in Laufmetern.;1;ja
+bestand;sunburst;Sunburst;Dieselben Bestände radial angeordnet: Kategorie innen, Unterkategorie in der Mitte, Bestand außen.;2;ja
+bestand;icicle;Icicle;Bestände als gestapelte Ebenen: Kategorie, Unterkategorie, Bestand.;3;ja
+bestand;circlePacking;Circle Packing;Bestände als ineinander verschachtelte Kreise je Kategorie.;4;ja
+bestand;ganttDiagramm;Gantt-Diagramm;Entstehungs-/Laufzeitraum jedes Bestands als horizontaler Balken auf der Zeitachse.;5;ja
+urkunden;;Urkunden;;1;ja
+urkunden;regestenKachelraster;Regesten-Kachelraster;Durchsuchbare Kurzfassungen (Regesten) aller {n_urkunden_punkt} Urkunden mit Foto, Kategorie und Volltextsuche.;1;ja
+urkunden;zeitachse;Zeitachse;Jede Urkunde als Punkt auf der Zeitachse, eingefärbt nach Kategorie.;2;ja
+urkunden;kalenderHeatmap;Kalender-Heatmap;Zeigt, an welchen Kalendertagen bzw. Jahrzehnten die meisten Urkunden ausgestellt wurden.;3;ja
+urkunden;dotPlot;Dot Plot;Verteilung der Urkunden nach Kategorie über die Zeit, jede Urkunde ein Punkt.;4;ja
+urkunden;swimlanes;Swimlanes;Urkundenhäufigkeit je Kategorie über die Zeit, als Zeitspuren dargestellt.;5;ja
+urkunden;ridgeline;Ridgeline;Gestapelte Verteilungskurven je Kategorie über die Zeit.;6;ja
+urkunden;horizonChart;Horizon Chart;Kompakte, geschichtete Zeitreihen für mehrere Kategorien gleichzeitig.;7;ja
+urkunden;marimekko;Marimekko;Mosaik je Jahrhundert: Spaltenbreite zeigt die Urkundenzahl, Höhe den Kategorie-Anteil.;8;ja
+urkunden;alluvial;Alluviales Diagramm;Fluss zwischen Jahrhundert und Kategorie - zeigt Verschiebungen der Kategorienzusammensetzung über die Zeit.;9;ja
+urkunden;adjazenzmatrix;Adjazenzmatrix;Matrix der am häufigsten gemeinsam in Urkunden genannten Personen.;10;ja
+urkunden;arcDiagramm;Arc-Diagramm;Personen entlang einer Achse, Bögen verbinden die am häufigsten gemeinsam Genannten.;11;ja
+urkunden;sankey;Sankey;Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.;12;ja
+urkunden;wortwolke;Wortwolke;Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.;13;ja
+buergerbuch;;Bürgerbuch;;2;ja
+buergerbuch;trellis;Trellis;Ein kleines Diagramm pro Wirtschaftssektor zeigt die Entwicklung der Bürgeraufnahmen über die Zeit.;1;ja
+buergerbuch;bumpChart;Bump Chart;Zeigt, wie sich die Rangfolge der Wirtschaftssektoren von Jahrzehnt zu Jahrzehnt verschiebt.;2;ja
+buergerbuch;personennetzwerk;Personennetzwerk;Zeigt Bürgschaftsbeziehungen zwischen Personen im Bürgerbuch.;3;ja
+buergerbuch;streamgraph;Streamgraph;Zeigt die zeitliche Entwicklung der Bürgeraufnahmen je Wirtschaftssektor als organisch geschichtete Flächen.;4;ja
+verlassenschaften;;Verlassenschaften;;3;ja
+verlassenschaften;parallelKoordinaten;Parallelkoordinaten;Vergleicht Vermögenswerte und -anteile jeder Verlassenschaft entlang mehrerer paralleler Achsen.;1;ja
+verlassenschaften;korrelationsmatrix;Korrelationsmatrix;Zeigt statistische Zusammenhänge zwischen den Vermögensmerkmalen der Verlassenschaftsinventare.;2;ja
+verlassenschaften;vermoegensschichtung;Vermögensschichtung;Verteilung der Verlassenschaften auf die Vermögensgruppen A bis E je Jahrzehnt, optional nach Ort oder Geschlecht aufgeschlüsselt.;3;ja
+verlassenschaften;marimekkoVerlassenschaften;Marimekko;Zeigt je Vermögensgruppe die Zusammensetzung des Realvermögens aus Grundstücken, Bargeld, Wertgegenständen und beruflichem Sonderbestand.;4;ja
+personen;;Personen;;4;ja
+personen;personenliste;Personenliste;Durchsuchbare, sortierbare Liste aller erfassten Personen mit Nennungshäufigkeit und Zeitspanne.;1;ja
+personen;bubbleChart;Bubble Chart;Ein Kreis pro Person, Fläche = Gesamt-Nennungshäufigkeit über Urkunden und Bürgerbuch (Circle-Packing, Farbe ohne inhaltliche Bedeutung).;2;ja
+personen;familienbaum;Habsburg-Zeitleistenbaum;Zeitleisten-Stammbaum des Hauses Habsburg von Rudolf I. bis Joseph II., mit Herrschaftszeiten von Kaisern und Königen.;3;ja
+personen;chordDiagramm;Chord-Diagramm;Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.;4;ja
+orte;;Orte;;5;ja
+orte;karte;Karte;Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.;1;ja
+orte;verbindungskarte;Verbindungskarte;Zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden.;2;ja
+orte;bipartiteFlowMap;Bipartite Flow Map;Zeigt, welche Orte mit welchen sozialen Gruppen (Dynastie/Adel/Klerus/Bürgertum) in Verbindung stehen.;3;ja

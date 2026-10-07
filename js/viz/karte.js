@@ -230,25 +230,22 @@ import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenDetail, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 import { parseJahr } from '../utils/urkundenZeit.js';
 import { ladeCSV } from '../core/dataLoader.js';
-import { konfigurationswert, infotextFuerModul } from '../core/archivKonfiguration.js';
+import { kartenStartpunkt, infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // Punkt 5 (Vorschlag, siehe Selbstauskunft im Chat - noch nicht freigegeben):
 // dritter Absatz zum neuen Verhalten ergänzt.
 
 const MARKER_FARBE = '#1a4d8f';
 // AUFTRAG "Archivspezifische Texte...", Punkt 2.8: Kartenstartpunkt aus
-// archiv.csv (`karte_zentrum_lat`/`-lon`/`karte_zoom`), mit den bisherigen
-// Werten als Rückfall (archivKonfiguration.js' Ersatzwerte greifen
-// ohnehin bereits identisch, falls archiv.csv fehlt - Number() hier nur
-// zur Absicherung, falls ein Archiv versehentlich Text statt Zahl einträgt).
-function ermittleStartZentrum() {
-  const lat = Number(konfigurationswert('karte_zentrum_lat'));
-  const lon = Number(konfigurationswert('karte_zentrum_lon'));
-  return Number.isFinite(lat) && Number.isFinite(lon) ? [lat, lon] : [48.42, 15.6];
-}
-function ermittleStartZoom() {
-  const zoom = Number(konfigurationswert('karte_zoom'));
-  return Number.isFinite(zoom) ? zoom : 7;
+// archiv.csv (`karte_zentrum_lat`/`-lon`/`karte_zoom`).
+// AUFTRAG C1, Punkt 5: kein fester Ersatzort mehr im Code - fehlt der
+// Startpunkt in archiv.csv, zeigt die Karte den Ausschnitt aller Orte aus
+// orte.csv, ohne Orte eine Weltübersicht.
+async function setzeStartansicht(karte, start) {
+  if (start) return;
+  const orte = Array.from((await ladeOrtsVerzeichnis()).values());
+  if (orte.length > 0) karte.fitBounds(L.latLngBounds(orte.map((o) => [o.lat, o.lon])), { padding: [40, 40] });
+  else karte.setView([0, 0], 2);
 }
 const JAHRZEHNT_SCHRITT = 10;
 const DEBOUNCE_MS = 80;
@@ -759,7 +756,9 @@ async function zeichneKarte() {
   container.appendChild(mapDiv);
   instanz.mapDiv = mapDiv;
 
-  const karte = L.map(mapDiv).setView(ermittleStartZentrum(), ermittleStartZoom());
+  const start = kartenStartpunkt();
+  const karte = L.map(mapDiv);
+  if (start) karte.setView(start.zentrum, start.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
   }).addTo(karte);
@@ -774,6 +773,8 @@ async function zeichneKarte() {
     instanz.aggregation = baueOrtsAggregation(records, ortsVerzeichnis);
   }
   if (!instanz) return; // destroy() kann während des await aufgerufen worden sein
+  await setzeStartansicht(karte, start); // AUFTRAG C1, Punkt 5
+  if (!instanz) return;
 
   aktualisiereMarker();
 
