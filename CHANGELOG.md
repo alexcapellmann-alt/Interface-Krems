@@ -7,6 +7,45 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-07 (108) – Archivspezifisches aus dem Code in die Daten (Teil C1)
+
+Auftrag C1 (Teil von Auftrag C, Prüfbericht Punkt 6, Übertragbarkeit).
+- **Neue Dateien:**
+  - `data/ansichten.csv`: Namen, Beschreibungen, Reihenfolge und Auswahl der
+    Bereiche und Ansichten.
+  - `data/rollen.csv`: Rollenlisten für Klerus und Adel, Titelwörter der
+    Personenliste.
+  - `js/core/ansichtenKonfiguration.js`: lädt `ansichten.csv` gleichzeitig
+    mit `archiv.csv` und passt die Registry an.
+- **`data/archiv.csv`, neue Schlüssel:** `dynastie_familien`,
+  `dynastie_name`, `dynastie_gruppenname`, `regest_quellenvermerk`. Listen
+  stehen mit `|` getrennt.
+- **Urkundenzahl berechnet:** Die Galerie zeigt jetzt „1.067“ statt der festen
+  „1.069“ (Stand vor der Dublettenbereinigung); neuer Platzhalter
+  `{n_urkunden_punkt}`. Die Über-Seite zeigt unverändert „1067“.
+- **Habsburg nur über Daten:**
+  - Der Zeitleisten-Stammbaum erscheint nur, wenn eine Person in
+    `familien.csv` zur Herrscherfamilie aus `archiv.csv` gehört.
+  - Chord und Flow Map werden ohne `rollen.csv` ausgeblendet.
+- **Kein fester Krems-Kartenausschnitt mehr:** Ohne Angabe richtet sich die
+  Karte nach den Orten.
+- **Wortmarke:** Ohne Logo-Datei steht der Kurzname als Text an der
+  Logo-Stelle.
+- **`data/ratsprotokolle.csv` entfernt**, ebenso die Verweise in SCHEMA und
+  Masterprompt.
+- **Doku:** SCHEMA.md (Abschnitte 13.1, 13.5, 13.6, neu 14 „Neues Archiv
+  einrichten“) und Masterprompt.
+
+**Ergebnis:**
+- Referenz 47/47: Text bis auf die gewollte Urkundenzahl identisch.
+- Detailvergleich (Beschriftungen, Farben, Karte, Wortwolke) identisch.
+- Zweitarchiv-Test: 8 von 9 Eingriffen außerhalb der CSV entfallen; offen
+  sind nur die Kategorienfarben (C2).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-03 (107) – Führungen: literatur.csv optional, „Hinweis“ statt „Fehler“
 
 Auftrag C3 (Teil von Auftrag C, Prüfbericht Punkt 6; Funde aus B3).
