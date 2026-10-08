@@ -88,6 +88,9 @@ export const ANSICHT_ANFORDERUNGEN = {
   // Personen
   personenliste: { dateien: { [PERSONENLISTE]: [] }, neben: { [URKUNDEN]: [], [BUERGERBUCH]: [], [INVENTARE]: [] }, ausblenden: PERSONENLISTE },
   bubbleChart: { dateien: { [PERSONENLISTE]: [] }, ausblenden: PERSONENLISTE },
+  // AUFTRAG G1: Urkunden-Netzwerk - Personen aus urkunden.csv (`personen_id` ist der
+  // Knotenschlüssel), Namen und Unsicherheit aus der Personenliste (Nebendatei).
+  urkundenNetzwerk: { dateien: { [URKUNDEN]: ['personen', 'personen_id'] }, neben: { [PERSONENLISTE]: ['personen_id', 'schreibweisen'] }, ausblenden: URKUNDEN },
   // AUFTRAG C1, Punkt 3: `merkmal` - nur angeboten, wenn mindestens eine Person
   // zur Herrscherfamilie aus archiv.csv (`dynastie_familien`) gehört.
   familienbaum: {

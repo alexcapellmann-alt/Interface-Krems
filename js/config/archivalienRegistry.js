@@ -384,6 +384,10 @@ export const ARCHIVALIENTYPEN = [
       // urkunden}`) und wählt sich intern selbst die zwei benötigten Teile
       // heraus (siehe app.js' ladeModulUndRender()-Kommentar: "ohne
       // datenSchluessel ... records unverändert durchgereicht").
+      // AUFTRAG G1: Personennetzwerk der Urkunden (Knoten = Person, Kante = gemeinsame
+      // Urkunde); bekommt das ganze Personen-Datenobjekt (urkunden + personenliste).
+      { id: 'urkundenNetzwerk', label: 'Personennetzwerk (Urkunden)', modulPfad: '../viz/urkundenNetzwerk.js',
+        beschreibung: 'Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.' },
       { id: 'chordDiagramm', label: 'Chord-Diagramm', modulPfad: '../viz/chordDiagramm.js',
         beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' }
     ]

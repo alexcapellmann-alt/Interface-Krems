@@ -219,6 +219,145 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-08 (65) – Auftrag G, Teil G1: Obergrenze und Personennetzwerk der Urkunden
+
+**Kontext:** Phase 1 (`Pruefung_2026-10-03/Nachher_G/phase1/VORSCHLAG_PHASE1.md`) vom Autor für G1 freigegeben.
+G2 (Wirtschaftsnetzwerk) folgt nach der Abnahme von G1 und der Zuordnung der fünf offenen Bürgen-Berufe.
+Vorher-Stand `a6ea24a` (F). Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen
+(`Nachher_G/laufprotokoll.txt`, in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten: `Pruefung_2026-10-03/Nachher_G/`.
+
+### Freigabe des Autors (G1)
+1. Spalte `obergrenze` in `ansichten.csv`.
+   - Urkunden-Netzwerk: Vorgabe 100, Rang nach Nennungen, Gleichstand an der Grenze mitnehmen; Anzeige „N von M
+     Personen gezeigt“.
+   - Adjazenzmatrix und Arc-Diagramm: Vorgabe 40, Rang nach Vernetzung, Anzeige wie bisher.
+2. „50 weitere“, „Alle“, Suche (Person samt Partnern), Tabelle als gleichwertige Alternative. Prüfen, ob „Alle“
+   bedienbar ist; sonst eine gemessene Obergrenze mit Hinweis.
+3. Bereich Personen, Optik und Skalen wie Alpha (`d303e41`), Kanten in vier Stufen mit Legende. Anzeigename =
+   Personenliste unverändert; fehlerhafte oder unvollständige Namen melden, nicht korrigieren.
+4. Auswahl `#b85c00` (Grafik ≥ 3:1, Text ≥ 4,5:1), Grau unsicherer Personen ≥ 3:1, Strichelung im σ-Modus.
+5. Zugänglichkeit und Laden nach den Regeln des Auftrags.
+
+### Punkt 1 – Obergrenze
+- **Umsetzung:**
+  - `ansichtenKonfiguration.js` liest `obergrenze` (ganze Zahl > 0) an den Registry-Eintrag; `app.js` reicht sie
+    in beiden Render-Wegen als `options.obergrenze` weiter.
+  - `adjazenzmatrix.js` und `arcDiagramm.js` nutzen `options.obergrenze || 40`.
+  - Neu `urkundenPersonen.js` `waehlePersonenNachNennungen()` (Gleichstand mitgenommen).
+  - `ansichten.csv`: Spalte ergänzt; Werte 40/40/100, sonst leer.
+- **Prüfung gegen die unabhängige Berechnung** (`tools/pG_unabhaengig.py`, `Nachher_G/akzeptanz/`):
+
+| Fall (`ansichten.csv`) | Urkunden-Netzwerk gezeigt (erwartet) | Kanten | Adjazenzmatrix | Arc-Diagramm |
+|---|---|---|---|---|
+| Standard (100/40/40) | 110 von 1.456, ab 3 Nennungen (110) | 191 (191) | Top 40 von 1349 (40/1349) | Top 40 von 1349 |
+| konfiguriert (50/25/60) | 60, ab 4 Nennungen (60) | 92 (92) | Top 25 von 1349 | Top 60 von 1349 |
+| ohne Spalte `obergrenze` | 110 (Vorgabe) | 191 | Top 40 | Top 40 |
+| größer als M (5000) | 222 + Hinweis Netzgrenze (Netz höchstens 250) | 374 (374) | Top 1349 von 1349 | Top 1349 von 1349 |
+
+- Die gezeigte Personenmenge ist in allen Fällen identisch mit der berechneten.
+- **Gleichstand:** 1 234 der 1 456 Personen haben genau eine Nennung. Deshalb gibt es nur die Stufen 110 (ab 3),
+  222 (ab 2) und alle 1 456. „50 weitere“ führt von 110 auf 222.
+- Mit N > M zeigen Adjazenzmatrix, Arc-Diagramm und die Tabelle alles. Das Netz ist gekappt (siehe Punkt 2).
+
+### Punkt 2 – Bedienung und Messung „Alle“
+- **Messung** (`Nachher_G/alle_messung/`, je 3 Läufe, Median):
+
+| Stufe | Personen / Kanten | Aufbau | Auswahl | Zoom-Schritt | kleinster Kreis | Tab-Stopps |
+|---|---|---|---|---|---|---|
+| Standard | 110 / 191 | nicht gemessen (beim Seitenaufruf) | 20 ms | 23 ms | nicht gemessen | 110 |
+| „50 weitere“ | 222 / 374 | 417 ms | 42 ms | 33 ms | 5,3 px | 222 |
+| „Alle“ | 1 456 / 4 083 | 3 231 ms | 60 ms | 64 ms | nicht gemessen (Screenshot `alle.png`: deutlich kleiner) | 1 456 |
+
+- **Ergebnis:**
+  - „Alle“ reagiert nach dem Aufbau, ist aber nicht bedienbar: 3,2 s Aufbau, Kreise und Namen im Screenshot unlesbar,
+    1 456 Tab-Stopps.
+  - Gemessene Grenze für das **Netz: höchstens 250 Personen.** Wegen der Gleichstand-Regel gilt die größte Stufe
+    bis 250, also bei Krems 222.
+  - Der Hinweis im Seitentext lautet: „Das Netz zeigt höchstens 250 Personen, weil es darüber nicht mehr lesbar
+    und per Tastatur bedienbar ist. Alle 1.456 Personen stehen in der Tabelle; die Suche blendet jede Person mit
+    ihren Partnern ein.“
+  - Ist die Grenze erreicht, sind „50 weitere“ und „Alle“ im Netz gesperrt.
+  - Die **Tabelle** zeigt bei „Alle“ 1 456 Zeilen.
+  - Die Zahl 250 ist eine Rundung oberhalb der gemessenen Stufe 222; dazwischen gibt es bei Krems keine Stufe,
+    die sich messen ließe.
+- **Tastatur und Fokus** (`Nachher_G/bedienung/`):
+  - Tab führt nach der Werkzeugleiste in die Knoten, in Reihenfolge der Nennungen.
+  - Jeder Knoten ist ein Knopf mit Namen, z. B. „Friedrich III., 136 Nennungen, 87 Partner“; 0 ohne Namen.
+  - Fokusring `#1a2f45` sichtbar.
+  - Eingabe wählt (`aria-pressed`, Detail im Seitentext mit Partnern als Knöpfen, Urkunden als Links, Link „in der
+    Personenliste“); Escape hebt auf.
+- **Suche:** „Krammer“ findet 2 Personen; „Abel Krammer“ (1 Nennung) wird samt 2 Partnern eingeblendet, gewählt
+  und fokussiert („113 von 1.456 … dazu 3 über die Suche“).
+- **σ-Modus:** 1 Person mit gestricheltem Rand (`#767676`) und 72 gestrichelte Kanten (Urkunden mit
+  `personen_unsicher = ja`), wie berechnet. Die Legende ergänzt beide Einträge.
+
+### Punkt 3 – Urkunden-Netzwerk
+- **Modul `js/viz/urkundenNetzwerk.js`:**
+  - Daten aus `urkunden.csv` über `baueKoNennungsNetzwerk()`; Namen und Unsicherheit aus `personenliste.csv`
+    (erste Schreibweise unverändert).
+  - Layout vorab berechnet, mit den Kraftparametern der Alpha; der Ausschnitt passt sich der Ausdehnung an.
+  - Personen ohne Verbindung liegen am Rand und sind blasser.
+  - Radius 5 + 1,6·√Nennungen (5–20 px); Kanten 1 / 2 / 3–4 / ≥ 5 → 1 / 2 / 3,5 / 5 px.
+- **Unabhängig nachgerechnet:**
+  - Die 10 häufigsten Personen (Nennungen, Radius, Partner) und die 10 häufigsten Paare (gemeinsame Urkunden,
+    Linienstufe) stimmen überein.
+  - Personen: Friedrich III. 136 (r 20, 87 Partner), Ferdiand I. 59, Albrecht V. 44, Maximilian I. 39,
+    Ladislaus 35, Albrecht III. 18, Leopold IV. 13, Hans 11, Simon 11, Albrecht IV. 10.
+  - Paare: Friedrich III.–Ladislaus 8, Albrecht IV.–Herzog Wilhelm 7, Friedrich III.–Hans Frodnacher 7,
+    Friedrich III.–Enngel 6, Friedrich III.–Maximilian I. 5 (alle Stufe 5 px), dann viermal 4 bzw. 3 (3,5 px).
+- **Kontraste** (gegen den SVG-Hintergrund `#f7f5f0`):
+  - Kanten 3,39:1; Auswahl-Orange 4,22:1; Rand unsicher 4,17:1; Knotenrand 12,54:1; Knoten verbunden 4,06:1.
+  - Personen ohne Verbindung: Fläche 1,93:1, Rand 12,54:1.
+  - Schrift weiß auf Kontur 13,67:1; Hinweistext 6,43:1.
+  - Orange wird nicht für Text verwendet.
+- **Fehlfälle** (`Nachher_G/fehlfaelle/`):
+
+| Fall | Ergebnis |
+|---|---|
+| ohne Spalte `personen_id` | Balken „In urkunden.csv fehlt die Spalte 'personen_id'. Diese Ansicht kann nicht angezeigt werden.“; Kachel bleibt |
+| ohne Spalte `personen` | ebenso |
+| `urkunden.csv` leer | Kachel ausgeblendet; direkter Link: Balken „Für diese Ansicht liegen keine Daten vor …“ |
+| `urkunden.csv` fehlt | ebenso |
+| `personenliste.csv` fehlt | Netz gezeichnet, Balken „… Diese Ansicht ist deshalb unvollständig.“ |
+
+- In allen Fällen 0 Fehler; Rückbau per `diff`.
+- **Auffällige Anzeigenamen** (`Nachher_G/namensliste.md`, nur gemeldet): 83 Personen, davon 32 unter den 110
+  gezeigten.
+  - Unvollständig (ein Wort, die ID nennt mehr), z. B.: Ladislaus (V.), Hans (Leutbein), Simon (Tundorfer),
+    Albrecht (Pyber), Jobst (Wasloff), Fuerer (Stephan Fuehrer), Martin, Niklas, Herman, Sigmund, Eytzing,
+    Heinrich ×2, Matthias (I.).
+  - Tippfehler-Verdacht, z. B.: „Ferdiand I.“, „Wolfang von Wallsee“, „Wofgang Wintperger“, „Abt Bendedikt“,
+    „Machart Treperger“, „Werhart Würffel“, „Agnes Weintinger“.
+  - Viele weitere sind wohl historische Schreibungen (Steffan, Hanns, Margareta).
+
+### Punkt 5 – Zugänglichkeit und Laden
+- **axe** (mit „incomplete“):
+  - Netz, Adjazenzmatrix, Arc-Diagramm: 0 Verstöße.
+  - Nach dem ersten Tooltip meldet axe `region` am gemeinsamen Tooltip `#geteilter-tooltip`, der außerhalb der
+    Landmarks an `body` hängt. Das gilt für alle Ansichten mit Tooltip und ist nicht neu (siehe Scope).
+  - `color-contrast` „incomplete“ für die Namen im SVG (axe kann Text mit Kontur nicht bewerten; berechnet 13,7:1).
+- **SVG:** `role="group"` mit `aria-label`; die Knoten sind `role="button"`; die Legende ist Seitentext mit
+  `aria-hidden`-Mustern. Die Seite trägt die verborgene h1 („Personennetzwerk (Urkunden) – Personen – Stadtarchiv
+  Krems“).
+- **Startgraph** (`tools/pB2_modulebenen.js`): vorher und nachher 25 Module, 3 Ebenen. Das neue Modul lädt per
+  `import()` beim Öffnen. Der Ladeweg der Treemap ist nicht betroffen (keine neue Anfrage, kein neues Startmodul).
+- **Referenzlauf** (47 Ansichten, gegen `Nachher_F/referenz_f`): 46/47 Text identisch. Nur
+  `visualisierungen/personen` zeigt die neue Kachel. 0 Fehler.
+- **Zweitarchiv** (Musterhausen, keine Änderung an dessen Dateien):
+  - 47/47 ohne Fehler, keine Reste.
+  - Die neue Ansicht zeigt „Alle 3 Personen gezeigt (2 Verbindungen)“, 0 Fehler.
+  - Ohne Info-Button, weil der Eintrag in Musterhausens `infotexte.csv` fehlt.
+
+### Scope-Meldungen
+- **Gemeinsamer Tooltip** (`js/utils/tooltip.js`): Er hängt außerhalb der Landmarks und bleibt nach dem ersten
+  Anzeigen im DOM; axe meldet dann `region`. Abhilfe wäre, ihn in `main` einzuhängen. Das betrifft alle Ansichten
+  und ist nicht geändert.
+- **Musterhausen:** Für den Info-Button der neuen Ansicht fehlt dort eine Zeile in `infotexte.csv` (nur CSV).
+- **„Alle“ im Netz:** Die Grenze 250 ist begründet, aber nur bei 222 und 1 456 gemessen.
+- **Anzeigenamen:** 83 Auffälligkeiten in der Personenliste, nicht korrigiert (Freigabe).
+
+---
+
 ## 2026-10-08 (64) – Auftrag F: Wortwolke bereinigen (Filter, Zusammenführung, Info-Button)
 
 **Kontext:** Phase 1 (`Pruefung_2026-10-03/Nachher_F/phase1/VORSCHLAG_PHASE1.md`) vom Autor mit Entscheidungen

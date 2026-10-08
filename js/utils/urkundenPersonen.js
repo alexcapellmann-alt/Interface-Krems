@@ -92,6 +92,17 @@ export function waehleTopPersonenNachGrad(knoten, paare, n) {
   return { knoten: ausgewaehlteKnoten, paare: gefiltertePaare, gesamtAnzahlVerbunden: verbundeneKnoten.length };
 }
 
+// AUFTRAG G1: die n meistgenannten Personen (Rang nach Nennungen, bei gleicher
+// Zahl nach Name). Gleichstand an der Grenze: alle Personen mit derselben Zahl
+// wie die n-te kommen mit (Entscheidung des Autors) - die Auswahl kann daher
+// größer als n sein. n >= Zahl der Personen: alle.
+export function waehlePersonenNachNennungen(knoten, n) {
+  const sortiert = [...knoten].sort((a, b) => b.anzahl - a.anzahl || a.name.localeCompare(b.name, 'de'));
+  if (!(n < sortiert.length)) return { knoten: sortiert, schwelle: sortiert.at(-1)?.anzahl ?? 0 };
+  const schwelle = sortiert[n - 1].anzahl;
+  return { knoten: sortiert.filter((k) => k.anzahl >= schwelle), schwelle };
+}
+
 export function baueKoNennungTooltip(paar) {
   const zeilen = [`${paar.a.name} ↔ ${paar.b.name}`, `${paar.anzahl} gemeinsame Nennung(en)`];
   if (paar.unsicherAnzahl > 0) zeilen.push(`davon ${paar.unsicherAnzahl} mit unsicherer Personenangabe`);

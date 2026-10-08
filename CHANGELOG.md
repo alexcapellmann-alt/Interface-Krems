@@ -7,6 +7,33 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-08 (113) – Personennetzwerk der Urkunden, Obergrenze der Personennetzwerke (Teil G1)
+
+Auftrag G, Teil G1.
+- **Neu `js/viz/urkundenNetzwerk.js`** (Bereich Personen, „Personennetzwerk (Urkunden)“):
+  - Knoten = Person (`personen_id`), Größe = Nennungen; Kante = gemeinsame Urkunde, vier Stufen mit Legende.
+  - Optik und Skalen nach der Alpha-Version (Commit `d303e41`), Auswahl in `#b85c00`.
+  - Tastaturbedienung, Suche, „50 weitere“, „Alle“, Tabelle als Alternative, σ-Modus gestrichelt.
+  - Lädt erst beim Öffnen.
+- **Obergrenze:** neue Spalte `obergrenze` in `data/ansichten.csv` (`js/core/ansichtenKonfiguration.js`, über
+  `js/core/app.js` an die Module).
+  - Urkunden-Netzwerk: Vorgabe 100, Gleichstand mitgenommen (Krems: 110); im Netz höchstens 250 (gemessen).
+  - Adjazenzmatrix und Arc-Diagramm: Vorgabe 40, wie bisher.
+- `js/utils/urkundenPersonen.js` (`waehlePersonenNachNennungen`), Registry, `datenAnforderungen.js`, `vizIcons.js`,
+  `data/infotexte.csv`, `docs/SCHEMA.md`, Masterprompt.
+
+**Ergebnis:**
+- N und M, die 10 häufigsten Personen und Paare stimmen mit einer unabhängigen Berechnung überein.
+- axe 0 Verstöße (Netz, Adjazenzmatrix, Arc).
+- Referenzlauf 46/47 unverändert (Personen-Galerie mit neuer Kachel).
+- Startgraph unverändert 25 Module / 3 Ebenen.
+- Zweitarchiv 47/47.
+- Details: `docs/PROJEKTLOG.md` Eintrag 65.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-08 (112) – Wortwolke bereinigen: Filterdatei, Zusammenführung, Info-Button
 
 Auftrag F.

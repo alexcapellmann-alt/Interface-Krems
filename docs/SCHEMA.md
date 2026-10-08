@@ -45,7 +45,8 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
 | `urkunden.csv` | `jahr` | Zeitachse, Kalender-Heatmap, Dot Plot, Swimlanes, Ridgeline, Horizon Chart |
 | | `kategorien` | Horizon Chart, Sankey |
 | | `orte` | Karte, Verbindungskarte, Sankey |
-| | `personen` | Adjazenzmatrix, Arc-Diagramm |
+| | `personen` | Adjazenzmatrix, Arc-Diagramm, Personennetzwerk (Urkunden) |
+| | `personen_id` | Personennetzwerk (Urkunden), seit Auftrag G1 (Knotenschlüssel; Namen und Unsicherheit kommen aus `personenliste.csv`, fehlt diese, erscheint ein Balken „… unvollständig“) |
 | | `regest` | Wortwolke |
 | `orte.csv` | `orte`, `lat`, `lon` | Karte, Verbindungskarte, Bipartite Flow Map |
 | `bestandsverzeichnis.csv` | `zeitraum_von`, `zeitraum_bis` | Gantt-Diagramm |
@@ -106,8 +107,8 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 | `orte` | Liste (Pipe-getrennt) | **Pflicht** (Karte, Verbindungskarte, Sankey) | |
 | `orte_unsicher` | ja/nein | – | |
 | `regest` | Volltext | **Pflicht** (Wortwolke) | |
-| `personen` | Liste (Pipe-getrennt) | **Pflicht** (Adjazenzmatrix, Arc-Diagramm) | |
-| `personen_id` | Text/Liste | nein | Verweis auf `personenliste.csv` (siehe Tabelle 8) |
+| `personen` | Liste (Pipe-getrennt) | **Pflicht** (Adjazenzmatrix, Arc-Diagramm, Personennetzwerk der Urkunden) | |
+| `personen_id` | Text/Liste | **Pflicht** (Personennetzwerk der Urkunden, seit Auftrag G1) | Verweis auf `personenliste.csv` (siehe Tabelle 8) |
 | `personen_unsicher` | ja/nein | – | |
 | `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | Farben: Die 16 Krems-Kategorien haben feste Farben; jede andere Kategorie bekommt automatisch eine Farbe (Abschnitt 14, „Farben der Kategorien“) |
 | `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 – Stand vor der Dublettenbereinigung am 2026-09-30 – automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
@@ -545,7 +546,7 @@ Eine Zeile pro Visualisierung/Modul, das einen Info-Button ("?" oben rechts) bes
 | `text` | Text (Pipe-getrennt bei mehreren Absätzen) | empfohlen | der eigentliche Erklärtext im aufklappbaren Popover |
 | `anmerkung` | Text | nein | rein für die eigene Dokumentation, wird nirgends angezeigt |
 
-**Vollständige Liste der 26 `modul_id`-Werte** (jede muss einmal vorkommen, damit die jeweilige Ansicht einen Info-Button hat): `adjazenzmatrix`, `bipartiteFlowMap`, `bumpChart`, `chordDiagramm`, `circlePacking`, `dotPlot`, `familienbaum`, `ganttDiagramm`, `icicle`, `kalenderHeatmap`, `karte`, `korrelationsmatrix`, `marimekkoVerlassenschaften`, `parallelKoordinaten`, `personenliste`, `personennetzwerk`, `regestenKachelraster`, `sankey`, `streamgraph`, `sunburst`, `treemap`, `trellis`, `verbindungskarte`, `vermoegensschichtung`, `wortwolke`, `zeitachse`.
+**Vollständige Liste der 27 `modul_id`-Werte** (jede muss einmal vorkommen; seit Auftrag G1 zusätzlich `urkundenNetzwerk`, damit die jeweilige Ansicht einen Info-Button hat): `adjazenzmatrix`, `bipartiteFlowMap`, `bumpChart`, `chordDiagramm`, `circlePacking`, `dotPlot`, `familienbaum`, `ganttDiagramm`, `icicle`, `kalenderHeatmap`, `karte`, `korrelationsmatrix`, `marimekkoVerlassenschaften`, `parallelKoordinaten`, `personenliste`, `personennetzwerk`, `regestenKachelraster`, `sankey`, `streamgraph`, `sunburst`, `treemap`, `trellis`, `urkundenNetzwerk`, `verbindungskarte`, `vermoegensschichtung`, `wortwolke`, `zeitachse`.
 
 **Sonderfall Sankey-Diagramm:** dessen Text verwendet zusätzlich drei modulinterne Platzhalter, die NICHT aus `archiv.csv` kommen, sondern vom Sankey-Modul selbst beim Anzeigen eingesetzt werden: `{ORT_BUENDELUNG_SCHWELLE}`, `{KATEGORIE_BUENDELUNG_SCHWELLE}`, `{ANDERE_KATEGORIEN}` (aktuell 15, 10 bzw. "Andere Kategorien").
 
@@ -565,6 +566,7 @@ Legt fest, wie die Bereiche (z. B. „Urkunden“, „Bürgerbuch“) und ihre A
 | `beschreibung` | Text | nein | Text unter der Kachel in der Galerie; Platzhalter wie `{n_urkunden_punkt}` erlaubt (Abschnitt 13). Leer: Standardbeschreibung |
 | `reihenfolge` | Zahl | nein | Reihenfolge der Bereiche bzw. der Ansichten innerhalb eines Bereichs. Ohne Zahl: hinter den nummerierten, in der Standardreihenfolge |
 | `anbieten` | ja/nein | nein | `nein` = Ansicht bzw. ganzer Bereich wird nicht angeboten, auch wenn Daten vorhanden sind. Ein gespeicherter Link darauf zeigt den Hinweisbalken „Diese Ansicht wird in diesem Interface nicht angeboten …“ (seit Auftrag C2). Leer: ja |
+| `obergrenze` | ganze Zahl | nein | **Seit Auftrag G1:** wie viele Personen eine Personennetzwerk-Ansicht zunächst zeigt. Gilt für `urkundenNetzwerk` (Vorgabe 100, Rang nach Nennungen, bei Gleichstand an der Grenze alle mit derselben Zahl), `adjazenzmatrix` und `arcDiagramm` (Vorgabe 40, Rang nach Vernetzung). Leer, ungültig oder Spalte fehlt: Vorgabe. Größer als die Zahl der Personen: alle (im Netz höchstens 250, siehe unten). Bei allen übrigen Ansichten ohne Wirkung |
 
 Beispiel (Krems):
 ```
@@ -578,6 +580,7 @@ personen;familienbaum;Habsburg-Zeitleistenbaum;Zeitleisten-Stammbaum des Hauses 
 - Bereiche und Ansichten ohne Daten blendet das Interface ohnehin selbst aus (Abschnitt „Mindestspalten …“); `anbieten` ist nur für eine bewusste Auswahl nötig.
 - **Grenze:** Die Datei kann vorhandene Bereiche und Ansichten umbenennen, beschreiben, umsortieren und weglassen. Einen **neuen Bereichstyp** (z. B. „Akten“ mit eigenen Spalten) kann sie nicht anlegen - jede Ansicht ist für den Aufbau genau einer Datei programmiert.
 - Ein Platzhalter, der nicht aufgelöst werden kann (z. B. weil `urkunden.csv` fehlt), führt zur Standardbeschreibung.
+- **Obergrenze (seit Auftrag G1):** Die Ansicht nennt immer, wie viele Personen gezeigt sind („110 von 1.456 Personen gezeigt …“ bzw. „Top 40 von 1349 …“) - nichts wird stillschweigend ausgeblendet. Im Personennetzwerk der Urkunden blenden „50 weitere“, „Alle“ und die Suche (Person samt Partnern) weitere Personen ein; die Tabelle zeigt dieselben Personen als Liste, bei „Alle“ wirklich alle. Das **Netz** zeigt höchstens 250 Personen (gemessen: 222 Personen bedienbar, 1 456 nicht); wegen der Gleichstand-Regel gilt die größte Stufe bis 250 (Krems: alle ab 2 Nennungen = 222). Ein Hinweis im Seitentext nennt das.
 
 ### 13.6 rollen.csv - Rollenlisten für die soziale Gruppierung (neu, Auftrag C1, 2026-10-03)
 

@@ -53,7 +53,8 @@ function zeichneMatrix() {
   fuegeStyleEin(container);
 
   const { knoten, paare } = baueKoNennungsNetzwerk(records);
-  const { knoten: topKnoten, gesamtAnzahlVerbunden } = waehleTopPersonenNachGrad(knoten, paare, TOP_N);
+  // AUFTRAG G1: Obergrenze aus ansichten.csv (`obergrenze`), Vorgabe TOP_N
+  const { knoten: topKnoten, gesamtAnzahlVerbunden } = waehleTopPersonenNachGrad(knoten, paare, options.obergrenze || TOP_N);
   const zellenIndex = baueZellenIndex(paare);
 
   const breite = options.width || container.clientWidth || Math.max(topKnoten.length * ZELLENGROESSE + RAND.links + RAND.rechts, 600);
