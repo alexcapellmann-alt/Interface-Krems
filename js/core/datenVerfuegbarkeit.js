@@ -50,7 +50,7 @@ function ladeFuerPruefung(pfad) {
 function pflichtspaltenDerDatei(pfad) {
   const spalten = new Set();
   Object.values(ANSICHT_ANFORDERUNGEN).forEach((anforderung) => {
-    [anforderung.dateien, anforderung.neben, anforderung.optional].forEach((gruppe) => (gruppe?.[pfad] || []).forEach((s) => spalten.add(s)));
+    [anforderung.dateien, anforderung.neben, anforderung.optional, anforderung.bedarf].forEach((gruppe) => (gruppe?.[pfad] || []).forEach((s) => spalten.add(s)));
     (anforderung.teilpflicht || []).filter((t) => t.datei === pfad).forEach((t) => t.spalten.forEach((s) => spalten.add(s)));
   });
   return spalten;
@@ -113,7 +113,8 @@ export async function stelleDateienSicher(ansichtId, zusatzDateien = []) {
 // Ergebnis: { blockiert, texte } - blockiert = Ansicht nicht zeichnen, nur den
 // Balken zeigen; texte = Sätze für den Hinweisbalken (leer = kein Balken).
 // zusatzNeben: weitere Nebendateien, die erst zur Laufzeit feststehen (z. B.
-// die Belegquellen einer bestimmten Führungsstation).
+// die Belegquellen einer bestimmten Führungsstation). Steht der Pfad unter
+// `bedarf` der Ansicht, gelten dessen Pflichtspalten (AUFTRAG E, Punkt 1).
 export function pruefeAnsicht(ansichtId, zusatzNeben = []) {
   const anforderung = ANSICHT_ANFORDERUNGEN[ansichtId];
   if (!anforderung) return { blockiert: false, texte: [] };
@@ -136,7 +137,7 @@ export function pruefeAnsicht(ansichtId, zusatzNeben = []) {
   }
 
   const neben = { ...(anforderung.neben || {}) };
-  zusatzNeben.forEach((pfad) => { if (!(pfad in neben) && !(pfad in (anforderung.dateien || {}))) neben[pfad] = []; });
+  zusatzNeben.forEach((pfad) => { if (!(pfad in neben) && !(pfad in (anforderung.dateien || {}))) neben[pfad] = anforderung.bedarf?.[pfad] || []; });
   Object.entries(neben).forEach(([pfad, pflicht]) => {
     const problem = beschreibeProblem(pfad, pflicht);
     if (problem) texte.push(`${problem.text} ${NEBENDATEI_FOLGE[pfad] || 'Diese Ansicht ist deshalb unvollständig.'}`);

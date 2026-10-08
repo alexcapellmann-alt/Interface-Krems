@@ -17,6 +17,9 @@
 // - `ausblenden`: Datei, bei deren Fehlen/Leere die Ansicht aus Navigation,
 //   Galerie und Flyouts verschwindet (Freigabe: Ansichten, die ausschließlich
 //   diese Datei nutzen, plus die Personenliste).
+// - `bedarf`: AUFTRAG E, Punkt 1 - Nebendateien, die nur geprüft werden, wenn
+//   der aufrufende Code sie zur Laufzeit als gebraucht meldet (pruefeAnsicht(),
+//   zusatzNeben). Beispiel: literatur.csv nur für Führungen mit "Zum Weiterlesen".
 
 const URKUNDEN = 'data/urkunden.csv';
 const ORTE = 'data/orte.csv';
@@ -102,7 +105,9 @@ export const ANSICHT_ANFORDERUNGEN = {
   literatur: { dateien: { [LITERATUR]: ['zitation'] }, ausblenden: LITERATUR },
   fuehrungenUebersicht: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, ausblenden: FUEHRUNGEN },
   fuehrungStation: { dateien: { [FUEHRUNGEN]: ['fuehrung_id', 'station_nr', 'text'] }, ausblenden: FUEHRUNGEN },
-  fuehrungAbschluss: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, neben: { [LITERATUR]: [] }, ausblenden: FUEHRUNGEN }
+  // AUFTRAG E, Punkt 1: literatur.csv nur, wenn der Abschluss "Zum Weiterlesen" enthält
+  // (sonst Fehlalarm bei Führungen ohne Literaturangaben); `literatur_id` löst die Einträge auf.
+  fuehrungAbschluss: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, bedarf: { [LITERATUR]: ['literatur_id'] }, ausblenden: FUEHRUNGEN }
 };
 
 // Schlüssel- bzw. bekannte Spalten je Datei: Grundlage der Regel "keine

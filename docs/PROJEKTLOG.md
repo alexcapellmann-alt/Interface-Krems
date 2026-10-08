@@ -219,6 +219,140 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-08 (63) – Auftrag E: Abschluss (Literaturprüfung, „Quelle“, Undatiert-Test, Matrix, Zeitmessung)
+
+**Kontext:** Abschluss der Folgeaufträge zum Prüfbericht vom 2026-10-03. Vorher-Stand ist `d5b2fe4` (D).
+Funktionsläufe mit dem neuen Wrapper (HTTP/1.1), Zeitmessung mit dem alten (`server_pruefung_http10.py`);
+vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen, ein Browser
+(`Pruefung_2026-10-03/Nachher_E/laufprotokoll.txt`; in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten:
+`Pruefung_2026-10-03/Nachher_E/`.
+
+### Punkt 1 – Literaturprüfung der Abschlussseite
+- **Entscheidung des Autors:** Ein Fehlalarm des Hinweisbalkens ist ein Fehler.
+- **Umsetzung:**
+  - `js/config/datenAnforderungen.js`: neue Gruppe `bedarf`. `fuehrungAbschluss` führt `literatur.csv` dort
+    statt unter `neben`, mit Pflichtspalte `literatur_id`.
+  - `js/core/datenVerfuegbarkeit.js`: Eine von der Ansicht gemeldete Zusatzdatei übernimmt die Pflichtspalten aus
+    `bedarf`; `bedarf` zählt bei der Regel „keine bekannte Spalte“ mit.
+  - `js/core/app.js`: meldet `literatur.csv` nur, wenn `fuehrung.weiterlesen` nicht leer ist.
+    `ladeFuehrungenDaten()` hat die Datei dann bereits geladen; es entsteht keine zusätzliche Anfrage.
+  - `docs/SCHEMA.md` (Abschnitt 10, Belegquellen) nennt die Regel.
+- **Prüfung** (`Nachher_E/punkt12/punkt12.json`; D-Code gegen E-Code mit denselben Daten):
+
+| `literatur.csv` | ohne „Zum Weiterlesen“ (`buergerspital-heringe`) D → E | mit (`buergerrecht-krems`) D → E |
+|---|---|---|
+| original | 0 → 0 Balken | 0 → 0 |
+| leer | 1 → **0** | 1 → 1 |
+| ohne Spalte `literatur_id` | 0 → 0 | 0 → **1** („In literatur.csv fehlt die Spalte 'literatur_id'.“) |
+| fehlend | 1 → **0** | 1 → 1 |
+| falsches Trennzeichen (Zusatz) | 1 → **0** | 1 → 1 |
+
+- Mit Originaldaten unverändert; keine Seiten- oder Konsolenfehler. Rückbau per `diff` belegt.
+- **Neu (Folge der Akzeptanz „ohne Spalte“):** Fehlt `literatur_id` bei einer Führung mit „Zum Weiterlesen“,
+  erscheint jetzt der Balken. Vorher zeigten nur die Einträge Fehlerboxen.
+
+### Punkt 2 – Beschriftung „Quelle“
+- `belegDarstellung.js` setzt `<p class="fuehrung-beleg-beschriftung">Quelle</p>` als erstes Element jedes
+  Belegs. Die Regel `.fuehrung-beleg::before` entfällt, die Deklarationen stehen unverändert in der neuen
+  Klasse (`css/components.css`, Außenabstand ausdrücklich `0 0 var(--space-2) 0`).
+- **Prüfung (alle 101 Stationen, Originaldaten):**
+  - 73 Belege; „QUELLE“ steht bei 73/73 im Seitentext (`innerText`, Großschreibung per CSS).
+  - Sonst ist der Seitentext aller 101 Stationen gleich, abgesehen von der neuen Zeile und den Leerzeilen um
+    das `<p>`.
+  - Pixel: 72/73 gleich. Ein Beleg (`weinbau-krems-stein/3`) weicht um 1 Pixel ab. Drei Wiederholungen je
+    Stand zeigen dieselbe Abweichung auch innerhalb eines Stands, also Rauschen (`punkt12/nach/`).
+- **axe** (nur geänderte Ansichten: zwei Abschlussseiten, vier Stationen, drei davon mit Beleg): 0 Verstöße
+  (`Nachher_E/axe/`).
+- **Referenzlauf** (47 Ansichten, gegen D-Endstand `Nachher_D/referenz_t5`): 46/47 Text identisch. Die 47.
+  (`fuehrungen/buergerspital-heringe`) zeigt zusätzlich nur „QUELLE“; 0 Fehler (`vergleich_referenz_e12.txt`).
+
+### Punkt 3 – „Undatiert“ im Zweitarchiv (nur Prüfung)
+- Kopie `kopie_Ez` (E-Code, Musterhausen-Daten). Der Testdatensatz enthält bereits eine undatierte Urkunde
+  (`MH-U-005`); für den Test wurden zusätzlich `MH-U-003` und `MH-U-004` ohne `datum`, `datum_normiert` und
+  `jahr` gesetzt. Rückbau per `diff` belegt (`urkunden.csv` gleich `kopie_Dz`).
+- **Ergebnis:** In beiden Varianten (1 bzw. 3 undatierte Urkunden) meldet axe für Swimlanes, Ridgeline und
+  Horizon Chart **keinen Verstoß**. Das gilt auch für `nested-interactive` (Regel „bestanden“).
+- **Einordnung:** Die Undatiert-Kacheln (`rect.unbekannt-kachel`, `tabindex="0"`) liegen im SVG mit
+  `role="img"`. axe stuft sie als fokussierbar und in der Tab-Reihenfolge ein; ein Tab-Test erreicht alle drei.
+  `nested-interactive` zählt aber nur fokussierbare Kinder mit Widget-Rolle (axe-core 4.13,
+  `no-focusable-content`), und `rect` hat keine. Die Vermutung aus D ist damit für axe **nicht bestätigt**,
+  es gibt keine Änderung (`Nachher_E/punkt3/`).
+
+### Punkt 4 – Matrix auf dem Endstand
+- Ablauf wie B2 (`tools/pE_matrix.sh`): Referenz, 595 Ladevorgänge, Einzelnachprüfung aller nicht stabilen
+  Einträge, Auswertung. Ein Browser, neuer Wrapper, 68 Minuten.
+- Die Matrix-Skripte nehmen jetzt Originaldaten und Browserzahl als Umgebungsvariablen; der Standard bleibt wie
+  bisher. Rückbau: `diff-exit=0` (Matrix und Nachprüfung).
+
+| Einstufung | B1 | B2 | Endstand |
+|---|---|---|---|
+| stabil | 517 | 481 | 483 |
+| stabil, Inhalt stark abweichend | 13 | 0 | 0 |
+| stabil, Konsolenfehler | 0 | 0 | 0 |
+| Fehlermeldung | 17 | 114 | 112 |
+| leer ohne Hinweis | 48 | 0 | 0 |
+| Absturz | 0 | 0 | 0 |
+
+- **Abweichungen zu B2: 2.** `literatur.csv` leer bzw. mit falschem Trennzeichen,
+  `fuehrungen/buergerspital-heringe/ende`: Fehlermeldung → stabil. Ursache: Punkt 1 (die zwei Fehlalarme aus D).
+- Keine Abweichung durch C1, C2 oder D.
+- Balkentexte (nach Einzelnachprüfung): 111 gleich, 2 abweichend (dieselben zwei Fälle)
+  (`Nachher_E/vergleich_B2/`).
+
+### Punkt 5 – Zeitmessung gegen B1
+- **Bedingungen:**
+  - Wie in B2: 100 ms RTT, Durchsatz unbegrenzt, Cache aus, je Ladevorgang frischer Server und Browser,
+    abwechselnde Reihenfolge, 20 Läufe je Stand und Ansicht.
+  - Alter Wrapper. B1 = `Pruefung_2026-10-03/_ref_B1` (`git archive d8ccea5`), Endstand = `kopie_En`.
+  - Ryzen 5 2600X, 3 600 MHz (Takt vor und nach gleich), Energieplan „Ausbalanciert“, CPU-Last 25 % bzw. 6 %
+    vor der Probe.
+  - Prozessliste in `Nachher_E/zeitmessung/bedingungen.txt`: Claude-Desktop, Explorer und dauerhaft laufende
+    Chrome-Prozesse (vor beiden Versuchen dieselben Prozess-IDs, also nicht vom Messskript).
+- **Geschwindigkeitsprobe:** Faktor 1,25 (Versuch 1) und 1,14 (Versuch 2), Grenze 2.
+- **Versuch 2** ist eine Bestätigungsmessung unter denselben Bedingungen, weil Versuch 1 bei der Treemap
+  knapp signifikant war.
+
+| Ansicht | Kennzahl | Versuch 1: B1 → Endstand | p | Versuch 2: B1 → Endstand | p |
+|---|---|---|---|---|---|
+| Startseite | DOMContentLoaded | 983 → 965 ms (−18) | 0,92 | 988 → 978 ms (−10) | 0,64 |
+| Startseite | FCP | 416 → 396 ms (−20) | 0,62 | 412 → 408 ms (−4) | 0,60 |
+| Startseite | Inhalt sichtbar | 1 393 → 1 387 ms (−6) | 0,89 | 1 396 → 1 393 ms (−3) | 0,68 |
+| Treemap | DOMContentLoaded | 958 → 973 ms (+15) | 0,70 | 961 → 961 ms (0) | 0,62 |
+| Treemap | FCP | 392 → 396 ms (+4) | 0,89 | 396 → 388 ms (−8) | 0,80 |
+| Treemap | Inhalt sichtbar | 1 622 → 1 727 ms (**+105**) | **0,033** | 1 644 → 1 689 ms (**+45**) | **0,027** |
+
+- Paarweise ist der Treemap-Inhalt in beiden Versuchen in 15 von 20 Läufen langsamer (Median +65 bzw. +45 ms).
+- Streuung (Quartile, Spannweite): `streuung_versuch1.md`, `…2.md`.
+- JS-Anfragen beim Einstieg: Startseite 25 → 30, Treemap 34 → 40 (B2 nach Abhilfe: 29 bzw. 38).
+- **Ergebnis:**
+  - Startseite und Seitengerüst: kein messbarer Unterschied.
+  - Treemap-Inhalt: in beiden Messungen signifikant später als B1. Die Höhe schwankt zwischen den Versuchen
+    (+105 / +45 ms).
+  - Nach der Abhilfe in B2 (Versuch 5) war kein Unterschied mehr messbar; die Verzögerung ist also seit B2
+    wieder entstanden.
+  - Die Ursache ist nicht untersucht (siehe Scope-Meldungen).
+
+### Punkt 6 – Vorher/Nachher-Tabelle
+`Pruefung_2026-10-03/Nachher_E/vorher_nachher.md`: alle Zahlen mit Fundstelle und Wrapper, dazu die Liste der
+bekannten Einschränkungen.
+
+### Scope-Meldungen
+- **Treemap-Verzögerung gegenüber B1 (Punkt 5):**
+  - Lesend geprüft: Der Start lädt `archiv.csv` und `ansichten.csv` parallel (C1). Die Module der Prüfkette
+    haben keinen neuen Ladeschritt; die neue Abhängigkeit `datenVerfuegbarkeit.js` → `archivKonfiguration.js`
+    ist beim Aufruf schon geladen.
+  - Die zusätzlichen 2 JS-Anfragen gegenüber B2 sind nicht einzeln gemessen.
+  - Eine Ursachenmessung (z. B. Stände B2/C1/C2/D einzeln gegen B1) wäre ein eigener Auftrag.
+- **Undatiert-Kacheln und Swimlane-Zellen** sind tastaturerreichbar in `role="img"` ohne eigenen Namen (Punkt 3).
+  axe meldet das nicht; geändert wurde nichts (Nicht-Ziel: kein zusätzliches ARIA).
+- **Matrix** ohne `rollen.csv` und `ansichten.csv` (seit C1; dort einzeln geprüft), um mit B2 vergleichbar zu
+  bleiben.
+- **Fehlende Spalte `zitation`** bei einer Führung mit „Zum Weiterlesen“: Laut Code (`fuehrungAbschluss.js`,
+  `${record.zitation}`) beginnt der Eintrag dann mit „undefined“. Das ist nicht im Browser geprüft und nicht
+  geändert; das Verhalten bestand schon vor E.
+
+---
+
 ## 2026-10-07 (62) – Auftrag D: Datenrückfälle (Teil 0), Barrierefreiheit, Dokumentationsabgleich (Punkt G)
 
 **Kontext:** Phase 1 (Vorschlag: `Pruefung_2026-10-03/Nachher_D/phase1/VORSCHLAG_PHASE1.md`) vom Autor

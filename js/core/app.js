@@ -931,9 +931,14 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
   // abgezweigt (sonst wuerde Number('ende') zu NaN und faelschlich "nicht
   // gefunden" ausloesen).
   if (fuehrung && stationNrRoh === 'ende') {
+    // AUFTRAG E, Punkt 1: literatur.csv nur prüfen, wenn diese Führung "Zum
+    // Weiterlesen" hat (ladeFuehrungenDaten() hat die Datei bereits geladen).
+    const literaturBedarf = fuehrung.weiterlesen.length > 0 ? ['data/literatur.csv'] : [];
+    await pm.stelleDateienSicher('fuehrungAbschluss', literaturBedarf);
+    if (meineGeneration !== generation) return;
     kontext.modul = abschlussModul.render(kontext.container, fuehrung);
     kontext.aktuellesVizModul = kontext.modul;
-    zeigeSeitenPruefung(kontext.container, pm.pruefeAnsicht('fuehrungAbschluss'), () => {}); // AUFTRAG B2: literatur.csv
+    zeigeSeitenPruefung(kontext.container, pm.pruefeAnsicht('fuehrungAbschluss', literaturBedarf), () => {}); // AUFTRAG B2: literatur.csv
     return;
   }
 
