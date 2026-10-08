@@ -7,6 +7,37 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-08 (112) – Wortwolke bereinigen: Filterdatei, Zusammenführung, Info-Button
+
+Auftrag F.
+- **Neu `data/wortwolke_filter.csv`** (optional, Spalten `typ`, `wort`, `leitform`, `anmerkung`), Krems: 241 Zeilen.
+  - 16 Wörter `auslassen`, 159 `vorname`, Regel `roemische_zahlen`.
+  - 32 Schreibvarianten `zusammenfuehren`, darunter `pfen` → `pfennig`.
+  - 33 Beugungsformen `beugung` in 27 Gruppen.
+- **`js/viz/wortwolke.js`:**
+  - Lädt die Datei beim Öffnen. Ein Wort entfällt, wenn es selbst oder seine Leitform ausgelassen wird; danach
+    zählen Formen unter der Leitform.
+  - Ohne Datei, bei leerer oder unbrauchbarer Datei zählt die Wolke wie vorher.
+  - Der Info-Button nennt die angewendeten Filter mit berechneten Zahlen.
+- **`js/config/datenAnforderungen.js`:** Die Filterdatei ist `optional` (bei unbrauchbarer Datei erscheint ein
+  Balken). Die Abschlussseite einer Führung verlangt jetzt auch `zitation` (Punkt 5).
+- **`js/fuehrungen/fuehrungenDaten.js`:** Ohne Spalte `zitation` stand „undefined“ unter „Zum Weiterlesen“; jetzt
+  „Hinweis: Literaturangabe nicht verfügbar …“ und ein Balken.
+- **Doku:** `docs/SCHEMA.md` (neuer Abschnitt 13.7, Mindestspalten, Verhalten, Anleitung), Masterprompt (Stand F,
+  Dateibaum).
+
+**Ergebnis:**
+- Mit Datei: Top 5 krems 973, stadt 475, stein 462, bürger 347, wien 290.
+- Ohne Datei sind Wörter und Zahlen gleich wie vorher.
+- axe 0 (Wortwolke, Abschlussseiten).
+- Referenzlauf: 46/47 Ansichten unverändert.
+- Zweitarchiv 47/47 fehlerfrei, 0 Eingriffe außerhalb der CSV-Dateien.
+- Details: `docs/PROJEKTLOG.md` Eintrag 64.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-08 (111) – Abschluss: Literaturprüfung nur bei „Zum Weiterlesen“, Beschriftung „Quelle“ im Text
 
 Auftrag E.

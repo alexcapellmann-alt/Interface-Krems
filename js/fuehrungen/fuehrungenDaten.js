@@ -230,7 +230,10 @@ export function ladeFuehrungenDaten() {
         // mehr aus - nur "Zum Weiterlesen" zeigt dann den Hinweis.
         ladeGecachteCSV('data/literatur.csv').catch(() => null)
       ]);
-      const literaturGrund = !literaturZeilen ? 'fehlt' : (literaturZeilen.length === 0 ? 'ist leer' : null);
+      // AUFTRAG F, Punkt 5: ohne Spalte `zitation` stand sonst "undefined" im Eintrag -
+      // jetzt derselbe Hinweis wie bei fehlender Datei (Balken: datenAnforderungen.js, `bedarf`).
+      const literaturGrund = !literaturZeilen ? 'fehlt'
+        : (literaturZeilen.length === 0 ? 'ist leer' : (!('zitation' in literaturZeilen[0]) ? "ohne Spalte 'zitation'" : null));
       const literaturKarte = new Map((literaturZeilen || []).map((r) => [r.literatur_id, r]));
       const gruppen = gruppiereNachFuehrung(fuehrungenZeilen);
       const fuehrungen = gruppen.map(([id, zeilen]) => baueFuehrung(id, zeilen, quellKarten, literaturKarte, literaturGrund));

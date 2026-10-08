@@ -24,12 +24,21 @@
 //
 // Farbe: CAT_COLORS.default mit Deckkraft nach Häufigkeit (kein Kategorie-Bezug,
 // ein Wort ist keiner einzelnen Urkunden-Kategorie zugeordnet).
+//
+// AUFTRAG F: archivspezifische Filter aus data/wortwolke_filter.csv (optional,
+// siehe docs/SCHEMA.md 13.7). Reihenfolge: Ein Wort entfällt, wenn es selbst oder
+// seine Leitform ausgelassen wird (Liste, Vorname, Regel "roemische_zahlen");
+// danach zählen Schreibweisen und Beugungsformen unter ihrer Leitform. Fehlt die
+// Datei, ist sie leer oder unbrauchbar, zählt die Wolke wie vorher (nur die
+// allgemeinen Füllwörter unten). Der Info-Button nennt die angewendeten Filter.
 
 import { CAT_COLORS } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { alsText } from '../utils/textwert.js';
+import { ladeGecachteCSV } from '../core/datenCache.js';
+import { holeDateiZustand } from '../core/dataLoader.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
 
@@ -62,20 +71,127 @@ function bereinigeRegestText(regest) {
   return alsText(regest).split(new RegExp(`(?:${vermerke.map(alsMuster).join('|')})\\s*:`, 'i'))[0];
 }
 
-function zaehleWorthaeufigkeit(records) {
-  const zaehlung = new Map();
-  records.forEach((record) => {
-    const text = bereinigeRegestText(record.regest).toLowerCase();
-    const woerter = text.match(/[a-zäöüß]{3,}/g) || [];
-    woerter.forEach((wort) => {
-      if (STOPWOERTER.has(wort)) return;
-      zaehlung.set(wort, (zaehlung.get(wort) || 0) + 1);
-    });
+// AUFTRAG F: Filterdatei lesen. Liefert null (= nicht filtern), wenn die Datei
+// fehlt, leer ist oder die Spalten `typ`/`wort` fehlen (falsches Trennzeichen) -
+// den Balken dafür zeigt die zentrale Prüfung (datenAnforderungen.js, `optional`).
+const FILTER_DATEI = 'data/wortwolke_filter.csv';
+const ROEMISCHE_ZAHL = /^m{0,3}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/;
+// Mittelalterliches Schluss-j (vij = vii) zählt mit.
+const istRoemischeZahl = (wort) => ROEMISCHE_ZAHL.test(wort.endsWith('j') ? `${wort.slice(0, -1)}i` : wort);
+const zelle = (wert) => alsText(wert).trim().toLowerCase();
+
+function leseFilter(zeilen) {
+  if (!Array.isArray(zeilen) || zeilen.length === 0 || !('typ' in zeilen[0]) || !('wort' in zeilen[0])) return null;
+  const filter = { auslassen: new Set(), vornamen: new Set(), roemisch: false, schreibweisen: new Map(), beugungen: new Map(), uebergangen: 0 };
+  zeilen.forEach((zeile) => {
+    const typ = zelle(zeile.typ);
+    const wort = zelle(zeile.wort);
+    const leitform = zelle(zeile.leitform);
+    if (!wort) filter.uebergangen += 1;
+    else if (typ === 'auslassen') filter.auslassen.add(wort);
+    else if (typ === 'vorname') filter.vornamen.add(wort);
+    else if (typ === 'regel' && wort === 'roemische_zahlen') filter.roemisch = true;
+    else if (typ === 'zusammenfuehren' && leitform) filter.schreibweisen.set(wort, leitform);
+    else if (typ === 'beugung' && leitform) filter.beugungen.set(wort, leitform);
+    else filter.uebergangen += 1;
   });
+  return filter;
+}
+
+// Leitform über Schreibweise/Beugung, auch als Kette (pfen -> pfennig), mit Schutz gegen Zyklen.
+function leitformVon(wort, filter) {
+  let aktuell = wort;
+  for (let schritt = 0; schritt < 5; schritt += 1) {
+    const naechste = filter.schreibweisen.get(aktuell) ?? filter.beugungen.get(aktuell);
+    if (!naechste || naechste === aktuell) break;
+    aktuell = naechste;
+  }
+  return aktuell;
+}
+
+// Grund des Auslassens oder null. Reihenfolge der Gründe: Liste, Vorname, römische Zahl.
+function auslassGrund(wort, leitform, grossgeschrieben, filter) {
+  if (filter.auslassen.has(wort) || filter.auslassen.has(leitform)) return 'liste';
+  if (filter.vornamen.has(wort) || filter.vornamen.has(leitform)) return 'vorname';
+  if (filter.roemisch && ((grossgeschrieben && istRoemischeZahl(wort)) || (leitform !== wort && istRoemischeZahl(leitform)))) return 'roemisch';
+  return null;
+}
+
+// Ohne Filter zählt die Wolke wie vor AUFTRAG F (gleiche Wörter, gleiche Zahlen).
+// Mit Filter hält instanz.filterStatistik die Zahlen für den Info-Button fest.
+function zaehleWorthaeufigkeit(records, filter = null) {
+  const zaehlung = new Map();
+  const statistik = { liste: 0, vorname: 0, roemisch: 0, roh: new Map(), schreibweisen: new Map(), beugungen: new Map() };
+  records.forEach((record) => {
+    const original = bereinigeRegestText(record.regest);
+    const text = original.toLowerCase();
+    // Großschreibung im Original nur für die Regel "roemische_zahlen" (gleiche Länge = gleiche Positionen)
+    const gleicheLaenge = original.length === text.length;
+    for (const treffer of text.matchAll(/[a-zäöüß]{3,}/g)) {
+      const wort = treffer[0];
+      if (STOPWOERTER.has(wort)) continue;
+      let zielwort = wort;
+      if (filter) {
+        const leitform = leitformVon(wort, filter);
+        const grossgeschrieben = gleicheLaenge && original[treffer.index] !== text[treffer.index];
+        const grund = auslassGrund(wort, leitform, grossgeschrieben, filter);
+        if (grund) { statistik[grund] += 1; continue; }
+        statistik.roh.set(wort, (statistik.roh.get(wort) || 0) + 1);
+        if (leitform !== wort) (filter.schreibweisen.has(wort) ? statistik.schreibweisen : statistik.beugungen).set(wort, leitform);
+        zielwort = leitform;
+      }
+      zaehlung.set(zielwort, (zaehlung.get(zielwort) || 0) + 1);
+    }
+  });
+  if (instanz) instanz.filterStatistik = filter ? statistik : null;
   return Array.from(zaehlung.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, MAX_WOERTER)
     .map(([text, anzahl]) => ({ text, anzahl }));
+}
+
+// AUFTRAG F: Absatz für den Info-Button, alle Zahlen aus der aktuellen Zählung.
+// Zahl mit Einzahl/Mehrzahl, z. B. anzahl(1, 'Wort', 'Wörter') -> "1 Wort".
+const anzahl = (n, einzahl, mehrzahl) => `${n.toLocaleString('de-DE')} ${n === 1 ? einzahl : mehrzahl}`;
+const nennungen = (n) => anzahl(n, 'Nennung', 'Nennungen');
+function beispiel(zuordnung, roh) {
+  const [wort, leitform] = [...zuordnung.entries()].sort((a, b) => (roh.get(b[0]) || 0) - (roh.get(a[0]) || 0))[0];
+  return `zum Beispiel „${wort}“ unter „${leitform}“`;
+}
+
+function baueFilterAbsatz() {
+  const absatz = document.createElement('p');
+  const saetze = ['Allgemeine Füllwörter wie „und“ oder „der“ werden nicht gezählt.'];
+  const { filter, filterStatistik: st } = instanz;
+  if (!filter || !st) {
+    saetze.push('Weitere Filter sind für dieses Archiv nicht eingestellt.');
+  } else {
+    const teile = [];
+    if (filter.auslassen.size) teile.push(`${anzahl(filter.auslassen.size, 'Wort', 'Wörter')} aus einer Liste (${nennungen(st.liste)})`);
+    if (filter.roemisch) teile.push(`römische Zahlen (${nennungen(st.roemisch)})`);
+    if (filter.vornamen.size) teile.push(`${anzahl(filter.vornamen.size, 'Vorname', 'Vornamen')} (${nennungen(st.vorname)})`);
+    if (teile.length) {
+      const aufzaehlung = teile.length > 1 ? `${teile.slice(0, -1).join(', ')} und ${teile[teile.length - 1]}` : teile[0];
+      saetze.push(`Für dieses Archiv werden zusätzlich ${aufzaehlung} ausgelassen (Datei wortwolke_filter.csv).`);
+    }
+    if (st.schreibweisen.size) {
+      saetze.push(`${anzahl(st.schreibweisen.size, 'Schreibweise wird', 'Schreibweisen werden')} unter ${anzahl(new Set(st.schreibweisen.values()).size, 'Hauptform', 'Hauptformen')} zusammengezählt, ${beispiel(st.schreibweisen, st.roh)}.`);
+    }
+    if (st.beugungen.size) {
+      // N: höchster Rang einer zusammengezählten Beugungsform unter allen Wörtern
+      // nach dem Auslassen und vor dem Zusammenzählen.
+      const rang = new Map([...st.roh.entries()].sort((a, b) => b[1] - a[1]).map(([wort], i) => [wort, i + 1]));
+      const n = Math.max(...[...st.beugungen.keys()].map((wort) => rang.get(wort)));
+      const formen = anzahl(st.beugungen.size, 'Beugungsform', 'Beugungsformen');
+      const verb = st.beugungen.size === 1 ? 'wird' : 'werden';
+      saetze.push(`Bei den ${n} häufigsten Wörtern ${verb} außerdem ${formen} unter ${anzahl(new Set(st.beugungen.values()).size, 'Grundform', 'Grundformen')} zusammengezählt, ${beispiel(st.beugungen, st.roh)}.`);
+    }
+    if (filter.uebergangen) {
+      saetze.push(`${anzahl(filter.uebergangen, 'Zeile', 'Zeilen')} der Filterdatei ${filter.uebergangen === 1 ? 'wurde' : 'wurden'} nicht verwendet (unbekannter Typ oder fehlende Leitform).`);
+    }
+  }
+  absatz.textContent = saetze.join(' ');
+  return absatz;
 }
 
 function baueSpiralPosition(schritt) {
@@ -139,13 +255,13 @@ function zeichneWortwolke() {
   container.appendChild(werkzeugleiste);
   infotextFuerModul('wortwolke').then((cfg) => {
     if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
-    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
+    instanz.infoButton = erzeugeInfoButton(werkzeugleiste, { ...cfg, zusatzInhalt: baueFilterAbsatz() }); // AUFTRAG F
   });
 
   const breite = options.width || container.clientWidth || 800;
   const hoehe = options.height || 600;
 
-  const woerter = zaehleWorthaeufigkeit(records);
+  const woerter = zaehleWorthaeufigkeit(records, instanz.filter);
   const maxAnzahl = d3.max(woerter, (w) => w.anzahl) || 1;
   const schriftgroessenSkala = d3.scaleSqrt().domain([1, maxAnzahl]).range([SCHRIFTGROESSE.min, SCHRIFTGROESSE.max]);
   const opazitaetSkala = d3.scaleLinear().domain([1, maxAnzahl]).range([0.5, 1]);
@@ -198,8 +314,19 @@ export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
-  instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options }, infoButton: null };
-  zeichneWortwolke();
+  instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options }, infoButton: null, filter: null, filterGeladen: false };
+  // AUFTRAG F: Filterdatei erst beim Öffnen der Wolke (die zentrale Prüfung hat sie
+  // vorher über denselben Cache geladen); gezeichnet wird, sobald sie vorliegt.
+  // Hat die Prüfung die Datei schon als fehlend erkannt, nicht erneut anfragen
+  // (der Cache behält fehlgeschlagene Ladeversuche bewusst nicht).
+  const meineInstanz = instanz;
+  const laden = holeDateiZustand(FILTER_DATEI)?.fehlt ? Promise.resolve(null) : ladeGecachteCSV(FILTER_DATEI).catch(() => null);
+  laden.then((zeilen) => {
+    if (instanz !== meineInstanz) return;
+    instanz.filter = leseFilter(zeilen);
+    instanz.filterGeladen = true;
+    zeichneWortwolke();
+  });
 }
 
 // Die Spiral-Platzierung hängt von den exakten Pixel-Maßen ab - resize() zeichnet
@@ -207,7 +334,7 @@ export function render(container, data, options = {}) {
 export function resize(neueOptionen = {}) {
   if (!instanz) return;
   instanz.options = { ...instanz.options, ...neueOptionen };
-  zeichneWortwolke();
+  if (instanz.filterGeladen) zeichneWortwolke(); // AUFTRAG F: sonst zeichnet render() nach dem Laden
 }
 
 export function destroy() {

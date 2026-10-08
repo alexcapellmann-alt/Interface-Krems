@@ -61,7 +61,7 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
 | | `station_nr`, `text` | Führungsstation |
 | `literatur.csv` | `zitation` | Literatur |
 
-`personenliste.csv`, `recherche_links.csv` und `infotexte.csv` haben keine Pflichtspalte. `ansichten.csv` ist optional; ist sie vorhanden, braucht sie die Spalte `bereich` (Abschnitt 13.5).
+`personenliste.csv`, `recherche_links.csv` und `infotexte.csv` haben keine Pflichtspalte. `ansichten.csv` ist optional; ist sie vorhanden, braucht sie die Spalte `bereich` (Abschnitt 13.5). Ebenso optional ist `wortwolke_filter.csv` (seit Auftrag F); ist sie vorhanden, braucht sie `typ` und `wort` (Abschnitt 13.7).
 
 **Was passiert, wenn …**
 
@@ -75,6 +75,7 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
   - **Seit Auftrag C1:** Fehlt `rollen.csv` oder ist sie leer, werden Chord-Diagramm und Bipartite Flow Map ausgeblendet (ohne Rollenlisten landeten sonst alle Personen außer der Dynastie im „Bürgertum“). Die Personenliste bleibt und sortiert dann ohne Titelwörter.
 - **… keine Person zur Herrscherfamilie gehört (seit Auftrag C1):** Der Zeitleisten-Stammbaum wird nur angeboten, wenn in `familien.csv` mindestens eine Person steht, deren `familie` in `dynastie_familien` (`archiv.csv`) genannt ist. Sonst wird er ausgeblendet; ein gespeicherter Link zeigt „Für diese Ansicht liegen keine Daten vor: In familien.csv gehört keine Person zur Herrscherfamilie …“.
 - **… `ansichten.csv` fehlt, leer oder unbrauchbar ist (seit Auftrag C1):** Fehlt sie oder ist sie leer, gelten die neutralen Standardnamen und -beschreibungen, ohne Hinweis. Ist sie vorhanden, aber unbrauchbar (Spalte `bereich` fehlt, falsches Trennzeichen), gelten ebenfalls die Standardangaben, und die Startseite zeigt einen Balken, z. B. „In ansichten.csv fehlt die Spalte 'bereich'. Es gelten deshalb die Standardnamen und -beschreibungen der Ansichten.“
+- **… `wortwolke_filter.csv` fehlt, leer oder unbrauchbar ist (seit Auftrag F):** Fehlt sie oder ist sie leer, zählt die Wortwolke ohne archivspezifische Filter, ohne Hinweis. Ist sie vorhanden, aber unbrauchbar (Spalte `typ` oder `wort` fehlt, falsches Trennzeichen), erscheint die Wolke ebenfalls ungefiltert, dazu ein Balken, z. B. „In wortwolke_filter.csv fehlt die Spalte 'typ'. Die Wortwolke wird deshalb ohne Filter gezeigt.“
 - **… eine Kerndatei fehlt oder leer ist:**
   - `startseite.csv`: Statt der Startseite erscheint ein Balken mit dem Dateinamen.
   - `archiv.csv`: Startseite und Über-Seite zeigen einen Balken; Name, Logo und Kontaktangaben fehlen dann.
@@ -378,7 +379,7 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 - Alle anderen Stationen, Belege, die Übersicht und der Abschluss bleiben unverändert. Zusätzlich zeigt die betroffene Station den Hinweisbalken aus Auftrag B2 („… Diese Ansicht ist deshalb unvollständig.“).
 - `fuehrungen.csv` selbst bleibt Pflicht (siehe „Mindestspalten und was bei Problemen passiert“).
 - **`literatur.csv` ist für die Führungen ebenfalls optional (Auftrag C3):** Fehlt sie oder ist sie leer, bleiben alle Führungen bedienbar. Nur die Einträge unter „Zum Weiterlesen“ zeigen dann „Hinweis: Literaturangabe nicht verfügbar, Quelle literatur.csv fehlt“ bzw. „… ist leer“; dazu erscheint auf der Abschlussseite der Hinweisbalken aus Auftrag B2. Die eigene Literaturseite verhält sich wie in B2 beschrieben.
-- **Seit Auftrag E (2026-10-08) wird `literatur.csv` auf der Abschlussseite nur für Führungen geprüft, deren Abschluss „Zum Weiterlesen“ enthält** (Spalte `weiterlesen` nicht leer). Nur dort erscheint der Hinweisbalken, wenn `literatur.csv` fehlt, leer oder unlesbar ist oder die Spalte `literatur_id` fehlt. Führungen ohne Literaturangaben (z. B. `buergerspital-heringe`, `wer-fehlt`) zeigen dann keinen Balken, denn ihre Seite ist unverändert.
+- **Seit Auftrag E (2026-10-08) wird `literatur.csv` auf der Abschlussseite nur für Führungen geprüft, deren Abschluss „Zum Weiterlesen“ enthält** (Spalte `weiterlesen` nicht leer). Nur dort erscheint der Hinweisbalken, wenn `literatur.csv` fehlt, leer oder unlesbar ist oder die Spalte `literatur_id` fehlt. **Seit Auftrag F** gilt dasselbe für die Spalte `zitation`: Fehlt sie, erscheint der Balken, und die Einträge unter „Zum Weiterlesen“ zeigen „Hinweis: Literaturangabe nicht verfügbar, Quelle literatur.csv ohne Spalte 'zitation'“ (vorher stand dort „undefined“). Führungen ohne Literaturangaben (z. B. `buergerspital-heringe`, `wer-fehlt`) zeigen dann keinen Balken, denn ihre Seite ist unverändert.
 
 **Unsicherheit:** bei datenbasierten Belegen (alle Präfixe außer `bild`) übernimmt die künftige Darstellung (Teil 2) die `_unsicher`-Felder/`unsicherheit_anmerkung` DIREKT aus der jeweiligen Quell-CSV der referenzierten ID - `unsicherheit_hinweis` in `fuehrungen.csv` ist ein davon UNABHÄNGIGER, zusätzlicher redaktioneller Text (z. B. eine Einordnung, warum eine Station gerade wegen der Unsicherheit erzählenswert ist), kein Ersatz.
 
@@ -426,7 +427,7 @@ Alle fünf Beleg-IDs sind per grep gegen die jeweilige Quell-CSV verifiziert (si
 
 ## 13. Archivspezifische Konfigurationsdateien (Auftrag "Archivspezifische Texte und Identität in CSV-Dateien", 2026-09-29)
 
-Diese Dateien (seit Auftrag C1 zusätzlich `ansichten.csv` und `rollen.csv`, Abschnitte 13.5 und 13.6; Anleitung für ein neues Archiv: Abschnitt 14) machen das Interface für ANDERE Kommunalarchive nachnutzbar, ohne dass am Code etwas geändert werden muss - Name, Kontakt, Logo, Kartenausschnitt sowie alle Texte der Startseite, der Über-Seite und der "?"-Info-Buttons stehen hier, nicht mehr fest im Code. **Dieser Abschnitt richtet sich ausdrücklich an Archivar:innen ohne Programmierkenntnisse** - die vier Dateien lassen sich mit jedem Tabellenprogramm (Excel, LibreOffice Calc, Google Sheets) öffnen und bearbeiten, solange beim Speichern das Format "CSV UTF-8, Semikolon-getrennt" gewählt wird (bei Excel: "CSV UTF-8 (durch Trennzeichen getrennt)").
+Diese Dateien (seit Auftrag C1 zusätzlich `ansichten.csv` und `rollen.csv`, seit Auftrag F `wortwolke_filter.csv`, Abschnitte 13.5 bis 13.7; Anleitung für ein neues Archiv: Abschnitt 14) machen das Interface für ANDERE Kommunalarchive nachnutzbar, ohne dass am Code etwas geändert werden muss - Name, Kontakt, Logo, Kartenausschnitt sowie alle Texte der Startseite, der Über-Seite und der "?"-Info-Buttons stehen hier, nicht mehr fest im Code. **Dieser Abschnitt richtet sich ausdrücklich an Archivar:innen ohne Programmierkenntnisse** - die vier Dateien lassen sich mit jedem Tabellenprogramm (Excel, LibreOffice Calc, Google Sheets) öffnen und bearbeiten, solange beim Speichern das Format "CSV UTF-8, Semikolon-getrennt" gewählt wird (bei Excel: "CSV UTF-8 (durch Trennzeichen getrennt)").
 
 **Gemeinsame Regeln für alle vier Dateien** (siehe auch die allgemeinen Konventionen ganz oben in diesem Dokument):
 
@@ -594,6 +595,34 @@ Wer zur Gruppe „Dynastie“ gehört, steht nicht hier, sondern ergibt sich aus
 
 **Verhalten bei fehlender oder leerer Datei:** Chord-Diagramm und Bipartite Flow Map werden nicht angeboten; ein gespeicherter Link zeigt „Für diese Ansicht liegen keine Daten vor: Die Datei rollen.csv fehlt.“ Die Personenliste bleibt und sortiert ohne Titelwörter.
 
+### 13.7 wortwolke_filter.csv - Filter der Wortwolke (neu, Auftrag F, 2026-10-08)
+
+Welche Wörter die Wortwolke (Urkunden) zusätzlich auslässt und welche Schreibweisen oder Beugungsformen sie zusammenzählt. Eine Zeile je Wort. Die Datei ist **optional** und wird erst geladen, wenn die Wortwolke geöffnet wird.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `typ` | Text | **Pflicht** (wenn die Datei vorhanden ist) | `auslassen`, `vorname`, `zusammenfuehren`, `beugung` oder `regel` (siehe unten) |
+| `wort` | Text | **Pflicht** (wenn die Datei vorhanden ist) | das Wort in Kleinschreibung, wie es in der Wolke erscheint; bei `regel` der Name der Regel |
+| `leitform` | Text | nur bei `zusammenfuehren` und `beugung` | Form, unter der das Wort gezählt wird |
+| `anmerkung` | Text | nein | wird nicht ausgewertet (kein `\|`, kein `;`) |
+
+**Werte von `typ`:**
+- `auslassen`: Das Wort wird nicht gezählt (z. B. `daß`, `sowie`).
+- `vorname`: wie `auslassen`; der Info-Button zählt Vornamen aber getrennt.
+- `zusammenfuehren`: Schreibvariante, gezählt unter `leitform` (z. B. `wienn` → `wien`, `pfen` → `pfennig`).
+- `beugung`: Beugungsform desselben Wortes, gezählt unter der Grundform in `leitform` (z. B. `bürgern` → `bürger`). Jede Form steht einzeln in der Datei; das Interface bildet keine Wortstämme selbst.
+- `regel`: schaltet eine im Programm hinterlegte Regel ein. Bisher gibt es nur `roemische_zahlen`: gültige römische Zahlen von 1 bis 3 999 (auch mit Schluss-j, z. B. `vij`), nur wenn sie im Regest großgeschrieben sind.
+
+**Reihenfolge:** Ein Wort entfällt, wenn es selbst oder seine Leitform ausgelassen wird (`auslassen`, `vorname`, Regel). Danach werden die Zählungen unter der Leitform addiert. Eine Leitform darf selbst wieder eine Leitform haben (z. B. `pfen` → `pfennig`, `pfennige` → `pfennig`).
+
+**Immer gilt:** Allgemeine Füllwörter (`der`, `und`, `dass` …) stehen fest im Programm und werden auch ohne diese Datei nicht gezählt.
+
+**Info-Button:** Der „?“-Knopf der Wortwolke nennt unter dem Text aus `infotexte.csv` die angewendeten Filter mit der Zahl der ausgelassenen Nennungen und der zusammengezählten Formen. Die Zahlen werden beim Zeichnen berechnet. Zeilen mit unbekanntem `typ`, unbekannter Regel oder ohne `leitform` (bei `zusammenfuehren`/`beugung`) werden übergangen und dort mitgezählt.
+
+Beispiel (Krems, Auszug): `regel;roemische_zahlen;;` · `auslassen;daß;;` · `vorname;friedrich;;` · `zusammenfuehren;wienn;wien;` · `beugung;städten;stadt;`
+
+**Verhalten bei fehlender oder leerer Datei:** keine archivspezifische Filterung, kein Hinweis; die Wolke zählt wie vor Auftrag F. Ist die Datei vorhanden, aber unbrauchbar (Spalte `typ`/`wort` fehlt, falsches Trennzeichen): Wolke ungefiltert, dazu ein Hinweisbalken.
+
 ---
 
 ## 14. Neues Archiv einrichten (Anleitung, Stand Auftrag C1, 2026-10-03)
@@ -613,13 +642,14 @@ Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nut
 - `infotexte.csv` (13.4): Erklärtexte der „?“-Knöpfe. Die mitgelieferten Texte erwähnen teils Krems - bei Bedarf anpassen.
 - `ansichten.csv` (13.5): andere Namen, Beschreibungen, Reihenfolge, Ansichten weglassen.
 - `rollen.csv` (13.6): Wörter für Klerus und Adel, Titelwörter der Personenliste. Ohne die Datei entfallen Chord-Diagramm und Bipartite Flow Map.
+- `wortwolke_filter.csv` (13.7, seit Auftrag F): Wörter, Vornamen, Schreibweisen und Beugungsformen, die die Wortwolke auslässt oder zusammenzählt. Ohne die Datei zählt die Wolke ungefiltert (nur allgemeine Füllwörter entfallen).
 - In `archiv.csv`: `dynastie_familien`, `dynastie_name`, `dynastie_gruppenname` (nur mit Herrscherfamilie in `familien.csv`), `regest_quellenvermerk`.
 
 **Grenzen der Anpassung**
 - Ein **neuer Bereichstyp** mit eigenen Spalten (z. B. „Akten“) lässt sich nicht allein über Daten anlegen; er braucht eigene Programmteile.
 - Spaltennamen, die technischen Namen in `ansichten.csv` (`bereich`, `ansicht`) und die Schlüssel in `archiv.csv` sind fest.
 - `|` ist in allen Dateien das Trennzeichen für Listen und darf nicht als normales Zeichen vorkommen.
-- Die Oberfläche ist deutschsprachig; Sprache und Füllwörter der Wortwolke sind nicht einstellbar.
+- Die Oberfläche ist deutschsprachig; Sprache und die allgemeinen Füllwörter der Wortwolke sind nicht einstellbar (archivspezifische Filter: `wortwolke_filter.csv`, 13.7).
 
 **Farben der Kategorien (seit Auftrag C2, 2026-10-07)**
 - Die 16 Kategorien der Krems-Urkunden (`kategorien` in `urkunden.csv`) haben feste Farben.

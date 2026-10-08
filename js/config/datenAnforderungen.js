@@ -35,6 +35,7 @@ const UEBER = 'data/ueber.csv';
 const ARCHIV = 'data/archiv.csv';
 const ANSICHTEN = 'data/ansichten.csv';
 const ROLLEN = 'data/rollen.csv';
+const WORTWOLKE_FILTER = 'data/wortwolke_filter.csv'; // AUFTRAG F: optional, archivspezifische Filter der Wortwolke
 const ROLLEN_PFLICHT = ['liste', 'begriffe'];
 
 const JAHR = ['jahr']; // Grenzfall G1: ohne `jahr` landen alle Urkunden in "undatiert"
@@ -66,7 +67,9 @@ export const ANSICHT_ANFORDERUNGEN = {
   adjazenzmatrix: nurUrkunden(['personen']),
   arcDiagramm: nurUrkunden(['personen']),
   sankey: nurUrkunden(['kategorien', 'orte']), // Freigabe Punkt 7: fängt das NaN im Sankey ab
-  wortwolke: nurUrkunden(['regest']),
+  // AUFTRAG F: wortwolke_filter.csv optional - fehlt sie oder ist sie leer, wird nicht
+  // gefiltert (kein Balken); ist sie unbrauchbar, erscheint die Wolke ungefiltert mit Balken.
+  wortwolke: { ...nurUrkunden(['regest']), optional: { [WORTWOLKE_FILTER]: ['typ', 'wort'] } },
   // Bürgerbuch
   trellis: nurBuergerbuch(['Datum', 'Wirtschaftssektor']),
   bumpChart: nurBuergerbuch(['Datum']),
@@ -106,8 +109,9 @@ export const ANSICHT_ANFORDERUNGEN = {
   fuehrungenUebersicht: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, ausblenden: FUEHRUNGEN },
   fuehrungStation: { dateien: { [FUEHRUNGEN]: ['fuehrung_id', 'station_nr', 'text'] }, ausblenden: FUEHRUNGEN },
   // AUFTRAG E, Punkt 1: literatur.csv nur, wenn der Abschluss "Zum Weiterlesen" enthält
-  // (sonst Fehlalarm bei Führungen ohne Literaturangaben); `literatur_id` löst die Einträge auf.
-  fuehrungAbschluss: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, bedarf: { [LITERATUR]: ['literatur_id'] }, ausblenden: FUEHRUNGEN }
+  // (sonst Fehlalarm bei Führungen ohne Literaturangaben); `literatur_id` löst die Einträge auf,
+  // `zitation` ist ihr Text (AUFTRAG F, Punkt 5: vorher stand ohne sie "undefined" im Eintrag).
+  fuehrungAbschluss: { dateien: { [FUEHRUNGEN]: ['fuehrung_id'] }, bedarf: { [LITERATUR]: ['literatur_id', 'zitation'] }, ausblenden: FUEHRUNGEN }
 };
 
 // Schlüssel- bzw. bekannte Spalten je Datei: Grundlage der Regel "keine
@@ -132,14 +136,16 @@ export const SCHLUESSELSPALTEN = {
   [UEBER]: ['block_id'],
   [ARCHIV]: ['schluessel'],
   [ANSICHTEN]: ['bereich', 'ansicht'],
-  [ROLLEN]: ['liste', 'begriffe']
+  [ROLLEN]: ['liste', 'begriffe'],
+  [WORTWOLKE_FILTER]: ['leitform']
 };
 
 // Folge-Satz für Probleme in Nebendateien, wenn der allgemeine Satz zu
 // unbestimmt wäre (Kerndatei archiv.csv, Freigabe Punkt 3).
 export const NEBENDATEI_FOLGE = {
   [ARCHIV]: 'Name, Logo und Kontaktangaben des Archivs können deshalb nicht angezeigt werden.',
-  [ANSICHTEN]: 'Es gelten deshalb die Standardnamen und -beschreibungen der Ansichten.'
+  [ANSICHTEN]: 'Es gelten deshalb die Standardnamen und -beschreibungen der Ansichten.',
+  [WORTWOLKE_FILTER]: 'Die Wortwolke wird deshalb ohne Filter gezeigt.'
 };
 
 // Dateien, die die Hintergrund-Prüfung nach dem ersten Bildaufbau lädt
