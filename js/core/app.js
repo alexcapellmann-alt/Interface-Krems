@@ -183,7 +183,7 @@ const istBereichAusgeblendet = (bereich) => (pruefModul ? pruefModul.istBereichA
 // eine bewusste, im Masterprompt nicht exakt vorgegebene Auslegung von "kleiner
 // Bildschirm" (siehe Zusammenfassung an den Nutzer).
 const KLEINER_BILDSCHIRM_SCHWELLE = 700;
-const GROSSBILDSCHIRM_ANSICHTEN = new Set(['personennetzwerk', 'ganttDiagramm']);
+const GROSSBILDSCHIRM_ANSICHTEN = new Set(['personennetzwerk', 'ganttDiagramm', 'urkundenNetzwerk']); // AUFTRAG G1: urkundenNetzwerk
 
 const contentRoot = document.getElementById('app-content');
 
@@ -547,7 +547,8 @@ async function renderVisualisierungenTab() {
     // passenden Teil aus - ohne datenSchluessel (alle übrigen Ansichten)
     // bleibt das Verhalten exakt wie zuvor (records unverändert durchgereicht).
     const datenFuerModul = eintrag.datenSchluessel ? records[eintrag.datenSchluessel] : records;
-    mod.render(vizContainer, datenFuerModul, { showUncertainty: getZustand().unsicherheitModusAktiv });
+    // AUFTRAG G1: obergrenze aus ansichten.csv (fehlt sie, gilt die Vorgabe des Moduls)
+    mod.render(vizContainer, datenFuerModul, { showUncertainty: getZustand().unsicherheitModusAktiv, obergrenze: eintrag.obergrenze });
     kontext.ansichtId = eintrag.id;
     kontext.aktuellesVizModul = mod;
     navigiereZu(['visualisierungen', archivalientyp.typ, eintrag.id]);
@@ -782,7 +783,7 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     // KLEINAUFTRAG "Familienbaum & Personenliste...": siehe identischer
     // Kommentar in renderVisualisierungenTab()'s ladeModulUndRender() oben.
     const datenFuerModul = eintrag.datenSchluessel ? kontext.records[eintrag.datenSchluessel] : kontext.records;
-    mod.render(kontext.vizContainer, datenFuerModul, { showUncertainty: false });
+    mod.render(kontext.vizContainer, datenFuerModul, { showUncertainty: false, obergrenze: eintrag.obergrenze }); // AUFTRAG G1
     setzeVizHinweisBalken(kontext, pruefung.texte); // AUFTRAG B2: nur bei Problemen in Nebendateien
 
     kontext.ansichtId = eintrag.id;

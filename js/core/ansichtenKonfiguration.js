@@ -17,6 +17,11 @@
 // neutralen Vorgaben aus der Registry - kein Absturz. Ist die Datei
 // unbrauchbar (Spalte `bereich` fehlt, falsches Trennzeichen), meldet das der
 // Hinweisbalken der Startseite (datenAnforderungen.js, `optional`).
+//
+// AUFTRAG G1: optionale Spalte `obergrenze` - wie viele Personen eine
+// Netzwerk-Ansicht zeigt (ganze Zahl > 0). Leer oder ungültig: Vorgabe des
+// Moduls. Die Zahl steht danach am Registry-Eintrag (`ansicht.obergrenze`);
+// app.js reicht sie als options.obergrenze an das Modul weiter.
 
 import { ladeGecachteCSV } from './datenCache.js';
 import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN } from '../config/archivalienRegistry.js';
@@ -86,6 +91,8 @@ export function wendeAnsichtenKonfigurationAn(zeilen) {
       return;
     }
     if (name) ansicht.label = name;
+    const obergrenze = Number(alsText(zeile.obergrenze));
+    if (Number.isInteger(obergrenze) && obergrenze > 0) ansicht.obergrenze = obergrenze; // AUFTRAG G1
     const beschreibung = alsText(zeile.beschreibung);
     if (beschreibung) {
       // Vorgabe aus der Registry aufheben: gilt, wenn ein Platzhalter (z. B.

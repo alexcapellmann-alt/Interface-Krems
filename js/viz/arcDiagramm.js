@@ -27,7 +27,8 @@ function zeichneArcDiagramm() {
   container.innerHTML = '';
 
   const { knoten, paare } = baueKoNennungsNetzwerk(records);
-  const { knoten: topKnoten, paare: topPaare, gesamtAnzahlVerbunden } = waehleTopPersonenNachGrad(knoten, paare, TOP_N);
+  // AUFTRAG G1: Obergrenze aus ansichten.csv (`obergrenze`), Vorgabe TOP_N
+  const { knoten: topKnoten, paare: topPaare, gesamtAnzahlVerbunden } = waehleTopPersonenNachGrad(knoten, paare, options.obergrenze || TOP_N);
 
   const hinweis = document.createElement('p');
   hinweis.style.fontSize = '12px';
