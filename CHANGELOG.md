@@ -7,6 +7,34 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-08 (114) – Personennetzwerk der Urkunden: nur noch das Netz, Fokus-Modus, volle Namen (G1b)
+
+Auftrag G1b.
+- **`js/viz/urkundenNetzwerk.js`:**
+  - Entfernt: Erklärtext, Tabelle, „50 weitere“, „Alle“, „Übersicht“, Suche, Zeile „N von M gezeigt“.
+  - Namen vollständig, 11 px unter dem Kreis; überlappungsfreies Layout „V5 kompakt“ (Namensbreite gemessen).
+  - Maßstab 1, Ziehen verschiebt, Strg+Mausrad zoomt; auf dem Phone Start bei der meistgenannten Person.
+  - Der Ausschnitt folgt Fokus und Auswahl.
+  - Fokus-Modus: Person und gezeigte Partner, Rest Deckkraft 0,06; zurück per Hintergrund, Zweitklick, Esc.
+  - Detailbereich nur im Fokus-Modus.
+- **Info-Button:** Er nennt Erklärung, N/M/K, Verbindungen und die Netzgrenze (Platzhalter beim Zeichnen
+  berechnet) und entfällt nie. Ist ein Wert nicht berechenbar oder fehlt der Eintrag, zeigt die Ansicht einen
+  Hinweisbalken (`js/core/archivKonfiguration.js`: neue Option `ersatzFuerFehlende`; bisherige Aufrufer
+  unverändert).
+- `data/infotexte.csv` (neuer Text), `docs/SCHEMA.md`, Masterprompt.
+
+**Ergebnis:**
+- Überlappende Namen 21 → 0; gekürzte Namen 71 → 0.
+- Fokus-Modus für 4 Personen gleich der unabhängigen Berechnung.
+- axe 0 Verstöße im Ausgangs- und Fokuszustand; Lighthouse 1,0.
+- Aufbau 219 → 303 ms (Median, je 12 Läufe).
+- Referenzlauf 47/47 unverändert; Zweitarchiv 47/47.
+- Details: `docs/PROJEKTLOG.md` Eintrag 66.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-08 (113) – Personennetzwerk der Urkunden, Obergrenze der Personennetzwerke (Teil G1)
 
 Auftrag G, Teil G1.

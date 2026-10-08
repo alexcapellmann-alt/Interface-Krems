@@ -219,6 +219,115 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-08 (66) – Auftrag G1b: Urkunden-Netzwerk – Reduktion, Fokus-Modus, Lesbarkeit
+
+**Kontext:**
+- Phase 1: `Pruefung_2026-10-03/Nachher_G1b/phase1/VORSCHLAG_PHASE1.md`. Bei Phase 1 war G1 noch nicht committet
+  (HEAD `a6ea24a`).
+- Vor Phase 2 vom Autor committet: **HEAD `8723bab` („g1“)**; das ist der Vorher-Stand.
+- Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen
+  (`Nachher_G1b/laufprotokoll.txt`, in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten:
+  `Pruefung_2026-10-03/Nachher_G1b/`.
+
+### Entscheidungen des Autors (Freigabe Phase 1)
+1. Layout V5 (kompakt).
+2. Namen 11 px unter dem Kreis, weiß mit dunkler Kontur.
+3. Mausrad-Zoom nur mit Strg (Hinweis im Info-Text); Phone Maßstab 1, Start bei der meistgenannten Person.
+4. Fokus: nur gezeigte Nachbarn, Deckkraft 0,06 (Konstante).
+5. Detailbereich nur im Fokus-Modus, kompakt (Partner mit Zahlen, Urkunden, Link zur Personenliste).
+6. Info-Text wie im Entwurf, auch für Musterhausen. Der Info-Button entfällt nie: Ein nicht auflösbarer
+   Platzhalter wird zu „nicht berechenbar“, dazu ein Hinweisbalken (Konvention C1).
+7. G1 committet der Autor vorab.
+
+### Umsetzung
+- **`js/viz/urkundenNetzwerk.js`:**
+  - Entfernt: Legende, Umschalter Netz/Tabelle samt Tabelle, „50 weitere“, „Alle“, „Übersicht“, Suche, Zeile „N von
+    M gezeigt“ und der Code dafür.
+  - Obergrenze nur aus `ansichten.csv` (Vorgabe 100), Netzgrenze 250 bleibt.
+  - Namensbreite per `getComputedTextLength()` gemessen (11 px, Gewicht 600).
+  - Kraftlayout V5: Link 60 / 0,4, Abstoßung −160 bis 350 px, Kollision = max(r, Namensbreite/2) + 6 (3
+    Iterationen), Zug zur Mitte 0,05/0,07, kein Ring.
+  - SVG mit Maßstab 1, so hoch wie das Layout; ist es breiter als die Ansicht, ist die Höhe 75 % des Fensters.
+  - `d3.zoom` mit Filter: Mausrad nur mit Strg.
+  - Der Ausschnitt folgt dem Tastaturfokus und der Auswahl.
+  - Fokus-Modus über `opacity` (0,06) an Knoten und Kanten.
+  - Knotennamen: „…, davon N im Netz“; im Fokus „verbunden mit …“ bzw. „nicht verbunden“.
+- **`js/core/archivKonfiguration.js`:**
+  - `infotextFuerModul(modulId, werte, { ersatzFuerFehlende })` liefert mit dieser Option immer ein Ergebnis:
+    fehlende Platzhalter werden ersetzt und gemeldet, ein fehlender Eintrag kommt als `eintragFehlt`.
+  - Ohne Option bleibt das Verhalten unverändert (alle übrigen Info-Buttons).
+- **`data/infotexte.csv`:** Text nach dem Entwurf, Platzhalter `{netz_gezeigt}`, `{netz_personen_punkt}`,
+  `{netz_ab_nennungen}`, `{netz_verbindungen_punkt}`, `{netz_grenze}`, dazu ein Absatz zu Verschieben und
+  Strg+Mausrad. Dieselbe Zeile steht in der `infotexte.csv` des Zweitarchivs (Testdatensatz).
+
+### Prüfung (gegen die unabhängige Berechnung `tools/pG1b_unabhaengig.py`)
+- **Entfernte Elemente** (Skript): Tabelle, Legende, Hinweiszeile, Suchfeld und die Knöpfe Netz/Tabelle/50
+  weitere/Alle/Übersicht/Suchen sind 0-mal im DOM; kein Text „von … Personen gezeigt“; der Detailbereich ist im
+  Ausgangszustand verborgen.
+- **Info-Text:** „Gezeigt werden die 110 meistgenannten von 1.456 Personen, alle ab 3 Nennungen (191
+  Verbindungen) … höchstens 250“, gleich der Berechnung (N 110, M 1 456, K 3, 191 Kanten).
+- **Info-Button entfällt nie** (`Nachher_G1b/infotest/`):
+
+| Fall | Info-Button | Text | Hinweisbalken |
+|---|---|---|---|
+| Original | ja | vollständig | keiner |
+| unbekannter Platzhalter `{netz_unbekannt}` | ja | „… Stand nicht berechenbar“ | „… konnten diese Werte nicht berechnet werden: netz_unbekannt. Dort steht „nicht berechenbar“.“ |
+| Zeile fehlt | ja | Ersatzsatz | „Für diese Ansicht (urkundenNetzwerk) gibt es keinen Eintrag in infotexte.csv, oder die Datei fehlt …“ |
+| Datei fehlt | ja | Ersatzsatz | wie oben |
+
+- Gegenprobe Wortwolke (ohne Option): Info-Button wie bisher, bei fehlender Datei nicht vorhanden. Rückbau per
+  `diff`.
+- **Namen:** 110 vollständig, 0 mit „…“ (vorher 71 gekürzt), identisch mit den berechneten Anzeigenamen.
+- **Überlappende Beschriftungen** (Bounding-Box-Schnitt, Desktop 1 366 × 900): G1 **21**, G1b **0**.
+- **Fokus-Modus:**
+
+| Person | gezeigte Nachbarn (berechnet) | Kanten voll sichtbar | Partner gesamt |
+|---|---|---|---|
+| Friedrich III. | 18 (18) | 18 | 87 |
+| Urban Heutl (wenige Partner) | 1 (1) | 1 | 10 |
+| Albrecht V. (ohne σ) | 16 (16) | 16 | 43 |
+| Paul Krautwurm (einzige σ-Person) | 3 (3) | 3 | 11 |
+
+- Übrige Knoten und Kanten jeweils Deckkraft 0,06.
+- Zurücksetzen per Zweitklick (alle 4), Hintergrund und Esc: danach 110 Knoten und 191 Kanten voll sichtbar,
+  Detailbereich verborgen. Nach Esc bleibt der Fokus auf dem Knoten.
+- **Tastatur:** Nach dem Info-Button folgen die Knoten in Reihenfolge der Nennungen („Friedrich III., 136
+  Nennungen, 87 Partner, davon 18 im Netz“, „Ferdiand I. …“). Eingabe wählt aus.
+- **Phone** (375 × 812, Touch):
+  - SVG 343 × 609 px; Friedrich III. startet in der Mitte (172/305).
+  - Ein Knoten am Rand rückt beim Tastaturfokus in den Ausschnitt (x 786 → 164 px, erster Prüflauf).
+  - Eine Auswahl außerhalb des Ausschnitts (z. B. aus der Partnerliste) holt die Person ebenfalls ins Bild (nach
+    der Sichtprüfung ergänzt, Screenshot `phone_fokus_urban_heutl.png`).
+- **σ-Modus:** 1 Person und 72 Kanten gestrichelt (wie G1).
+- **axe:**
+  - Ausgangszustand und Fokus-Modus: 0 Verstöße.
+  - σ-Modus nach Tooltip: `region` am gemeinsamen Tooltip (bekannt, Korrektur in G2/K1).
+  - Mit geöffnetem Info-Button: `scrollable-region-focusable` am Popover (siehe Scope).
+  - `color-contrast` „incomplete“ für die Namen mit Kontur.
+- **Lighthouse** (Barrierefreiheit, nur diese Ansicht): vorher 1,0, nachher 1,0, keine fehlgeschlagenen Audits.
+- **Aufbauzeit** (Wechsel auf die Ansicht bis alle Knoten stehen, je 12 Läufe): vorher Median 219 ms (214–233),
+  nachher **303 ms** (299–339). Der Zuwachs kommt von Namensmessung und Kollisionsberechnung.
+- **Referenzlauf** (47 Ansichten, gegen `Nachher_G/referenz_g1`): 47/47 Text identisch, 0 Fehler. Die Netzansicht
+  selbst ist nicht Teil der 47; geprüft ist sie oben.
+- **Zweitarchiv:** 47/47 ohne Fehler, keine Reste. Die neue Ansicht zeigt 3 Personen (vollständige Namen), Info-Text
+  „… die 3 meistgenannten von 3 Personen, alle ab 2 Nennungen (2 Verbindungen)“, kein Balken, 0 Fehler.
+- **Screenshots zur Sichtprüfung** (`Nachher_G1b/pruefung/`):
+  - Desktop: `desktop_start.jpg`, `desktop_fokus_friedrich.png`, `desktop_fokus_urban_heutl.png`;
+  - Phone: `phone_start.png`, `phone_fokus_friedrich.png`, `phone_fokus_urban_heutl.png`.
+- **Nicht gemessen:** Aufbauzeit auf dem Phone; Lesbarkeit bei Strg-Zoom unter Maßstab 1; Verhalten mit einem
+  Screenreader.
+
+### Scope-Meldungen
+- **Info-Popover** (`js/utils/infoButton.js`, gemeinsam): Der längere Text überschreitet die Höhe 420 px; das
+  Popover scrollt und hat `tabindex="-1"`. Es bekommt beim Öffnen den Fokus und ist per Pfeiltasten scrollbar, axe
+  meldet aber `scrollable-region-focusable`. Das betrifft jeden Info-Text dieser Länge.
+  - Abhilfe wäre `tabindex="0"` am Popover (gemeinsame Komponente, nicht geändert); alternativ ein kürzerer Text.
+- **Gemeinsamer Tooltip:** `region` wie bekannt (G2/K1).
+- Durch die Gleichstand-Regel kann sich das Layout mit anderen Daten ändern. Eine Überlappungsprüfung zur Laufzeit
+  gibt es nicht; gemessen sind die Krems-Daten (0) und Musterhausen (3 Personen).
+
+---
+
 ## 2026-10-08 (65) – Auftrag G, Teil G1: Obergrenze und Personennetzwerk der Urkunden
 
 **Kontext:** Phase 1 (`Pruefung_2026-10-03/Nachher_G/phase1/VORSCHLAG_PHASE1.md`) vom Autor für G1 freigegeben.

@@ -271,14 +271,29 @@ function ladeInfotexteRohdaten() {
 // eingesetzt wurden (Punkt 2.2, z.B. Sankeys ORT_BUENDELUNG_SCHWELLE) -
 // überschreiben bei Namensgleichheit NICHT die globalen Werte (archiv.csv/
 // Zählwerte), sondern ergänzen sie nur.
-export async function infotextFuerModul(modulId, zusatzWerte = {}) {
+//
+// AUFTRAG G1b (Entscheidung des Autors: der Info-Button entfällt nie):
+// Mit `{ ersatzFuerFehlende: 'Text' }` liefert die Funktion statt `null` immer
+// ein Ergebnis - nicht auflösbare Platzhalter werden durch den Ersatztext
+// ersetzt und in `fehlend` gemeldet, ein fehlender Eintrag in `eintragFehlt`
+// (dann `text: null`). Der Aufrufer zeigt dazu einen Hinweisbalken. Ohne diese
+// Option bleibt das bisherige Verhalten unverändert (alle übrigen Aufrufer).
+export async function infotextFuerModul(modulId, zusatzWerte = {}, { ersatzFuerFehlende = null } = {}) {
   const [rohdaten, globaleWerte] = await Promise.all([ladeInfotexteRohdaten(), ermittleGlobaleWerte()]);
   const roh = rohdaten.get(modulId);
   if (!roh) {
     console.warn(`infotexte.csv enthält keinen Eintrag für Modul "${modulId}" - kein Info-Button.`);
-    return null;
+    return ersatzFuerFehlende === null ? null : { text: null, ariaLabel: undefined, fehlend: [], eintragFehlt: true };
   }
   const werte = { ...globaleWerte, ...zusatzWerte };
+  if (ersatzFuerFehlende !== null) {
+    const fehlend = new Set();
+    const ersetze = (t) => ersetzePlatzhalterInText(t, werte, fehlend).replace(PLATZHALTER_MUSTER, (treffer, schluessel) => (fehlend.has(schluessel) ? ersatzFuerFehlende : treffer));
+    const absaetze = (Array.isArray(roh.text) ? roh.text : [roh.text]).map((t) => (typeof t === 'string' ? ersetze(t) : t));
+    const ariaLabel = typeof roh.aria_label === 'string' ? ersetze(roh.aria_label) : undefined;
+    if (fehlend.size > 0) console.warn(`"${modulId}": nicht auflösbare Platzhalter {${[...fehlend].join('}, {')}} - ersetzt durch "${ersatzFuerFehlende}".`);
+    return { text: absaetze.join('\n\n'), ariaLabel: ariaLabel || undefined, fehlend: [...fehlend], eintragFehlt: false };
+  }
   const verarbeitet = ersetzePlatzhalterInRecord(roh, werte, modulId);
   if (!verarbeitet) return null; // ersetzePlatzhalterInRecord() hat bereits gewarnt
   const absaetze = Array.isArray(verarbeitet.text) ? verarbeitet.text : [verarbeitet.text];
