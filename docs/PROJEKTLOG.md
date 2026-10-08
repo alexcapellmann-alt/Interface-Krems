@@ -219,6 +219,144 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-08 (64) – Auftrag F: Wortwolke bereinigen (Filter, Zusammenführung, Info-Button)
+
+**Kontext:** Phase 1 (`Pruefung_2026-10-03/Nachher_F/phase1/VORSCHLAG_PHASE1.md`) vom Autor mit Entscheidungen
+freigegeben. Vorher-Stand `9858a3f` (E). Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100
+TIME_WAIT-Verbindungen (`Nachher_F/laufprotokoll.txt`, in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten:
+`Pruefung_2026-10-03/Nachher_F/`.
+
+### Entscheidungen des Autors (Freigabe)
+1. Das Tag für E setzt der Autor.
+2. Datei `data/wortwolke_filter.csv` mit `typ`, `wort`, `leitform`, `anmerkung`. Fehlt sie oder ist sie leer:
+   keine Filterung, kein Balken. Ist sie unbrauchbar: Wolke ungefiltert, mit Balken. Zusätzlicher `typ` `beugung`
+   erlaubt.
+3. Die 81 Füllwörter bleiben im Code.
+4. Auslassliste: sowie, beiden, deren, dessen, ihnen, sind, alle, allen, daselbst, beide, beider, anderen, andere,
+   ihrem, wegen, daß.
+5. Römische Zahlen per Regel, nur großgeschrieben.
+6. Alle 154 eindeutigen Vornamen (auch Herrschernamen) und von den mehrdeutigen hanns, wilhelm, barbara, maria,
+   karl. Übrige mehrdeutige Fälle bleiben.
+7. Schreibvarianten unter der häufigsten Form, stein inklusive stain; `pfen` → `pfennig`.
+8. Beugungsformen: jede Gruppe als eigene Zeilen, nur Flexion, Zweifelsfälle nicht; Geltungsbereich die 300
+   häufigsten Wörter nach dem Auslassen; Leitform ist die Grundform, wenn sie vorkommt.
+9. Info-Text als zusätzlicher Absatz im Seitentext, alle Zahlen berechnet.
+
+### Punkt 1 – Filterdatei und Verarbeitung
+- **Datei (Krems), 241 Zeilen**, erzeugt mit `tools/pF_filterdatei.py`:
+  - 1 `regel` (`roemische_zahlen`);
+  - 16 `auslassen`;
+  - 159 `vorname` (154 + 5 freigegebene mehrdeutige);
+  - 32 `zusammenfuehren`;
+  - 33 `beugung` (27 Gruppen).
+- **`wortwolke.js`:**
+  - `leseFilter()`: `null`, wenn die Datei fehlt, leer ist oder `typ`/`wort` fehlen.
+  - `leitformVon()`: auch als Kette, z. B. `pfen` → `pfennig` ← `pfennige`.
+  - `auslassGrund()`: Liste, Vorname, römische Zahl; je Nennung geprüft, römische Zahlen nur bei Großschreibung
+    im Original.
+  - Ohne Filter derselbe Zählweg wie vorher.
+  - Geladen wird die Datei erst beim Öffnen der Wolke. Hat die zentrale Prüfung sie schon als fehlend erkannt,
+    wird sie nicht erneut angefragt.
+- **`datenAnforderungen.js`:** `wortwolke` mit `optional: { wortwolke_filter.csv: ['typ', 'wort'] }`,
+  Schlüsselspalte `leitform`, Folgesatz „Die Wortwolke wird deshalb ohne Filter gezeigt.“
+- **Prüfung** (`Nachher_F/wolke/`; jedes Wort mit Zahl aus dem Tooltip, gegen einen unabhängigen Python-Nachbau
+  `tools/pF_erwartung.py`):
+
+| Fall | Ergebnis |
+|---|---|
+| vorher (E-Code) | 90 Wörter, gleich dem Nachbau ohne Filter |
+| Datei fehlt | gleich vorher, kein Balken, eine Anfrage mit 404 |
+| leer / nur Kopfzeile | gleich vorher, kein Balken |
+| falsches Trennzeichen | gleich vorher, Balken „… keine bekannten Spalten erkannt … ohne Filter gezeigt.“ |
+| ohne Spalte `typ` | gleich vorher, Balken „In wortwolke_filter.csv fehlt die Spalte 'typ'. …“ |
+| mit Datei | 90/90 Wörter und Zahlen gleich dem Nachbau mit Filter; kein ausgelassenes Wort und kein Nebenwort einer Gruppe in der Wolke |
+
+- **Top 5 vorher:** krems 949, stein 405, bürger 290, wien 254, iii 211.
+- **Top 5 nachher:** krems 973, stadt 475, stein 462, bürger 347, wien 290.
+- Top 30 vor und nach F: `Nachher_F/ergebnis_wortwolke.md`.
+- **Ausgelassen:**
+  - Liste 764 Nennungen (davon `beyden` über die Leitform `beiden`);
+  - römische Zahlen 480;
+  - Vornamen 2 012 (einschließlich der Varianten, deren Leitform ein Vorname ist).
+- Rückbau der Filterdatei per `diff` belegt.
+
+### Punkt 2 – Gruppen
+- 21 Schreibweisen unter 15 Hauptformen und 32 Beugungsformen unter 26 Grundformen wurden tatsächlich
+  zusammengezählt. Größte Gruppen:
+  - krems 973 (krembs 23, kremms 1);
+  - stadt 475 (städte 188, städten 142);
+  - stein 462 (stain 53, stayn 3, steyn 1);
+  - bürger 347;
+  - wien 290 (wienn 34, wyenn 2);
+  - rat 231 (rates, rats, räte);
+  - pfennig 131 (pfen 113, pfennige 11).
+  Vollständige Tabelle mit Mitgliedern und Summen: `Nachher_F/ergebnis_wortwolke.md`.
+- **Konflikte aus der Reihenfolge** (Leitform ausgelassen, Gruppe entfällt mit), 10 Gruppen:
+  - Vornamen: friedrich (3 Tippfehler), wolfgang, ulrich (ullrich, ulrichs 10), margarete (margarethe 16),
+    steffan, paul, simon, mathias;
+  - Auslassliste: beiden (beyden).
+- **Zweifelsfälle, nicht zusammengeführt:** 26 Zeilen in der Tabelle, z. B. rat/rate, recht/rechte/rechten,
+  befehl/befehlen, stift/stiften, steuern/steuer, ungarn/ungar, aller/alle, gnade/gnad, pfn, Ableitungen
+  (kremser, wiener) und Formen außerhalb der 300.
+- **N im Info-Text:** 297 (höchster Rang einer zusammengezählten Beugungsform; Platz 300 hat 9 Nennungen).
+
+### Punkt 3 – Info-Button
+- **Text mit Krems-Daten:** „Allgemeine Füllwörter wie „und“ oder „der“ werden nicht gezählt. Für dieses Archiv
+  werden zusätzlich 16 Wörter aus einer Liste (764 Nennungen), römische Zahlen (480 Nennungen) und 159 Vornamen
+  (2.012 Nennungen) ausgelassen (Datei wortwolke_filter.csv). 21 Schreibweisen werden unter 15 Hauptformen
+  zusammengezählt, zum Beispiel „pfen“ unter „pfennig“. Bei den 297 häufigsten Wörtern werden außerdem 32
+  Beugungsformen unter 26 Grundformen zusammengezählt, zum Beispiel „städte“ unter „stadt“.“
+- **Ohne Datei:** „… Weitere Filter sind für dieses Archiv nicht eingestellt.“
+- Der Absatz ist ein `<p>` im Popover (`zusatzInhalt` von `erzeugeInfoButton()`), ohne neue Farben.
+- Kontrast 17,4:1. axe mit geöffnetem Info-Button: 0 Verstöße.
+
+### Punkt 4 – Dokumentation und Zweitarchiv
+- `docs/SCHEMA.md`: neuer Abschnitt 13.7 (Spalten, `typ`-Werte, Reihenfolge, Info-Button, Verhalten ohne Datei),
+  dazu Mindestspalten-Hinweis, „Was passiert, wenn …“, Abschnitt 14 und die Literaturregel (Punkt 5).
+- Masterprompt: Stand Auftrag F und Dateibaum.
+- **Zweitarchiv (Musterhausen, ohne Filterdatei, Code gleich Arbeitsbaum):**
+  - 47/47 Ansichten ohne Fehler, keine Reste des Erstarchivs, **0 Eingriffe außerhalb der CSV-Dateien**
+    (`Nachher_F/zweitarchiv/`).
+  - Die Wortwolke ist dort per `ansichten.csv` nicht angeboten.
+- **Test mit kleiner Filterdatei** (je Typ eine Zeile, dazu eine unbekannte Zeile; Wortwolke dafür vorübergehend
+  angeboten):
+  - musterhausen 3 → 5 (beispielstein zusammengeführt), acker und pfarrer ausgelassen, rechte → recht.
+  - Der Info-Text nennt „1 Zeile der Filterdatei wurde nicht verwendet“.
+  - Ohne Datei gibt es 2 Anfragen mit 404, keine Fehler.
+  - Rückbau: `diff -r` gegen `kopie_Ez/data` ohne Unterschied.
+
+### Punkt 5 – Kleinkorrektur aus E
+- **Im Browser bestätigt** (`Nachher_F/punkt5/`, E-Code): Ohne Spalte `zitation` zeigte `buergerrecht-krems/ende`
+  dreimal „undefined in der Literaturliste“ und keinen Balken.
+- **Behoben:**
+  - `fuehrungenDaten.js`: `literaturGrund` „ohne Spalte 'zitation'“ → „Hinweis: Literaturangabe nicht verfügbar,
+    Quelle literatur.csv ohne Spalte 'zitation'“.
+  - `datenAnforderungen.js`: `bedarf` um `zitation` ergänzt → Balken „In literatur.csv fehlt die Spalte
+    'zitation'. Diese Ansicht ist deshalb unvollständig.“
+- Nachher: 0 × „undefined“; Originaldaten unverändert; Führung ohne „Zum Weiterlesen“ ohne Balken.
+- Rückbau belegt.
+
+### Regression
+- **Referenzlauf** (47 Ansichten, gegen `Nachher_E/referenz_e12`): 46/47 Text identisch. Die Wortwolke ist
+  geändert (Filter); der Info-Text steht im geschlossenen Popover. 0 Fehler (`vergleich_referenz_f.txt`).
+- **axe** (Wortwolke, Wortwolke mit offenem Info-Button, zwei Abschlussseiten): 0 Verstöße.
+
+### Ergebnis zu „dass“
+„dass“ steht schon unter den 81 Füllwörtern im Code und kommt im Bestand nicht vor (0 Nennungen). „daß“ (120)
+entfällt über die Auslassliste.
+
+### Scope-Meldungen
+- **Fehlende Filterdatei:** Der Browser protokolliert je Öffnen eine Anfrage mit 404 (Krems-Test: 1;
+  Musterhausen: 2), wie bei `ansichten.csv`. Der Cache behält Fehlversuche bewusst nicht (B2).
+- **Vornamen in der Wolke:** Personen erscheinen nur noch mit Nachnamen, z. B. eytzing. Ein Personennetzwerk für
+  Vornamen ist ein eigener Auftrag.
+- **„pfn“ (3)** ist ebenfalls eine Abkürzung für Pfennig, aber nicht freigegeben und deshalb nicht zusammengeführt.
+- **Testartefakt:** Ein axe-Lauf nach dem Auslesen der Tooltips meldet `region` am geteilten Tooltip, auch auf
+  dem E-Stand. Auf einer frischen Seite gibt es keinen Befund.
+- Zahlen im Info-Text mit deutschem Tausenderpunkt („2.012“).
+
+---
+
 ## 2026-10-08 (63) – Auftrag E: Abschluss (Literaturprüfung, „Quelle“, Undatiert-Test, Matrix, Zeitmessung)
 
 **Kontext:** Abschluss der Folgeaufträge zum Prüfbericht vom 2026-10-03. Vorher-Stand ist `d5b2fe4` (D).
