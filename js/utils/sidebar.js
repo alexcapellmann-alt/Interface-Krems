@@ -452,6 +452,7 @@ function zeigeUrkundenListe(sidebarInstanz, titel, records) {
   zurueckBtn.hidden = true;
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titelEl.focus();
 }
 
@@ -471,6 +472,7 @@ export function zeigeUrkundenDetail(sidebarInstanz, record) {
   zurueckBtn.hidden = !sidebarInstanz._urkundenListe;
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titel.focus();
 }
 
@@ -510,6 +512,7 @@ export function baueSidebarGeruest(container) {
   const sidebar = document.createElement('aside');
   sidebar.className = 'bestand-sidebar';
   sidebar.setAttribute('aria-hidden', 'true');
+  sidebar.inert = true; // AUFTRAG D, Punkt 2 (axe aria-hidden-focus): geschlossen = inert, nicht per Tab erreichbar
   sidebar.setAttribute('aria-label', 'Bestand-Details');
 
   const kopf = document.createElement('div');
@@ -533,7 +536,9 @@ export function baueSidebarGeruest(container) {
   zurueckBtn.textContent = '← Zurück';
   zurueckBtn.hidden = true;
 
-  const titel = document.createElement('h3');
+  // AUFTRAG D, Punkt 1: <h2> statt <h3>, damit die Überschriftenfolge nach der
+  // (verborgenen) <h1> nicht springt; Größe per Klasse wie bisher (--fs-h3).
+  const titel = document.createElement('h2');
   titel.className = 'bestand-sidebar-titel';
   titel.setAttribute('tabindex', '-1');
   const schliessenBtn = document.createElement('button');
@@ -559,6 +564,7 @@ export function oeffneSidebar(sidebarInstanz, record, konfiguration) {
   koerper.appendChild(baueSidebarInhalt(record, konfiguration));
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titel.focus(); // Abschnitt 10: Fokus wandert beim Öffnen zum Sidebar-Titel
 }
 
@@ -579,6 +585,7 @@ export function schliesseSidebar(sidebarInstanz, fokusZielFallback) {
   }
   sidebar.classList.remove('offen');
   sidebar.setAttribute('aria-hidden', 'true');
+  sidebar.inert = true; // AUFTRAG D, Punkt 2 (axe aria-hidden-focus): geschlossen = inert, nicht per Tab erreichbar
   sidebarInstanz._urkundenListe = null;
   zurueckBtn.hidden = true;
 }
@@ -594,7 +601,7 @@ export function fuegeSidebarStyleEin(container) {
       overflow-y: auto; z-index: 500; padding: var(--space-4); }
     .bestand-sidebar.offen { transform: translateX(0); }
     .bestand-sidebar-kopf { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--space-3); }
-    .bestand-sidebar-titel { margin: 0; }
+    .bestand-sidebar-titel { margin: 0; font-size: var(--fs-h3); }
     .bestand-sidebar-kopf button { min-height: 44px; min-width: 44px; border: none; background: none; font-size: 1.5rem; line-height: 1; cursor: pointer; }
     .bestand-sidebar-kopf button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     .bestand-sidebar-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }

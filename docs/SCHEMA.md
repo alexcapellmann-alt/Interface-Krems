@@ -109,7 +109,7 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 | `personen_id` | Text/Liste | nein | Verweis auf `personenliste.csv` (siehe Tabelle 8) |
 | `personen_unsicher` | ja/nein | – | |
 | `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | Farben: Die 16 Krems-Kategorien haben feste Farben; jede andere Kategorie bekommt automatisch eine Farbe (Abschnitt 14, „Farben der Kategorien“) |
-| `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
+| `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 – Stand vor der Dublettenbereinigung am 2026-09-30 – automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
 | `unsicherheit_anmerkung` | Text | nein | für Hover-Tooltip |
 | `bilder` | Liste (Pipe-getrennt) | nein | **neu (Auftrag "Urkundenfotos über die Spalte `bilder`", 2026-09-30):** die tatsächlichen Dateinamen der Fotos zu dieser Urkunde, ohne Pfad - der vollständige Bildpfad ergibt sich aus `fotos/thumbs/<foto_ordner>/<Dateiname>`. Letzte Spalte der Tabelle, direkt nach `foto_ordner` eingefügt. Löst das bisherige, separat per Kommandozeilenskript erzeugte JSON-Manifest ab (siehe PROJEKTLOG) - Foto-Zuordnung ist damit ohne Programmierkenntnisse direkt in der Tabelle pflegbar. |
 
@@ -628,6 +628,8 @@ Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nut
 - Filter und Legenden zeigen nur Kategorien, die in den Daten vorkommen. Bestandskategorien (`bkk_kategorie`) wurden schon immer automatisch gefärbt.
 - Ohne eigenes Favicon (`favicon_datei` leer) erscheint kein Symbol; der Browser meldet dann keinen Fehler mehr (Auftrag C2).
 
+**Zugänglichkeit:** Das Interface wurde mit axe-core und Lighthouse geprüft (Stand 2026-10-07, Auftrag D: axe ohne Befund, Lighthouse 1,0 in allen 47 Ansichten); eine vollständige Konformitätsprüfung liegt nicht vor. Einzelheiten und bekannte Grenzen: Masterprompt, Abschnitt 10.
+
 **Prüfen:** Seite öffnen; Hinweisbalken nennen Datei und Spalte, wenn etwas fehlt oder falsch gespeichert ist (meist: Excel-Format „CSV UTF-8 (durch Trennzeichen getrennt)“ wählen).
 
 ---
@@ -638,13 +640,13 @@ Diese Anleitung richtet sich an Archive, die das Interface mit eigenen Daten nut
 2. `verlassenschaftsinventare.csv`: Spaltennamen mit Leerzeichen/Sonderzeichen nicht bereinigt; kein `_unsicher`-Flag (jetzt optional, aber zu erwägen)
 3. `buergerbuch.csv`: Großschreibungs-Konvention weicht ab; `buergen_id`-Verweisziel zu bestätigen
 4. `urkunden.csv`: Herkunft/Zweck von `datum_normiert` weiterhin nicht abschließend geklärt
-5. `bestand.csv`: Verbleib von `sort_nr` und allgemeinem `anmerkungen`-Feld zu bestätigen (bewusst entfernt oder versehentlich)
+5. `bestandsverzeichnis.csv` (Dateiname berichtigt, Auftrag D): Verbleib von `sort_nr` und allgemeinem `anmerkungen`-Feld zu bestätigen (bewusst entfernt oder versehentlich)
 6. `orte.csv`: neue `orte_id` – Frage, ob andere Tabellen künftig darauf statt auf den Namen verweisen sollen (siehe Masterprompt Abschnitt 8)
 7. ~~`personenliste.csv`: Format von `nennung_in_urkunden`/`nennung_in_buergerbuch` zu prüfen~~ – geklärt (Text/Liste, Pipe-getrennte IDs); `nennungsspanne_jahre` wird weiterhin als eigenes Rohfeld geführt (nicht im DataLoader abgeleitet)
 8. Alle Dateien: Export von Excel (.xlsx, Arbeitsformat) zu CSV (Einsatzformat) steht noch aus
 9. `unsicherheit_anmerkung` ist überall als Spalte vorhanden, aber inhaltlich noch nicht befüllt
 10. `literatur.csv` war bisher nur im Masterprompt erwähnt, jetzt erstmals als eigene Struktur dokumentiert (Abschnitt 9) – noch keine echten Daten erfasst
-11. `urkunden.csv`: `foto_ordner` erfolgreich befüllt (1068/1068, automatischer Abgleich über `id`/`signatur`), erledigt
+11. `urkunden.csv`: `foto_ordner` erfolgreich befüllt (1068/1068 – Stand vor der Dublettenbereinigung am 2026-09-30, automatischer Abgleich über `id`/`signatur`), erledigt
 12. Ordner `StaAKr-0892` existiert unter `fotos/thumbs/`, hat aber keine entsprechende Zeile in `urkunden.csv` – zu klären, ob eine Urkunde in der CSV fehlt oder der Ordner veraltet ist
 13. **Datenintegrität/externe Datei-Operationen (2026-09-21):** `familien.csv` verlor zwischenzeitlich `hrr_status`/`herrschaft_von`/`herrschaft_bis` durch eine externe Datei-Operation (Dateizeitstempel lag vor deren ursprünglicher Einführung – kein CLI-Edit, sonst gäbe es einen CHANGELOG-Eintrag) und wurde wiederhergestellt; `buergerbuch.csv` hatte zusätzlich kurzzeitig eine fälschliche Platzhalter-Kopfzeile (`Column1;Column2;…`) vor dem echten Header, ebenfalls behoben. `orte.csv`/`verlassenschaftsinventare.csv` tragen denselben alten Dateizeitstempel wie `familien.csv` vor der Korrektur, wurden aber inhaltlich nie separat als beschädigt festgestellt – bei künftigen Aufträgen an diesen beiden Dateien vorsichtshalber Spalten-/Zeilenzahl gegen die hier dokumentierten Werte gegenprüfen. Siehe CHANGELOG Eintrag 77 für die volle Diagnose.
 14. **Dieselbe Platzhalter-Kopfzeilen-Korruption, zwei weitere Fälle (Auftrag "Führungen, Teil 1", 2026-09-23):** `literatur.csv` und die (inzwischen entfernte) Ratsprotokoll-Tabelle hatten dieselbe fälschliche `Column1;Column2;…`-Zeile wie zuvor `buergerbuch.csv` (Punkt 13) - behoben (siehe Abschnitte 2/9). Root-Cause-Bestätigung: `js/core/dataLoader.js` (Zeile 143-144) hat KEINEN Zeilen-Skip, liest immer Zeile 1 als Kopfzeile - eine solche Platzhalterzeile ist daher IMMER ein Fehler, nie eine absichtliche Umgehung. Bei künftigen Datei-Operationen an beliebigen `data/*.csv` vorsorglich Zeile 1 gegen die hier dokumentierte Kopfzeile prüfen.

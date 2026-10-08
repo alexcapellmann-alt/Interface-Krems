@@ -395,7 +395,7 @@ function zeichneChordDiagramm() {
   const svg = d3.select(chartContainer).append('svg')
     .attr('width', breite).attr('height', hoehe)
     .attr('viewBox', `${-breite / 2} ${-hoehe / 2} ${breite} ${hoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Chord-Diagramm: Ko-Nennungen zwischen den sozialen Gruppen Dynastie, Adel, Klerus und Bürgertum');
 
   svg.append('desc').text(

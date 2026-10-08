@@ -191,7 +191,8 @@ function baueKopfzeile(container) {
   const kopfzeile = document.createElement('div');
   kopfzeile.className = 'mekkoverl-kopfzeile';
 
-  const titel = document.createElement('h3');
+  // AUFTRAG D, Punkt 1 (axe heading-order): <h2> statt <h3> nach der verborgenen <h1>; Größe per Klasse wie bisher
+  const titel = document.createElement('h2');
   titel.className = 'mekkoverl-titel';
   titel.textContent = 'Realvermögens-Zusammensetzung nach Vermögensgruppe';
   kopfzeile.appendChild(titel);
@@ -224,6 +225,7 @@ function zeichneEineSpalte(svg, gruppeDaten, xPosition, spaltenBreite, hoehePlot
 
     const rect = svg.append('rect')
       .attr('tabindex', 0)
+      .attr('role', 'img') // AUFTRAG D, Punkt 2 (axe aria-prohibited-attr): aria-label braucht eine Rolle
       .attr('aria-label', baueSegmentAriaLabel(gruppeDaten, segment))
       .attr('x', xPosition).attr('y', yOben)
       .attr('width', Math.max(spaltenBreite - 1, 0)).attr('height', Math.max(segmentHoehe - 1, 0))
@@ -287,7 +289,7 @@ function zeichneMarimekko() {
   const gesamtHoehe = RAND.oben + hoehePlot + RAND.unten;
   svg.attr('height', gesamtHoehe)
     .attr('viewBox', `0 0 ${breite} ${gesamtHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2: enthält fokussierbare Flächen
     .attr('aria-label', 'Marimekko der Verlassenschaften: Vermögensgruppe x Realvermögens-Zusammensetzung');
 
   svg.append('desc').text(
@@ -304,7 +306,7 @@ function fuegeStyleEin(container) {
     .mekkoverl-werkzeugleiste { display: flex; justify-content: flex-end; margin: 0 0 var(--space-3) 0; flex: 0 0 auto; }
     .mekkoverl-chart-bereich { flex: 1 1 auto; overflow-x: hidden; overflow-y: visible; }
     .mekkoverl-kopfzeile { margin-bottom: var(--space-2); }
-    .mekkoverl-titel { margin: 0 0 var(--space-2) 0; }
+    .mekkoverl-titel { margin: 0 0 var(--space-2) 0; font-size: var(--fs-h3); }
     .mekkoverl-legende { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); font-size: var(--fs-sm); }
     .mekkoverl-legende-eintrag { display: inline-flex; align-items: center; gap: 4px; }
     .mekkoverl-legende-punkt { width: 12px; height: 12px; border-radius: 2px; display: inline-block; border: 1px solid var(--border); }

@@ -705,7 +705,7 @@ function zeichneTagModus(gefiltert, zeigeUnsicherheit) {
   const gesamtHoehe = nichtDarstellbarStart + bereichsHoehe + 10;
   svg.attr('height', gesamtHoehe)
     .attr('viewBox', `0 0 ${tatsaechlicheBreite} ${gesamtHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', `Kalender-Heatmap der Urkunden nach Monat und Tag, über alle Jahre aggregiert, Zeitraum ${instanz.aktiverZeitraum.von}–${instanz.aktiverZeitraum.bis + 9}`);
 
   svg.append('desc').text(
@@ -804,7 +804,7 @@ function zeichneJahrzehntModus(gefiltert, zeigeUnsicherheit) {
   const gesamtHoehe = nichtDarstellbarStart + bereichsHoehe + 10;
   svg.attr('height', gesamtHoehe)
     .attr('viewBox', `0 0 ${tatsaechlicheBreite} ${gesamtHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', `Kalender-Heatmap der Urkunden nach Jahrzehnt und Monat, Zeitraum ${aktiverZeitraum.von}–${aktiverZeitraum.bis + 9}`);
 
   svg.append('desc').text(

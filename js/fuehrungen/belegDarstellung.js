@@ -35,6 +35,7 @@
 // Selektor `.fuehrung-beleg-scroll .bestand-sidebar-foto-haupt` überschrieben
 // - KEINE Änderung an `sidebar.js` selbst nötig).
 
+import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js'; // AUFTRAG D, Punkt 4
 import { baueUrkundenDetailInhalt } from '../utils/sidebar.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { baueDatensatzLink, TYP_ANZEIGE } from '../utils/datensatzAufruf.js';
@@ -126,12 +127,10 @@ function alsText(wert) {
 }
 
 // AUFTRAG C3, Punkt 8: `quelleFehlt` - Quelle bewusst optional und fehlt/ist
-// leer: gleiche Box, aber Vorsatz "Hinweis:" statt "Fehler:" (components.css).
+// leer: gleiche Box, aber Vorsatz "Hinweis:" statt "Fehler:".
+// AUFTRAG D, Punkt 4: der Vorsatz steht jetzt im Text (fuehrungHinweisBox.js).
 function baueFehlerBox(fehlertext, quelleFehlt = false) {
-  const box = document.createElement('p');
-  box.className = quelleFehlt ? 'fuehrung-fehler fuehrung-quelle-fehlt' : 'fuehrung-fehler';
-  box.textContent = fehlertext;
-  return box;
+  return baueFuehrungHinweisBox(fehlertext, { quelleFehlt });
 }
 
 // Quellenzeile: Typ, ID, Datum/Zeitraum (Punkt 4, Auftrag wörtlich), dazu

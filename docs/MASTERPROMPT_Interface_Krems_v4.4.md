@@ -33,17 +33,23 @@ Ein interaktives, browserbasiertes Interface zur Exploration der Bestände des S
 
 ## 3. Ordnerstruktur
 
+*Berichtigung (Auftrag D, 2026-10-07): Der Baum ist ein **Auszug**, kein vollständiges Verzeichnis. Nicht
+mehr zutreffende Einträge (ein eigener CSV-Zerleger und eine eigene Farbdatei unter `utils/`, ein veralteter Dateiname des Bestandsverzeichnisses) sind berichtigt;
+die maßgebliche Dateiliste ist das Repository selbst.*
+
 ```
 interface-krems/
 ├── index.html
 ├── css/
 │   ├── base.css
 │   ├── layout.css
-│   └── components.css
+│   ├── components.css
+│   ├── startseite.css
+│   └── fonts.css
 ├── js/
 │   ├── core/
 │   │   ├── app.js
-│   │   ├── dataLoader.js         # Vertrag: siehe Abschnitt 6
+│   │   ├── dataLoader.js         # Vertrag: siehe Abschnitt 6; zerlegt CSV mit d3.dsvFormat(';').parse()
 │   │   ├── state.js              # Schema: siehe Abschnitt 7
 │   │   ├── archivKonfiguration.js  # archiv.csv, Seitenblöcke, Platzhalter
 │   │   ├── ansichtenKonfiguration.js  # ansichten.csv -> Registry (Auftrag C1)
@@ -59,18 +65,20 @@ interface-krems/
 │   │   ├── karte.js
 │   │   ├── personennetzwerk.js
 │   │   └── ... (eine Datei pro Visualisierung, gemeinsames Modul-Interface, siehe Abschnitt 5)
+│   ├── fuehrungen/                # Führungen: Daten, Galerie, Station, Abschluss, Belege
 │   ├── utils/
-│   │   ├── csvParser.js           # nutzt d3.dsvFormat(';').parse() (RFC-4180-konform, Semikolon-Trenner), kein Eigenbau-Parser
-│   │   ├── colors.js              # CAT_COLORS, technische Konstante
+│   │   ├── kategorieFarben.js     # erzeugte Farbskala für Bestandskategorien (bkk_kategorie)
+│   │   ├── urkundenKategorieFarben.js  # Urkundenkategorien: CAT_COLORS + automatische Farben (Auftrag C2)
 │   │   ├── tooltip.js
 │   │   ├── uncertainty.js
 │   │   └── datePrecision.js
 │   └── config/
-│       ├── constants.js
+│       ├── constants.js           # u. a. CAT_COLORS (feste Farben der Urkundenkategorien)
+│       ├── datenAnforderungen.js  # Pflicht-/Schlüsselspalten je Ansicht (Auftrag B2)
 │       └── archivalienRegistry.js  # Verzeichnis der Archivalientypen/Ansichten/Modul-Pfade, genutzt von Kachelauswahl, Ansicht-wechseln-Button und app.js
 ├── data/
 │   ├── urkunden.csv
-│   ├── bestand.csv
+│   ├── bestandsverzeichnis.csv
 │   ├── buergerbuch.csv
 │   ├── verlassenschaftsinventare.csv
 │   ├── familien.csv
@@ -94,22 +102,15 @@ interface-krems/
 
 **Bilder-Konvention:** Thumbnails zu Urkunden liegen im Projektordner unter `fotos/thumbs/<foto_ordner>/`, ein Unterordner pro Urkunde. Die Ordnernamen entsprechen **nicht zuverlässig** der Signatur (uneinheitliche Schreibweisen wie `StaAKr-0001` vs. `StAK-UrkKr-0233` vs. `StAK-UrkKR-0644`, teils datumsbasierte Namen wie `StAK_1647_909_reg`) – deshalb verweist `urkunden.csv` über ein eigenes Feld `foto_ordner` (siehe `docs/SCHEMA.md`) explizit auf den tatsächlichen Ordnernamen, statt dass der Code versucht, Signatur und Ordnername automatisch abzugleichen. Innerhalb eines Ordners werden beim Laden einfach alle vorhandenen Bilddateien aufgelistet, unabhängig von ihrem Namensschema (aktuell überwiegend `_r`/`_v` für Vorder-/Rückseite, teils zusätzlich durchnummeriert) – der Code erwartet kein festes Namensmuster und keine feste Anzahl.
 
-**Ermittlung der Bilddateien: Manifest statt Live-Verzeichnislisting.** Ein Browser kann ohne Server-Unterstützung nicht zuverlässig herausfinden, welche Dateien in einem Ordner liegen – ein Ansatz über die vom Webserver zurückgegebene Verzeichnisliste (funktioniert z. B. mit `python -m http.server` oder Apache/nginx-Autoindex) scheitert bei vielen üblichen Static-Hosting-Lösungen, insbesondere GitHub Pages. Stattdessen gibt es eine einmalig generierte `data/foto_manifest.json`:
-```
-{
-  "StaAKr-0001": ["StAK_11080906_1a_r.jpg", "StAK_11080906_1a_v.jpg", "..."],
-  "StaAKr-0001a": []
-}
-```
-Diese Datei wird wie ein gewöhnliches statisches Datenfile geladen (kein Live-Scan), und bei Bedarf per kleinem Hilfsskript neu generiert, wenn neue Fotos hinzukommen – ein einmaliger Vorbereitungsschritt außerhalb der Laufzeit-Logik, vergleichbar mit dem Excel-zu-CSV-Export, kein Verstoß gegen "kein Build-Step" (der Grundsatz betrifft die Laufzeit-Anwendung, nicht die einmalige Datenvorbereitung).
+**Ermittlung der Bilddateien (Berichtigung, Auftrag D, 2026-10-07):** Die Dateinamen der Fotos einer Urkunde stehen in `urkunden.csv`, Spalte `bilder` (Liste mit `|`), der Ordner in `foto_ordner`. `js/utils/bilder.js` setzt daraus `fotos/thumbs/<foto_ordner>/<datei>` zusammen. Eine Manifest-Datei gibt es nicht; der früher hier beschriebene Ansatz wurde nicht umgesetzt. Neue Fotos werden deshalb in `urkunden.csv` (`bilder`) eingetragen.
 
 **Originale bleiben außerhalb des Projekts:** Die Original-Fotos (`fotos/<foto_ordner>/`, ohne `thumbs/`) sind bewusst nicht Teil des Projektordners – sie sind meist zu groß für die Veröffentlichung und werden separat/lokal aufbewahrt. Nur `fotos/thumbs/` gehört zum Interface-Projekt und wird ausgeliefert.
 
-**Bestätigt vorhanden, nicht nur hypothetisch:** In der echten Ordnerliste sind bereits 17 von 1069 Ordnern leer (keine Fotos vorhanden) – die Fallback-Regel ("Foto folgt") ist also von Anfang an aktiv, nicht erst für zukünftige Fälle relevant.
+**Bestätigt vorhanden, nicht nur hypothetisch:** In der echten Ordnerliste waren (Stand vor der Dublettenbereinigung am 2026-09-30, damals 1069 Urkunden, heute 1067) bereits 17 von 1069 Ordnern leer (keine Fotos vorhanden) – die Fallback-Regel ("Foto folgt") ist also von Anfang an aktiv, nicht erst für zukünftige Fälle relevant.
 
 Fehlt zu einer Signatur ein Ordner oder sind keine Bilddateien vorhanden (z. B. bei neu erfassten, noch nicht fotografierten Urkunden), zeigt das Interface einen sichtbaren Hinweis ("Foto folgt") anstelle eines Bildes – kein stiller Ausfall, kein kaputtes Bild-Symbol, konsistent mit der Fehlerbehandlungs-Regel aus Abschnitt 12.
 
-**Klarstellung zu Konfigurationsdateien:** Es gibt bewusst keine zentrale `config.json` für archivarische Inhalte – diese laufen ausschließlich über CSV-Dateien in `data/`. `constants.js`/`colors.js` sind rein technische, entwicklerseitige Werte, die im Code liegen dürfen.
+**Klarstellung zu Konfigurationsdateien:** Es gibt bewusst keine zentrale `config.json` für archivarische Inhalte – diese laufen ausschließlich über CSV-Dateien in `data/`. `constants.js` (u. a. `CAT_COLORS`) und die Farbmodule `kategorieFarben.js`/`urkundenKategorieFarben.js` sind rein technische, entwicklerseitige Werte, die im Code liegen dürfen (Berichtigung Auftrag D).
 
 ---
 
@@ -348,6 +349,14 @@ Diese Tabelle ist als Ausgangspunkt gedacht und im Zuge der Kapitel 4/5-Arbeit z
 - Mindestschriftgröße 16px für Fließtext
 - Header: Logo und Hauptnavigation. Footer: Impressum, rechtliche Hinweise, Metanavigation
 
+**Vermerkte Abweichungen von diesem Abschnitt und von Abschnitt 11–12 (Auftrag D, 2026-10-07, Entscheidung des Autors: dokumentieren, nicht ändern):**
+- *Farbe als einziges Merkmal:* In der **Zeitachse** und im **Marimekko** (Urkunden) sind die Kategorien im Ausgangszustand nur über die Farbe unterscheidbar; die Namen erscheinen erst im Tooltip bzw. im aufklappbaren Kategorienfilter.
+- *Kontrast von Grafikelementen (3:1):* Fünf feste Kategorienfarben liegen gegen den Seitenhintergrund `#f7f5f0` unter 3:1 – Bildung und Erziehung `#da8f62` (2,38:1), Grund und Boden `#cbda62` (1,40:1), Medien `#71da62` (1,62:1), Privatvermögen `#62daad` (1,59:1), Religion `#62adda` (2,27:1). In Swimlanes, Ridgeline, Horizon Chart, Alluvial und Sankey steht der Name daneben; Badges mit Text haben ≥ 4,5:1.
+- *Wortwolke:* Die Wörter sind grau (`#888888`) mit 50–100 % Deckkraft (1,7:1 bis 3,25:1 gegen den Hintergrund).
+- Gegenstand späterer Entscheidungen; bis dahin bekannte Grenze.
+
+**Prüfstand Zugänglichkeit (Auftrag D, 2026-10-07):** Alle 47 Ansichten wurden mit axe-core 4.13.0 (Regeln WCAG 2.0–2.2 A/AA und Best Practice, Fenster 1366×900) und Lighthouse 13.5.0 (Kategorie Zugänglichkeit, mobile Standardeinstellung) geprüft. Ergebnis: axe ohne Befund; Lighthouse 1,0 in allen Ansichten (das nicht gewertete Audit `label-content-name-mismatch` schlägt in 5 Ansichten weiterhin fehl). Automatische Werkzeuge decken nur einen Teil der Anforderungen ab; eine vollständige Konformitätsprüfung (manuell, mit Screenreader und Tastatur in allen Ansichten) liegt nicht vor. Die vermerkten Abweichungen oben bleiben bestehen.
+
 ---
 
 ## 11. Uncertainty-Konzept
@@ -418,7 +427,7 @@ Konkrete Spaltenlisten pro Archivalientyp werden in `docs/SCHEMA.md` gepflegt.
 - Längere blockierende Hauptthread-Berechnungen sind nach Möglichkeit zu vermeiden – dies ist ein Entwicklungsziel, keine technisch hart garantierbare Eigenschaft (die tatsächliche Dauer hängt von Gerät, Browser und Datenmenge ab). D3-Force-Simulationen (Personennetzwerk) werden schrittweise über `requestAnimationFrame` statt in einem Rutsch berechnet; bei großen Netzwerken kann eine niedrigere Start-Alpha (`simulation.alpha(0.3)` statt Standardwert) helfen, die Berechnung spürbar zu entzerren.
 - Icicle-Diagramm immer vertikal.
 - Tooltips immer mit Rand-Clamping.
-- Farben ausschließlich aus `CAT_COLORS`. Seit Auftrag C2 (2026-10-07) für Urkundenkategorien über `js/utils/urkundenKategorieFarben.js`: feste Farbe aus `CAT_COLORS`, für Kategorien eines anderen Archivs eine automatische, deterministische Farbe aus einer festen 24er-Palette (Kontrast geprüft, siehe `docs/SCHEMA.md` Abschnitt 14).
+- Farben ausschließlich aus `CAT_COLORS` (Präzisierung Auftrag D: gilt für die Urkundenkategorien; Bestandskategorien kommen aus der erzeugten Skala in `js/utils/kategorieFarben.js`). Seit Auftrag C2 (2026-10-07) für Urkundenkategorien über `js/utils/urkundenKategorieFarben.js`: feste Farbe aus `CAT_COLORS`, für Kategorien eines anderen Archivs eine automatische, deterministische Farbe aus einer festen 24er-Palette (Kontrast geprüft, siehe `docs/SCHEMA.md` Abschnitt 14).
 - Lazy Loading: Visualisierungscode und -daten erst bei erstmaligem Aufruf laden. (Abweichung für die Hintergrund-Prüfung der Datenverfügbarkeit seit Auftrag B2, siehe Abschnitt 2.)
 
 ### Regressionsschutz

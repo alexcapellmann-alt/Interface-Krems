@@ -819,7 +819,7 @@ function zeichneZeitachse() {
 
   svg.attr('height', hoehePlot + RAND.unten)
     .attr('viewBox', `0 0 ${breite} ${hoehePlot + RAND.unten}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Zeitachse der Urkunden nach Jahr, als Schwarm-Diagramm')
     // AUFTRAG "Teil 2h", Punkt 2 (Auftrag wörtlich: "bei Klick auf eine
     // leere Fläche der Visualisierung"): `event.target === svg.node()`

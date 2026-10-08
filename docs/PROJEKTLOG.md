@@ -263,7 +263,173 @@ Teil-0-Daten, gleicher Code und Wrapper):
   - Verbindungskarte: keine neue Linie (die einzige Urkunde mit Bógget nennt keinen weiteren Ort).
   - Kartenausschnitt unverändert.
 
-*(Die folgenden Punkte werden nach Freigabe des Messverfahrens ergänzt.)*
+### Punkt 1 – Überschriften
+- **`<h1>` nur für Hilfsmittel** (Freigabe des Autors):
+  - `app.js` setzt bei jedem Seitenwechsel eine `<h1 class="nur-fuer-hilfsmittel">` als erstes
+    Element in `main#app-content`; `raeumeSeiteAuf()` setzt sie nach dem Leeren wieder ein.
+  - Text: Ansicht, Bereich und Archiv, z. B. „Zeitachse – Urkunden – Stadtarchiv Krems“,
+    „Eine Tonne Heringe – Station 2 – Stadtarchiv Krems“ (Führungstitel aus `fuehrungen.csv`,
+    nachgeladen).
+  - CSS: `.nur-fuer-hilfsmittel` in `css/layout.css`; `position: absolute`, daher kein Einfluss
+    auf das Raster des Hauptbereichs.
+- **Sidebar-Titel `<h3>` → `<h2>`** (`sidebar.js`): Vorher geprüft, keine CSS-Regel zielt auf
+  `h3` in der Sidebar. Die Größe ist per Klasse auf den bisherigen Wert fixiert (`--fs-h3`,
+  gemessen 18 px vorher und nachher).
+- **Weitere Titel `<h3>` → `<h2>`** (axe `heading-order` nach Einführung der `<h1>`, gleiche
+  Größe per Klasse):
+  - Diagrammtitel in Streamgraph, Parallelkoordinaten, Vermögensschichtung und Marimekko
+    Verlassenschaften;
+  - Titel der Regesten-Kacheln. Erst nach der Umstellung der Kacheln auf `<div>` (Punkt 5)
+    gemeldet.
+
+### Punkt 2 – Verschachtelte Bedienelemente und Fokus
+- **Vorab geprüft** (`Nachher_D/punkt2/kinder_vorher.json`): Was wird für Hilfsmittel
+  erreichbar, wenn `role="img"` zu `role="group"` wird?
+  - In 16 Ansichten haben alle fokussierbaren Kinder bereits einen Namen (`aria-label`).
+  - **Treemap:** 315 fokussierbare Bestandskacheln (`<g tabindex="0">`) ohne eigenen Namen; mit
+    `role="group"` lesen Hilfsmittel ihren sichtbaren, teils gekürzten Kacheltext vor.
+  - **Dot Plot:** 3 fokussierbare Kategorie-Beschriftungen ohne eigenen Namen.
+  - Gemeldet, keine zusätzlichen ARIA-Attribute („nicht auf Verdacht“); axe meldet danach
+    nichts.
+- **`role="img"` → `role="group"`** an 18 Grafiken in 17 Ansichten; `aria-label` bleibt:
+  - Treemap, Sunburst, Icicle, Circle Packing, Gantt (Hauptgrafik), Zeitachse (Hauptgrafik),
+    Kalender-Heatmap (beide Modi), Dot Plot, Sankey, Bump Chart, Streamgraph,
+    Parallelkoordinaten;
+  - Korrelationsmatrix (Matrix und Streudiagramm), Vermögensschichtung, Familienbaum, Chord;
+  - Flow Map (Überlagerung; die Verbindungskarte nutzt dieselbe Überlagerung ohne bedienbare
+    Teile und bleibt `role="img"`).
+- **Marimekko Verlassenschaften** (`aria-prohibited-attr`): Flächen `role="img"`, Grafik
+  `role="group"`.
+- **`inert` an der geschlossenen Sidebar:** an allen 12 Stellen, an denen eine Sidebar `aria-hidden`
+  umschaltet (`sidebar.js` 5, `karte.js` 1, `personenliste.js` 4, `vermoegensschichtung.js` 2).
+- **Tab-Test** (`Nachher_D/punkt2/sidebar/`):
+  - Geschlossene Sidebar, 60 × Tab: Fokus nie in der Sidebar. In der Personenliste war das vorher
+    1 ×.
+  - Geöffnete Sidebar (Zeitachse, Personenliste, Karte): gleicher Fokus und gleiche Tab-Folge wie
+    vorher.
+  - Pixelvergleich der geöffneten Sidebar: 0 Pixel Unterschied.
+
+### Punkt 4 – Vorsatz im Seitentext
+- Neues Modul `js/fuehrungen/fuehrungHinweisBox.js` (`baueFuehrungHinweisBox()`): „Fehler: “ bzw.
+  „Hinweis: “ als `<strong class="fuehrung-vorsatz">` im Text.
+- Genutzt an allen 8 Stellen: `belegDarstellung.js`, `fuehrungAbschluss.js` ×2,
+  `fuehrungStation.js` ×3, `fuehrungenGalerie.js` ×2.
+- Die beiden `::before`-Regeln in `components.css` sind entfallen.
+- **Prüfung mit Problemdaten** (`Nachher_D/punkt4/`): `buergerbuch.csv` fehlt, unbekannte
+  Beleg-ID, `literatur.csv` fehlt.
+  - Der Text enthält jetzt „Hinweis: …“ bzw. „Fehler: …“.
+  - Alle 5 Boxen sind pixelgleich mit vorher.
+  - Rückbau der Testdaten belegt.
+
+### Punkt 5 – Landmarks und weitere Befunde
+- **Startseiten-Fußzeile:** ohne `role="contentinfo"` (`startseite.js`). Die drei
+  Landmark-Regeln sind ohne Befund.
+- **Regesten-Kacheln:** `<div role="listitem">` statt `<article>` (`aria-allowed-role` ohne
+  Befund).
+
+### Punkt 3 – Kontraste (freigegeben)
+| Ansicht | Element | vorher | nachher |
+|---|---|---|---|
+| Startseite | Fußzeilen-Überschriften | Weiß 60 % (4,46:1) | Weiß 65 % (4,92:1) |
+| Startseite | Copyright-Zeile | Weiß 50 % (3,61:1) | Weiß 70 % (5,43:1) |
+| Korrelationsmatrix | Legende „kein Zusammenhang“ | `#999` (2,61:1) | Text `#6b6b6b` (4,89:1), Symbol ■ bleibt `#999` |
+| Wortwolke | Hinweis bei schmalem Fenster | `#888` (3,25:1) | `#6b6b6b` (4,89:1) |
+
+Vorher/Nachher-Aufnahmen mit gemessenen Farben: `Nachher_D/punkt3/`.
+
+**Unverändert und dokumentiert** (Masterprompt Abschnitt 10, „Vermerkte Abweichungen“):
+- Wortwolke (Wörter);
+- die fünf festen Kategorienfarben unter 3:1;
+- „nur Farbe“ in Zeitachse und Marimekko.
+
+### Punkt 6 – Dokumentationsabgleich (G)
+- **Masterprompt:**
+  - Dateibaum als „Auszug“ gekennzeichnet.
+  - Entfernt bzw. berichtigt: CSV-Zerleger und Farbdatei unter `utils/`, Dateiname
+    `bestandsverzeichnis.csv`.
+  - Ergänzt: `fuehrungen/`, `kategorieFarben.js`, `urkundenKategorieFarben.js`,
+    `datenAnforderungen.js`, CSS-Dateien.
+  - Manifest-Absatz durch das tatsächliche Verfahren ersetzt (`bilder` + `foto_ordner`,
+    `js/utils/bilder.js`).
+  - Farbregel präzisiert; Satz zu den Konfigurationsdateien berichtigt.
+  - Historische Zahl mit Datum versehen.
+  - Vermerkte Abweichungen und Prüfstand Zugänglichkeit in Abschnitt 10.
+- **SCHEMA.md:**
+  - Offene Punkte Nr. 5: Dateiname berichtigt.
+  - „1068/1068“ an zwei Stellen mit „Stand vor der Dublettenbereinigung“.
+  - Zugänglichkeitsvermerk in Abschnitt 14.
+- **Code-Kommentar:** `bestandsHierarchie.js` (alter Dateiname).
+- **Bleibt bewusst:** „eingefroren“-Vermerk, „keine zentrale `config.json`“.
+- **grep** auf Dokumente und ausgelieferte Dateien: 0 Treffer für die veralteten Verweise. Alle
+  in der Dokumentation genannten Pfade existieren; ausgenommen sind D3.js (Bibliothek) und die
+  bewusst ausgeschlossene `config.json`.
+
+### Verifikation
+**Referenzläufe** (neuer Wrapper, 1 Browser, je ~265 s, 0 × `ERR_NO_BUFFER_SPACE`;
+`laufprotokoll.txt`):
+
+| Schritt | Text gegenüber Vorschritt | Fehler | Pixel (43 Ansichten*) |
+|---|---|---|---|
+| t0 Teil 0 | 47/47 gleich | 0 | – |
+| t1b Punkt 1+2 | einzige Änderung: neue `<h1>` (47/47) | 0 | 43/43 gleich |
+| t2 Punkt 4+5 | 47/47 gleich | 0 | 43/43 gleich |
+| t3 Punkt 3 | 47/47 gleich | 0 | 42/43; Korrelationsmatrix-Legende geändert (gewollt) |
+| t4 Punkt 6 | 47/47 gleich | 0 | 43/43 gleich |
+| t5 Regesten-Titel | 47/47 gleich | 0 | 43/43 gleich |
+
+\* Karte, Verbindungskarte, Zeitachse und Bipartite Flow Map werden nur über Text und Struktur
+verglichen, nicht über Pixel: Sie schwanken von Lauf zu Lauf (Vorgabe des Autors).
+
+**axe** (alle 47 Ansichten):
+
+| Regel | Prüfung 03.10. | Stand C2 | nach D |
+|---|---|---|---|
+| `page-has-heading-one` | 47 | 47 | 0 |
+| `nested-interactive` | 16 | 17* | 0 |
+| `aria-hidden-focus` | 14 | 15* | 0 |
+| `aria-prohibited-attr` | 1 (24 Knoten) | 1 (24) | 0 |
+| `color-contrast` | 2 (4) | 2 (4) | 0 |
+| `aria-allowed-role` | 1 (50) | 1 (50) | 0 |
+| `landmark-contentinfo-is-top-level`, `landmark-no-duplicate-contentinfo`, `landmark-unique` | je 1 | je 1 | 0 |
+| `heading-order` | 0 | 0 | 0 (zwischenzeitlich 5, behoben) |
+
+\* **Messkorrektur der Prüfung vom 03.10., keine Verschlechterung:** Der Dot Plot ist seit der
+Prüfung unverändert. Die Prüfung hatte nach 1,5 s Wartezeit Grafik und Sidebar noch nicht
+erfasst; seit B2 wird 4 s gewartet.
+
+**Lighthouse** (Zugänglichkeit, alle 47 Ansichten):
+- Prüfung: 28 × 1,0, 16 × 0,96, 3 × 0,95.
+- Nach D: 47 × 1,0. 19 Ansichten sind besser, keine schlechter.
+- Weiterhin fehlgeschlagen (nicht gewertet): `label-content-name-mismatch` in Sunburst, Icicle,
+  Gantt, Personenliste und Führungen.
+
+**Zweitarchiv-Test:** 47/47 fehlerfrei, keine Reste des Erstarchivs, 0 Eingriffe außerhalb der
+CSV-Dateien (Code per `diff` identisch).
+
+**Zusatz (aus B2 offen):** Begründungstabelle der 36 Fälle „stabil“ und 13 Fälle „stabil, stark
+abweichend“, die seit B2 einen Hinweisbalken zeigen: `Nachher_D/b2_faelle.md`.
+- 39 berechtigt.
+- 8 berechtigt, Wirkung erst bei Interaktion: Nebendateien der Personenliste und der Flow Map.
+- 2 mögliche Fehlalarme: Abschlussseite einer Führung ohne Literaturangaben, wenn `literatur.csv`
+  leer oder unlesbar ist. Der Balken entsteht, weil `literatur.csv` für jede Abschlussseite als
+  Nebendatei geprüft wird.
+
+### Scope-Meldungen
+- **Mögliche Fehlalarme des B2-Balkens:** Abschlussseite ohne Literaturangaben. Abhilfe wäre, die
+  Prüfung nur bei Führungen mit „Zum Weiterlesen“ zu führen. Nicht umgesetzt.
+- **„Undatiert“-Bereiche** (`zeichneUnbekanntBereich`) in Swimlanes, Ridgeline und Horizon Chart
+  enthalten fokussierbare Punkte in einer Grafik mit `role="img"`. Bei Krems tritt das nicht auf
+  (keine undatierten Urkunden in diesen Ansichten), bei Archiven mit undatierten Urkunden
+  voraussichtlich `nested-interactive`. Nicht geändert, weil nicht in der freigegebenen Liste.
+- **CSS-Beschriftung `.fuehrung-beleg::before { content: "Quelle" }`:** derselbe Typ wie der frühere
+  Vorsatz; nicht Teil des Auftrags.
+- **Treemap-Kacheln und Dot-Plot-Beschriftungen** ohne eigenen zugänglichen Namen (siehe Punkt 2).
+- **Lighthouse `label-content-name-mismatch`** in 5 Ansichten.
+- **Zeitmessung gegen B1** (alter Wrapper): Der Startgraph hat sich in D nicht geändert (neue
+  Module nur per `import()` bzw. in den nachgeladenen Führungen). Die Messung folgt wie vereinbart
+  einmalig nach dem letzten Auftrag.
+
+Kein Commit durch Claude Code.
 
 ---
 

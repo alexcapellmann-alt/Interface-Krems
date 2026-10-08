@@ -11,6 +11,7 @@
 // Block (Nicht-Ziel) - Stelle fuer einen spaeteren Auftrag im PROJEKTLOG
 // vermerkt.
 
+import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js'; // AUFTRAG D, Punkt 4
 import { baueHash } from '../core/router.js';
 import { ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { loescheZustand } from './fuehrungFortsetzen.js';
@@ -92,10 +93,7 @@ function baueSelbstErkunden(fuehrung) {
   abschnitt.appendChild(titel);
   eintraege.forEach(({ href, beschriftung, fehler }) => {
     if (fehler) {
-      const box = document.createElement('p');
-      box.className = 'fuehrung-fehler';
-      box.textContent = fehler;
-      abschnitt.appendChild(box);
+      abschnitt.appendChild(baueFuehrungHinweisBox(fehler));
       return;
     }
     const link = document.createElement('a');
@@ -126,11 +124,8 @@ function baueWeiterlesen(fuehrung) {
   abschnitt.appendChild(titel);
   fuehrung.weiterlesen.forEach(({ record, fehler, quelleFehlt }) => {
     if (fehler) {
-      const box = document.createElement('p');
       // AUFTRAG C3, Punkt 7/8: fehlende/leere literatur.csv -> "Hinweis:" statt "Fehler:"
-      box.className = quelleFehlt ? 'fuehrung-fehler fuehrung-quelle-fehlt' : 'fuehrung-fehler';
-      box.textContent = fehler;
-      abschnitt.appendChild(box);
+      abschnitt.appendChild(baueFuehrungHinweisBox(fehler, { quelleFehlt }));
       return;
     }
     const p = document.createElement('p');

@@ -740,7 +740,7 @@ function zeichneGantt() {
 
   const svg = d3.select(zeitbereich).append('svg')
     .attr('width', zeitbereichBreite).attr('height', Math.max(gesamtHoehe, 1))
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', `Gantt-Diagramm: ${mitZeitraum.length} Bestände nach Zeitraum, ${ohneZeitraum.length} ohne Zeitangabe`);
 
   svg.append('desc').text(

@@ -186,6 +186,52 @@ const KLEINER_BILDSCHIRM_SCHWELLE = 700;
 const GROSSBILDSCHIRM_ANSICHTEN = new Set(['personennetzwerk', 'ganttDiagramm']);
 
 const contentRoot = document.getElementById('app-content');
+
+// AUFTRAG D, Punkt 1 (axe page-has-heading-one): jede Seite hat genau eine
+// <h1> - nur für Hilfsmittel (visuell verborgen, Freigabe des Autors). Text:
+// Ansicht und Archiv, z. B. "Zeitachse – Urkunden – Stadtarchiv Krems". Sie
+// steht als erstes Element im Hauptbereich und wird nach jedem Leeren des
+// Bereichs wieder eingesetzt (raeumeSeiteAuf()).
+const seitenueberschrift = document.createElement('h1');
+seitenueberschrift.className = 'nur-fuer-hilfsmittel';
+seitenueberschrift.id = 'app-seitenueberschrift';
+
+const TAB_NAMEN = { bestand: 'Bestand', visualisierungen: 'Visualisierungen', fuehrungen: 'Führungen', literatur: 'Literatur', ueber: 'Über das Archiv' };
+
+function setzeSeitenueberschrift(teile) {
+  const archiv = String(konfigurationswert('archiv_kurzname') || '').trim();
+  seitenueberschrift.textContent = [...teile.filter(Boolean), archiv].filter(Boolean).join(' – ');
+  if (seitenueberschrift.parentNode !== contentRoot) contentRoot.prepend(seitenueberschrift);
+}
+
+// Teile der Überschrift aus der Route: Registry/ansichten.csv für Bereiche und
+// Ansichten, fuehrungen.csv für Führungen (Titel, sobald geladen).
+function aktualisiereSeitenueberschrift(route) {
+  const [a, b] = route.segmente;
+  if (!route.tab) return setzeSeitenueberschrift(['Startseite']);
+  if (route.tab === 'bestand') {
+    return setzeSeitenueberschrift([BESTAND_ANSICHTEN.find((x) => x.id === a)?.label, 'Bestand']);
+  }
+  if (route.tab === 'visualisierungen') {
+    const typ = ARCHIVALIENTYPEN.find((x) => x.typ === a);
+    const ansicht = typ?.ansichten.find((x) => x.id === b);
+    return setzeSeitenueberschrift(ansicht ? [ansicht.label, typ.label] : [typ?.label, 'Visualisierungen']);
+  }
+  if (route.tab === 'fuehrungen') {
+    const schritt = b === 'ende' ? 'Ende der Führung' : (b ? `Station ${b}` : null);
+    setzeSeitenueberschrift(a ? ['Führung', schritt] : ['Führungen']);
+    if (!a) return undefined;
+    import('../fuehrungen/fuehrungenDaten.js')
+      .then((m) => m.ladeFuehrungenDaten())
+      .then(({ fuehrungen }) => {
+        const titel = fuehrungen.find((f) => f.fuehrung_id === a)?.fuehrung_titel;
+        if (titel && aktuelleRoute().segmente[0] === a && aktuelleRoute().segmente[1] === b) setzeSeitenueberschrift([titel, schritt]);
+      })
+      .catch(() => {});
+    return undefined;
+  }
+  return setzeSeitenueberschrift([TAB_NAMEN[route.tab] || 'Nicht gefunden']);
+}
 const navLinks = Array.from(document.querySelectorAll('.haupt-navigation a[data-tab]'));
 
 let generation = 0;
@@ -308,6 +354,7 @@ function raeumeSeiteAuf() {
     aktuellerKontext = null;
   }
   contentRoot.innerHTML = '';
+  contentRoot.prepend(seitenueberschrift); // AUFTRAG D, Punkt 1
 }
 
 function ermittleVisualisierungenAnsichtId(archivalientyp) {
@@ -1017,6 +1064,7 @@ function verarbeiteResize(meineGeneration) {
 function handleRouteChange() {
   const route = aktuelleRoute();
   aktualisiereNavHervorhebung(route.tab);
+  aktualisiereSeitenueberschrift(route); // AUFTRAG D, Punkt 1
 
   if (aktuellerKontext && aktuellerKontext.tab === route.tab) {
     // FOLGEAUFTRAG "...Galerie-Muster für Bestand": Bestand läuft jetzt über

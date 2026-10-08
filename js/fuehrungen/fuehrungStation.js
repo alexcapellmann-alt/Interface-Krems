@@ -65,6 +65,7 @@
 // Scrollen der Station sichtbar, ohne fremden Content zu verdecken - sticky
 // braucht anders als `fixed` keine manuelle Platzreservierung).
 
+import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js'; // AUFTRAG D, Punkt 4
 import { baueHash } from '../core/router.js';
 import { fuegeSidebarStyleEin } from '../utils/sidebar.js';
 import { baueBelegBereich } from './belegDarstellung.js';
@@ -140,12 +141,7 @@ function baueKopf(fuehrung, station, aktuelleNr) {
   meta.textContent = zeitraum || '';
   kopf.append(fuehrungstitel, stationstitel, meta);
 
-  fuehrung.kopfFehler.forEach((text) => {
-    const box = document.createElement('p');
-    box.className = 'fuehrung-fehler';
-    box.textContent = text;
-    kopf.appendChild(box);
-  });
+  fuehrung.kopfFehler.forEach((text) => kopf.appendChild(baueFuehrungHinweisBox(text)));
   return kopf;
 }
 
@@ -189,12 +185,7 @@ function baueErzaehlbereich(station) {
   mitte.className = 'fuehrung-erzaehltext-mitte';
   bereich.appendChild(mitte);
 
-  station.stationWarnungen.forEach((text) => {
-    const box = document.createElement('p');
-    box.className = 'fuehrung-fehler';
-    box.textContent = text;
-    mitte.appendChild(box);
-  });
+  station.stationWarnungen.forEach((text) => mitte.appendChild(baueFuehrungHinweisBox(text)));
 
   station.textBloecke.forEach((block) => {
     if (block.art === 'liste') {
@@ -233,10 +224,7 @@ function baueVertiefungsBereich(vertiefung) {
   bereich.className = 'fuehrung-vertiefung';
   vertiefung.forEach(({ href, beschriftung, fehler }) => {
     if (fehler) {
-      const box = document.createElement('p');
-      box.className = 'fuehrung-fehler';
-      box.textContent = fehler;
-      bereich.appendChild(box);
+      bereich.appendChild(baueFuehrungHinweisBox(fehler));
       return;
     }
     const link = document.createElement('a');

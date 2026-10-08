@@ -663,7 +663,7 @@ function zeichneDotPlot() {
   const gesamtHoehe = ohneJahrStart + bereichsHoehe + 10;
   svg.attr('height', gesamtHoehe)
     .attr('viewBox', `0 0 ${breite} ${gesamtHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Dot Plot der Urkunden: Jahr je Kategorie');
 
   svg.append('desc').text(

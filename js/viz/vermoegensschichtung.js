@@ -131,6 +131,7 @@ function oeffneDetailliste(titel, records) {
   sidebar.koerper.appendChild(baueListeInhalt(records));
   sidebar.sidebar.classList.add('offen');
   sidebar.sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   sidebar.titel.focus();
 }
 
@@ -138,6 +139,7 @@ function schliesseDetailliste() {
   const { sidebar } = instanz;
   sidebar.sidebar.classList.remove('offen');
   sidebar.sidebar.setAttribute('aria-hidden', 'true');
+  sidebar.sidebar.inert = true; // AUFTRAG D, Punkt 2 (axe aria-hidden-focus): geschlossen = inert, nicht per Tab erreichbar
 }
 
 function baueTooltipText(jahrzehnt, gruppe, segment, splitModus) {
@@ -154,7 +156,8 @@ function baueKopfzeile() {
   const kopfzeile = document.createElement('div');
   kopfzeile.className = 'vermschicht-kopfzeile';
 
-  const titel = document.createElement('h3');
+  // AUFTRAG D, Punkt 1 (axe heading-order): <h2> statt <h3> nach der verborgenen <h1>; Größe per Klasse wie bisher
+  const titel = document.createElement('h2');
   titel.className = 'vermschicht-titel';
   titel.textContent = 'Vermögensschichtung nach Jahrzehnt';
   kopfzeile.appendChild(titel);
@@ -281,7 +284,7 @@ function zeichneVermoegensschichtung() {
 
   const style = document.createElement('style');
   style.textContent = `
-    .vermschicht-titel { margin: 0 0 var(--space-2) 0; }
+    .vermschicht-titel { margin: 0 0 var(--space-2) 0; font-size: var(--fs-h3); }
     .vermschicht-kopfzeile { margin-bottom: var(--space-2); }
     .vermschicht-umschalter-zeile { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-2); }
     .vermschicht-umschalter-label { font-size: var(--fs-sm); color: var(--text-muted); }
@@ -331,7 +334,7 @@ function zeichneVermoegensschichtung() {
   const svgHoehe = hoehePlot + RAND.oben + RAND.unten;
   const svg = d3.select(container).append('svg').attr('width', breite).attr('height', svgHoehe)
     .attr('viewBox', `0 0 ${breite} ${svgHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Vermögensschichtung: Anzahl der Verlassenschaftsinventare je Vermögensgruppe und Jahrzehnt');
   svg.append('desc').text(
     `Drei Balkendiagramme (${jahrzehnte.join(', ')}), je eines pro Jahrzehnt, X-Achse Vermögensgruppe A bis E ` +

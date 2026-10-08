@@ -187,7 +187,7 @@ function zeichneWortwolke() {
   if (nichtPlatziert.length > 0) {
     const hinweis = document.createElement('p');
     hinweis.style.fontSize = '11px';
-    hinweis.style.color = '#888';
+    hinweis.style.color = '#6b6b6b'; // AUFTRAG D, Punkt 3: 3,25:1 -> 4,89:1 auf #f7f5f0
     hinweis.textContent = `${nichtPlatziert.length} Wörter (${nichtPlatziert.map((w) => w.text).join(', ')}) `
       + 'passten bei dieser Fenstergröße nicht kollisionsfrei hinein - bei mehr Platz erscheinen sie.';
     container.appendChild(hinweis);

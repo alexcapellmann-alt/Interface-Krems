@@ -641,7 +641,7 @@ function zeichneSunburst() {
     .attr('width', breite)
     .attr('height', hoehe)
     .attr('viewBox', `${-breite / 2} ${-hoehe / 2} ${breite} ${hoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', inKategorieAnsicht
       ? `Bestände der Kategorie ${aktuelleKategorieDaten.name}, mit Unterkategorie- und Bestand-Ring`
       : 'Sunburst des Gesamtbestands, mit Kategorie-, Unterkategorie- und Bestand-Ring');

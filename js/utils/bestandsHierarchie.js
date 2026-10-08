@@ -1,6 +1,6 @@
 // js/utils/bestandsHierarchie.js
 // Gemeinsame Hierarchie-Aufbereitung für alle Bestandsverzeichnis-Visualisierungen
-// (Abschnitt 13, DRY). Baut aus den flachen bestand.csv-Records (aus dataLoader.js)
+// (Abschnitt 13, DRY). Baut aus den flachen bestandsverzeichnis.csv-Records (aus dataLoader.js)
 // die Struktur Gesamtbestand -> bkk_kategorie -> bkk_unterkategorie -> einzelner
 // Bestand auf (vier Ebenen, siehe docs/SCHEMA.md-Korrektur), ohne die übergebenen
 // Records zu verändern (Abschnitt 5).
