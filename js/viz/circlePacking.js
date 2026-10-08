@@ -302,7 +302,7 @@ function zeichneCirclePacking() {
     .attr('width', breite)
     .attr('height', hoehe)
     .attr('viewBox', `0 0 ${breite} ${hoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', inKategorieAnsicht
       ? `Bestände der Kategorie ${aktuelleKategorieDaten.name}`
       : 'Circle Packing des Gesamtbestands, gruppiert nach Kategorie');

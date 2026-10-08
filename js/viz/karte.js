@@ -439,6 +439,7 @@ function oeffneUnsichereOrteSidebar() {
   zurueckBtn.hidden = true;
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
 }
 
 // KORREKTURAUFTRAG "Karte – Klick auf Ort-Marker öffnet Sidebar", Punkt 2

@@ -7,6 +7,41 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-07 (110) – Barrierefreiheit (axe ohne Befund), Datenrückfälle, Dokumentationsabgleich
+
+Auftrag D (Prüfbericht Punkte 5 und G).
+- **Daten (Teil 0, Freigabe des Autors):**
+  - `urkunden.csv` `StaAKr-0566b`: `unsicherheit_anmerkung` wiederhergestellt (CHANGELOG 2).
+  - `orte.csv` `bogget_belgien`: Koordinaten `51,1667`/`5,5833` (CHANGELOG 62); in der Anmerkung
+    nur den Vermerk „Koordinaten noch nicht ermittelt“ entfernt.
+- **Überschriften:**
+  - Jede Seite hat eine `<h1>` nur für Hilfsmittel (Ansicht, Bereich, Archiv; `app.js`,
+    `layout.css`).
+  - Sidebar-, Diagramm- und Kacheltitel `<h3>` → `<h2>` bei gleicher Größe.
+- **Bedienung:**
+  - `role="img"` → `role="group"` an 18 Grafiken mit bedienbaren Teilen.
+  - Geschlossene Sidebar `inert` (12 Stellen).
+  - Marimekko-Flächen mit Rolle.
+- **Hinweisboxen der Führungen:** Vorsatz „Fehler:“/„Hinweis:“ steht im Seitentext (neues Modul
+  `js/fuehrungen/fuehrungHinweisBox.js`), gleiche Optik.
+- **Landmarks:** Startseiten-Fußzeile ohne `contentinfo`; Regesten-Kacheln als `<div>`.
+- **Kontraste:** Startseiten-Fußzeile (2 Stellen), Legende der Korrelationsmatrix, Hinweis der
+  Wortwolke.
+- **Doku:**
+  - Masterprompt und SCHEMA berichtigt (veraltete Dateinamen und Manifest-Absatz).
+  - Vermerkte Abweichungen: „nur Farbe“ in Zeitachse und Marimekko, fünf feste Farben, Wortwolke.
+  - Prüfstand „mit axe-core und Lighthouse geprüft“, ohne Konformitätsaussage.
+
+**Ergebnis:**
+- axe: alle 47 Ansichten ohne Befund (vorher 9 Regeln).
+- Lighthouse 1,0 in allen 47 Ansichten (vorher 0,95–1,0).
+- Text sonst unverändert, Pixel unverändert außer der Korrelationsmatrix-Legende.
+- Zweitarchiv: 0 Eingriffe.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-07 (109) – Automatische Kategorienfarben, Restpunkte, Kategorie „Bevölkerung“ (Teil C2)
 
 Auftrag C2 (Prüfbericht Punkt 6, Übertragbarkeit).

@@ -7,6 +7,7 @@
 // Führungen brauchen stattdessen "Galerie -> EINE Station" - ein
 // grundverschiedenes zweites Navigationsziel, siehe Selbstauskunft im Chat).
 
+import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js'; // AUFTRAG D, Punkt 4
 import { navigiereZu } from '../core/router.js';
 import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
@@ -58,10 +59,7 @@ function baueKachel(fuehrung, bildUrl) {
   kachel.append(titel, beschreibung, zeitraum);
 
   if (fuehrung.kurzbeschreibungZuLang) {
-    const hinweis = document.createElement('p');
-    hinweis.className = 'fuehrung-fehler';
-    hinweis.textContent = 'kurzbeschreibung ist länger als 300 Zeichen.';
-    kachel.appendChild(hinweis);
+    kachel.appendChild(baueFuehrungHinweisBox('kurzbeschreibung ist länger als 300 Zeichen.'));
   }
 
   // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: dezenter Hinweis auf eine
@@ -109,10 +107,7 @@ export async function render(container, { hinweis } = {}) {
   container.appendChild(wurzel);
 
   if (hinweis) {
-    const hinweisEl = document.createElement('p');
-    hinweisEl.className = 'fuehrung-fehler fuehrungen-galerie-hinweis';
-    hinweisEl.textContent = hinweis;
-    wurzel.appendChild(hinweisEl);
+    wurzel.appendChild(baueFuehrungHinweisBox(hinweis, { zusatzKlasse: 'fuehrungen-galerie-hinweis' }));
   }
 
   const { fuehrungen } = await ladeFuehrungenDaten();

@@ -760,7 +760,7 @@ async function zeichneFlowMap() {
 
   const svgUeberlagerung = erzeugeUeberlagerungsSvg(plotWrapper, breite, hoehe, {
     ariaLabel: 'Karte: Orte als Tortendiagramme der sozialen Gruppen'
-  });
+  }).attr('role', 'group'); // AUFTRAG D, Punkt 2 (nested-interactive): bedienbare Orts-Knoten; Verbindungskarte bleibt role=img
 
   // Ein Cluster (<g>) pro Ort, per `transform: translate(...)` an dessen
   // Kartenposition verankert - alle Kreiselemente sind relativ zum

@@ -206,7 +206,7 @@ function fuegeStyleEin(container) {
        State nötig. box-sizing:border-box (base.css) verhindert dabei jede
        Layout-Verschiebung im Grid gegenüber eingeklappten Kacheln. */
     .regk-karte[aria-expanded="true"] { border: 3px solid var(--accent); }
-    .regk-karte-titel { display: flex; align-items: center; gap: var(--space-1); }
+    .regk-karte-titel { display: flex; align-items: center; gap: var(--space-1); font-size: var(--fs-h3); }
     .regk-karte-titel-text { flex: 1 1 auto; }
     /* Punkt 2: Chevron dreht sich beim Auf-/Zuklappen (sanfte Transition) -
        aria-hidden (siehe baueChevron()), rein visueller Zustandshinweis. */
@@ -474,7 +474,9 @@ function baueChevron() {
 }
 
 function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
-  const karte = document.createElement('article');
+  // AUFTRAG D, Punkt 5 (axe aria-allowed-role): <div> statt <article> - die Rolle
+  // "listitem" ist für <article> nicht vorgesehen; Gestaltung hängt an der Klasse.
+  const karte = document.createElement('div');
   karte.className = 'regk-karte';
   karte.setAttribute('tabindex', '0');
   karte.setAttribute('aria-label', `Urkunde ${record.signatur}`);
@@ -488,7 +490,9 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   // gültig und verträgt sich mit role="listitem" ohne Konflikt.
   karte.setAttribute('aria-expanded', 'false');
 
-  const titel = document.createElement('h3');
+  // AUFTRAG D, Punkt 1 (axe heading-order): <h2> statt <h3> - nach Umstellung der Kachel auf <div>
+  // (Punkt 5) folgte die <h3> direkt auf die <h1>; Größe per Klasse wie bisher (--fs-h3).
+  const titel = document.createElement('h2');
   titel.className = 'regk-karte-titel';
   if (zeigeUnsicherheit && istRecordUnsicher(record)) {
     titel.appendChild(baueWarnIcon(record, container));

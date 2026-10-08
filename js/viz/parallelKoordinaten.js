@@ -304,7 +304,8 @@ function baueKopfzeile(container, ansichtKey) {
   const kopfzeile = document.createElement('div');
   kopfzeile.className = 'parkoord-kopfzeile';
 
-  const titel = document.createElement('h3');
+  // AUFTRAG D, Punkt 1 (axe heading-order): <h2> statt <h3> nach der verborgenen <h1>; Größe per Klasse wie bisher
+  const titel = document.createElement('h2');
   titel.className = 'parkoord-titel';
   titel.textContent = ANSICHTEN[ansichtKey].titel;
   kopfzeile.appendChild(titel);
@@ -451,7 +452,7 @@ function zeichneParallelKoordinaten() {
   const style = document.createElement('style');
   style.textContent = `
     .parkoord-achse { font-size: ${ACHSEN_SCHRIFTGROESSE}px; }
-    .parkoord-titel { margin: 0 0 var(--space-2) 0; }
+    .parkoord-titel { margin: 0 0 var(--space-2) 0; font-size: var(--fs-h3); }
     .parkoord-kopfzeile { margin-bottom: var(--space-2); }
     .parkoord-umschalter { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
     .parkoord-knopf { min-height: 44px; padding: var(--space-1) var(--space-3); border-radius: var(--radius);
@@ -518,7 +519,7 @@ function zeichneParallelKoordinaten() {
   const svgHoehe = hoehePlot + RAND.oben + RAND.unten;
   const svg = d3.select(container).append('svg').attr('width', breite).attr('height', svgHoehe)
     .attr('viewBox', `0 0 ${breite} ${svgHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', ANSICHTEN[ansichtKey].titel);
   svg.append('desc').text(
     `${achsen.length} Achsen: ${achsen.map((a) => a.label).join(', ')}. Jede Linie ist ein Verlassenschaftsinventar. ` +

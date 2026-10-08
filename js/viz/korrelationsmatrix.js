@@ -142,12 +142,14 @@ function farbeFuerR(r) {
   return d3.color(basis).copy({ opacity: Math.max(Math.abs(r), 0.08) });
 }
 
+// AUFTRAG D, Punkt 3: Legendentext "kein Zusammenhang" in #6b6b6b (4,89:1 statt 2,61:1);
+// das Symbol ■ bleibt #999, es zeigt die Zellfarbe.
 function baueLegende(container) {
   const legende = document.createElement('div');
   legende.style.fontSize = '11px';
   legende.style.margin = '0 0 6px 0';
   legende.innerHTML = `<span style="color:${FARBE_NEGATIV}">■ negativ</span> &nbsp;
-    <span style="color:#999">■ kein Zusammenhang</span> &nbsp;
+    <span style="color:#6b6b6b"><span style="color:#999">■</span> kein Zusammenhang</span> &nbsp;
     <span style="color:${FARBE_POSITIV}">■ positiv</span> (Deckkraft = Stärke |r|, Spearman-Rangkorrelation) &nbsp;
     <span style="color:var(--text-muted)">Zelle anklicken für Streudiagramm</span>`;
   container.appendChild(legende);
@@ -255,7 +257,7 @@ function zeichneScatterInhalt(zeilenVar, spaltenVar, records) {
   const svg = d3.select(scatterInhalt).append('svg')
     .attr('width', breite).attr('height', hoehe)
     .attr('viewBox', `0 0 ${breite} ${hoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', `Streudiagramm ${spaltenVar.label} gegen ${zeilenVar.label}`);
   svg.append('desc').text(
     `Jeder Punkt ist eine Person. Spearman-Rangkorrelation r = ${rWert === null ? 'nicht berechenbar' : rWert.toFixed(2)}, N = ${paare.length}.`
@@ -322,7 +324,7 @@ function zeichneKorrelationsmatrix() {
   const svg = d3.select(container).append('svg')
     .attr('width', breite).attr('height', hoehe)
     .attr('viewBox', `0 0 ${breite} ${hoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Korrelationsmatrix der Vermögenskennzahlen aus den Verlassenschaftsinventaren');
 
   svg.append('desc').text(

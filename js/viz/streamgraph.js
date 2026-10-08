@@ -103,7 +103,8 @@ function baueKopfzeile(container, sektoren, farbeFuerSektor) {
   const kopfzeile = document.createElement('div');
   kopfzeile.className = 'streamgraph-kopfzeile';
 
-  const titel = document.createElement('h3');
+  // AUFTRAG D, Punkt 1 (axe heading-order): <h2> statt <h3> nach der verborgenen <h1>; Größe per Klasse wie bisher
+  const titel = document.createElement('h2');
   titel.className = 'streamgraph-titel';
   titel.textContent = 'Wirtschaftssektoren über die Zeit';
   kopfzeile.appendChild(titel);
@@ -251,7 +252,7 @@ function zeichneStreamgraph() {
 
   svg.attr('height', hoehePlot)
     .attr('viewBox', `0 0 ${breite} ${hoehePlot}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Streamgraph des Bürgerbuchs: Wirtschaftssektoren über die Zeit');
 
   svg.append('desc').text(
@@ -271,7 +272,7 @@ function fuegeStyleEin(container) {
     .streamgraph-werkzeugleiste { display: flex; justify-content: flex-end; margin: 0 0 var(--space-3) 0; flex: 0 0 auto; }
     .streamgraph-plot-bereich { flex: 1 1 auto; overflow-x: hidden; overflow-y: visible; }
     .streamgraph-kopfzeile { margin-bottom: var(--space-2); }
-    .streamgraph-titel { margin: 0 0 var(--space-2) 0; }
+    .streamgraph-titel { margin: 0 0 var(--space-2) 0; font-size: var(--fs-h3); }
     .streamgraph-legende { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); font-size: var(--fs-sm); }
     .streamgraph-legende-eintrag { display: inline-flex; align-items: center; gap: 4px; }
     .streamgraph-legende-punkt { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }

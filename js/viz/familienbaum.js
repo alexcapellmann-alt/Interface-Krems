@@ -1407,7 +1407,7 @@ function zeichneFamilienbaum() {
 
   const svg = d3.select(plotBereich).append('svg')
     .attr('width', breite).attr('height', hoehe)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', `${dynastieName()}-Zeitleistenbaum`);
   // Punkt 3 (3. Folgeauftrag): Klick auf freie Fläche löst die eingefrorene
   // Hervorhebung - erreicht diesen Handler NUR, wenn der Klick nicht auf

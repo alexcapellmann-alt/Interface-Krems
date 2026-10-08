@@ -289,10 +289,9 @@
 .fuehrung-fehler { margin: 0 0 var(--space-2) 0; padding: var(--space-2) var(--space-3);
   border: 2px dashed var(--fuehrung-buehne-fehler); border-radius: var(--radius);
   background: var(--fuehrung-buehne-fehler-bg); color: var(--fuehrung-buehne-fehler); font-size: var(--fs-sm); }
-.fuehrung-fehler::before { content: "Fehler: "; font-weight: 700; }
-/* AUFTRAG C3, Punkt 8: fehlende/leere OPTIONALE Quelle (Belegquelle,
-   literatur.csv) ist kein Datenfehler - gleiche Box, Vorsatz "Hinweis:". */
-.fuehrung-fehler.fuehrung-quelle-fehlt::before { content: "Hinweis: "; }
+/* AUFTRAG D, Punkt 4: Vorsatz „Fehler:“/„Hinweis:“ steht im Seitentext
+   (<strong class="fuehrung-vorsatz">, fuehrungHinweisBox.js), nicht mehr ::before. */
+.fuehrung-vorsatz { font-weight: 700; }
 /* Heller Belegbereich (s.u.) bleibt bei der urspruenglichen, helltauglichen
    Amber-Variante - einzige verbleibende Stelle, an der ein Beleg selbst
    ungueltig ist (ID nicht gefunden). */

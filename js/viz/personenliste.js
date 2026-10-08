@@ -399,6 +399,7 @@ function zeigeDetailUrkunde(sidebarInstanz, record, zeigeZurueck) {
   zurueckBtn.hidden = !zeigeZurueck;
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titel.focus();
 }
 
@@ -411,6 +412,7 @@ function zeigeDetailBuergerbuch(sidebarInstanz, record, zeigeZurueck) {
   zurueckBtn.hidden = !zeigeZurueck;
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titel.focus();
 }
 
@@ -424,6 +426,7 @@ function zeigeDetailInventar(sidebarInstanz, record, zeigeZurueck) {
   zurueckBtn.hidden = !zeigeZurueck;
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titel.focus();
 }
 
@@ -475,6 +478,7 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
   zurueckBtn.hidden = true; // die kombinierte Liste selbst ist die Wurzel, kein Zurück-Ziel dahinter
   sidebar.classList.add('offen');
   sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false; // AUFTRAG D, Punkt 2: geöffnet = bedienbar
   titel.focus();
 }
 

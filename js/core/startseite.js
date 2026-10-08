@@ -228,7 +228,8 @@ function baueKachelbereich(wurzel, kacheln) {
 function baueFooter(wurzel, downloads, footerHinweisBlock) {
   const footer = document.createElement('footer');
   footer.className = 'startseite-footer';
-  footer.setAttribute('role', 'contentinfo');
+  // AUFTRAG D, Punkt 5: kein role="contentinfo" mehr - diese Fußzeile liegt im
+  // Hauptbereich; Seitenfußzeile im Sinne der Landmarks ist die globale <footer>.
 
   const innen = document.createElement('div');
   innen.className = 'startseite-footer-inner';

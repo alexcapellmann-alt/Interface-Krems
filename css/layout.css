@@ -38,6 +38,19 @@ body {
   gap: var(--space-4);
 }
 
+/* AUFTRAG D, Punkt 1: Seitenüberschrift (<h1>) nur für Hilfsmittel - visuell
+   verborgen, aber vorlesbar. position:absolute nimmt sie aus dem Raster von
+   #app-content heraus (keine Verschiebung der übrigen Zeilen). */
+.nur-fuer-hilfsmittel {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Zweizeilige Wortmarke: Logo-Grafik aus archiv.csv (`logo_datei`) und
    darunter der kleinere Untertitel (`logo_untertitel`, Großschreibung per
    CSS). Ohne Logo-Datei steht der Kurzname des Archivs als Text an der

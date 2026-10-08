@@ -190,7 +190,7 @@ function zeichneBumpChart() {
   const svg = d3.select(plotBereich).append('svg').attr('width', breite)
     .attr('height', gesamtHoehe)
     .attr('viewBox', `0 0 ${breite} ${gesamtHoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', 'Bump Chart des Bürgerbuchs: Rang der Wirtschaftssektoren je Jahrzehnt');
 
   svg.append('desc').text(
