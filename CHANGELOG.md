@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-08 (111) – Abschluss: Literaturprüfung nur bei „Zum Weiterlesen“, Beschriftung „Quelle“ im Text
+
+Auftrag E.
+- **Literaturprüfung der Abschlussseite (Punkt 1):** `literatur.csv` wird auf der Abschlussseite
+  einer Führung nur noch geprüft, wenn diese Führung „Zum Weiterlesen“ hat (neue Gruppe `bedarf` in
+  `js/config/datenAnforderungen.js`, Auswertung in `js/core/datenVerfuegbarkeit.js`, Aufruf in
+  `js/core/app.js`). Behebt den Fehlalarm des Hinweisbalkens bei Führungen ohne Literaturangaben.
+  Neu: Fehlt dort die Spalte `literatur_id`, erscheint der Balken ebenfalls. Regel in `docs/SCHEMA.md`.
+- **Beschriftung „Quelle“ (Punkt 2):** steht im Seitentext (`js/fuehrungen/belegDarstellung.js`)
+  statt per `.fuehrung-beleg::before`; neue Klasse `.fuehrung-beleg-beschriftung` in
+  `css/components.css`, gleiche Optik.
+
+**Ergebnis:**
+- Balken nur noch bei Führungen mit „Zum Weiterlesen“; Text und Pixel der Belege sonst gleich; axe 0.
+- Undatiert-Test im Zweitarchiv: kein axe-Befund.
+- Matrix auf dem Endstand: 2 Einstufungen gegenüber B2 geändert (die beiden Fehlalarme), 0 Abstürze,
+  0 „leer ohne Hinweis“.
+- Zeitmessung gegen B1: Startseite ohne Unterschied; Treemap-Inhalt +105 bzw. +45 ms (p ≈ 0,03, Ursache
+  offen).
+- Details: `docs/PROJEKTLOG.md` Eintrag 63 und `Pruefung_2026-10-03/Nachher_E/vorher_nachher.md`.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-07 (110) – Barrierefreiheit (axe ohne Befund), Datenrückfälle, Dokumentationsabgleich
 
 Auftrag D (Prüfbericht Punkte 5 und G).

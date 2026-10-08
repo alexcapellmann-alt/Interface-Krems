@@ -314,6 +314,11 @@ function baueScrollWrapper() {
 export function baueBelegBereich(beleg, bildText) {
   const bereich = document.createElement('div');
   bereich.className = 'fuehrung-beleg';
+  // AUFTRAG E, Punkt 2: Beschriftung im Seitentext statt per CSS (::before)
+  const beschriftung = document.createElement('p');
+  beschriftung.className = 'fuehrung-beleg-beschriftung';
+  beschriftung.textContent = 'Quelle';
+  bereich.appendChild(beschriftung);
 
   if (beleg.fehler) bereich.appendChild(baueFehlerBox(beleg.fehler, beleg.quelleFehlt));
 

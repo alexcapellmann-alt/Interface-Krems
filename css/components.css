@@ -364,8 +364,9 @@
   border: 1px solid var(--fuehrung-beleg-border); border-radius: var(--radius);
   background: var(--fuehrung-beleg-bg); color: var(--fuehrung-beleg-text);
   box-shadow: 0 4px 20px rgba(0, 0, 0, .35); }
-.fuehrung-beleg::before { content: "Quelle"; flex: 0 0 auto; display: block; font-size: var(--fs-sm); font-weight: 700;
-  color: var(--fuehrung-beleg-text-muted); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: .04em; }
+/* AUFTRAG E, Punkt 2: Beschriftung "Quelle" steht im Seitentext (belegDarstellung.js), nicht mehr per ::before. */
+.fuehrung-beleg-beschriftung { flex: 0 0 auto; display: block; font-size: var(--fs-sm); font-weight: 700;
+  color: var(--fuehrung-beleg-text-muted); margin: 0 0 var(--space-2) 0; text-transform: uppercase; letter-spacing: .04em; }
 .fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--fuehrung-beleg-text-muted); }
 .fuehrung-beleg-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .fuehrung-beleg-scroll:focus-visible { outline: 3px solid var(--fuehrung-beleg-fokus); outline-offset: -3px; }
