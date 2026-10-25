@@ -7,14 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
-## 2026-10-25 (115) – Führungen: 17 neue Führungen, 6 Kategorien, Übersicht als Feldraster
+## 2026-10-25 (115) – Führungen: 16 neue Führungen, 6 Kategorien, Übersicht als Feldraster
 
 - **`data/fuehrungen.csv`:**
-  - 17 neue Führungen in einfacher Sprache (111 Zeilen, Status leer = Entwurf), Grundlage Kremser Sekundärliteratur.
+  - 16 neue Führungen in einfacher Sprache (111 Zeilen, Status leer = Entwurf), Grundlage Kremser Sekundärliteratur.
   - Die bestehenden 101 Zeilen sind unverändert, nur `themenbereich` ist neu (11 Zeilen).
   - `themenbereich` auf 6 Kategorien zurückgeführt.
+  - Texte als erzählte Geschichten neu gefasst, ohne Autorennamen (`fuehrungen_politur3.py`).
   - Alle neuen Kurzbeschreibungen sind ≤ 300 Zeichen; Arbeitsvermerke und Zuordnungshinweise stehen jetzt in `quellen_intern`.
   - 1945-Führung lose zugeordnet: 5.3.2.1.2. (Stationen 6–9) und 7.13.2. (Stationen 1–5).
+  - Altbestand `eisen-waage-krems` Station 6: lose `bestand:1.1.2.2.4.3.` zugeordnet (einzige Änderung an alten Führungen neben `themenbereich`).
 - **`data/literatur.csv`:** 20 Werke ergänzt; alle `weiterlesen`-IDs werden aufgelöst.
 - **`js/fuehrungen/fuehrungenGalerie.js`, `css/components.css`:**
   - Die Übersicht ist ein bildschirmfüllendes Raster mit einem Feld je Kategorie.
