@@ -204,7 +204,10 @@ export const ARCHIVALIENTYPEN = [
       { id: 'sankey', label: 'Sankey', modulPfad: '../viz/sankey.js',
         beschreibung: 'Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.' },
       { id: 'wortwolke', label: 'Wortwolke', modulPfad: '../viz/wortwolke.js',
-        beschreibung: 'Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.' }
+        beschreibung: 'Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.' },
+      // Wunsch des Autors (2026-10-25): Darstellungsform des Theaterzettel-Prototyps mit den Urkunden.
+      { id: 'bilderwand', label: 'Bilderwand', modulPfad: '../viz/bilderwand.js',
+        beschreibung: 'Jede Urkunde als Bild in Jahrzehnt-Säulen; Orte, Kategorien und Personen filtern und teilen die Säulen.' }
     ]
   },
   {

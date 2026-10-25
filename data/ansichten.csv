@@ -18,6 +18,7 @@ urkunden;adjazenzmatrix;Adjazenzmatrix;Matrix der am häufigsten gemeinsam in Ur
 urkunden;arcDiagramm;Arc-Diagramm;Personen entlang einer Achse, Bögen verbinden die am häufigsten gemeinsam Genannten.;11;ja;40
 urkunden;sankey;Sankey;Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.;12;ja;
 urkunden;wortwolke;Wortwolke;Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.;13;ja;
+urkunden;bilderwand;Bilderwand;Jede der {n_urkunden_punkt} Urkunden als Bild in Jahrzehnt-Säulen. Orte, Kategorien und Personen filtern; passende Urkunden rücken nach oben.;14;ja;
 buergerbuch;;Bürgerbuch;;2;ja;
 buergerbuch;trellis;Trellis;Ein kleines Diagramm pro Wirtschaftssektor zeigt die Entwicklung der Bürgeraufnahmen über die Zeit.;1;ja;
 buergerbuch;bumpChart;Bump Chart;Zeigt, wie sich die Rangfolge der Wirtschaftssektoren von Jahrzehnt zu Jahrzehnt verschiebt.;2;ja;

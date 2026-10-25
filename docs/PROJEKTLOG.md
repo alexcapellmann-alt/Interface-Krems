@@ -219,6 +219,33 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-25 (68) – Bilderwand der Urkunden (nach dem Theaterzettel-Prototyp)
+
+**Entscheidungen des Autors (2026-10-25):**
+- Säulen je Jahrzehnt.
+- Direkt im Interface, nicht als eigener Prototyp.
+- Filter: Orte, Kategorien, Personen und eine Karte im Hintergrund.
+
+**Abweichungen vom Prototyp:**
+- **Keine Sprite-Sheets:** Die Miniaturen werden zur Laufzeit in Atlas-Canvas-Stufen (3–48 px Zellbreite) gezeichnet, sodass die CSV die einzige Quelle bleibt. Beim Hineinzoomen lädt das Modul die sichtbaren Zellen zuerst.
+- **Zoom nur mit Strg+Mausrad** (wie `urkundenNetzwerk.js`), dazu Knöpfe +/−.
+- **Klick öffnet die Sidebar** (`zeigeUrkundenDetail`) statt einer angehefteten Karte; `oeffneDatensatz()` für Datensatzaufrufe.
+- **Orte:** `orte` sind die in der Urkunde genannten Orte (mehrere je Urkunde möglich), also nicht nur der Ausstellungsort. Deshalb heißt der Filter „Orte“.
+  - Die Wolke zeigt die Orte ab 5 Nennungen (41), auf schmalen Bildschirmen nur so viele, wie schräg nebeneinander passen. Die übrigen sind über „Alle Orte“ erreichbar.
+- **Karte:** nur Punkte, ohne Grundkarte, weil im Repository keine Geodaten liegen.
+  - Der Maßstab richtet sich nach den Wolken-Orten, damit Einzelfälle wie Aalst den Ausschnitt nicht bestimmen.
+  - Beschriftet werden nur die 8 häufigsten hervorgehobenen Orte.
+  - 22 genannte Orte haben keine Koordinate und fehlen auf der Karte.
+
+**Messung:** Der Testserver liefert ein Thumbnail in etwa 320 ms aus (einzeln, ohne Cache), deshalb füllt sich die Wand dort langsam. Auf GitHub Pages ist das schneller zu erwarten; nicht gemessen.
+
+**Offen:**
+- axe/Lighthouse.
+- Grundkarte (Donau, Grenzen; bräuchte einen Geodaten-Download, z. B. Natural Earth).
+- Pinch-Zoom auf Touch-Geräten.
+
+---
+
 ## 2026-10-25 (67) – Führungen: neue Entwürfe, Kategorien, Feldraster-Übersicht
 
 **Daten:**

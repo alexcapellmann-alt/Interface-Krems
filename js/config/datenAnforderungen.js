@@ -69,6 +69,7 @@ export const ANSICHT_ANFORDERUNGEN = {
   sankey: nurUrkunden(['kategorien', 'orte']), // Freigabe Punkt 7: fängt das NaN im Sankey ab
   // AUFTRAG F: wortwolke_filter.csv optional - fehlt sie oder ist sie leer, wird nicht
   // gefiltert (kein Balken); ist sie unbrauchbar, erscheint die Wolke ungefiltert mit Balken.
+  bilderwand: nurUrkunden(JAHR), // orte.csv nur für die Hintergrundkarte, fehlt sie, entfällt nur die Karte
   wortwolke: { ...nurUrkunden(['regest']), optional: { [WORTWOLKE_FILTER]: ['typ', 'wort'] } },
   // Bürgerbuch
   trellis: nurBuergerbuch(['Datum', 'Wirtschaftssektor']),

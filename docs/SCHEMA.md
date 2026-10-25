@@ -42,13 +42,13 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
 | `archiv.csv` (Kerndatei) | `schluessel`, `wert` | Startseite, Über |
 | `startseite.csv` (Kerndatei) | `typ`, `sichtbar` | Startseite |
 | `ueber.csv` | `text`, `sichtbar` | Über |
-| `urkunden.csv` | `jahr` | Zeitachse, Kalender-Heatmap, Dot Plot, Swimlanes, Ridgeline, Horizon Chart |
+| `urkunden.csv` | `jahr` | Zeitachse, Kalender-Heatmap, Dot Plot, Swimlanes, Ridgeline, Horizon Chart, Bilderwand |
 | | `kategorien` | Horizon Chart, Sankey |
 | | `orte` | Karte, Verbindungskarte, Sankey |
 | | `personen` | Adjazenzmatrix, Arc-Diagramm, Personennetzwerk (Urkunden) |
 | | `personen_id` | Personennetzwerk (Urkunden), seit Auftrag G1 (Knotenschlüssel; Namen und Unsicherheit kommen aus `personenliste.csv`, fehlt diese, erscheint ein Balken „… unvollständig“) |
 | | `regest` | Wortwolke |
-| `orte.csv` | `orte`, `lat`, `lon` | Karte, Verbindungskarte, Bipartite Flow Map |
+| `orte.csv` | `orte`, `lat`, `lon` | Karte, Verbindungskarte, Bipartite Flow Map; Bilderwand nur für die Hintergrundkarte (fehlt die Datei, entfällt nur die Karte) |
 | `bestandsverzeichnis.csv` | `zeitraum_von`, `zeitraum_bis` | Gantt-Diagramm |
 | `buergerbuch.csv` | `Datum` | Trellis, Bump Chart |
 | | `Wirtschaftssektor` | Trellis |

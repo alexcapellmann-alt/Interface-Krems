@@ -7,6 +7,26 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-25 (116) – Neue Urkunden-Ansicht „Bilderwand“
+
+Wunsch des Autors: die Darstellungsform des Theaterzettel-Prototyps (Desktop\Theaterzettel\prototyp) mit den Urkunden.
+- **`js/viz/bilderwand.js` (neu):**
+  - Jede Urkunde ist eine Bildzelle (erstes Foto) in einer Jahrzehnt-Säule (1100er–1840er), nach Datum geordnet.
+  - Oben eine schräge Wortwolke der Orte ab 5 Nennungen; Schalter „Alle Orte“, „Kategorien“ und „Personen“ öffnen durchsuchbare Wortwolken der 40 häufigsten Einträge.
+  - Ein aktiver Filter teilt die Säulen: Passendes steht oben, der Rest gedämpft unten. Hover über einen Begriff dämpft die übrigen Urkunden.
+  - Hintergrund: Orte aus `orte.csv` als Punkte, hervorgehobene Orte leuchten auf.
+  - Strg+Mausrad oder +/− zoomt, Ziehen verschiebt, Klick öffnet die Sidebar.
+  - Tastatur: Pfeile, Eingabe, +/−, mit Live-Ansage.
+  - Mit „σ Unsicherheiten“ werden unsichere Urkunden rot gestrichelt umrandet.
+- **Bilder:** Die Miniaturen aus `fotos/thumbs` werden gedrosselt geladen, die sichtbaren zuerst, in Atlas-Stufen gezeichnet. Keine vorab erzeugten Sprite-Sheets, damit neue Fotos über die CSV sofort erscheinen.
+- **Eingebunden:** `js/config/archivalienRegistry.js`, `js/config/datenAnforderungen.js`, `js/utils/vizIcons.js`, `data/ansichten.csv` (Reihenfolge 14), `data/infotexte.csv`, `docs/SCHEMA.md`.
+- Geprüft auf dem Testserver 8845 (Desktop und 375 px): Filter, Teilung, Zoom, Sidebar, Tastatur, Unsicherheiten. axe/Lighthouse noch nicht gelaufen.
+- Details: `docs/PROJEKTLOG.md` Eintrag 68.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-25 (115) – Führungen: 16 neue Führungen, 6 Kategorien, Übersicht als Feldraster
 
 - **`data/fuehrungen.csv`:**
