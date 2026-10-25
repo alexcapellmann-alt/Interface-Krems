@@ -219,6 +219,28 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-25 (69) – Bilderwand: Europakarte, Mausrad-Zoom; Fußzeile
+
+**Karte:**
+- Natural-Earth-Ebenen (gemeinfrei):
+  - `ne_50m_coastline` und `ne_50m_lakes`
+  - `ne_10m_admin_0_boundary_lines_land`
+  - `ne_10m_rivers_lake_centerlines` (nur Flüsse)
+  - `ne_10m_rivers_europe` (Rang ≤ 11)
+- Die Dateien wurden von github.com/nvkelso/natural-earth-vector geladen, rund 15 MB, nur im temporären Ordner.
+- `karte_europa.py` schneidet auf 12° W – 42° O, 34–64° N zu und vereinfacht per Douglas-Peucker (0,02°, Flüsse 0,008°).
+- Die Projektion ist gleichabstandstreu mit cos 48°; das Modul projiziert die Orte aus `orte.csv` mit derselben Formel (`lat0` in der JSON-Datei).
+- Wie im Prototyp bestimmen die Kern-Orte (Wolke) Maßstab und Lage, gezeichnet wird ganz Europa.
+- Ergebnis: 365 KB mit 152 Küsten-, 1 817 Grenz-, 1 051 Fluss- und 65 Seen-Linien.
+
+**Zoom:** Das Mausrad über der Bildfläche zoomt jetzt ohne Strg und verhindert dabei das Scrollen der Seite (Wunsch des Autors). Das weicht bewusst von `urkundenNetzwerk.js` ab.
+
+**Fußzeile:**
+- `handleRouteChange()` blendet `.app-footer` auf allen Seiten außer der Startseite aus (`hidden`).
+- Die Höhenberechnung der Führungsstationen misst die Fußzeile; ausgeblendet hat sie die Höhe 0, das ist also unverändert korrekt.
+
+---
+
 ## 2026-10-25 (68) – Bilderwand der Urkunden (nach dem Theaterzettel-Prototyp)
 
 **Entscheidungen des Autors (2026-10-25):**
