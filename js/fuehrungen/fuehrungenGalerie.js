@@ -1,16 +1,23 @@
 // js/fuehrungen/fuehrungenGalerie.js
-// AUFTRAG "Führungen, Teil 2a", Punkt 3: Übersichtsgalerie aller Führungen,
-// nach `themenbereich` gruppiert. Gestaltung an renderBestandTab()s/
-// erzeugeGalerieFlyoutKontext()s Kachelraster angelehnt (eigene, schlankere
-// Kacheln - die bestehende Maschinerie selbst wird NICHT wiederverwendet,
-// sie ist für "Galerie -> Flyout mit mehreren VISUALISIERUNGEN" gebaut,
-// Führungen brauchen stattdessen "Galerie -> EINE Station" - ein
-// grundverschiedenes zweites Navigationsziel, siehe Selbstauskunft im Chat).
+// Übersicht aller Führungen: ein bildschirmfüllendes Raster mit EINEM Feld je
+// Führungs-Kategorie (`themenbereich` aus fuehrungen.csv - die Zahl der Felder
+// ergibt sich aus den Daten, nichts ist fest verdrahtet). Beim Überfahren mit
+// der Maus zeigt ein Feld die Titel der enthaltenen Führungen, ein Klick auf
+// einen Titel öffnet die Führung (Station 1).
+//
+// Zugänglichkeit: Hover allein ist nicht tastatur- und touchtauglich. Jedes
+// Feld hat deshalb einen Kopf-Button (aria-expanded), der die Titelliste
+// dauerhaft öffnet/schließt; die Liste ist außerdem bei Fokus innerhalb des
+// Feldes sichtbar. Geschlossene Listen sind `visibility: hidden` und damit
+// auch aus der Tab-Reihenfolge genommen.
+//
+// Vorher (Teil 2a, Punkt 3): Kachelraster je Kategorie mit Bild, Titel,
+// Kurzbeschreibung und Zeitraum je Führung.
 
 import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js'; // AUFTRAG D, Punkt 4
 import { navigiereZu } from '../core/router.js';
 import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
-import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
+import { ermittleBildUrls } from '../utils/bilder.js';
 import { ermittlePausierteFuehrung } from './fuehrungFortsetzen.js';
 
 function ermittleKachelBild(fuehrung) {
@@ -23,73 +30,6 @@ function ermittleKachelBild(fuehrung) {
   return null;
 }
 
-function baueKachel(fuehrung, bildUrl) {
-  const kachel = document.createElement('button');
-  kachel.type = 'button';
-  kachel.className = 'fuehrung-kachel';
-  kachel.setAttribute('aria-label', fuehrung.fuehrung_titel || fuehrung.fuehrung_id);
-
-  if (bildUrl) {
-    const img = document.createElement('img');
-    img.className = 'fuehrung-kachel-bild';
-    img.src = bildUrl;
-    img.alt = '';
-    wendeBildFehlerbehandlungAn(img, bildUrl, fuehrung.fuehrung_id);
-    kachel.appendChild(img);
-  } else {
-    const platzhalter = document.createElement('div');
-    platzhalter.className = 'fuehrung-kachel-bild fuehrung-kachel-bild-neutral';
-    kachel.appendChild(platzhalter);
-  }
-
-  if (fuehrung.status === 'entwurf') {
-    const badge = document.createElement('span');
-    badge.className = 'fuehrung-kachel-entwurf';
-    badge.textContent = 'Entwurf';
-    kachel.appendChild(badge);
-  }
-
-  const titel = document.createElement('h3');
-  titel.textContent = fuehrung.fuehrung_titel || fuehrung.fuehrung_id;
-  const beschreibung = document.createElement('p');
-  beschreibung.textContent = fuehrung.kurzbeschreibung;
-  const zeitraum = document.createElement('p');
-  zeitraum.className = 'fuehrung-kachel-zeitraum';
-  zeitraum.textContent = fuehrung.zeitraum;
-  kachel.append(titel, beschreibung, zeitraum);
-
-  if (fuehrung.kurzbeschreibungZuLang) {
-    kachel.appendChild(baueFuehrungHinweisBox('kurzbeschreibung ist länger als 300 Zeichen.'));
-  }
-
-  // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: dezenter Hinweis auf eine
-  // pausierte Fuehrung, nur fuer die eine betroffene Kachel - eigener,
-  // verschachtelter Button statt textContent, damit er unabhaengig vom
-  // Kachel-Klick (der immer zu Station 1 fuehrt) zur pausierten Station
-  // springen kann. stopPropagation, sonst wuerde der Kachel-eigene
-  // Klick-Handler zusaetzlich zu Station 1 navigieren.
-  const pausiert = ermittlePausierteFuehrung();
-  if (pausiert && pausiert.fuehrungId === fuehrung.fuehrung_id) {
-    const fortsetzenBtn = document.createElement('span');
-    fortsetzenBtn.className = 'fuehrung-kachel-fortsetzen';
-    fortsetzenBtn.setAttribute('role', 'button');
-    fortsetzenBtn.tabIndex = 0;
-    fortsetzenBtn.textContent = `Fortsetzen bei Station ${pausiert.stationNr}`;
-    const springe = (event) => {
-      event.stopPropagation();
-      navigiereZu(['fuehrungen', fuehrung.fuehrung_id, String(pausiert.stationNr)]);
-    };
-    fortsetzenBtn.addEventListener('click', springe);
-    fortsetzenBtn.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); springe(event); }
-    });
-    kachel.appendChild(fortsetzenBtn);
-  }
-
-  kachel.addEventListener('click', () => navigiereZu(['fuehrungen', fuehrung.fuehrung_id, '1']));
-  return kachel;
-}
-
 function gruppiereNachThemenbereich(fuehrungen) {
   const reihenfolge = [];
   const gruppen = new Map();
@@ -98,6 +38,93 @@ function gruppiereNachThemenbereich(fuehrungen) {
     gruppen.get(f.themenbereich).push(f);
   });
   return reihenfolge.map((themenbereich) => [themenbereich, gruppen.get(themenbereich)]);
+}
+
+// Ein Eintrag der Titelliste: Titel (+ Entwurf-Markierung, Zeitraum), Klick
+// führt zu Station 1; ggf. „Fortsetzen“ für eine pausierte Führung und der
+// Prüfhinweis zur Kurzbeschreibung wie bisher an der Kachel.
+function baueTitelEintrag(fuehrung, pausiert) {
+  const li = document.createElement('li');
+  li.className = 'fuehrungen-feld-eintrag';
+
+  const link = document.createElement('button');
+  link.type = 'button';
+  link.className = 'fuehrungen-feld-titel';
+  const titel = document.createElement('span');
+  titel.textContent = fuehrung.fuehrung_titel || fuehrung.fuehrung_id;
+  link.appendChild(titel);
+  if (fuehrung.status === 'entwurf') {
+    const badge = document.createElement('span');
+    badge.className = 'fuehrung-kachel-entwurf';
+    badge.textContent = 'Entwurf';
+    link.appendChild(badge);
+  }
+  if (fuehrung.zeitraum) {
+    const zeit = document.createElement('span');
+    zeit.className = 'fuehrungen-feld-zeitraum';
+    zeit.textContent = fuehrung.zeitraum;
+    link.appendChild(zeit);
+  }
+  link.addEventListener('click', () => navigiereZu(['fuehrungen', fuehrung.fuehrung_id, '1']));
+  li.appendChild(link);
+
+  if (pausiert && pausiert.fuehrungId === fuehrung.fuehrung_id) {
+    const fortsetzen = document.createElement('button');
+    fortsetzen.type = 'button';
+    fortsetzen.className = 'fuehrung-kachel-fortsetzen';
+    fortsetzen.textContent = `Fortsetzen bei Station ${pausiert.stationNr}`;
+    fortsetzen.addEventListener('click', () => navigiereZu(['fuehrungen', fuehrung.fuehrung_id, String(pausiert.stationNr)]));
+    li.appendChild(fortsetzen);
+  }
+  if (fuehrung.kurzbeschreibungZuLang) {
+    li.appendChild(baueFuehrungHinweisBox(`kurzbeschreibung von „${fuehrung.fuehrung_titel}“ ist länger als 300 Zeichen.`));
+  }
+  return li;
+}
+
+function baueFeld(themenbereich, gruppe, index, pausiert) {
+  const feld = document.createElement('section');
+  feld.className = 'fuehrungen-feld';
+  const bild = gruppe.map(ermittleKachelBild).find(Boolean);
+  // Absolute URL: eine relative url() in einer CSS-Variable würde sonst gegen
+  // css/components.css aufgelöst (→ css/fotos/…, 404).
+  if (bild) feld.style.setProperty('--fuehrungen-feld-bild', `url("${new URL(bild, document.baseURI).href}")`);
+
+  const listenId = `fuehrungen-feld-liste-${index}`;
+  const kopf = document.createElement('button');
+  kopf.type = 'button';
+  kopf.className = 'fuehrungen-feld-kopf';
+  kopf.setAttribute('aria-expanded', 'false');
+  kopf.setAttribute('aria-controls', listenId);
+  const name = document.createElement('h2');
+  name.className = 'fuehrungen-feld-name';
+  name.textContent = themenbereich;
+  const anzahl = document.createElement('span');
+  anzahl.className = 'fuehrungen-feld-anzahl';
+  anzahl.textContent = gruppe.length === 1 ? '1 Führung' : `${gruppe.length} Führungen`;
+  kopf.append(name, anzahl);
+  kopf.addEventListener('click', () => {
+    const offen = !feld.classList.contains('offen');
+    feld.classList.toggle('offen', offen);
+    kopf.setAttribute('aria-expanded', String(offen));
+  });
+
+  const liste = document.createElement('ul');
+  liste.className = 'fuehrungen-feld-liste';
+  liste.id = listenId;
+  gruppe.forEach((f) => liste.appendChild(baueTitelEintrag(f, pausiert)));
+
+  // Esc schließt ein geöffnetes Feld und gibt den Fokus an den Kopf zurück.
+  feld.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && feld.classList.contains('offen')) {
+      feld.classList.remove('offen');
+      kopf.setAttribute('aria-expanded', 'false');
+      kopf.focus();
+    }
+  });
+
+  feld.append(kopf, liste);
+  return feld;
 }
 
 export async function render(container, { hinweis } = {}) {
@@ -112,21 +139,13 @@ export async function render(container, { hinweis } = {}) {
 
   const { fuehrungen } = await ladeFuehrungenDaten();
   const gruppen = gruppiereNachThemenbereich(fuehrungen);
+  const pausiert = ermittlePausierteFuehrung();
 
-  for (const [themenbereich, gruppe] of gruppen) {
-    const abschnitt = document.createElement('section');
-    const ueberschrift = document.createElement('h2');
-    ueberschrift.className = 'fuehrungen-galerie-gruppentitel';
-    ueberschrift.textContent = themenbereich;
-    abschnitt.appendChild(ueberschrift);
-
-    const raster = document.createElement('div');
-    raster.className = 'fuehrungen-galerie-raster';
-    const bilder = gruppe.map(ermittleKachelBild);
-    gruppe.forEach((fuehrung, i) => raster.appendChild(baueKachel(fuehrung, bilder[i])));
-    abschnitt.appendChild(raster);
-    wurzel.appendChild(abschnitt);
-  }
+  const raster = document.createElement('div');
+  raster.className = 'fuehrungen-felder';
+  raster.style.setProperty('--fuehrungen-feld-anzahl', String(gruppen.length));
+  gruppen.forEach(([themenbereich, gruppe], i) => raster.appendChild(baueFeld(themenbereich, gruppe, i, pausiert)));
+  wurzel.appendChild(raster);
 
   return { destroy: () => { container.innerHTML = ''; } };
 }

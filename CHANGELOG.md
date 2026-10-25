@@ -7,6 +7,26 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-25 (115) – Führungen: 17 neue Führungen, 6 Kategorien, Übersicht als Feldraster
+
+- **`data/fuehrungen.csv`:**
+  - 17 neue Führungen in einfacher Sprache (111 Zeilen, Status leer = Entwurf), Grundlage Kremser Sekundärliteratur.
+  - Die bestehenden 101 Zeilen sind unverändert, nur `themenbereich` ist neu (11 Zeilen).
+  - `themenbereich` auf 6 Kategorien zurückgeführt.
+  - Alle neuen Kurzbeschreibungen sind ≤ 300 Zeichen; Arbeitsvermerke und Zuordnungshinweise stehen jetzt in `quellen_intern`.
+  - 1945-Führung lose zugeordnet: 5.3.2.1.2. (Stationen 6–9) und 7.13.2. (Stationen 1–5).
+- **`data/literatur.csv`:** 20 Werke ergänzt; alle `weiterlesen`-IDs werden aufgelöst.
+- **`js/fuehrungen/fuehrungenGalerie.js`, `css/components.css`:**
+  - Die Übersicht ist ein bildschirmfüllendes Raster mit einem Feld je Kategorie.
+  - Maus über ein Feld zeigt die Titel, ein Klick öffnet Station 1.
+  - Kopf-Button mit `aria-expanded` für Tastatur und Touch; Esc schließt.
+  - Responsiv: 3/2/1 Spalten.
+- Details: `docs/PROJEKTLOG.md` Eintrag 67.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-08 (114) – Personennetzwerk der Urkunden: nur noch das Netz, Fokus-Modus, volle Namen (G1b)
 
 Auftrag G1b.
