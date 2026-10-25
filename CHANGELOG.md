@@ -16,6 +16,8 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
   - Texte als erzählte Geschichten neu gefasst, ohne Autorennamen (`fuehrungen_politur3.py`).
   - Alle neuen Kurzbeschreibungen sind ≤ 300 Zeichen; Arbeitsvermerke und Zuordnungshinweise stehen jetzt in `quellen_intern`.
   - 1945-Führung lose zugeordnet: 5.3.2.1.2. (Stationen 6–9) und 7.13.2. (Stationen 1–5).
+  - Alle 12 bestehenden Führungen: Autorennamen der Sekundärliteratur aus `text` und `unsicherheit_hinweis` entfernt (nur die betroffenen Sätze, `fuehrungen_autoren_alt.py`), Literaturangaben in `quellen_intern`.
+  - Altbestand `schule-gasthaus`: Ortsangabe „Gasthaus zum Goldenen Hirschen am Dreifaltigkeitsplatz“; Stationen 1, 2, 4, 5, 6 mit `bestand:1.1.1.1.1.` (Ratsprotokolle) verknüpft, Fundstellen aus den Anmerkungen der Literatur in `quellen_intern`.
   - Altbestand `eisen-waage-krems` Station 6: lose `bestand:1.1.2.2.4.3.` zugeordnet (einzige Änderung an alten Führungen neben `themenbereich`).
 - **`data/literatur.csv`:** 20 Werke ergänzt; alle `weiterlesen`-IDs werden aufgelöst.
 - **`js/fuehrungen/fuehrungenGalerie.js`, `css/components.css`:**
