@@ -1071,6 +1071,9 @@ function handleRouteChange() {
   const route = aktuelleRoute();
   aktualisiereNavHervorhebung(route.tab);
   aktualisiereSeitenueberschrift(route); // AUFTRAG D, Punkt 1
+  // Wunsch des Autors (2026-10-25): die Fußzeile (`footer_text`) nur noch auf der Startseite.
+  const fusszeile = document.querySelector('.app-footer');
+  if (fusszeile) fusszeile.hidden = Boolean(route.tab);
 
   if (aktuellerKontext && aktuellerKontext.tab === route.tab) {
     // FOLGEAUFTRAG "...Galerie-Muster für Bestand": Bestand läuft jetzt über

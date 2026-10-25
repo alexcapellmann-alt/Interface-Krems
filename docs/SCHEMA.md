@@ -482,7 +482,7 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `dynastie_name` | Habsburg | Name der Herrscherfamilie in den Texten des Stammbaums („des Hauses Habsburg“, „Habsburg-Linie“). Leer: „Herrscherfamilie“ |
 | `dynastie_gruppenname` | Dynastie (Habsburger) | Name der Gruppe „Dynastie“ in Chord-Diagramm und Bipartite Flow Map. Leer: „Dynastie“ |
 | `regest_quellenvermerk` | Source Regest\|Quelle Regest | **Liste.** Vermerk, ab dem ein Regest-Text in der Wortwolke nicht mehr gezählt wird (die Quellenangabe), jeweils gefolgt von einem Doppelpunkt. Leer: das ganze Regest zählt |
-| `footer_text` | Interface des Stadtarchivs … | Fußzeile ALLER Seiten AUSSER der Startseite (die hat ihre eigene, siehe `startseite.csv`s `footer_hinweis` unten) |
+| `footer_text` | Interface des Stadtarchivs … | Fußzeile, seit 2026-10-25 nur noch auf der Startseite (dort zusätzlich zur eigenen, siehe `startseite.csv`s `footer_hinweis` unten); auf allen übrigen Seiten ausgeblendet |
 
 **Verhalten bei fehlender Datei:** neutrale Ersatzwerte (u. a. „Archiv" als Name/Titel, leere Kontaktangaben, die bisherige Standardfarbe; Karten zeigen den Ausschnitt der Orte aus `orte.csv` - seit Auftrag C1 gibt es keinen festen Krems-Ausschnitt mehr), eine Fehlermeldung in der Browser-Konsole, kein Absturz. **Seit Auftrag B2 (2026-10-03):** `archiv.csv` ist eine Kerndatei - fehlt sie, ist sie leer oder fehlt `schluessel`/`wert`, zeigen Startseite und Über-Seite zusätzlich einen Hinweisbalken mit dem Dateinamen (siehe „Mindestspalten und was bei Problemen passiert" oben).
 

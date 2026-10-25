@@ -9,9 +9,9 @@
 //   Filter: alle Orte, Kategorien, Personen (je eine durchsuchbare Wortwolke der 40 häufigsten).
 //   Innerhalb eines Filters ODER (nur Orte: Mehrfachauswahl), zwischen Filtern UND.
 // - Mit aktivem Filter teilen sich die Säulen: passende Urkunden oben, übrige gedämpft unten.
-// - Hintergrund: die Orte aus orte.csv als Punkte (gleichabstandstreue Projektion um den
-//   Kernausschnitt); Mouseover über einen Begriff hebt die betroffenen Orte hervor.
-// - Strg+Mausrad oder +/− zoomt, Ziehen verschiebt, Klick öffnet die Urkunde in der Sidebar.
+// - Hintergrund: Karte Europas (Küsten, Grenzen, Flüsse, Seen; vendor/karten/europa.json) mit den
+//   Orten aus orte.csv als Punkten; Mouseover über einen Begriff hebt die betroffenen Orte hervor.
+// - Mausrad oder +/− zoomt, Ziehen verschiebt, Klick öffnet die Urkunde in der Sidebar.
 //
 // Bilder: keine vorab erzeugten Sprite-Sheets (anders als der Prototyp), damit neue Fotos über die
 // CSV-Zelle sofort erscheinen. Die Miniaturen aus fotos/thumbs werden gedrosselt geladen und in
@@ -47,6 +47,10 @@ const FARBE = {
   akzent: '#f2d48a', flaeche: '#6f6a5f', unsicher: '#e0675a', karte: '#9a978f'
 };
 const SCHRIFT = "'Inter', system-ui, sans-serif";
+// Grundkarte Europas (Natural Earth, erzeugt mit Interface-Krems-Testserver\karte_europa.py):
+// [Ebene, Linienbreite in px, Deckkraft] - zurückhaltend wie der Stadtplan des Theaterzettel-Prototyps
+const KARTE_PFAD = 'vendor/karten/europa.json';
+const KARTE_EBENEN = [['grenzen', 0.8, 0.10], ['fluesse', 0.7, 0.10], ['seen', 0.8, 0.12], ['kueste', 1.1, 0.16], ['fluesse_gross', 2.4, 0.16]];
 
 const ICONS = {
   ort: '<path d="M8 15s5-5 5-9A5 5 0 0 0 3 6c0 4 5 9 5 9z"/><circle cx="8" cy="6" r="1.8"/>',
@@ -443,8 +447,10 @@ function hiBild(t) {
 // ---- Karte im Hintergrund ----------------------------------------------------------------------------
 
 async function ladeKarte() {
-  let orte = [];
-  try { orte = await ladeGecachteCSV('data/orte.csv'); } catch { return; }
+  const [orte, grund] = await Promise.all([
+    ladeGecachteCSV('data/orte.csv').catch(() => []),
+    fetch(KARTE_PFAD).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+  ]);
   if (!I) return;
   const zahl = (v) => parseFloat(String(alsText(v)).replace(',', '.'));
   const f = facette('ort');
@@ -454,16 +460,58 @@ async function ladeKarte() {
     const lat = zahl(r.lat), lon = zahl(r.lon);
     if (j !== undefined && Number.isFinite(lat) && Number.isFinite(lon)) punkte.set(j, { lat, lon });
   });
-  if (!punkte.size) return;
-  // Kernausschnitt: Orte der Wolke (häufig genannt), damit Einzelfälle in Belgien o. Ä. den
-  // Maßstab nicht bestimmen; weiter entfernte Orte liegen außerhalb und werden nicht gezeichnet.
+  if (!punkte.size && !grund) return;
+  // Kernausschnitt: Orte der Wolke (häufig genannt) bestimmen Maßstab und Lage, damit Einzelfälle
+  // wie Aalst den Ausschnitt nicht aufblähen; gezeichnet wird ganz Europa, damit die Karte die
+  // Fläche in jeder Breite füllt (wie der Stadtplan im Theaterzettel-Prototyp).
   const kern = I.wolke.map((j) => punkte.get(j)).filter(Boolean);
   const basis = kern.length >= 3 ? kern : [...punkte.values()];
-  const lat0 = basis.reduce((a, p) => a + p.lat, 0) / basis.length, k = Math.cos(lat0 * Math.PI / 180);
+  const lat0 = grund?.lat0 ?? (basis.reduce((a, p) => a + p.lat, 0) / (basis.length || 1));
+  const k = Math.cos(lat0 * Math.PI / 180);
   const xy = (p) => [p.lon * k, -p.lat];
   const xs = basis.map((p) => xy(p)[0]), ys = basis.map((p) => xy(p)[1]);
-  I.karte = { punkte, xy, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  const [bx0, by0, bx1, by1] = grund?.bereich || [0, 0, 1, 1];
+  I.karte = {
+    punkte, xy,
+    x0: xs.length ? Math.min(...xs) : bx0, x1: xs.length ? Math.max(...xs) : bx1,
+    y0: ys.length ? Math.min(...ys) : by0, y1: ys.length ? Math.max(...ys) : by1,
+    ebenen: grund ? Object.fromEntries(Object.entries(grund.ebenen).map(([n, d]) => [n, new Path2D(d)])) : null,
+    nachweis: grund?.nachweis || ''
+  };
+  I.kartenEbene = null;
   requestDraw();
+}
+
+// Maßstab und Lage der Karte in Bildschirm-Pixeln (fest, unabhängig vom Zoom der Bilderwand)
+function kartenTransform() {
+  const km = I.karte, rand = 0.12, w = I.W * (1 - 2 * rand), h = I.H * (1 - 2 * rand);
+  const s = Math.min(w / ((km.x1 - km.x0) || 1), h / ((km.y1 - km.y0) || 1));
+  return { s, ox: (I.W - (km.x1 - km.x0) * s) / 2 - km.x0 * s, oy: (I.H - (km.y1 - km.y0) * s) / 2 - km.y0 * s };
+}
+
+// Grundkarte einmal je Flächengröße in eine eigene Ebene zeichnen; danach kostet sie pro Bild fast nichts
+function kartenEbene() {
+  const km = I.karte;
+  if (!km?.ebenen) return null;
+  if (I.kartenEbene && I.kartenEbene.width === I.dom.cv.width && I.kartenEbene.height === I.dom.cv.height) return I.kartenEbene;
+  const c = I.kartenEbene || document.createElement('canvas');
+  c.width = I.dom.cv.width; c.height = I.dom.cv.height;
+  const g = c.getContext('2d'), { s, ox, oy } = kartenTransform();
+  g.clearRect(0, 0, c.width, c.height);
+  g.setTransform(I.dpr * s, 0, 0, I.dpr * s, I.dpr * ox, I.dpr * oy);
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.strokeStyle = '#ffffff';
+  for (const [name, breite, deckkraft] of KARTE_EBENEN) {
+    if (!km.ebenen[name]) continue;
+    g.globalAlpha = deckkraft;
+    g.lineWidth = breite / s;
+    g.stroke(km.ebenen[name]);
+  }
+  g.setTransform(I.dpr, 0, 0, I.dpr, 0, 0);
+  g.globalAlpha = 0.45; g.fillStyle = FARBE.gedaempft; g.font = `10px ${SCHRIFT}`; g.textAlign = 'right'; g.textBaseline = 'alphabetic';
+  g.fillText(km.nachweis, I.W - 8, I.H - 6);
+  I.kartenEbene = c;
+  return c;
 }
 
 function countByOrt(pred) {
@@ -477,9 +525,7 @@ const kartenDeckkraft = () => Math.max(0, Math.min(1, 1 - (I.view.s / I.fitS - 1
 function zeichneKarte(ctx, a) {
   const km = I.karte;
   if (!km || a <= 0) return;
-  const rand = 0.12, w = I.W * (1 - 2 * rand), h = I.H * (1 - 2 * rand);
-  const s = Math.min(w / ((km.x1 - km.x0) || 1), h / ((km.y1 - km.y0) || 1));
-  const ox = (I.W - (km.x1 - km.x0) * s) / 2 - km.x0 * s, oy = (I.H - (km.y1 - km.y0) * s) / 2 - km.y0 * s;
+  const { s, ox, oy } = kartenTransform();
   const c = I.hoverCount || I.ortZahl, max = c ? Math.max(1, ...c) : 1;
   const terms = facette('ort').terms;
   // nur die häufigsten hervorgehobenen Orte beschriften, sonst überdecken sich die Namen
@@ -512,6 +558,7 @@ function messeFlaeche() {
   const r = I.dom.cv.getBoundingClientRect();
   I.dpr = window.devicePixelRatio || 1; I.W = r.width; I.H = r.height;
   I.dom.cv.width = Math.round(I.W * I.dpr); I.dom.cv.height = Math.round(I.H * I.dpr);
+  I.kartenEbene = null;
 }
 
 function draw() {
@@ -521,7 +568,11 @@ function draw() {
   ctx.fillStyle = FARBE.buehne;
   ctx.fillRect(0, 0, I.W, I.H);
   const ka = kartenDeckkraft();
-  // Ruhende Karte sehr zurückhaltend; hervorgehobene Orte darüber nach den Zellen
+  const ebene = I.karte && ka > 0 ? kartenEbene() : null;
+  if (ebene) {
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = ka; ctx.drawImage(ebene, 0, 0); ctx.restore();
+  }
+  // Ruhende Orte sehr zurückhaltend; hervorgehobene Orte darüber nach den Zellen
   if (I.karte && !(I.hoverCount || I.ortZahl)) zeichneKarte(ctx, ka * 0.6);
   const cw = s, ch = s * CH;
   const L = MIP_W.findIndex((w) => w >= cw * dpr);
@@ -675,8 +726,7 @@ function tastatur(e) {
 
 function verdrahte() {
   const cv = I.dom.cv;
-  cv.addEventListener('wheel', (e) => {
-    if (!e.ctrlKey) return; // ohne Strg scrollt die Seite (wie urkundenNetzwerk.js)
+  cv.addEventListener('wheel', (e) => { // Wunsch des Autors: Zoom per Mausrad, auch ohne Strg
     e.preventDefault();
     const r = cv.getBoundingClientRect();
     zoome(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
@@ -837,7 +887,7 @@ export function render(container, data, options = {}) {
     hoverTile: null, aktiv: null, ausgewaehlt: null, userZoomed: false,
     view: { s: 1, ox: 0, oy: 0 }, ziel: { s: 1, ox: 0, oy: 0 }, von: { s: 1, ox: 0, oy: 0 }, fitS: 1,
     K: 3, COL_S: 3 * (1 + G) + COL_GAP, W: 0, H: 0, dpr: 1, animiert: false, zeichnenGeplant: false,
-    hiRes: new Map(), karte: null, infoButton: null,
+    hiRes: new Map(), karte: null, kartenEbene: null, infoButton: null,
     reduziert: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   };
   dom.cv.setAttribute('aria-label', `Bilderwand: ${mitZahl(I.tiles.length, 'Urkunde', 'Urkunden')} als Bilder in Jahrzehnt-Säulen. `

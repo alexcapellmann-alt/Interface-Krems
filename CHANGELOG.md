@@ -7,6 +7,26 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-25 (117) – Bilderwand mit Europakarte und Mausrad-Zoom; Fußzeile nur auf der Startseite
+
+- **`js/viz/bilderwand.js`:**
+  - Im Hintergrund liegt eine Karte Europas (Küsten, Staatsgrenzen, Flüsse, große Flüsse wie die Donau kräftiger, Seen), zurückhaltend wie der Stadtplan des Theaterzettel-Prototyps.
+  - Die Karte wird einmal je Flächengröße vorgezeichnet und tritt beim Hineinzoomen zurück.
+  - Zoom per Mausrad ohne Strg.
+- **`vendor/karten/europa.json` (neu, 365 KB):**
+  - Quelle: Natural Earth (gemeinfrei), vereinfacht.
+  - Erzeugt mit `Interface-Krems-Testserver\karte_europa.py` (außerhalb des Repositorys).
+- **`js/core/app.js`:** Die Fußzeile (`footer_text`) erscheint nur noch auf der Startseite. `data/archiv.csv` (Anmerkung), `docs/SCHEMA.md` und `data/infotexte.csv` (Bilderwand) sind angepasst.
+- Geprüft auf dem Testserver 8845:
+  - Die Karte ist sichtbar, Hover hebt die Orte hervor.
+  - Mausrad zoomt, ohne die Seite zu scrollen.
+  - Die Fußzeile erscheint auf der Startseite, nicht aber auf Literatur oder Führungen.
+- Details: `docs/PROJEKTLOG.md` Eintrag 69.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-25 (116) – Neue Urkunden-Ansicht „Bilderwand“
 
 Wunsch des Autors: die Darstellungsform des Theaterzettel-Prototyps (Desktop\Theaterzettel\prototyp) mit den Urkunden.
