@@ -222,11 +222,12 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 ## 2026-10-25 (67) – Führungen: neue Entwürfe, Kategorien, Feldraster-Übersicht
 
 **Daten:**
-- 17 neue Führungen aus dem KI-Tribunal-Lauf (`KI-Tribunal\fuehrungen\fuehrungen_neu_2026-10-21.csv`) zusammengeführt.
+- 16 neue Führungen aus dem KI-Tribunal-Lauf (`KI-Tribunal\fuehrungen\fuehrungen_neu_2026-10-21.csv`) zusammengeführt.
 - Zwei Nachbearbeitungen (`fuehrungen_politur.py`, `fuehrungen_politur2.py`):
   - Kurzbeschreibungen gekürzt, Arbeitssprache entfernt.
   - Jede Station bekommt einen Bestand, notfalls lose zugeordnet; die Begründung steht in `quellen_intern`.
 - „Auszug“-Formulierungen in `unsicherheit_hinweis` leserbezogen umformuliert.
+- Dritte Nachbearbeitung (`fuehrungen_politur3.py`, Wunsch des Autors): Jede Führung erzählt eine Geschichte, ohne Autorennamen in öffentlichen Feldern und ohne Erklärung von Alltagswörtern. Claude schreibt, ChatGPT prüft gegen die Vorfassung, Claude überarbeitet. Geändert wurden nur `kurzbeschreibung`, `leitfrage`, `station_titel`, `text` und `unsicherheit_hinweis`; die alten 101 Zeilen sind unverändert.
 - Sicherungen in `KI-Tribunal\sicherungen\`.
 
 **Kategorien (6):**
@@ -240,7 +241,7 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 **Offen:**
 - `wer-heilt-die-stadt` Station 6 (Bader von Mautern) hat keinen Bestand: Die Quelle liegt außerhalb des Kremser Bestandsverzeichnisses.
 - Die losen Zuordnungen der 1945-Führung (5.3.2.1.2., 7.13.2.) im Archiv prüfen.
-- Altbestand `eisen-waage-krems` Station 6: `bestand:1.2.2.6.1./1.2.2.6.2.` ist eine Doppelangabe mit Schrägstrich und wird nicht aufgelöst. Sie bestand schon vorher und wurde nicht geändert.
+- Altbestand `eisen-waage-krems` Station 6 hatte keinen Beleg; die Schrägstrich-Angabe stand nur als Vermerk in `quellen_intern`. Auf Wunsch des Autors lose `bestand:1.1.2.2.4.3.` (Thematische Reihe) zugeordnet und den Vermerk umformuliert. Inhalt im Archiv prüfen.
 
 **Übersicht:**
 - `.fuehrungen-felder` ist ein Raster aus Flex-Spalten (Basis 0, `minmax(0,1fr)`-Zeilen), damit es den Bildschirm füllt, statt mit dem Inhalt zu wachsen.
