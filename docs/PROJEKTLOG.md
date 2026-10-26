@@ -219,6 +219,24 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-26 (70) – Bilderwand: Ortsverbindungen, Sprite-Sheet
+
+**Anlass:** Die Miniaturen luden langsam, rund 1 000 Einzelanfragen; am Testserver je rund 320 ms.
+- Das Sprite-Sheet (48 × 36 px je Zelle = größte Atlas-Stufe) ersetzt sie durch zwei Anfragen.
+- Damit gilt die Entscheidung aus Eintrag 68 („keine Sprite-Sheets, damit die CSV die einzige Quelle bleibt“) nur noch abgeschwächt:
+  - Das Manifest nennt je Signatur den Dateinamen. Passt er nicht mehr zum ersten Foto in `urkunden.csv`, oder fehlt die Urkunde im Sheet, lädt das Modul das Foto wie bisher einzeln.
+  - Neue Fotos erscheinen also sofort, nur langsamer, bis das Sheet neu erzeugt ist.
+- Für die Detailansicht beim starken Hineinzoomen lädt das Modul weiterhin das einzelne Thumbnail.
+
+**Ortsverbindungen:** `hauptOrte()` ist der Ort unter der Maus, sonst die gewählten Orte. `verbindungen(m)` zählt, wie oft andere Orte gemeinsam mit m in einer Urkunde stehen (unter den übrigen Filtern).
+- **Hauptort:** Radius 7 mit Hof und Namen.
+- **Verbundene Orte:** 1,8–4,3 px, Deckkraft 0,45.
+- **Bögen:** quadratisch, Linienbreite 0,7, Deckkraft 0,12–0,30 je nach Zahl gemeinsamer Urkunden, stets in dieselbe Richtung gekrümmt.
+
+**„Alle Orte“ entfernt:** Orte mit weniger als 5 Nennungen (also außerhalb der Wolke) sind damit nicht mehr als Filter wählbar; auf schmalen Bildschirmen gilt das auch für die ausgeblendeten Wolken-Orte.
+
+---
+
 ## 2026-10-25 (69) – Bilderwand: Europakarte, Mausrad-Zoom; Fußzeile
 
 **Karte:**
