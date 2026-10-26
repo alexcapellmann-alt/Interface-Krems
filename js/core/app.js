@@ -219,6 +219,7 @@ function aktualisiereSeitenueberschrift(route) {
   }
   if (route.tab === 'fuehrungen') {
     const schritt = b === 'ende' ? 'Ende der Führung' : (b ? `Station ${b}` : null);
+    if (a === 'zeitleiste') return setzeSeitenueberschrift(['Zeitleiste', 'Führungen']);
     setzeSeitenueberschrift(a ? ['Führung', schritt] : ['Führungen']);
     if (!a) return undefined;
     import('../fuehrungen/fuehrungenDaten.js')
@@ -898,12 +899,14 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
     import('../fuehrungen/fuehrungAbschluss.js'),
     ladePruefModul() // AUFTRAG B2: Prüfmodul parallel, nicht im Startgraphen
   ]);
+  // Wunsch des Autors (2026-10-26): zweite Übersicht #fuehrungen/zeitleiste
+  const istZeitleiste = fuehrungId === 'zeitleiste';
   if (meineGeneration !== generation) return; // Tab während des Ladens bereits gewechselt
 
   // AUFTRAG B2 (Prüfbericht Punkt 3): fuehrungen.csv vor dem Aufbau prüfen -
   // fehlt sie, ist sie leer, unlesbar oder fehlt eine Pflichtspalte, steht dort
   // nur der Hinweisbalken (bisher leere Übersicht bzw. "nicht gefunden").
-  const pruefAnsicht = !fuehrungId ? 'fuehrungenUebersicht' : (stationNrRoh === 'ende' ? 'fuehrungAbschluss' : 'fuehrungStation');
+  const pruefAnsicht = !fuehrungId || istZeitleiste ? 'fuehrungenUebersicht' : (stationNrRoh === 'ende' ? 'fuehrungAbschluss' : 'fuehrungStation');
   await pm.stelleDateienSicher(pruefAnsicht);
   if (meineGeneration !== generation) return;
   const vorabPruefung = pm.pruefeAnsicht(pruefAnsicht);
@@ -920,6 +923,12 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
 
   if (!fuehrungId) {
     kontext.modul = await galerieModul.render(kontext.container);
+    return;
+  }
+  if (istZeitleiste) {
+    const zeitleisteModul = await import('../fuehrungen/fuehrungenZeitleiste.js');
+    if (meineGeneration !== generation) return;
+    kontext.modul = await zeitleisteModul.render(kontext.container);
     return;
   }
 

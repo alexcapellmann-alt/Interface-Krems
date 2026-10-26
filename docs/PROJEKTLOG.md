@@ -219,6 +219,26 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-26 (72) – Zeitleiste der Führungen
+
+**Zeitraum aus Freitext:** `fuehrungen.csv` hat keine Jahreszahl-Spalten.
+- `leseZeitraum()` liest Jahre (1000–1999) und Jahrhunderte aus dem Hauptteil von `zeitraum`, also vor Komma, Klammer oder „mit Ausblick/Rückblick“.
+- „früh/spät/Mitte“ eines Jahrhunderts gilt als erstes, letztes oder mittleres Drittel.
+- Ergebnis für die heutigen 28 Führungen: 27 aus `zeitraum`; „Wer muss Soldat werden?“ ohne `zeitraum` aus den Stationen (1507–1866); keine ohne Zeitraum.
+- Sollten Freitexte künftig nicht mehr lesbar sein, wären eigene Spalten `zeitraum_von`/`zeitraum_bis` die robustere Lösung. Nicht umgesetzt: das wäre eine Schemaänderung.
+
+**Packen:** Gierig nach Anfangsjahr, längere zuerst. Der Titel steht im Balken, sonst rechts, sonst links, sonst gekürzt im Balken.
+- Der Platz für den Titel wird beim Packen mitgerechnet.
+- Reichen 24 px Zeilen nicht, wird mit 12-px-Schrift und 18-px-Zeilen neu gepackt. Grund: um 1600 überschneiden sich bis zu rund 20 Führungen.
+
+**Karte:**
+- Overpass-Export, rund 9,4 MB, nur im temporären Ordner; der Hauptserver war ausgelastet, geladen über overpass.private.coffee.
+- Inhalt: Straßen ohne Fuß-, Rad- und Feldwege, Bahn, Gewässer.
+- Vereinfacht auf rund 3 m, 319 KB.
+- Ausschnitt: Altstädte Krems und Stein, die Fläche wird gefüllt. Farben warm-grau, Wasser blau-grau, Deckkraft 0,22–0,42 auf hellem Grund.
+
+---
+
 ## 2026-10-26 (71) – Bilderwand: Kartenausschnitt Niederösterreich
 
 **Ausschnitt:** Wunsch des Autors: wieder auf Niederösterreich und die unmittelbare Umgebung fokussiert.

@@ -692,3 +692,51 @@
 /* h2/h3 (Ueberschrift "Ende der Fuehrung"/"Selbst erkunden"/"Zum Weiterlesen")
    setzen KEINE eigene Farbe - erben `color` von `.fuehrung-station` (Punkt 2),
    dieselbe Vererbung wie der uebrige Erzaehltext. */
+
+/* Umschalter der Führungs-Übersichten (fuehrungenAnsichtWahl.js) */
+.fuehrungen-ansichtwahl { flex: 0 0 auto; display: flex; gap: var(--space-1); margin-bottom: var(--space-3); }
+.fuehrungen-ansichtwahl a { padding: var(--space-1) var(--space-3); min-height: 36px; display: inline-flex; align-items: center;
+  border: 1px solid var(--border); border-radius: 99px; color: var(--text); text-decoration: none; font-size: var(--fs-md); background: var(--surface); }
+.fuehrungen-ansichtwahl a:hover { border-color: var(--accent); }
+.fuehrungen-ansichtwahl a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.fuehrungen-ansichtwahl a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Zeitleiste der Führungen (fuehrungenZeitleiste.js): heller Stadtplan von Krems im Hintergrund,
+   Balken so lang wie der Zeitraum, Farbe = Themenbereich. */
+.fuehrungen-zeitleiste { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
+.fz-legende { flex: 0 0 auto; list-style: none; margin: 0 0 var(--space-2); padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+  font-size: var(--fs-sm); color: var(--text); }
+.fz-legende li { display: inline-flex; align-items: center; gap: var(--space-1); }
+.fz-legende li::before { content: ""; width: 14px; height: 14px; border-radius: 3px; background: color-mix(in srgb, var(--fz-farbe) 45%, #fff);
+  box-shadow: inset 0 -3px 0 var(--fz-farbe); }
+.fz-buehne { position: relative; flex: 1 1 0; min-height: 420px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: #f4f1ea; overflow: hidden; }
+.fz-karte { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.fz-balken-ebene { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+.fz-balken { --fz-leicht: color-mix(in srgb, var(--fz-farbe) 24%, #fff); --fz-leicht0: color-mix(in srgb, var(--fz-farbe) 0%, transparent);
+  --fz-kraeftig: color-mix(in srgb, var(--fz-farbe) 48%, #fff);
+  position: absolute; display: flex; align-items: center; border-radius: 4px; text-decoration: none; color: var(--text);
+  box-shadow: inset 0 -3px 0 var(--fz-farbe); transition: box-shadow .15s, filter .15s; }
+.fz-balken:hover, .fz-balken:focus-visible { box-shadow: inset 0 -3px 0 var(--fz-farbe), 0 0 0 2px var(--fz-farbe); filter: saturate(1.3); z-index: 2; }
+.fz-balken:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.fz-titel { font-weight: 600; font-size: var(--fz-schrift, 14px); white-space: nowrap; pointer-events: none; }
+.fz-titel-innen .fz-titel { padding-left: 10px; overflow: hidden; text-overflow: ellipsis; }
+.fz-titel-rechts .fz-titel, .fz-titel-links .fz-titel { position: absolute; padding: 1px 6px; border-radius: 3px;
+  background: rgba(244, 241, 234, .85); }
+.fz-titel-rechts .fz-titel { left: calc(100% + 4px); }
+.fz-titel-links .fz-titel { right: calc(100% + 4px); }
+.fz-balken:hover .fz-titel, .fz-balken:focus-visible .fz-titel { text-decoration: underline; }
+.fz-achse { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; border-top: 1px solid #c9c2b4; background: rgba(244, 241, 234, .9); }
+.fz-tick { position: absolute; top: 6px; transform: translateX(-50%); font-size: var(--fs-sm); color: var(--text-muted); }
+.fz-tick::before { content: ""; position: absolute; left: 50%; top: -6px; height: 5px; border-left: 1px solid #a39b8c; }
+.fz-tick-jahrhundert { color: var(--text); font-weight: 600; }
+.fz-tipp { position: absolute; z-index: 5; width: 280px; padding: var(--space-3); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); font-size: var(--fs-sm); pointer-events: none; }
+.fz-tt { font-weight: 700; font-size: var(--fs-md); }
+.fz-tm { color: var(--text-muted); margin-top: 2px; }
+.fz-tk { margin-top: var(--space-2); line-height: 1.4; }
+.fz-ohne { flex: 0 0 auto; margin-top: var(--space-3); font-size: var(--fs-sm); }
+.fz-ohne h2 { font-size: var(--fs-md); margin: 0 0 var(--space-1); }
+.fz-ohne ul { margin: 0; padding-left: var(--space-4); }
+@media (max-width: 800px) { .fuehrungen-zeitleiste { flex: 0 0 auto; } }
+@media (prefers-reduced-motion: reduce) { .fz-balken { transition: none; } }

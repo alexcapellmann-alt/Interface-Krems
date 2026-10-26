@@ -19,6 +19,7 @@ import { navigiereZu } from '../core/router.js';
 import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
 import { ermittleBildUrls } from '../utils/bilder.js';
 import { ermittlePausierteFuehrung } from './fuehrungFortsetzen.js';
+import { baueAnsichtWahl } from './fuehrungenAnsichtWahl.js';
 
 function ermittleKachelBild(fuehrung) {
   const ersterBeleg = fuehrung.stationen[0]?.belege[0];
@@ -131,6 +132,7 @@ export async function render(container, { hinweis } = {}) {
   container.innerHTML = '';
   const wurzel = document.createElement('div');
   wurzel.className = 'fuehrungen-galerie';
+  wurzel.appendChild(baueAnsichtWahl('themen')); // Umschalter zur Zeitleiste (fuehrungenZeitleiste.js)
   container.appendChild(wurzel);
 
   if (hinweis) {
