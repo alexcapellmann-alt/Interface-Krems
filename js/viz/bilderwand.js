@@ -9,7 +9,8 @@
 //   Filter: Kategorien, Personen (je eine durchsuchbare Wortwolke der 40 häufigsten).
 //   Innerhalb eines Filters ODER (nur Orte: Mehrfachauswahl), zwischen Filtern UND.
 // - Mit aktivem Filter teilen sich die Säulen: passende Urkunden oben, übrige gedämpft unten.
-// - Hintergrund: Karte Europas (Küsten, Grenzen, Flüsse, Seen; vendor/karten/europa.json) mit den
+// - Hintergrund: Karte Niederösterreichs und der Umgebung (Grenzen, Flüsse, Seen;
+//   vendor/karten/niederoesterreich.json) mit den
 //   Orten aus orte.csv als Punkten; Mouseover über einen Begriff hebt die betroffenen Orte hervor.
 // - Mausrad oder +/− zoomt, Ziehen verschiebt, Klick öffnet die Urkunde in der Sidebar.
 //
@@ -50,10 +51,14 @@ const FARBE = {
   akzent: '#f2d48a', flaeche: '#6f6a5f', unsicher: '#e0675a', karte: '#9a978f'
 };
 const SCHRIFT = "'Inter', system-ui, sans-serif";
-// Grundkarte Europas (Natural Earth, erzeugt mit Interface-Krems-Testserver\karte_europa.py):
-// [Ebene, Linienbreite in px, Deckkraft] - zurückhaltend wie der Stadtplan des Theaterzettel-Prototyps
-const KARTE_PFAD = 'vendor/karten/europa.json';
-const KARTE_EBENEN = [['grenzen', 0.8, 0.10], ['fluesse', 0.7, 0.10], ['seen', 0.8, 0.12], ['kueste', 1.1, 0.16], ['fluesse_gross', 2.4, 0.16]];
+// Grundkarte Niederösterreich und Umgebung (Natural Earth, erzeugt mit
+// Interface-Krems-Testserver\karte_niederoesterreich.py): [Ebene, Linienbreite in px, Deckkraft] -
+// zurückhaltend wie der Stadtplan des Theaterzettel-Prototyps
+const KARTE_PFAD = 'vendor/karten/niederoesterreich.json';
+const KARTE_EBENEN = [['laender', 0.8, 0.10], ['fluesse', 0.8, 0.11], ['seen', 0.8, 0.12], ['grenzen', 1.2, 0.16], ['fluesse_gross', 2.6, 0.17]];
+// Ausschnitt (Grad): Niederösterreich mit unmittelbarer Umgebung (Wien, Südböhmen/-mähren, Westslowakei,
+// Burgenland, Oberösterreich, Steiermark); weiter entfernte Orte liegen außerhalb des Bildes
+const KARTE_FOKUS = { W: 14.0, E: 17.4, S: 47.25, N: 49.15 };
 
 const ICONS = {
   ort: '<path d="M8 15s5-5 5-9A5 5 0 0 0 3 6c0 4 5 9 5 9z"/><circle cx="8" cy="6" r="1.8"/>',
@@ -494,20 +499,15 @@ async function ladeKarte() {
     if (j !== undefined && Number.isFinite(lat) && Number.isFinite(lon)) punkte.set(j, { lat, lon });
   });
   if (!punkte.size && !grund) return;
-  // Kernausschnitt: Orte der Wolke (häufig genannt) bestimmen Maßstab und Lage, damit Einzelfälle
-  // wie Aalst den Ausschnitt nicht aufblähen; gezeichnet wird ganz Europa, damit die Karte die
-  // Fläche in jeder Breite füllt (wie der Stadtplan im Theaterzettel-Prototyp).
-  const kern = I.wolke.map((j) => punkte.get(j)).filter(Boolean);
-  const basis = kern.length >= 3 ? kern : [...punkte.values()];
-  const lat0 = grund?.lat0 ?? (basis.reduce((a, p) => a + p.lat, 0) / (basis.length || 1));
+  // Fester Ausschnitt Niederösterreich (KARTE_FOKUS) bestimmt Maßstab und Lage; gezeichnet wird der
+  // ganze Kartenbereich, damit die Karte die Fläche in jeder Breite füllt (wie der Stadtplan im
+  // Theaterzettel-Prototyp).
+  const lat0 = grund?.lat0 ?? (KARTE_FOKUS.S + KARTE_FOKUS.N) / 2;
   const k = Math.cos(lat0 * Math.PI / 180);
   const xy = (p) => [p.lon * k, -p.lat];
-  const xs = basis.map((p) => xy(p)[0]), ys = basis.map((p) => xy(p)[1]);
-  const [bx0, by0, bx1, by1] = grund?.bereich || [0, 0, 1, 1];
   I.karte = {
     punkte, xy,
-    x0: xs.length ? Math.min(...xs) : bx0, x1: xs.length ? Math.max(...xs) : bx1,
-    y0: ys.length ? Math.min(...ys) : by0, y1: ys.length ? Math.max(...ys) : by1,
+    x0: KARTE_FOKUS.W * k, x1: KARTE_FOKUS.E * k, y0: -KARTE_FOKUS.N, y1: -KARTE_FOKUS.S,
     ebenen: grund ? Object.fromEntries(Object.entries(grund.ebenen).map(([n, d]) => [n, new Path2D(d)])) : null,
     nachweis: grund?.nachweis || ''
   };
@@ -517,7 +517,7 @@ async function ladeKarte() {
 
 // Maßstab und Lage der Karte in Bildschirm-Pixeln (fest, unabhängig vom Zoom der Bilderwand)
 function kartenTransform() {
-  const km = I.karte, rand = 0.12, w = I.W * (1 - 2 * rand), h = I.H * (1 - 2 * rand);
+  const km = I.karte, rand = 0.04, w = I.W * (1 - 2 * rand), h = I.H * (1 - 2 * rand);
   const s = Math.min(w / ((km.x1 - km.x0) || 1), h / ((km.y1 - km.y0) || 1));
   return { s, ox: (I.W - (km.x1 - km.x0) * s) / 2 - km.x0 * s, oy: (I.H - (km.y1 - km.y0) * s) / 2 - km.y0 * s };
 }
