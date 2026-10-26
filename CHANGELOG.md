@@ -7,6 +7,24 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-26 (118) – Bilderwand: Ortsverbindungen als Bögen, Sprite-Sheet, ohne „Alle Orte“
+
+- **`js/viz/bilderwand.js`:**
+  - Der Schalter „Alle Orte“ entfällt; Orte filtert die Wolke oben.
+  - Mouseover über einen Ort (oder gewählte Orte) hebt nur diesen Ort kräftig hervor. Die gemeinsam mit ihm genannten Orte erscheinen dezent, verbunden durch ganz dünne, gedämpfte Bogenlinien.
+  - Bei Kategorien und Personen bleibt die gleichmäßige Hervorhebung.
+- **Sprite-Sheet `fotos/sprites/urkunden.jpg` + `urkunden.json` (neu, 558 + 48 KB):**
+  - 1 054 Miniaturen in einem Bild statt einzelner Anfragen.
+  - Fotos, die nicht oder in anderer Fassung im Sheet stehen, lädt das Modul weiter einzeln nach.
+  - Erzeugt mit `Interface-Krems-Testserver\sprites_urkunden.py`; nach Fotoänderungen neu aufrufen.
+- `data/infotexte.csv` angepasst.
+- Geprüft auf dem Testserver 8845: Das Sheet lädt in rund 0,3 s, danach keine einzelne Miniatur mehr. Schalter, Hervorhebung und Bögen wie beschrieben.
+- Details: `docs/PROJEKTLOG.md` Eintrag 70.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-25 (117) – Bilderwand mit Europakarte und Mausrad-Zoom; Fußzeile nur auf der Startseite
 
 - **`js/viz/bilderwand.js`:**

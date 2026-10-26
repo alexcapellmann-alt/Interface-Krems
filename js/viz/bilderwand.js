@@ -6,16 +6,17 @@
 // - Jede Urkunde ist eine Bildzelle (erstes Foto aus `bilder`) in einer Jahrzehnt-Säule,
 //   innerhalb der Säule nach Datum, die älteste unten an der Achse.
 // - Oben eine schräge Wortwolke der Orte (`orte`, die häufigsten), darunter Schalter für weitere
-//   Filter: alle Orte, Kategorien, Personen (je eine durchsuchbare Wortwolke der 40 häufigsten).
+//   Filter: Kategorien, Personen (je eine durchsuchbare Wortwolke der 40 häufigsten).
 //   Innerhalb eines Filters ODER (nur Orte: Mehrfachauswahl), zwischen Filtern UND.
 // - Mit aktivem Filter teilen sich die Säulen: passende Urkunden oben, übrige gedämpft unten.
 // - Hintergrund: Karte Europas (Küsten, Grenzen, Flüsse, Seen; vendor/karten/europa.json) mit den
 //   Orten aus orte.csv als Punkten; Mouseover über einen Begriff hebt die betroffenen Orte hervor.
 // - Mausrad oder +/− zoomt, Ziehen verschiebt, Klick öffnet die Urkunde in der Sidebar.
 //
-// Bilder: keine vorab erzeugten Sprite-Sheets (anders als der Prototyp), damit neue Fotos über die
-// CSV-Zelle sofort erscheinen. Die Miniaturen aus fotos/thumbs werden gedrosselt geladen und in
-// Atlas-Ebenen verschiedener Zellgröße gezeichnet (MIP_W); bis dahin steht eine Fläche.
+// Bilder: ein vorab erzeugtes Sprite-Sheet (fotos/sprites, eine Anfrage statt rund 1 000) füllt die
+// Atlas-Ebenen verschiedener Zellgröße (MIP_W). Fotos, die das Sheet nicht oder in anderer Fassung
+// enthält, lädt das Modul einzeln aus fotos/thumbs nach - neue Fotos über die CSV erscheinen also
+// sofort, auch bevor das Sheet neu erzeugt ist. Bis ein Bild da ist, steht eine Fläche.
 //
 // Zugänglichkeit: Filter sind Knöpfe mit Zahl im Namen; die Zeichenfläche ist fokussierbar,
 // Pfeiltasten wählen eine Urkunde (Ansage über eine Live-Region), Eingabe öffnet sie.
@@ -41,6 +42,8 @@ const WOLKE_WINKEL = 38;
 const TOP_N = 40;            // Einträge je Filterwolke
 const MIP_W = [3, 6, 12, 24, 48]; // Zellbreiten der Atlas-Stufen in Pixeln
 const LADE_PARALLEL = 6;
+const SPRITE_BILD = 'fotos/sprites/urkunden.jpg';
+const SPRITE_MANIFEST = 'fotos/sprites/urkunden.json';
 const DAUER = 750;
 const FARBE = {
   buehne: '#17222c', papier: '#ebe3cf', text: '#d9d4c7', gedaempft: '#9a978f', linie: '#3a4550',
@@ -176,7 +179,7 @@ function buildCloud() {
 
 function refresh() {
   const c = counts('ort'), sel = I.sel.ort;
-  // Schmale Fenster: nur so viele Orte, wie schräg nebeneinander passen (übrige über „Alle Orte“)
+  // Schmale Fenster: nur so viele Orte, wie schräg nebeneinander passen
   const sinW = Math.sin(WOLKE_WINKEL * Math.PI / 180);
   const platz = Math.max(0, I.dom.kopf.clientWidth - PAD_X - Math.min(150, I.dom.kopf.clientWidth * 0.3));
   const passen = Math.max(5, Math.floor(platz / (10 * 1.15 / sinW)));
@@ -221,13 +224,14 @@ function refresh() {
 // ---- Weitere Filter ---------------------------------------------------------------------------
 
 function buildToggles() {
-  I.facetten.forEach((f) => {
+  // Orte filtert die Wolke oben; ein eigener Schalter „Alle Orte“ entfällt (Wunsch des Autors, 2026-10-26)
+  I.facetten.filter((f) => f.key !== 'ort').forEach((f) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'bw-schalter';
     b.setAttribute('aria-pressed', 'false');
     b.innerHTML = `<svg viewBox="0 0 16 16" aria-hidden="true">${ICONS[f.key]}</svg><span></span>`;
-    b.querySelector('span').textContent = f.key === 'ort' ? 'Alle Orte' : f.label;
+    b.querySelector('span').textContent = f.label;
     b.addEventListener('click', () => toggleBand(f));
     f.btn = b;
     I.dom.schalter.insertBefore(b, I.dom.schalterRest);
@@ -236,7 +240,7 @@ function buildToggles() {
 function toggleBand(f) { f.open = !f.open; update(); if (f.open) f.band?.querySelector('input')?.focus(); }
 
 function syncBands() {
-  for (const f of I.facetten) {
+  for (const f of I.facetten.filter((x) => x.key !== 'ort')) {
     if (f.open && !f.band) {
       const sec = document.createElement('section');
       sec.className = 'bw-band';
@@ -280,7 +284,7 @@ function renderPicked() {
     d.querySelector('small').textContent = f.key === 'ort' ? 'Ort' : f.label;
     d.querySelector('.bw-gtext').textContent = f.terms[j];
     d.querySelector('.bw-gtext').title = 'Auswahl ändern';
-    d.querySelector('.bw-gtext').addEventListener('click', () => toggleBand(f));
+    if (f.key !== 'ort') d.querySelector('.bw-gtext').addEventListener('click', () => toggleBand(f));
     d.querySelector('.bw-gx').setAttribute('aria-label', `Filter ${f.terms[j]} entfernen`);
     d.querySelector('.bw-gx').addEventListener('click', () => toggleTerm(f.key, j));
     box.appendChild(d);
@@ -387,8 +391,36 @@ function baueAtlanten() {
     if (w === MIP_W[0]) c.getContext('2d', { willReadFrequently: true }); // Durchschnittsfarbe je Zelle
     return c;
   });
-  I.ladeSchlange = I.tiles.filter((t) => t.bild).slice();
-  for (let k = 0; k < LADE_PARALLEL; k++) ladeNaechstes();
+  ladeSpriteSheet().finally(() => {
+    if (!I) return;
+    // Was das Sheet nicht (oder in anderer Fassung) enthält, wird einzeln nachgeladen
+    I.ladeSchlange = I.tiles.filter((t) => t.bild && !t.geladen);
+    for (let k = 0; k < LADE_PARALLEL; k++) ladeNaechstes();
+  });
+}
+
+// Vorab erzeugtes Sprite-Sheet (Interface-Krems-Testserver\sprites_urkunden.py): ein Bild statt rund
+// 1 000 Anfragen. Eine Zelle gilt nur, wenn ihr Dateiname noch zum ersten Foto in urkunden.csv passt.
+async function ladeSpriteSheet() {
+  let manifest;
+  try {
+    const antwort = await fetch(SPRITE_MANIFEST);
+    if (!antwort.ok) return;
+    manifest = await antwort.json();
+  } catch { return; }
+  const bild = new Image();
+  bild.src = SPRITE_BILD;
+  try { await bild.decode(); } catch { return; }
+  if (!I) return;
+  const [zw, zh] = manifest.zelle, spalten = manifest.spalten;
+  for (const t of I.tiles) {
+    const eintrag = manifest.urkunden?.[t.signatur];
+    if (!eintrag || !t.bild || !t.bild.endsWith(`/${eintrag[1]}`)) continue;
+    const k = eintrag[0];
+    zeichneInAtlas(t, bild, (k % spalten) * zw, Math.floor(k / spalten) * zh, zw, zh);
+    t.geladen = true;
+  }
+  requestDraw();
 }
 
 function ladeNaechstes() {
@@ -402,7 +434,7 @@ function ladeNaechstes() {
   const weiter = () => { ladeNaechstes(); };
   img.onload = () => {
     if (!I) return;
-    zeichneInAtlas(t, img);
+    zeichneInAtlas(t, img, 0, 0, img.naturalWidth, img.naturalHeight);
     t.geladen = true;
     requestDraw();
     weiter();
@@ -411,10 +443,11 @@ function ladeNaechstes() {
   img.src = t.bild;
 }
 
-// Bild „contain“ in die Zelle jeder Stufe; von der größten Stufe schrittweise verkleinert.
-function zeichneInAtlas(t, img) {
+// Bild (oder Ausschnitt des Sprite-Sheets) „contain“ in die Zelle jeder Stufe; von der größten
+// Stufe schrittweise verkleinert.
+function zeichneInAtlas(t, img, qx, qy, qw, qh) {
   const x0 = t.i % I.atlasSpalten, y0 = Math.floor(t.i / I.atlasSpalten);
-  let quelle = img, qx = 0, qy = 0, qw = img.naturalWidth, qh = img.naturalHeight;
+  let quelle = img;
   for (let L = MIP_W.length - 1; L >= 0; L--) {
     const w = MIP_W[L], h = Math.round(w * CH), g = I.atlanten[L].getContext('2d');
     g.imageSmoothingQuality = 'high';
@@ -522,10 +555,81 @@ function countByOrt(pred) {
 
 const kartenDeckkraft = () => Math.max(0, Math.min(1, 1 - (I.view.s / I.fitS - 1.5) / 2.5));
 
+// Orte, deren Verbindungen gezeigt werden: der Ort unter der Maus, sonst die gewählten Orte.
+// Beim Überfahren einer Kategorie oder Person bleibt es bei der gleichmäßigen Hervorhebung.
+function hauptOrte() {
+  if (I.hoverTerm) return I.hoverTerm.key === 'ort' ? [I.hoverTerm.i] : null;
+  return I.sel.ort.size ? [...I.sel.ort] : null;
+}
+
+// Wie oft andere Orte gemeinsam mit Ort m in einer Urkunde genannt werden (unter den übrigen Filtern)
+function verbindungen(m) {
+  const n = new Map();
+  for (const t of I.tiles) {
+    if (!t.f.ort.includes(m) || !passes(t, 'ort')) continue;
+    for (const j of t.f.ort) if (j !== m) n.set(j, (n.get(j) || 0) + 1);
+  }
+  return n;
+}
+
+function zeichneOrtsverbindungen(ctx, a, haupt, pos) {
+  const km = I.karte, terms = facette('ort').terms, A = Math.max(a, 0.4);
+  const jeHaupt = haupt.map((m) => [m, verbindungen(m)]);
+  const verbunden = new Map();
+  jeHaupt.forEach(([, n]) => n.forEach((z, j) => { if (!haupt.includes(j)) verbunden.set(j, (verbunden.get(j) || 0) + z); }));
+  const max = Math.max(1, ...verbunden.values());
+  // ruhende Orte
+  ctx.fillStyle = FARBE.karte;
+  km.punkte.forEach((p, j) => {
+    if (haupt.includes(j) || verbunden.has(j)) return;
+    const q = pos(j); if (!q) return;
+    ctx.globalAlpha = 0.3 * a; ctx.beginPath(); ctx.arc(q[0], q[1], 1.6, 0, 7); ctx.fill();
+  });
+  // ganz dünne, dezente Bögen (immer im Uhrzeigersinn gekrümmt, damit sich Hin- und Rückweg decken)
+  ctx.strokeStyle = FARBE.akzent; ctx.lineWidth = 0.7;
+  jeHaupt.forEach(([m, n]) => {
+    const p0 = pos(m); if (!p0) return;
+    n.forEach((z, j) => {
+      const p1 = pos(j); if (!p1) return;
+      const [ax, ay, bx, by] = m < j ? [...p0, ...p1] : [...p1, ...p0];
+      const mx = (ax + bx) / 2, my = (ay + by) / 2, dx = bx - ax, dy = by - ay;
+      ctx.globalAlpha = A * (0.12 + 0.18 * Math.sqrt(z / max));
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(mx - dy * 0.2, my + dx * 0.2, bx, by); ctx.stroke();
+    });
+  });
+  // verbundene Orte: klein und gedämpft
+  ctx.fillStyle = FARBE.akzent;
+  verbunden.forEach((z, j) => {
+    const q = pos(j); if (!q) return;
+    ctx.globalAlpha = A * 0.45; ctx.beginPath(); ctx.arc(q[0], q[1], 1.8 + 2.5 * Math.sqrt(z / max), 0, 7); ctx.fill();
+  });
+  // Hauptort(e): kräftig, mit Hof und Namen
+  ctx.font = `600 12px ${SCHRIFT}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  haupt.forEach((m) => {
+    const q = pos(m); if (!q) return;
+    const [x, y] = q, r = 7;
+    ctx.fillStyle = FARBE.akzent;
+    ctx.globalAlpha = 0.25 * A; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 7); ctx.fill();
+    ctx.globalAlpha = A; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    ctx.fillStyle = FARBE.buehne; ctx.globalAlpha = A * 0.8; ctx.fillText(terms[m], x + r + 7, y + 1);
+    ctx.fillStyle = FARBE.akzent; ctx.globalAlpha = A; ctx.fillText(terms[m], x + r + 6, y);
+  });
+  ctx.globalAlpha = 1;
+}
+
 function zeichneKarte(ctx, a) {
   const km = I.karte;
   if (!km || a <= 0) return;
   const { s, ox, oy } = kartenTransform();
+  const haupt = hauptOrte();
+  if (haupt) {
+    const pos = (j) => {
+      const p = km.punkte.get(j); if (!p) return null;
+      const [px, py] = km.xy(p); return [ox + px * s, oy + py * s];
+    };
+    zeichneOrtsverbindungen(ctx, a, haupt, pos);
+    return;
+  }
   const c = I.hoverCount || I.ortZahl, max = c ? Math.max(1, ...c) : 1;
   const terms = facette('ort').terms;
   // nur die häufigsten hervorgehobenen Orte beschriften, sonst überdecken sich die Namen
