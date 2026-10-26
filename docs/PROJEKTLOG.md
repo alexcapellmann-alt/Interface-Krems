@@ -219,6 +219,19 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-26 (71) – Bilderwand: Kartenausschnitt Niederösterreich
+
+**Ausschnitt:** Wunsch des Autors: wieder auf Niederösterreich und die unmittelbare Umgebung fokussiert.
+- Der Maßstab richtet sich nicht mehr nach den Wolken-Orten (die bis Rom und Nürnberg reichen), sondern nach dem festen Ausschnitt `KARTE_FOKUS` mit 4 % Rand.
+- Gezeichnet wird ein weiterer Bereich (11–21,5° O, 45,5–51° N), damit die Karte breite Fenster füllt.
+
+**Daten:**
+- Vereinfachung feiner als bei der Europakarte: Grenzen 0,003°, Flüsse und Seen 0,002°.
+- Ergebnis: 243 KB mit 2 421 Landesgrenz-, 525 Staatsgrenz-, 136 Fluss- und 22 Seen-Linien.
+- Die Natural-Earth-Dateien liegen nur im temporären Ordner (zusätzlich geladen: rund 22 MB).
+
+---
+
 ## 2026-10-26 (70) – Bilderwand: Ortsverbindungen, Sprite-Sheet
 
 **Anlass:** Die Miniaturen luden langsam, rund 1 000 Einzelanfragen; am Testserver je rund 320 ms.

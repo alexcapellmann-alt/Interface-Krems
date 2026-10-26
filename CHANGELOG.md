@@ -7,6 +7,22 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-26 (119) – Bilderwand: Karte auf Niederösterreich und Umgebung fokussiert
+
+- **`js/viz/bilderwand.js`:**
+  - Fester Kartenausschnitt Niederösterreich mit unmittelbarer Umgebung (`KARTE_FOKUS`: 14,0–17,4° O, 47,25–49,15° N), statt des von den Wolken-Orten bestimmten Europa-Ausschnitts.
+  - Neu sind die Landesgrenzen; Flüsse sind feiner gezeichnet.
+  - Weiter entfernte Orte liegen außerhalb des Bildes; ihre Bögen laufen aus dem Bild hinaus.
+- **`vendor/karten/niederoesterreich.json` (neu, 243 KB)** ersetzt `vendor/karten/europa.json` (gelöscht).
+  - Quelle: Natural Earth (gemeinfrei), zusätzlich Landesgrenzen (`ne_10m_admin_1_states_provinces_lines`) und `ne_10m_lakes_europe`.
+  - Erzeugt mit `Interface-Krems-Testserver\karte_niederoesterreich.py`.
+- `data/infotexte.csv` angepasst.
+- Geprüft auf dem Testserver 8845.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-26 (118) – Bilderwand: Ortsverbindungen als Bögen, Sprite-Sheet, ohne „Alle Orte“
 
 - **`js/viz/bilderwand.js`:**
