@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-26 (120) – Führungen: Zeitleiste als zweite Übersicht
+
+- **`js/fuehrungen/fuehrungenZeitleiste.js` (neu), Route `#fuehrungen/zeitleiste`:**
+  - Jede Führung ist ein Balken so lang wie ihr Zeitraum; Klick oder Eingabe öffnet Station 1.
+  - Farbe = Themenbereich (Legende); ein Schwerpunkt erscheint kräftiger, Jahrhundert-Grenzen enden weich.
+  - Die Kurzbeschreibung erscheint bei Mauszeiger und Fokus.
+  - Zeilen werden gepackt; wird es eng, schrumpfen Schrift und Zeilen, damit alles auf den Bildschirm passt.
+  - Im Hintergrund liegt ein heller Stadtplan von Krems, Stein und Mautern.
+- **`js/fuehrungen/fuehrungenAnsichtWahl.js` (neu):** Umschalter „Nach Themen“ / „Zeitleiste“, eingebunden in `fuehrungenGalerie.js` und die Zeitleiste.
+- **`js/core/app.js`:** Route und Seitenüberschrift „Zeitleiste – Führungen“.
+- **`css/components.css`:** Stile für Umschalter und Zeitleiste.
+- **`vendor/karten/krems.json` (neu, 319 KB):**
+  - Quelle: OpenStreetMap über Overpass (ODbL, Nachweis auf der Karte).
+  - Erzeugt mit `Interface-Krems-Testserver\karte_krems.py`.
+- **`docs/SCHEMA.md`:** wie die Zeitleiste `zeitraum` liest.
+- Geprüft auf dem Testserver 8845:
+  - Desktop 1024×768: 28 Balken in 23 Zeilen, ohne Seitenscrollen.
+  - Tooltip, Klick öffnet die Führung, Umschalter in beide Richtungen.
+  - 375 px: kein abgeschnittener Titel.
+- Details: `docs/PROJEKTLOG.md` Eintrag 72.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-26 (119) – Bilderwand: Karte auf Niederösterreich und Umgebung fokussiert
 
 - **`js/viz/bilderwand.js`:**
