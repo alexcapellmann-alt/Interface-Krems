@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (140) – Zeitleistenbaum und Chord-Diagramm
+
+- Habsburg-Zeitleistenbaum: Der Zweig Habsburg-Lothringen (nur Joseph II.) war mit Stufe 1.6 fast pink (#d83751). Jetzt leicht hellere Stufe 0.4 (#8d2435) im Bordeaux-Ton.
+- Habsburg-Zeitleistenbaum: Balken ragten links über die Jahresachse, weil die Zoom-Transform den Achsabstand überschrieb. Der Baum liegt jetzt in einem beschnittenen Ausschnitt rechts der Achse; Mausrad-Zoom bleibt unter dem Zeiger.
+- Chord-Diagramm: Das Bild ist nur noch so groß wie der sichtbare Platz und mittig darin; keine Schiebebalken mehr.
+- Geprüft auf dem Testserver 8845 (1600 × 900).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (139) – StaAKr-0337 bereinigt
 
 - Familiennamen aus dem Regest (die von Posing, Liechtenstainer, Ellerbacher, Peinkirchner, Gravenegker, Ankchenwerter, Kadauer) nicht mehr als Personen.

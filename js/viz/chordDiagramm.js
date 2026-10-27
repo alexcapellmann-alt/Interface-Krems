@@ -148,6 +148,7 @@ import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul, konfigurationswert } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
+import { ermittleVerfuegbareBreite, ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 
 // Soziale Gruppe je Person aus personenliste.csv (Spalte `soziale_gruppe`: dynastie/adel/klerus/buerger),
 // seit 2026-10-27 statt der Wortlisten aus rollen.csv (Wunsch des Autors: rollen.csv entfällt). Die
@@ -366,12 +367,14 @@ function zeichneChordDiagramm() {
   // fuegeStyleEin() unten) lässt das dadurch über den Flex-Container hinaus
   // gewachsene `<svg>` unbeschnitten wachsen, exakt wie es die Randmarge
   // selbst schon vorher tat.
-  const RAND_MARGE = 170;
-  const RAND_MARGE_VORHER = 90;
-  const GROESSEN_AUSGLEICH = (RAND_MARGE - RAND_MARGE_VORHER) * 2;
-  const breite = (options.width || container.clientWidth || 700) + GROESSEN_AUSGLEICH;
-  const hoehe = (options.height || Math.max(container.clientHeight || 700, 500)) + GROESSEN_AUSGLEICH;
-  const radiusAussen = Math.min(breite, hoehe) / 2 - RAND_MARGE;
+  // 2026-10-27 (Hinweis des Autors): das um GROESSEN_AUSGLEICH vergrößerte <svg> ragte über die Seite hinaus und
+  // erzwang Schiebebalken. Jetzt genau so groß wie der sichtbare Platz, der Kreis mittig darin. Seitlich bleibt
+  // Raum für die waagrechten Gruppen-Beschriftungen, oben und unten nur für Bogen und Verbindungslinie.
+  const RAND_SEITLICH = 190;
+  const RAND_VERTIKAL = 50;
+  const breite = options.width || ermittleVerfuegbareBreite(chartContainer);
+  const hoehe = options.height || ermittleVerfuegbareHoehe(chartContainer, { mindestHoehe: 360 });
+  const radiusAussen = Math.max(Math.min(breite / 2 - RAND_SEITLICH, hoehe / 2 - RAND_VERTIKAL), 80);
   const radiusInnen = radiusAussen - 16;
 
   const chordLayout = d3.chord().padAngle(0.06).sortSubgroups(d3.descending)(matrix);
@@ -521,7 +524,7 @@ export function render(container, data, options = {}) {
   style.textContent = `
     .chord-wurzel { display: flex; flex-direction: column; height: 100%; }
     .chord-werkzeugleiste { display: flex; justify-content: flex-end; margin: 0 0 var(--space-3) 0; flex: 0 0 auto; }
-    .chord-chart-bereich { flex: 1 1 auto; overflow: visible; }
+    .chord-chart-bereich { flex: 1 1 auto; overflow: hidden; display: flex; justify-content: center; }
     .chord-sehne { cursor: pointer; }
     .chord-gruppe { cursor: pointer; }
     .chord-gruppe:focus-visible, .chord-sehne:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
