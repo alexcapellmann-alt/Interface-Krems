@@ -219,6 +219,31 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-27 (73) – Partizipations-Modul: Vorschlagsformular mit Forminit
+
+**Vorgeschichte:** Masterprompt v4.0–4.4, Abschnitt 5a; bisher nicht umgesetzt. Qualitätsprüfung vom 03.10.2026: „nicht vorhanden“. Der Autor hat ein Forminit-Konto und die Formular-ID `u6sxymvk3fz`.
+
+**Umsetzung:**
+- Versand per `fetch` mit `FormData` direkt an `https://forminit.com/f/u6sxymvk3fz`. Kein eingebundenes Forminit-SDK und kein `npx`-Paket: Das Interface lädt keine Fremdskripte, und der Masterprompt verlangt eine austauschbare Versandfunktion.
+- Feldnamen nach Forminit-Anleitung (forminit.com/setup.md, Submit-Form-API):
+  - `fi-sender-fullName` und `fi-sender-email`;
+  - alles Übrige als `fi-text-*`, weil `fi-sender-*` nur feste Namen zulässt;
+  - Honeypot `_gotcha`.
+- Fehlertexte des Dienstes werden nicht angezeigt. 429 → „Bitte warten …“; im Public-Modus gilt 1 Anfrage je 5 Sekunden und IP.
+- **Abweichung vom Masterprompt:** Schalter und Endpunkt stehen in `archiv.csv` statt in `constants.js` (Entscheidung des Autors). Damit ist auch der in der Masterarbeit vorgemerkte Punkt „Spannung zwischen Konfigurationsort und Zielgruppe“ hinfällig. Die Masterarbeit wird auf Wunsch des Autors nicht angepasst.
+- **Platzierung:**
+  - `baueUnsicherheitAbsatz()` hat eine optionale Option `vorschlag`. Ist der Datensatz unsicher, öffnet der σ-Knopf Anmerkung und Formular gemeinsam; sonst liefert die Funktion den Knopf „✎ Änderung vorschlagen“ (`baueVorschlagAufklapper()`).
+  - Personen: Formular je Bürgerbuch- und Inventareintrag. Die Personenliste selbst hat keine Personen-Detailansicht.
+  - Orte: nur in der Sidebar „Unsichere Orte“ der Karte. Ein Marker-Klick im Normalmodus öffnet Urkunden, die ihr eigenes Formular haben.
+
+**Offen:**
+- Echter Testversand (CORS des Dienstes ist nicht dokumentiert).
+- In Forminit sollten erlaubte Domains und Honeypot eingestellt werden.
+- Die Datenminimierung (IP, User-Agent) ist nicht geprüft (Masterprompt 5a).
+- Kriterien des Archivs für Annahme und Ablehnung.
+
+---
+
 ## 2026-10-26 (72) – Zeitleiste der Führungen
 
 **Zeitraum aus Freitext:** `fuehrungen.csv` hat keine Jahreszahl-Spalten.

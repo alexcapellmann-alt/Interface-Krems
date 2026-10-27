@@ -11,6 +11,7 @@
 // Start eingeklappt) unveraendert aus der urspruenglichen Fuehrungen-Fassung.
 
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { baueVorschlagFormular, baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 
 function alsText(wert) {
   return Array.isArray(wert) ? wert.join('; ') : (wert || '');
@@ -22,9 +23,13 @@ function alsText(wert) {
 // gelten (je Aufrufer verschieden, siehe jeweilige Aufrufstelle) - zusaetzlich
 // gilt ein befuellter `unsicherheit_anmerkung` immer als unsicher, auch ohne
 // gesetztes `_unsicher`-Feld.
-export function baueUnsicherheitAbsatz(record, unsicherFelder) {
+// vorschlag (optional, Partizipations-Modul, Wunsch des Autors 2026-10-27): Bezug fuer das
+// Vorschlagsformular (siehe js/beteiligung/vorschlagFormular.js). Ist der Datensatz unsicher,
+// erscheint das Formular im aufgeklappten Feld unter der Anmerkung; sonst liefert die Funktion
+// statt null einen eigenen Knopf „Änderung vorschlagen“. Ohne `vorschlag` (Fuehrungen) wie bisher.
+export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag } = {}) {
   const istUnsicher = unsicherFelder.some((f) => record[f]) || Boolean(alsText(record.unsicherheit_anmerkung).trim());
-  if (!istUnsicher) return null;
+  if (!istUnsicher) return vorschlag ? baueVorschlagAufklapper(vorschlag) : null;
   const wrapper = document.createElement('div');
   wrapper.className = 'unsicher-absatz';
   const btn = document.createElement('button');
@@ -36,11 +41,15 @@ export function baueUnsicherheitAbsatz(record, unsicherFelder) {
   text.className = 'unsicher-absatz-text';
   text.hidden = true;
   text.textContent = alsText(record.unsicherheit_anmerkung) || 'Keine weitere Angabe.';
+  const form = vorschlag ? baueVorschlagFormular(vorschlag) : null;
+  if (form) form.hidden = true;
   btn.addEventListener('click', () => {
     const offen = btn.getAttribute('aria-expanded') === 'true';
     btn.setAttribute('aria-expanded', String(!offen));
     text.hidden = offen;
+    if (form) form.hidden = offen;
   });
   wrapper.append(btn, text);
+  if (form) wrapper.append(form);
   return wrapper;
 }

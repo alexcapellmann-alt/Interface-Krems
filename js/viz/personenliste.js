@@ -277,7 +277,16 @@ function baueBuergerbuchDetailInhalt(record) {
   if (record.Anmerkungen) wrapper.appendChild(baueBuergerbuchSidebarFeld('Anmerkungen', record.Anmerkungen));
   // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
   // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
-  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['Datum_unsicher', 'Beruf_unsicher', 'orte_unsicher']);
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['Datum_unsicher', 'Beruf_unsicher', 'orte_unsicher'], {
+    vorschlag: { // Partizipations-Modul (2026-10-27)
+      typ: 'buergerbuch', id: record.id, titel: [`Bürgerbuch ${record.id}`, record.Name, record.Datum].filter(Boolean).join(', '),
+      felder: [
+        { name: 'Name', label: 'Name', wert: record.Name }, { name: 'Datum', label: 'Datum', wert: record.Datum },
+        { name: 'Beruf', label: 'Beruf', wert: record.Beruf }, { name: 'Ort', label: 'Ort', wert: record.Ort },
+        { name: 'Buergen', label: 'Bürgen', wert: record.Buergen }
+      ]
+    }
+  });
   if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
   return wrapper;
 }
@@ -341,7 +350,16 @@ function baueInventarDetailInhalt(record) {
   if (record['Beruf/Funktion/Stand']) wrapper.appendChild(baueBuergerbuchSidebarFeld('Beruf/Funktion/Stand', record['Beruf/Funktion/Stand']));
   if (record['Ort (Schaetzung)']) wrapper.appendChild(baueBuergerbuchSidebarFeld('Ort', record['Ort (Schaetzung)']));
   if (record.Vermoegensgruppe) wrapper.appendChild(baueBuergerbuchSidebarFeld('Vermögensgruppe', record.Vermoegensgruppe));
-  const unsicherAbsatz = baueUnsicherheitAbsatz(record, []);
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, [], {
+    vorschlag: { // Partizipations-Modul (2026-10-27)
+      typ: 'verlassenschaftsinventar', id: record.id, titel: [`Verlassenschaftsinventar ${record.id}`, record.Name, record.Jahr].filter(Boolean).join(', '),
+      felder: [
+        { name: 'Name', label: 'Name', wert: record.Name }, { name: 'Jahr', label: 'Jahr', wert: record.Jahr },
+        { name: 'Beruf/Funktion/Stand', label: 'Beruf/Funktion/Stand', wert: record['Beruf/Funktion/Stand'] },
+        { name: 'Ort (Schaetzung)', label: 'Ort', wert: record['Ort (Schaetzung)'] }
+      ]
+    }
+  });
   if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
   return wrapper;
 }
