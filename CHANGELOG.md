@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (135) – Über-Seite: „Mitarbeit und Kontakt“ beschreibt das Vorschlagsformular
+
+- `data/ueber.csv` (`mitarbeit`): statt „In Kürze wird dafür ein Formular … zur Verfügung stehen“ jetzt drei Absätze.
+  - Wo das Formular steht und wie es mit „σ Angaben unsicher“ zusammenhängt.
+  - Was man angibt.
+  - Prüfung durch das Archiv, Zweck von Name und E-Mail, Übermittlung über Forminit, E-Mail für alles andere.
+- Sicherung: `KI-Tribunal\sicherungen\ueber_vor_mitarbeit_2026-10-27.csv`.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (134) – Startseite: untere Fußzeile entfernt, © aus der oberen
 
 - `app.js`: Die globale Fußzeile (`footer_text` aus `archiv.csv`) ist jetzt auf allen Seiten ausgeblendet, auch auf der Startseite. `archiv.csv` (Anmerkung) und `docs/SCHEMA.md` angepasst.
