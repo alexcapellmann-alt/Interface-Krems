@@ -40,6 +40,7 @@ const ZUORDNUNG = {
   bestand: { segmente: ['bestand', 'treemap'] },
   person: { segmente: ['visualisierungen', 'personen', 'personenliste'] },
   familie: { segmente: ['visualisierungen', 'personen', 'familienbaum'] },
+  ort: { segmente: ['visualisierungen', 'orte', 'ortsliste'] }, // 2026-10-28: Kennung = Ortsname
   literatur: { segmente: ['literatur'] }
 };
 
@@ -60,6 +61,7 @@ export const TYP_ANZEIGE = {
   // die Quellenzeile (belegDarstellung.js) als auch Screenreader-
   // Beschriftungen (siehe TYP_ANZEIGE-Dateikopf-Kommentar).
   familie: 'Stammbaum',
+  ort: 'Ort',
   literatur: 'Literatur'
 };
 

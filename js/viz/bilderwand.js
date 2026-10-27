@@ -23,6 +23,8 @@
 // Pfeiltasten wählen eine Urkunde (Ansage über eine Live-Region), Eingabe öffnet sie.
 
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { toggleUnsicherheitModus, getZustand } from '../core/state.js';
+import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBildUrls } from '../utils/bilder.js';
 import { ladeGecachteCSV } from '../core/datenCache.js';
@@ -128,8 +130,13 @@ function bereiteDatenVor(records) {
 
 const facette = (key) => I.facetten.find((f) => f.key === key);
 const anyActive = () => I.facetten.some((f) => I.sel[f.key].size);
+// Eigener Knopf „σ Unsicherheiten anzeigen“ links oben (2026-10-28): wirkt wie ein weiterer Filter -
+// nur Urkunden mit Unsicherheitsmarkierung stehen oben, die übrigen rücken nach unten
+const nurUnsicher = () => Boolean(I.options.showUncertainty);
+const filterAktiv = () => anyActive() || nurUnsicher();
 const hasTerm = (t, key, set) => t.f[key].some((j) => set.has(j));
 function passes(t, except) {
+  if (nurUnsicher() && !t.unsicher) return false;
   for (const f of I.facetten) if (f.key !== except && I.sel[f.key].size && !hasTerm(t, f.key, I.sel[f.key])) return false;
   return true;
 }
@@ -156,7 +163,7 @@ function clearAll() {
 function update() { syncBands(); refresh(); messeFlaeche(); layout(false); }
 function setHover(h) {
   I.hoverTerm = h;
-  I.hoverCount = h ? countByOrt((t) => isHover(t) && (!anyActive() || passes(t))) : null;
+  I.hoverCount = h ? countByOrt((t) => isHover(t) && (!filterAktiv() || passes(t))) : null;
   requestDraw();
 }
 
@@ -222,8 +229,8 @@ function refresh() {
   I.facetten.forEach((x) => x.open && renderBand(x));
   renderPicked();
   I.dom.loeschen.hidden = !anyActive();
-  const sichtbar = anyActive() ? I.tiles.filter((t) => passes(t)).length : I.tiles.length;
-  I.dom.zahl.textContent = anyActive() ? `${mitZahl(sichtbar, 'Urkunde', 'Urkunden')} von ${fmt(I.tiles.length)}` : mitZahl(I.tiles.length, 'Urkunde', 'Urkunden');
+  const sichtbar = filterAktiv() ? I.tiles.filter((t) => passes(t)).length : I.tiles.length;
+  I.dom.zahl.textContent = filterAktiv() ? `${mitZahl(sichtbar, 'Urkunde', 'Urkunden')} von ${fmt(I.tiles.length)}` : mitZahl(I.tiles.length, 'Urkunde', 'Urkunden');
 }
 
 // ---- Weitere Filter ---------------------------------------------------------------------------
@@ -331,7 +338,7 @@ function renderBand(f) {
 
 function layout(sofort) {
   const { tiles, saeulen } = I;
-  const split = anyActive();
+  const split = filterAktiv();
   for (const t of tiles) t.up = !split || passes(t);
   I.ortZahl = split ? countByOrt((t) => t.up) : null;
   const upN = new Array(saeulen).fill(0), downN = new Array(saeulen).fill(0);
@@ -932,6 +939,11 @@ function fuegeStyleEin(container) {
     .bw-tr { margin-top: 6px; line-height: 1.35; }
     .bw-tu { margin-top: 6px; color: #a0291c; font-weight: 600; }
     .bw-info-anker { position: absolute; top: 8px; right: 12px; z-index: 6; }
+    .bw-unsicher { position: absolute; top: 10px; left: 12px; z-index: 6; background: rgba(23,34,44,.75); border: 1px solid #5d6873;
+      color: ${FARBE.text}; border-radius: 3px; min-height: 32px; padding: 3px 10px; font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+    .bw-unsicher:hover { border-color: ${FARBE.gedaempft}; }
+    .bw-unsicher:focus-visible { outline: 3px solid ${FARBE.akzent}; outline-offset: 2px; }
+    .bw-unsicher[aria-pressed="true"] { border-color: ${FARBE.unsicher}; color: ${FARBE.papier}; background: rgba(224,103,90,.18); }
     .bw-nur-hilfsmittel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     @media (max-width: 700px) { .bw-schalter-leiste, .bw-band, .bw-gewaehlt-leiste { padding-left: 12px; padding-right: 12px; } }
   `;
@@ -942,7 +954,8 @@ function baueGeruest(container) {
   const wurzel = document.createElement('div');
   wurzel.className = 'bw-wurzel';
   wurzel.innerHTML = `
-    <div class="bw-kopf"><div class="bw-wolke" role="group" aria-label="Orte, nach Häufigkeit"></div><div class="bw-info-anker"></div></div>
+    <div class="bw-kopf"><div class="bw-wolke" role="group" aria-label="Orte, nach Häufigkeit"></div><div class="bw-info-anker"></div>
+      <button type="button" class="bw-unsicher" aria-pressed="false"></button></div>
     <div class="bw-schalter-leiste" role="group" aria-label="Weitere Filter und Ansicht">
       <span>Weitere Filter:</span>
       <span class="bw-rest">
@@ -965,7 +978,7 @@ function baueGeruest(container) {
   return {
     wurzel,
     dom: {
-      kopf: q('.bw-kopf'), wolke: q('.bw-wolke'), info: q('.bw-info-anker'), schalter: q('.bw-schalter-leiste'), schalterRest: q('.bw-rest'),
+      kopf: q('.bw-kopf'), unsicher: q('.bw-unsicher'), wolke: q('.bw-wolke'), info: q('.bw-info-anker'), schalter: q('.bw-schalter-leiste'), schalterRest: q('.bw-rest'),
       zahl: q('.bw-zahl'), loeschen: q('.bw-loeschen'), plus: q('.bw-plus'), minus: q('.bw-minus'), gesamt: q('.bw-gesamt'),
       gewaehlt: q('.bw-gewaehlt-leiste'), baender: q('.bw-baender'), cv: q('canvas'), tipp: q('.bw-tipp'), ansage: q('.bw-nur-hilfsmittel')
     }
@@ -999,6 +1012,14 @@ export function render(container, data, options = {}) {
   buildCloud();
   buildToggles();
   verdrahte();
+  beschrifteUnsicherKnopf();
+  dom.unsicher.addEventListener('click', () => {
+    toggleUnsicherheitModus();
+    I.options.showUncertainty = getZustand().unsicherheitModusAktiv;
+    beschrifteUnsicherKnopf();
+    I.userZoomed = false;
+    update();
+  });
   messeFlaeche();
   layout(true);
   refresh();
@@ -1017,9 +1038,16 @@ export function render(container, data, options = {}) {
   I.beobachter.observe(dom.cv);
 }
 
+function beschrifteUnsicherKnopf() {
+  const aktiv = nurUnsicher();
+  I.dom.unsicher.setAttribute('aria-pressed', String(aktiv));
+  I.dom.unsicher.textContent = `${UNSICHERHEIT_SYMBOL} ${aktiv ? 'Unsicherheiten ausblenden' : 'Unsicherheiten anzeigen'}`;
+}
+
 export function resize(neueOptionen = {}) {
   if (!I) return;
   I.options = { ...I.options, ...neueOptionen };
+  beschrifteUnsicherKnopf();
   refresh(); messeFlaeche(); layout(true);
 }
 

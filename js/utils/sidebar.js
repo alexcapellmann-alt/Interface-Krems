@@ -67,7 +67,7 @@ import { farbeFuerUrkundenKategorie } from './urkundenKategorieFarben.js'; // AU
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from './bilder.js';
 import { oeffneLightbox } from './lightbox.js';
 import { baueUnsicherheitAbsatz } from './unsicherAbsatz.js';
-import { baueGenanntePersonenZeile } from './genanntePersonen.js';
+import { baueGenanntePersonenZeile, baueVerlinkteOrte } from './genanntePersonen.js';
 import { urkundeBezug, bestandBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 
 export const STANDARD_SIDEBAR_FELDER = [
@@ -410,7 +410,12 @@ export function baueUrkundenDetailInhalt(record) {
   wrapper.appendChild(baueSidebarFeld('Regest', record.regest || '(kein Regest)'));
   const kategorienFeld = baueUrkundenKategorienFeld(record);
   if (kategorienFeld) wrapper.appendChild(kategorienFeld);
-  if (record.orte && record.orte.length) wrapper.appendChild(baueSidebarFeld('Orte', alsText(record.orte)));
+  // Seit 2026-10-28 als Links zur Ortsliste (Wunsch des Autors)
+  if (record.orte && record.orte.length) {
+    const orteFeld = baueSidebarFeld('Orte', '');
+    orteFeld.lastChild.appendChild(baueVerlinkteOrte(Array.isArray(record.orte) ? record.orte : [record.orte]));
+    wrapper.appendChild(orteFeld);
+  }
   // AUFTRAG "Teil 2h", Punkt 1: Personen jetzt verlinkt zur Personenliste -
   // dieselbe Funktion wie in den Führungen (belegDarstellung.js) und im
   // Regestenkachelraster (Auftrag wörtlich: "keine zweite Implementierung").

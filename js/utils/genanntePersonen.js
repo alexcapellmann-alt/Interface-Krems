@@ -45,6 +45,25 @@ export function baueVerlinkteNamen(personen) {
   return fragment;
 }
 
+// Ortsnamen als Links zur Ortsliste (Wunsch des Autors, 2026-10-28) - derselbe Datensatzaufruf wie bei
+// den Personen (typ `ort`, Kennung = Ortsname wie in urkunden.csv). Gibt es die Ortsliste nicht, bleibt
+// reiner Text stehen.
+export function baueVerlinkteOrte(namen) {
+  const fragment = document.createDocumentFragment();
+  (namen || []).map((n) => String(n ?? '').trim()).filter(Boolean).forEach((name, i) => {
+    if (i > 0) fragment.appendChild(document.createTextNode(', '));
+    const href = baueDatensatzLink('ort', name);
+    if (!href) { fragment.appendChild(document.createTextNode(name)); return; }
+    const link = document.createElement('a');
+    link.className = 'genannte-personen-link';
+    link.href = href;
+    link.textContent = name;
+    link.setAttribute('aria-label', `${name} in der Ortsliste`);
+    fragment.appendChild(link);
+  });
+  return fragment;
+}
+
 // Vollständige, beschriftete "Personen: …"-Zeile (ursprünglich Punkt 4/5,
 // Auftrag wörtlich: "als eigene Zeile unter dem Regest"; Beschriftung seit
 // Teil 2i "Personen" statt "Genannte Personen" - ersetzt die vormals

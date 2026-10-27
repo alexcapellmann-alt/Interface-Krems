@@ -100,6 +100,7 @@ export const ANSICHT_ANFORDERUNGEN = {
   // Ohne `soziale_gruppe` in personenliste.csv nicht angeboten (seit 2026-10-27; vorher rollen.csv)
   chordDiagramm: { dateien: { [URKUNDEN]: [], [PERSONENLISTE]: GRUPPEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: PERSONENLISTE },
   // Orte (mehrere Dateien: nie ausgeblendet, Balken)
+  ortsliste: { dateien: { [ORTE]: ['orte'], [URKUNDEN]: ['orte'] }, neben: { [INVENTARE]: [] } }, // 2026-10-28
   karte: { dateien: { [URKUNDEN]: ['orte'], [ORTE]: ['orte', 'lat', 'lon'] } },
   verbindungskarte: { dateien: { [URKUNDEN]: ['orte'], [ORTE]: ['orte', 'lat', 'lon'] } },
   bipartiteFlowMap: { dateien: { [URKUNDEN]: [], [ORTE]: ['orte', 'lat', 'lon'], [PERSONENLISTE]: GRUPPEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: PERSONENLISTE },

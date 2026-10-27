@@ -206,7 +206,8 @@ export const ARCHIVALIENTYPEN = [
       { id: 'wortwolke', label: 'Wortwolke', modulPfad: '../viz/wortwolke.js',
         beschreibung: 'Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.' },
       // Wunsch des Autors (2026-10-25): Darstellungsform des Theaterzettel-Prototyps mit den Urkunden.
-      { id: 'bilderwand', label: 'Bilderwand', modulPfad: '../viz/bilderwand.js',
+      // `eigenerUnsicherheitsButton` (2026-10-28): der Knopf sitzt in der Ansicht selbst, links oben
+      { id: 'bilderwand', label: 'Bilderwand', modulPfad: '../viz/bilderwand.js', eigenerUnsicherheitsButton: true,
         beschreibung: 'Jede Urkunde als Bild in Jahrzehnt-Säulen; Orte, Kategorien und Personen filtern und teilen die Säulen.' }
     ]
   },
@@ -418,7 +419,8 @@ export const ARCHIVALIENTYPEN = [
     // gesamte `{urkunden, familien}`-Objekt) - exakt dasselbe Muster wie
     // chordDiagramm.js unter `personen` oben.
     // AUFTRAG C1, Punkt 4: `rollen` für die Bipartite Flow Map
-    datenDatei: { urkunden: 'data/urkunden.csv', familien: 'data/familien.csv', personenliste: 'data/personenliste.csv' }, // 2026-10-27: Gruppen aus personenliste.csv statt rollen.csv
+    // 2026-10-28: `ortsverzeichnis` (orte.csv) und `verlassenschaften` für die Ortsliste
+    datenDatei: { urkunden: 'data/urkunden.csv', familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', ortsverzeichnis: 'data/orte.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv' }, // 2026-10-27: Gruppen aus personenliste.csv statt rollen.csv
     primaeransicht: 'karte',
     hatGalerie: true,
     ansichten: [
@@ -429,6 +431,9 @@ export const ARCHIVALIENTYPEN = [
       // welchen thematischen Kategorien in Verbindung stehen..." - deckt
       // sich exakt mit dem im Auftrag gelieferten Kachel-Text, genauer als
       // die bisherige Kurzfassung).
+      // Wunsch des Autors (2026-10-28): Ortsliste nach dem Vorbild der Personenliste
+      { id: 'ortsliste', label: 'Ortsliste', modulPfad: '../viz/ortsliste.js',
+        beschreibung: 'Durchsuchbare, sortierbare Liste aller Orte mit der Zahl ihrer Nennungen in Urkunden und Verlassenschaftsinventaren.' },
       { id: 'karte', label: 'Karte', modulPfad: '../viz/karte.js', datenSchluessel: 'urkunden',
         beschreibung: 'Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.' },
       { id: 'verbindungskarte', label: 'Verbindungskarte', modulPfad: '../viz/verbindungskarte.js', datenSchluessel: 'urkunden',
