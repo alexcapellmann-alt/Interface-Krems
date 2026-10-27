@@ -143,6 +143,7 @@ import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
 import { erzeugeAnsichtenLeiste } from './ansichtenLeiste.js';
+import { erzeugeUnterleistenSchalter } from '../utils/unterleistenSchalter.js';
 import { erzeugeStartseite } from './startseite.js';
 import { erzeugeBereichsLeiste, erzeugeBereichsLeistenVorschau } from './bereichsLeiste.js';
 import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
@@ -766,13 +767,11 @@ function stelleVizFlyoutSicher(kontext) {
   // Siehe kontext.eigenerFlyoutNoetig-Kommentar in erzeugeGalerieFlyoutKontext()
   // oben: für Bestand bewusst ausgelassen (permanenter Icon-Flyout aus Punkt 2
   // sitzt bereits am selben Auslöser).
-  if (kontext.eigenerFlyoutNoetig) {
-    kontext.flyout = verankereFlyout(kontext.ausloeser, {
-      tabs: baueTabListe(kontext),
-      aktiverId: kontext.ansichtId,
-      onAktivieren: (id) => navigiereZu(kontext.routeSegmente(id))
-    });
-  }
+  // Seit 2026-10-27 (Wunsch des Autors) kein Flyout mehr am AKTIVEN Bereich, sobald eine Ansicht offen
+  // ist: dessen Ansichten stehen bereits in der Ansichten-Leiste darunter (zeigeAnsichtenLeiste()). Die
+  // Flyouts der übrigen Bereiche (bereichsLeiste.js, verankereVizFlyout) bleiben. Vorher hier:
+  // kontext.flyout = verankereFlyout(kontext.ausloeser, { tabs, aktiverId, onAktivieren }).
+  kontext.flyout = null;
 }
 
 // Dritte Navigationsebene (Wunsch des Autors, 2026-10-27): alle Ansichten des Bereichs, die aktuelle
@@ -1179,6 +1178,7 @@ function handleRouteChange() {
   const fusszeile = document.querySelector('.app-footer');
   if (fusszeile) fusszeile.hidden = true;
   aktualisiereHintergrundkarte(route); // Stadtplan als Hintergrund der Übersichtsseiten (2026-10-27)
+  setzeBestandFlyout(route.tab !== 'bestand');
 
   if (aktuellerKontext && aktuellerKontext.tab === route.tab) {
     // FOLGEAUFTRAG "...Galerie-Muster für Bestand": Bestand läuft jetzt über
@@ -1294,13 +1294,26 @@ function verankereHauptnavFlyouts() {
   // Visualisierungen - Klick darin springt DIREKT dorthin (nicht zur
   // Galerie); Klick auf "Bestand" selbst bleibt unverändert (siehe
   // visualisierungsTabs.js' verankereIconFlyout()-Dateikopf-Kommentar).
-  const bestandLink = document.querySelector('.haupt-navigation a[data-tab="bestand"]');
-  verankereIconFlyout(bestandLink, {
-    eintraege: BESTAND_ANSICHTEN.map((a) => ({ id: a.id, label: a.label })),
-    onAktivieren: (id) => navigiereZu(['bestand', id])
-  });
+  setzeBestandFlyout(true);
+}
+
+// Seit 2026-10-27 (Wunsch des Autors): kein Hover-Flyout an „Bestand“, solange der Bestand-Tab aktiv ist -
+// dessen Ansichten stehen dann in der Galerie bzw. der Ansichten-Leiste. Auf allen anderen Seiten bleibt er.
+let bestandIconFlyout = null;
+function setzeBestandFlyout(an) {
+  if (an && !bestandIconFlyout) {
+    const bestandLink = document.querySelector('.haupt-navigation a[data-tab="bestand"]');
+    bestandIconFlyout = verankereIconFlyout(bestandLink, {
+      eintraege: BESTAND_ANSICHTEN.map((a) => ({ id: a.id, label: a.label })),
+      onAktivieren: (id) => navigiereZu(['bestand', id])
+    });
+  } else if (!an && bestandIconFlyout) {
+    bestandIconFlyout.destroy();
+    bestandIconFlyout = null;
+  }
 }
 verankereHauptnavFlyouts();
+erzeugeUnterleistenSchalter(document.querySelector('.app-header-inner')); // Unterleisten ein-/ausklappen (2026-10-27)
 
 // AUFTRAG "Archivspezifische Texte...", Punkt 2.1/2.3/2.4: überträgt die
 // geladenen archiv.csv-Werte in die statischen index.html-Elemente

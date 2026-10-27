@@ -16,8 +16,8 @@ function fuegeStyleEin(container) {
     .ansichten-leiste-huelle { margin: 0 calc(-1 * var(--space-4)); padding: 0 var(--space-4);
       background: var(--bg); border-top: 1px solid var(--border); box-shadow: var(--shadow); }
     .ansichten-leiste-huelle:first-child { margin-top: calc(-1 * var(--space-4)); border-top: none; }
-    .ansichten-leiste { display: flex; flex-wrap: wrap; gap: var(--space-1); font-size: var(--fs-sm); }
-    .ansichten-leiste a { display: inline-flex; align-items: center; min-height: 40px; padding: var(--space-1) var(--space-3);
+    .ansichten-leiste { display: flex; flex-wrap: wrap; gap: 2px; font-size: 0.8125rem; } /* 13px, kleiner als die Bereichs-Leiste */
+    .ansichten-leiste a { display: inline-flex; align-items: center; min-height: 32px; padding: 2px var(--space-2);
       text-decoration: none; color: var(--text); font-weight: 500; border-radius: var(--radius); }
     .ansichten-leiste a:hover { background: var(--surface); }
     .ansichten-leiste a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
