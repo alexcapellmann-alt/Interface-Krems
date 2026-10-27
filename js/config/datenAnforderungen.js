@@ -34,9 +34,8 @@ const STARTSEITE = 'data/startseite.csv';
 const UEBER = 'data/ueber.csv';
 const ARCHIV = 'data/archiv.csv';
 const ANSICHTEN = 'data/ansichten.csv';
-const ROLLEN = 'data/rollen.csv';
 const WORTWOLKE_FILTER = 'data/wortwolke_filter.csv'; // AUFTRAG F: optional, archivspezifische Filter der Wortwolke
-const ROLLEN_PFLICHT = ['liste', 'begriffe'];
+const GRUPPEN_PFLICHT = ['personen_id', 'soziale_gruppe']; // 2026-10-27: statt rollen.csv
 
 const JAHR = ['jahr']; // Grenzfall G1: ohne `jahr` landen alle Urkunden in "undatiert"
 const VERMOEGENSPROFIL = ['Realvermoegen_fl', 'Gesamtvermoegen_fl', 'Anteil Grundstuecke am RV (%)',
@@ -98,12 +97,12 @@ export const ANSICHT_ANFORDERUNGEN = {
     dateien: { [FAMILIEN]: ['familie', 'id'] }, ausblenden: FAMILIEN, // `id`: Grenzfall G4
     merkmal: { datei: FAMILIEN, spalte: 'familie', konfiguration: 'dynastie_familien', text: 'In familien.csv gehört keine Person zur Herrscherfamilie (Eintrag dynastie_familien in archiv.csv).' }
   },
-  // AUFTRAG C1, Punkt 4: ohne rollen.csv nicht angeboten (Freigabe Phase 1, Punkt 5)
-  chordDiagramm: { dateien: { [URKUNDEN]: [], [ROLLEN]: ROLLEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: ROLLEN },
+  // Ohne `soziale_gruppe` in personenliste.csv nicht angeboten (seit 2026-10-27; vorher rollen.csv)
+  chordDiagramm: { dateien: { [URKUNDEN]: [], [PERSONENLISTE]: GRUPPEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: PERSONENLISTE },
   // Orte (mehrere Dateien: nie ausgeblendet, Balken)
   karte: { dateien: { [URKUNDEN]: ['orte'], [ORTE]: ['orte', 'lat', 'lon'] } },
   verbindungskarte: { dateien: { [URKUNDEN]: ['orte'], [ORTE]: ['orte', 'lat', 'lon'] } },
-  bipartiteFlowMap: { dateien: { [URKUNDEN]: [], [ORTE]: ['orte', 'lat', 'lon'], [ROLLEN]: ROLLEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: ROLLEN },
+  bipartiteFlowMap: { dateien: { [URKUNDEN]: [], [ORTE]: ['orte', 'lat', 'lon'], [PERSONENLISTE]: GRUPPEN_PFLICHT }, neben: { [FAMILIEN]: [] }, ausblenden: PERSONENLISTE },
   // Seiten
   // AUFTRAG C1: `optional` - Datei darf fehlen oder leer sein (dann gelten
   // Vorgaben); nur wenn sie vorhanden, aber unbrauchbar ist, erscheint ein Balken.
@@ -140,7 +139,6 @@ export const SCHLUESSELSPALTEN = {
   [UEBER]: ['block_id'],
   [ARCHIV]: ['schluessel'],
   [ANSICHTEN]: ['bereich', 'ansicht'],
-  [ROLLEN]: ['liste', 'begriffe'],
   [WORTWOLKE_FILTER]: ['leitform']
 };
 

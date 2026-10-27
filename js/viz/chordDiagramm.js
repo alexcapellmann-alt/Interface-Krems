@@ -149,25 +149,22 @@ import { infotextFuerModul, konfigurationswert } from '../core/archivKonfigurati
 import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
 
-// AUFTRAG C1, Punkt 4: die Rollenlisten (Punkt 1.2 Klerus, 1.3a Adelstitel,
-// 1.3b Adelsfamilien mit Schreibvarianten) stehen in data/rollen.csv (Spalten
-// `liste`, `begriffe`) statt fest im Code. Geladen über die Bereichsdaten
-// (archivalienRegistry.js, `rollen`) und hier per uebernehmeRollen() gesetzt.
-// Fehlt die Datei, werden Chord-Diagramm und Flow Map nicht angeboten
-// (datenAnforderungen.js) - ohne Listen landeten sonst alle Personen außer
-// der Dynastie fälschlich im Bürgertum.
-let rollen = { klerus: [], adelTitel: [], adelFamilien: [] };
+// Soziale Gruppe je Person aus personenliste.csv (Spalte `soziale_gruppe`: dynastie/adel/klerus/buerger),
+// seit 2026-10-27 statt der Wortlisten aus rollen.csv (Wunsch des Autors: rollen.csv entfällt). Die
+// Spalte war bereits mit derselben Logik befüllt; geprüft: 2 276 von 2 276 Personennennungen der Urkunden
+// ergeben dieselbe Gruppe wie die bisherige Laufzeitberechnung. Geladen über die Bereichsdaten
+// (archivalienRegistry.js, `personenliste`) und hier per uebernehmePersonenGruppen() gesetzt.
+const GUELTIGE_GRUPPEN = new Set(['dynastie', 'adel', 'klerus', 'buerger']);
+let gruppeJePerson = new Map();
 
 // Exportiert: bipartiteFlowMap.js nutzt dieselbe Einteilung (ermittleGruppe()).
-export function uebernehmeRollen(rollenRecords = []) {
-  const begriffe = (record) => (Array.isArray(record.begriffe) ? record.begriffe : [record.begriffe])
-    .map((wert) => String(wert ?? '').trim()).filter((wert) => wert !== '');
-  const liste = (name) => rollenRecords.filter((record) => String(record.liste ?? '').trim() === name);
-  rollen = {
-    klerus: liste('klerus').flatMap(begriffe),
-    adelTitel: liste('adel_titel').flatMap(begriffe),
-    adelFamilien: liste('adel_familie').map(begriffe).filter((varianten) => varianten.length > 0)
-  };
+export function uebernehmePersonenGruppen(personenlisteRecords = []) {
+  gruppeJePerson = new Map();
+  personenlisteRecords.forEach((r) => {
+    const id = String(r.personen_id ?? '').trim();
+    const gruppe = String(r.soziale_gruppe ?? '').trim().toLowerCase();
+    if (id && GUELTIGE_GRUPPEN.has(gruppe)) gruppeJePerson.set(id, gruppe);
+  });
 }
 
 // Reihenfolge bestimmt sowohl die Segment-Anordnung im Kreis als auch die
@@ -194,27 +191,16 @@ export const GRUPPEN = [
 
 let instanz = null; // { container, wurzel, chartContainer, familienRecords, urkundenRecords, options, infoButton, sidebar, hoverGruppe, frozenGruppe, gruppenAuswahl, sehnenAuswahl, ausgewaehlteSehne } – eine aktive Ansicht pro Modul-Ladung
 
-function woerterDesNamens(name) {
-  return (String(name || '').match(/\p{L}+/gu) || []);
-}
-
-function enthaeltGanzesWort(name, liste) {
-  const woerter = woerterDesNamens(name).map((w) => w.toLowerCase());
-  return liste.some((wort) => woerter.includes(wort.toLowerCase()));
-}
-
-function enthaeltFamilienname(name) {
-  const lower = String(name || '').toLowerCase();
-  return rollen.adelFamilien.some((varianten) => varianten.some((v) => lower.includes(v.toLowerCase())));
-}
-
 // Punkt 1, EXAKT in der vorgegebenen Priorität (siehe Dateikopf-Kommentar).
 // Exportiert (siehe Auftrag "Bipartite Flow Map – ..." oben) - Wiederver-
 // wendung statt Neuimplementierung in bipartiteFlowMap.js.
+// Seit 2026-10-27: die Gruppe steht in personenliste.csv; ohne Eintrag dort zählt eine Person der
+// Herrscherfamilie (familien.csv) zur Dynastie, alle übrigen zum Bürgertum. `name` bleibt als
+// Parameter, damit die Aufrufer unverändert bleiben.
 export function ermittleGruppe(name, personenId, familienIds) {
-  if (personenId && familienIds.has(personenId)) return 'dynastie';
-  if (enthaeltGanzesWort(name, rollen.klerus)) return 'klerus';
-  if (enthaeltGanzesWort(name, rollen.adelTitel) || enthaeltFamilienname(name)) return 'adel';
+  const id = String(personenId ?? '').trim();
+  if (id && gruppeJePerson.has(id)) return gruppeJePerson.get(id);
+  if (id && familienIds.has(id)) return 'dynastie';
   return 'buerger';
 }
 
@@ -562,7 +548,7 @@ export function render(container, data, options = {}) {
   // urkunden}`-Objekt (siehe archivalienRegistry.js) und wählt sich hier
   // selbst die zwei benötigten Teile heraus. `personenliste` bleibt
   // ungenutzt (nur `familienbaum`/`personenliste`/`bubbleChart` brauchen sie).
-  uebernehmeRollen(data.rollen || []); // AUFTRAG C1, Punkt 4
+  uebernehmePersonenGruppen(data.personenliste || []); // soziale_gruppe aus personenliste.csv (statt rollen.csv)
   instanz = {
     container,
     wurzel,

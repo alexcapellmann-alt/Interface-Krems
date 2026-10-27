@@ -67,7 +67,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
-import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { infotextFuerModul, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
 import { buergerbuchBezug, inventarBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
@@ -863,9 +863,8 @@ export function render(container, data, options = {}) {
   // `verlassenschaften` (Teil 2h, Punkt 4b) werden hier EINMALIG zu
   // Nachschlage-Maps (Signatur/ID -> Record) aufbereitet statt bei jedem
   // Zeilen-Klick erneut linear durchsucht zu werden.
-  titelWoerter = (data.rollen || [])
-    .filter((record) => String(record.liste ?? '').trim() === 'namenszusatz')
-    .flatMap((record) => (Array.isArray(record.begriffe) ? record.begriffe : [record.begriffe]))
+  // Seit 2026-10-27 aus archiv.csv (`namenszusaetze`) statt aus rollen.csv
+  titelWoerter = konfigurationsliste('namenszusaetze')
     .map((wert) => String(wert ?? '').trim().toLowerCase().replace(/\.$/, ''))
     .filter((wert) => wert !== '');
   const urkundenRecords = data.urkunden || [];

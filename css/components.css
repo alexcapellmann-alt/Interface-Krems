@@ -770,3 +770,12 @@
 .vorschlag-senden:disabled { opacity: .6; cursor: progress; }
 .vorschlag-senden:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .vorschlag-danke { margin: var(--space-2) 0 0; padding: var(--space-3); border-radius: var(--radius); background: #e8f1e4; color: #24451c; font-size: var(--fs-sm); }
+
+/* Suchfeld der Bestand-Visualisierungen (js/utils/bestandSuche.js) */
+.bestand-suche { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-left: var(--space-4); }
+.bestand-suche label { font-size: var(--fs-sm); font-weight: 600; }
+.bestand-suche input { font: inherit; font-size: var(--fs-md); min-height: 40px; width: min(320px, 70vw); padding: var(--space-1) var(--space-2);
+  border: 1px solid #8a8378; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.bestand-suche input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.bestand-suche-status { font-size: var(--fs-sm); color: var(--text-muted); }
+@media (max-width: 700px) { .bestand-suche { margin-left: 0; margin-top: var(--space-2); } }

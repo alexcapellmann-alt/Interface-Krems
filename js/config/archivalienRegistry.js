@@ -330,7 +330,7 @@ export const ARCHIVALIENTYPEN = [
     // löst `nennung_in_verlassenschaften` jetzt ebenso gegen
     // `verlassenschaftsinventare.csv`s `id` auf, fünfte Quelle.
     // AUFTRAG C1, Punkt 4: `rollen` (data/rollen.csv) für Chord-Diagramm und Personenliste
-    datenDatei: { familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv', rollen: 'data/rollen.csv' },
+    datenDatei: { familien: 'data/familien.csv', personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv' },
     primaeransicht: 'personenliste',
     // FOLGEAUFTRAG "Galerie+Flyout für Bürgerbuch und Personen": `hatGalerie`
     // + `beschreibung` wie bei buergerbuch oben. Zwei Abweichungen vom
@@ -421,7 +421,7 @@ export const ARCHIVALIENTYPEN = [
     // gesamte `{urkunden, familien}`-Objekt) - exakt dasselbe Muster wie
     // chordDiagramm.js unter `personen` oben.
     // AUFTRAG C1, Punkt 4: `rollen` für die Bipartite Flow Map
-    datenDatei: { urkunden: 'data/urkunden.csv', familien: 'data/familien.csv', rollen: 'data/rollen.csv' },
+    datenDatei: { urkunden: 'data/urkunden.csv', familien: 'data/familien.csv', personenliste: 'data/personenliste.csv' }, // 2026-10-27: Gruppen aus personenliste.csv statt rollen.csv
     primaeransicht: 'karte',
     hatGalerie: true,
     ansichten: [

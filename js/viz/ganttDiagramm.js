@@ -865,3 +865,14 @@ export function destroy() {
   instanz.container.innerHTML = '';
   instanz = null;
 }
+
+// Suchfeld der Bestand-Visualisierungen und Datensatzaufruf: wählt den Balken bzw. Marker des
+// Bestands aus (öffnet die Sidebar) und holt ihn in den sichtbaren Bereich.
+export function oeffneDatensatz(kuerzel) {
+  if (!instanz) return false;
+  const blatt = [...instanz.mitZeitraum, ...instanz.ohneZeitraum].find((b) => b.data?.record?.kuerzel === kuerzel);
+  if (!blatt) return false;
+  if (instanz.ausgewaehlterSchluessel !== schluesselFuerBlatt(blatt)) waehleBestand(blatt);
+  instanz.gruppeNachSchluessel.get(schluesselFuerBlatt(blatt))?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  return true;
+}

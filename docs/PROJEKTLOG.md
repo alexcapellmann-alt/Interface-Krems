@@ -219,6 +219,19 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-27 (75) – Bestand-Suche; rollen.csv aufgelöst
+
+**Suche:** Datalist-Vorschläge `Kürzel – Name`. Treffer-Reihenfolge: genau, Wortanfang, Teiltreffer. Bei gleichnamigen Beständen (z. B. mehrere „Ratsprotokolle“) öffnet Eingabe+Enter den ersten; über die Vorschlagsliste ist jeder einzeln wählbar.
+
+**rollen.csv:**
+- `soziale_gruppe` in `personenliste.csv` war bereits am 21.09.2026 mit derselben Logik materialisiert worden.
+- Vergleich im Browser vor der Umstellung (Laufzeitlogik mit `rollen.csv` + `familien.csv` gegen die Spalte): 2 276 von 2 276 Personennennungen gleich; jede Person durchgehend in einer Gruppe; keine Urkundenperson fehlt in der Personenliste.
+- Die Diagramme bleiben also inhaltlich unverändert.
+- `ermittleGruppe()` behält die Signatur: Gruppe aus der Personenliste, sonst Dynastie (wenn in `familien.csv`), sonst Bürgertum.
+- Neue Personen müssen künftig in `personenliste.csv` eine `soziale_gruppe` bekommen; die Wortlisten werden nicht mehr automatisch angewandt.
+
+---
+
 ## 2026-10-27 (74) – Vorschlagsformular überall
 
 Wunsch des Autors: der Knopf auch in den Regesten-Kacheln und in jeder Sidebar.

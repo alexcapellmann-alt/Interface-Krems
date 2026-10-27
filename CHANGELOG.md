@@ -7,6 +7,27 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (123) – Bestand: Suchfeld in allen Visualisierungen; rollen.csv entfällt
+
+- **Suchfeld (`js/utils/bestandSuche.js`, neu):**
+  - In der Werkzeugleiste jeder Bestand-Visualisierung (`app.js`): Name oder Kürzel eingeben, Vorschläge aus der Liste.
+  - Ein Treffer öffnet die Sidebar des Bestands in der aktuellen Ansicht.
+  - `oeffneDatensatz(kuerzel)` neu in `sunburst.js`, `icicle.js`, `circlePacking.js` (wechselt in die Kategorie) und `ganttDiagramm.js`; Treemap hatte es schon.
+  - Gemeinsame Suche im Baum: `findeBestandImBaum()` in `bestandsHierarchie.js`.
+- **`rollen.csv` entfällt:**
+  - Chord-Diagramm und Bipartite Flow Map nehmen die soziale Gruppe aus `personenliste.csv` (`soziale_gruppe`).
+  - Die Titelwörter der Personenliste stehen in `archiv.csv` (`namenszusaetze`).
+  - Angepasst: Registry, `datenAnforderungen.js` (Pflichtspalte `soziale_gruppe`) und `docs/SCHEMA.md`.
+  - Die Datei ist gelöscht; Sicherung unter `KI-Tribunal\sicherungen\rollen_vor_entfernung_2026-10-27.csv`.
+- Geprüft auf dem Testserver 8845:
+  - Suche „Waagbücher“ öffnet die Sidebar in allen 5 Bestand-Ansichten.
+  - Gruppenvergleich vorher: 2 276 von 2 276 Nennungen gleich.
+  - Chord-Diagramm, Flow Map und Personenliste ohne Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (122) – Vorschlagsformular in allen Sidebars und in den Regesten-Kacheln
 
 - **`js/beteiligung/bezuege.js` (neu):** eine Bezugsbeschreibung je Datensatztyp (Urkunde, Bürgerbuch, Verlassenschaftsinventar, Bestand), gemeinsam genutzt.
