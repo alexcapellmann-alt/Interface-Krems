@@ -7,6 +7,34 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (126) – Einleitungstext auf der Startseite von „Erkundung“
+
+- Text vom Autor geprüft und freigegeben; er steht in `data/ansichten.csv` als neue Zeile `erkundung;;Erkundung;…`.
+  - Absätze sind mit `|` getrennt, `**…**` wird fett.
+  - Die Zeile ist kein Bereich, nur die Einleitung des Tabs.
+- `ansichtenKonfiguration.js` liest die Zeile; `app.js` zeigt sie anstelle von „Bitte oben einen Bereich wählen.“.
+  - Gemeinsamer Baustein `baueEinleitungsBlock()`, auch für die Bestand-Seite.
+  - Gleiche mittige Lesespalte wie „Über“.
+- Fakten geprüft:
+  - 1 054 von 1 067 Urkunden mit Foto.
+  - 4 176 Einträge in der Personenliste.
+  - Bürgerbuch 1535–1625, Sektoren „Landwirtschaft & Weinbau“, „Handel“ und mehrere Handwerkssektoren.
+- `docs/SCHEMA.md`: siehe Eintrag 124 (Bereichszeile `beschreibung`); die Zeile `erkundung` gilt entsprechend.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-27 (125) – Bestand-Einleitung und Literaturseite mittig wie „Über“
+
+- `literaturSeite.js`: die ganze Seite in einer mittigen Lesespalte (70ch, `margin: 0 auto`, wie `.ueber-wurzel`); Recherche-Karten passen sich an (`auto-fit`).
+- Bestand-Seite (`app.js`, `components.css`): Überschrift und Einleitung gemeinsam in derselben mittigen Spalte, die Kacheln bleiben in voller Breite.
+- Geprüft auf dem Testserver 8845 (1024 px): beide Spalten mittig.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (124) – „Erkundung“, reduzierte Ansichten, Bestand-Einleitung, Bógget
 
 - **Tab „Visualisierungen“ heißt „Erkundung“** (`index.html`, `app.js`, Schaltfläche der Startseite in `startseite.csv`). Die Adressen (`#visualisierungen/…`) bleiben unverändert.

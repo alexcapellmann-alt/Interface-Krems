@@ -77,6 +77,12 @@ export function wendeAnsichtenKonfigurationAn(zeilen) {
   zeilen.forEach((zeile) => {
     const bereichId = alsText(zeile.bereich);
     const ansichtId = alsText(zeile.ansicht);
+    // Zeile `erkundung;;…`: nur die Einleitung der Startseite des Tabs „Erkundung“ (kein Bereich)
+    if (bereichId === 'erkundung' && !ansichtId) {
+      const absaetze = (Array.isArray(zeile.beschreibung) ? zeile.beschreibung : [zeile.beschreibung]).map(alsText).filter(Boolean);
+      if (absaetze.length) einleitungen.set('erkundung', absaetze);
+      return;
+    }
     const bereich = bereiche.get(bereichId);
     if (!bereich) {
       if (bereichId) console.warn(`ansichten.csv: unbekannter Bereich "${bereichId}" - Zeile wird ignoriert.`);
