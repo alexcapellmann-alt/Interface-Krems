@@ -12,6 +12,7 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 - Habsburg-Zeitleistenbaum: Der Zweig Habsburg-Lothringen (nur Joseph II.) war mit Stufe 1.6 fast pink (#d83751). Jetzt leicht hellere Stufe 0.4 (#8d2435) im Bordeaux-Ton.
 - Habsburg-Zeitleistenbaum: Balken ragten links über die Jahresachse, weil die Zoom-Transform den Achsabstand überschrieb. Der Baum liegt jetzt in einem beschnittenen Ausschnitt rechts der Achse; Mausrad-Zoom bleibt unter dem Zeiger.
 - Chord-Diagramm: Das Bild ist nur noch so groß wie der sichtbare Platz und mittig darin; keine Schiebebalken mehr.
+- Chord-Diagramm, Nachtrag: Beim ersten Öffnen kommt die Ansichten-Leiste erst nach dem Zeichnen dazu und schob das Diagramm um gut 30 px nach unten (wieder ein Schiebebalken). Das Diagramm vermisst sich jetzt neu, wenn sich seine Lage danach ändert; die Info-Button-Zeile hat von Anfang an ihre Höhe.
 - Geprüft auf dem Testserver 8845 (1600 × 900).
 
 Kein Commit durch Claude Code.
