@@ -662,8 +662,22 @@ function raeumeGalerieAuf(kontext) {
 }
 
 // Einleitungstext aus ansichten.csv (Bereichszeile) als mittige Lesespalte wie die Über-Seite:
-// Überschrift + Absätze; **fett** wird als Hervorhebung gesetzt, Platzhalter wie {n_bestaende_punkt}
-// werden aufgelöst. Gibt den Block zurück (oder null ohne Text).
+// Überschrift + Absätze; **fett** wird als Hervorhebung gesetzt, [Text](#ziel) als Link (nur interne
+// Ziele mit `#`, Wunsch des Autors 2026-10-27), Platzhalter wie {n_bestaende_punkt} werden aufgelöst.
+// Gibt den Block zurück (oder null ohne Text).
+function fuegeTextMitLinksEin(ziel, text) {
+  String(text).split(/\[([^\]]+)\]\((#[^)\s]*)\)/).forEach((teil, i, alle) => {
+    if (i % 3 === 1) {
+      const a = document.createElement('a');
+      a.href = alle[i + 1];
+      a.textContent = teil;
+      ziel.appendChild(a);
+    } else if (i % 3 === 0 && teil) {
+      ziel.appendChild(document.createTextNode(teil));
+    }
+  });
+}
+
 function baueEinleitungsBlock(absaetze, titelElement) {
   if (!absaetze.length) return null;
   const block = document.createElement('div');
@@ -676,8 +690,8 @@ function baueEinleitungsBlock(absaetze, titelElement) {
       absatzEl.textContent = '';
       String(text ?? absatz).split(/\*\*(.+?)\*\*/).forEach((teil, i) => {
         if (!teil) return;
-        if (i % 2 === 1) { const b = document.createElement('strong'); b.textContent = teil; absatzEl.appendChild(b); }
-        else absatzEl.appendChild(document.createTextNode(teil));
+        if (i % 2 === 1) { const b = document.createElement('strong'); fuegeTextMitLinksEin(b, teil); absatzEl.appendChild(b); }
+        else fuegeTextMitLinksEin(absatzEl, teil);
       });
     });
   });

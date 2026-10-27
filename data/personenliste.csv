@@ -774,7 +774,7 @@ felix_holzpeundtner;Felix Holzpeundtner|Felix Holzpunntner;Bürgerbuch;2;1561;15
 felix_sturmb;Felix Stuermb;Bürgerbuch;1;1588;1588;0;;BB-2104;;buerger;Schneider;
 felix_weixelbaum;Felix Weixelbaum;Bürgerbuch;1;1575;1575;0;;BB-1576;;buerger;Hauer;
 ferdinand_baldung;Ferdinand Baldung;Urkunden;1;1522;1522;0;StaAKr-0632;;;buerger;;
-ferdinand_i;Ferdiand I.|Ferdinand I.;Urkunden;59;1521;1563;42;StaAKr-0628|StaAKr-0630|StaAKr-0633|StaAKr-0634|StaAKr-0635|StaAKr-0637|StaAKr-0638|StaAKr-0639|StaAKr-0640|StaAKr-0641|StaAKr-0643|StaAKr-0646|StaAKr-0648|StaAKr-0649|StaAKr-0650|StaAKr-0651|StaAKr-0654|StaAKr-0655|StaAKr-0658|StaAKr-0662|StaAKr-0664|StaAKr-0665|StaAKr-0671|StaAKr-0672|StaAKr-0673|StaAKr-0675|StaAKr-0685|StaAKr-0688|StaAKr-0689|StaAKr-0690|StaAKr-0695|StaAKr-0700|StaAKr-0705|StaAKr-0706|StaAKr-0710|StaAKr-0712|StaAKr-0713|StaAKr-0718|StaAKr-0719|StaAKr-0726|StaAKr-0730|StaAKr-0743|StaAKr-0744|StaAKr-0748|StaAKr-0756|StaAKr-0763|StaAKr-0764|StaAKr-0766|StaAKr-0768|StaAKr-0770|StaAKr-0775|StaAKr-0790|StaAKr-0791|StaAKr-0793|StaAKr-0878|StaAKr-0666a|StAK-Stein-2027|StAK-Stein-2028|StAK_15580819_906_reg;;;dynastie;;
+ferdinand_i;Ferdinand I.;Urkunden;59;1521;1563;42;StaAKr-0628|StaAKr-0630|StaAKr-0633|StaAKr-0634|StaAKr-0635|StaAKr-0637|StaAKr-0638|StaAKr-0639|StaAKr-0640|StaAKr-0641|StaAKr-0643|StaAKr-0646|StaAKr-0648|StaAKr-0649|StaAKr-0650|StaAKr-0651|StaAKr-0654|StaAKr-0655|StaAKr-0658|StaAKr-0662|StaAKr-0664|StaAKr-0665|StaAKr-0671|StaAKr-0672|StaAKr-0673|StaAKr-0675|StaAKr-0685|StaAKr-0688|StaAKr-0689|StaAKr-0690|StaAKr-0695|StaAKr-0700|StaAKr-0705|StaAKr-0706|StaAKr-0710|StaAKr-0712|StaAKr-0713|StaAKr-0718|StaAKr-0719|StaAKr-0726|StaAKr-0730|StaAKr-0743|StaAKr-0744|StaAKr-0748|StaAKr-0756|StaAKr-0763|StaAKr-0764|StaAKr-0766|StaAKr-0768|StaAKr-0770|StaAKr-0775|StaAKr-0790|StaAKr-0791|StaAKr-0793|StaAKr-0878|StaAKr-0666a|StAK-Stein-2027|StAK-Stein-2028|StAK_15580819_906_reg;;;dynastie;;
 ferdinand_ii;Ferdinand II.;Urkunden;6;1622;1656;34;StaAKr-0837|StaAKr-0838|StaAKr-0840|StaAKr-0880|StAK-Stein-2046|StAK-Stein-2048;;;dynastie;;
 ferdinand_iii;Ferdinand III.;Urkunden;3;1628;1643;15;StaAKr-0840|StaAKr-0842|StAK-Stein-2043;;;dynastie;;
 ferdinand_teubl;Ferdinandt Teubl;Bürgerbuch;1;1596;1596;0;;BB-2282;;buerger;Hutstepper;
@@ -3606,8 +3606,7 @@ ulrich_1461;Ulrich;Urkunden;1;1461;1461;0;StaAKr-0388;;;buerger;;
 ulrich_baumgartenbergerhof;Ulrich Baumgartenbergerhof;Urkunden;1;1322;1322;0;StAK-UrkKr-0011;;;buerger;;
 ulrich_breuer;Ulrich Prener;Bürgerbuch;1;1567;1567;0;;BB-1157;;buerger;Beutler;
 ulrich_eberwein;Ulrich Eberwein;Bürgerbuch;1;1543;1543;0;;BB-0108;;buerger;;
-ulrich_edlinger;Ulrich Edlinger;Urkunden;1;1549;1549;0;StaAKr-0807;;;buerger;;"Möglicherweise identisch mit der Bürgerbuch-Person ""ulrich_edlinger_bb1548"" (dort 1548 registriert, 1 Jahre Abstand): gleicher Name, ""Bürger zu Krems"" in beiden Quellen, kein Widerspruch feststellbar, aber auch kein eindeutiger Beleg. Nicht zusammengeführt."
-ulrich_edlinger_bb1548;Uelrich Edlinger;Bürgerbuch;1;1548;1548;0;;BB-0237;;buerger;Kürschner;
+ulrich_edlinger;Ulrich Edlinger|Uelrich Edlinger;Urkunden|Bürgerbuch;2;1548;1549;1;StaAKr-0807;BB-0237;;buerger;Kürschner;
 ulrich_eytzing_von_eytzingen;Ulrich Eytzing von Eytzingen;Urkunden;1;1452;1452;0;StaAKr-0310;;;adel;;
 ulrich_feigel;Ulrich Feigel;Bürgerbuch;1;1543;1543;0;;BB-0125;;buerger;Schneider;
 ulrich_fiernkhrannz;Ulrich Fiernkhrannz;Bürgerbuch;1;1579;1579;0;;BB-1800;;buerger;Hauer;
@@ -3978,8 +3977,7 @@ wolfgang_cienbacher;Wolfgang Cienbacher;Urkunden;1;1531;1531;0;StaAKr-0718a;;;bu
 wolfgang_durner;Wolfganng Durner;Bürgerbuch;1;1552;1552;0;;BB-0448;;buerger;Schuster;
 wolfgang_eckersperger;Wolffgang Eckersperger;Bürgerbuch;1;1544;1544;0;;BB-0144;;buerger;Hafner;
 wolfgang_edmair;Wolfganng Etmair;Bürgerbuch;1;1558;1558;0;;BB-0761;;buerger;;
-wolfgang_egger;Wolfgang Egger;Urkunden;1;1549;1549;0;StaAKr-0815;;;buerger;;"Möglicherweise identisch mit der Bürgerbuch-Person ""wolfgang_egger_bb1548"" (dort 1548 registriert, 1 Jahre Abstand): gleicher Name, ""Bürger zu Krems"" in beiden Quellen, kein Widerspruch feststellbar, aber auch kein eindeutiger Beleg. Nicht zusammengeführt."
-wolfgang_egger_bb1548;Wolffganng Egger;Bürgerbuch;1;1548;1548;0;;BB-0262;;buerger;;
+wolfgang_egger;Wolfgang Egger|Wolffganng Egger;Urkunden|Bürgerbuch;2;1548;1549;1;StaAKr-0815;BB-0262;;buerger;;
 wolfgang_emerstorfer;Wolfgang Emerstorfer;Urkunden;1;1482;1482;0;StaAKr-0462;;;buerger;;
 wolfgang_entznman;Wolfganng Entznman;Bürgerbuch;1;1551;1551;0;;BB-0404;;buerger;;
 wolfgang_felinger;Wolfgang Felinger;Urkunden;1;1526;1526;0;StaAKr-0671d;;;buerger;;

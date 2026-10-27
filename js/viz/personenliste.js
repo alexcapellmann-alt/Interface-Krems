@@ -536,7 +536,8 @@ const SPALTEN = [
     sortWertFn: (r) => ermittleSortierNachname(r.schreibweisen) || r.personen_id
   },
   { schluessel: 'weitereSchreibweisen', label: 'Weitere Schreibweisen', typ: 'text', wertFn: (r) => (Array.isArray(r.schreibweisen) ? r.schreibweisen.slice(1).join(', ') : '') },
-  { schluessel: 'quelle', label: 'Quelle', typ: 'text', wertFn: (r) => r.quelle || '' },
+  // Seit 2026-10-27 kann eine Person aus mehreren Quellen stammen (`Urkunden|Bürgerbuch`, zusammengeführt)
+  { schluessel: 'quelle', label: 'Quelle', typ: 'text', wertFn: (r) => (Array.isArray(r.quelle) ? r.quelle.join(', ') : r.quelle || '') },
   { schluessel: 'anzahl_nennungen', label: 'Nennungen', typ: 'zahl', wertFn: (r) => Number(r.anzahl_nennungen) || 0 },
   { schluessel: 'erste_nennung', label: 'Erste Nennung', typ: 'zahl', wertFn: (r) => Number(r.erste_nennung) || null },
   { schluessel: 'letzte_nennung', label: 'Letzte Nennung', typ: 'zahl', wertFn: (r) => Number(r.letzte_nennung) || null }

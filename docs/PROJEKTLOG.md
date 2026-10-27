@@ -14,6 +14,20 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-10-27 – „Ferdiand I.“ korrigiert; Wolfgang Egger und Ulrich Edlinger zusammengeführt (Entscheidung des Autors)
+
+| Datei | Zeile | Spalte | vorher | nachher |
+|---|---|---|---|---|
+| `personenliste.csv` | `ferdinand_i` | `schreibweisen` | `Ferdiand I.\|Ferdinand I.` | `Ferdinand I.` |
+| `urkunden.csv` | `StaAKr-0658`, `StaAKr-0763` | `personen` | `Ferdiand I.` | `Ferdinand I.` |
+| `personenliste.csv` | `wolfgang_egger` | mehrere | Urkunden-Person (1549), Vermerk „Möglicherweise identisch …“ | zusammengeführt: Schreibweisen `Wolfgang Egger\|Wolffganng Egger`, Quelle `Urkunden\|Bürgerbuch`, 2 Nennungen 1548–1549, `StaAKr-0815` + `BB-0262`, Vermerk leer |
+| `personenliste.csv` | `wolfgang_egger_bb1548` | – | eigene Zeile | entfernt (in `wolfgang_egger` aufgegangen) |
+| `personenliste.csv` | `ulrich_edlinger` | mehrere | Urkunden-Person (1549), Vermerk „Möglicherweise identisch …“ | zusammengeführt: `Ulrich Edlinger\|Uelrich Edlinger`, Quelle `Urkunden\|Bürgerbuch`, 2 Nennungen 1548–1549, `StaAKr-0807` + `BB-0237`, Beruf Kürschner, Vermerk leer |
+| `personenliste.csv` | `ulrich_edlinger_bb1548` | – | eigene Zeile | entfernt (in `ulrich_edlinger` aufgegangen) |
+| `buergerbuch.csv` | `BB-0262`, `BB-0237` | `personen_id`, `unsicherheit_anmerkung` | `…_bb1548`, „Möglicherweise identisch …“ | `wolfgang_egger` / `ulrich_edlinger`, leer |
+
+Begründung (Autor): Es handelt sich um dieselben Personen. Die Regesten von `StaAKr-0658` und `StaAKr-0763` schreiben weiterhin „Ferdiand“ (Quellentext, nicht geändert; `wortwolke_filter.csv` filtert das Wort). Erste personenübergreifende Zusammenführung zwischen Urkunden und Bürgerbuch; `quelle` ist damit erstmals eine Liste (`personenliste.js` zeigt sie mit Komma). Sicherungen: `KI-Tribunal\sicherungen\*_vor_personenfix_2026-10-27.csv`.
+
 ### 2026-10-27 – Begründung der Ortsunsicherheit „Bógget, Belgien“ nachgetragen (Wunsch des Autors)
 
 | Datei | Zeile | Spalte | vorher | nachher | Quelle |

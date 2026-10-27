@@ -235,7 +235,7 @@ BB-0233;1547-05-20;;Wolff Prunner;wolf_brunner;Glaser;;Holz, Bau & Stein;;;;;;;;
 BB-0234;1547-05-20;;Zimprecht Baier;zimprecht_baier;;;;;;;;;;;;
 BB-0235;1547-05-20;;Jorg Nawein;georg_nawein;;;;;;;;;;;;
 BB-0236;1547-05-20;;Caspar Segmullner;kaspar_segmullner;;;;;;;;;;;;
-BB-0237;1548-01-04;;Uelrich Edlinger;ulrich_edlinger_bb1548;Kürschner;;Leder & Pelz;;;;;;;;ja;"Möglicherweise identisch mit der Person ""ulrich_edlinger"" aus urkunden_gesamt.xlsx (dort genannt 1549, 1 Jahre Abstand zu diesem Bürgerbuch-Eintrag): beide ""Bürger zu Krems"", kein Widerspruch in Beruf/Kontext feststellbar, aber auch kein eindeutiger Beleg (z.B. übereinstimmende Ehefrau) vorhanden. Nicht zusammengeführt."
+BB-0237;1548-01-04;;Uelrich Edlinger;ulrich_edlinger;Kürschner;;Leder & Pelz;;;;;;;;ja;
 BB-0238;1548-01-04;;Gabriel Kornhueber;gabriel_kornhueber;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0239;1548-01-04;;Hanns Hefelfuerter;hans_hefelfuerter;;;;;;;;;;;;
 BB-0240;1548-01-04;;Hanns Ambshaimer;hans_ambshaimer;;;;;;;;;;;;
@@ -260,7 +260,7 @@ BB-0258;1548-08-14;;Hanns Ortner;hans_ortner;;;;;;;;;;;;
 BB-0259;1548-09-14;;Hanns Walkham;hans_walkham;;;;;;;;;;;;
 BB-0260;1548-11-09;;Georg Sailler;georg_seiler;Schreiner, Tischler;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0261;1548-11-09;;Ambrosy Lifftl;ambrosius_lifftl;Beutler;;Leder & Pelz;;;;;;;;ja;
-BB-0262;1548-11-09;;Wolffganng Egger;wolfgang_egger_bb1548;;;;;;;;;;;;"Möglicherweise identisch mit der Person ""wolfgang_egger"" aus urkunden_gesamt.xlsx (dort genannt 1549, 1 Jahre Abstand zu diesem Bürgerbuch-Eintrag): beide ""Bürger zu Krems"", kein Widerspruch in Beruf/Kontext feststellbar, aber auch kein eindeutiger Beleg (z.B. übereinstimmende Ehefrau) vorhanden. Nicht zusammengeführt."
+BB-0262;1548-11-09;;Wolffganng Egger;wolfgang_egger;;;;;;;;;;;;
 BB-0263;1548-11-09;;Thoman Hamperger;thomas_hamperger;Wagner;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0264;1548-11-09;;Steffan Nagl;stephan_nagl;;;;;;;Erstmalig vorstellig am 4. Mai 1548.;;;;;
 BB-0265;1548-12-07;;Ambrosy Munzenrieder;ambrosius_munzenrieder;Sattler;;Leder & Pelz;;;;;;;;ja;
