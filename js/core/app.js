@@ -751,6 +751,7 @@ function stelleVizFlyoutSicher(kontext) {
   raeumeGalerieAuf(kontext);
   kontext.modus = 'viz';
   const unsicherheitsContainer = erzeugeUnterContainer('werkzeugleiste-unsicherheit');
+  kontext.unsicherheitsContainer = unsicherheitsContainer;
   kontext.kleinerBildschirmHinweis = erzeugeKleinerBildschirmHinweis();
   kontext.vizContainer = erzeugeUnterContainer('viz-inhalt');
   kontext.unsicherheitsButton = erzeugeUnsicherheitsButton(unsicherheitsContainer, {
@@ -872,6 +873,9 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     }
     setUnsicherheitModus(false); // Abschnitt 11, wie ansichtWechseln.js: setzt sich bei jedem Wechsel zurück
     kontext.unsicherheitsButton.setzeZurueck();
+    // 2026-10-28: Ansichten mit eigenem Unsicherheits-Knopf (Registry `eigenerUnsicherheitsButton`, z. B. die
+    // Bilderwand) blenden die allgemeine Zeile darüber aus, damit sie die Ansicht nicht nach unten schiebt
+    kontext.unsicherheitsContainer.style.display = eintrag.eigenerUnsicherheitsButton ? 'none' : '';
 
     // KLEINAUFTRAG "Familienbaum & Personenliste...": siehe identischer
     // Kommentar in renderVisualisierungenTab()'s ladeModulUndRender() oben.

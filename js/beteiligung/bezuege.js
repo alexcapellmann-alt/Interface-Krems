@@ -40,6 +40,18 @@ export function inventarBezug(r) {
   };
 }
 
+// Ort (orte.csv), seit 2026-10-28 für die Ortsliste
+export function ortBezug(r) {
+  return {
+    typ: 'ort', id: text(r.orte_id) || text(r.orte), titel: text(r.orte),
+    felder: [
+      { name: 'orte', label: 'Ortsname / Identifizierung', wert: r.orte },
+      { name: 'koordinaten', label: 'Koordinaten', wert: [text(r.lat), text(r.lon)].filter(Boolean).join(', ') },
+      { name: 'unsicherheit_anmerkung', label: 'Anmerkung', wert: r.unsicherheit_anmerkung }
+    ]
+  };
+}
+
 // Bestand (bestandsverzeichnis.csv): Felder wie in der Sidebar (STANDARD_SIDEBAR_FELDER u. a.)
 export function bestandBezug(r, felder = []) {
   return {

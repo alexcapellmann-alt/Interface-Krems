@@ -83,10 +83,10 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
 import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
-import { setFilterEntity, getZustand, clearZielSignatur } from '../core/state.js';
+import { getZustand, clearZielSignatur } from '../core/state.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { farbeFuerUrkundenKategorie, alleUrkundenKategorien } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
-import { baueGenanntePersonenZeile } from '../utils/genanntePersonen.js';
+import { baueGenanntePersonenZeile, baueVerlinkteOrte } from '../utils/genanntePersonen.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { erzeugeFilterleiste } from '../utils/filterleiste.js';
@@ -216,7 +216,6 @@ function fuegeStyleEin(container) {
       transition: transform .15s ease; }
     .regk-chevron.regk-chevron-aufgeklappt { transform: rotate(180deg); }
     .regk-feld-unsicher { border: 1px dashed var(--unsicher); padding: 1px 4px; border-radius: 3px; }
-    .regk-entity-btn { background: none; border: none; color: var(--accent); text-decoration: underline; cursor: pointer; padding: 0; font: inherit; }
     .regk-foto-platzhalter { font-style: italic; color: var(--text-muted); }
     .regk-foto-bereich img { max-width: 100px; max-height: 100px; margin: 2px; cursor: pointer; border-radius: 3px;
       transition: box-shadow .15s ease; }
@@ -251,20 +250,13 @@ function fuegeStyleEin(container) {
 // <button> selbst auslösen) zusätzlich den neuen Kachel-weiten Klick-Handler
 // erreicht und die Kachel ungewollt mit auf-/zuklappt - setFilterEntity()
 // selbst bleibt unverändert (Nicht-Ziel: keine Aktivierung der Links).
-function baueEntityButtons(werte, typ) {
+// Seit 2026-10-28 (Wunsch des Autors): Ortsnamen sind Links zur Ortsliste statt Filter-Knöpfe
+// (setFilterEntity()); ein Linkklick klappt die Kachel weiterhin nicht auf/zu.
+function baueOrtsLinks(werte) {
   const wrapper = document.createElement('span');
-  werte.forEach((wert, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'regk-entity-btn';
-    btn.textContent = wert;
-    btn.setAttribute('aria-label', `Nach ${typ === 'ort' ? 'Ort' : 'Person'} ${wert} filtern`);
-    btn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      setFilterEntity(typ, wert);
-    });
-    wrapper.appendChild(btn);
-    if (i < werte.length - 1) wrapper.appendChild(document.createTextNode(', '));
+  wrapper.appendChild(baueVerlinkteOrte(werte));
+  wrapper.addEventListener('click', (event) => {
+    if (event.target.closest('a')) event.stopPropagation();
   });
   return wrapper;
 }
@@ -295,7 +287,7 @@ function baueListenFeld(label, werte, entityTyp, feldname, unsicher, anmerkung, 
   const liste = Array.isArray(werte) ? werte : [werte];
   const feld = document.createElement('p');
   feld.appendChild(document.createTextNode(`${label}: `));
-  feld.appendChild(baueFeldMitUnsicherheit(baueEntityButtons(liste, entityTyp), zeigeUnsicherheit && unsicher, anmerkung, feldname, container));
+  feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks(liste), zeigeUnsicherheit && unsicher, anmerkung, feldname, container));
   return feld;
 }
 

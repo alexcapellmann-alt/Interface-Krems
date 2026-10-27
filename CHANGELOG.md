@@ -7,6 +7,22 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (141) – Bilderwand-Unsicherheitsknopf, neue Ortsliste, Ortslinks
+
+- Bilderwand: „σ Unsicherheiten anzeigen“ sitzt jetzt links oben in der Ansicht, in den Farben der dunklen Bühne. Die allgemeine Zeile darüber entfällt für diese Ansicht (Registry `eigenerUnsicherheitsButton`), die Bilderwand rückt dadurch nach oben.
+- Bilderwand: Der Knopf wirkt wie ein Filter, Urkunden mit Unsicherheitsmarkierung stehen oben (190 von 1.067), die übrigen rücken nach unten. Infotext angepasst.
+- Neue Ansicht „Ortsliste“ unter Orte (`js/viz/ortsliste.js`, erste Ansicht des Bereichs): alle 257 Orte aus `orte.csv` mit Quellen, Nennungen, erster und letzter Nennung. Gezählt werden Urkunden und Verlassenschaftsinventare (das Bürgerbuch hat keine Ortsspalte).
+  - Suche, Sortierung per Spaltenkopf und 100 Orte je Seite wie in der Personenliste.
+  - Klick auf einen Ort: Sidebar mit seinen Urkunden und Inventaren, darüber die Unsicherheitsangabe bzw. „Änderung vorschlagen“ (`ortBezug` in `bezuege.js`).
+  - „σ Unsicherheiten anzeigen“ zeigt wie die Karte nur die 86 Orte mit `orte_unsicher`, die Begründung als Tooltip.
+  - Neu in `ansichten.csv`, `infotexte.csv`, `datenAnforderungen.js`, `vizIcons.js`; `orte.ansichten` lädt dafür zusätzlich `orte.csv` und `verlassenschaftsinventare.csv`.
+- Ortsnamen in den Regesten-Kacheln (bisher Filter-Knöpfe) und in den Urkunden-Sidebars (bisher Text) sind Links zur Ortsliste (Datensatzaufruf `ort:<Ortsname>`, `baueVerlinkteOrte()` in `genanntePersonen.js`).
+- Geprüft auf dem Testserver 8845: Bilderwand mit/ohne Filter, Ortsliste (Suche, Sortierung, Unsicherheit, Sidebar), Links aus Kachel und Sidebar (auch mit Umlaut), Karte unverändert, keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (140) – Zeitleistenbaum und Chord-Diagramm
 
 - Habsburg-Zeitleistenbaum: Der Zweig Habsburg-Lothringen (nur Joseph II.) war mit Stufe 1.6 fast pink (#d83751). Jetzt leicht hellere Stufe 0.4 (#8d2435) im Bordeaux-Ton.

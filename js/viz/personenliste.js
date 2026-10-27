@@ -336,7 +336,7 @@ function baueBuergerbuchListeInhalt(records, { onEintragKlick } = {}) {
 // gesetzt ist - baueUnsicherheitAbsatz() zeigt den Hinweis trotzdem
 // (unsicherheit_anmerkung gilt dort unabhängig von einem `_unsicher`-Feld
 // immer als Auslöser, siehe dortiger Dateikopf-Kommentar).
-function baueInventarDetailInhalt(record) {
+export function baueInventarDetailInhalt(record) { // seit 2026-10-27 auch von ortsliste.js genutzt
   const wrapper = document.createElement('div');
   wrapper.appendChild(baueBuergerbuchSidebarFeld('Jahr', record.Jahr || '(ohne Jahr)'));
   if (record['Beruf/Funktion/Stand']) wrapper.appendChild(baueBuergerbuchSidebarFeld('Beruf/Funktion/Stand', record['Beruf/Funktion/Stand']));
@@ -349,7 +349,7 @@ function baueInventarDetailInhalt(record) {
 
 // Kompakte Inventar-Liste, analog zu baueBuergerbuchListeInhalt() - ID+Jahr
 // als Kopfzeile, Beruf/Funktion/Stand als Vorschauzeile.
-function baueInventarListeInhalt(records, { onEintragKlick } = {}) {
+export function baueInventarListeInhalt(records, { onEintragKlick } = {}) { // seit 2026-10-27 auch von ortsliste.js genutzt
   const liste = document.createElement('ul');
   liste.className = 'bestand-sidebar-urkunden-liste';
 
