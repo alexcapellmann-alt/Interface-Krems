@@ -231,6 +231,7 @@ import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkund
 import { parseJahr } from '../utils/urkundenZeit.js';
 import { ladeCSV } from '../core/dataLoader.js';
 import { kartenStartpunkt, infotextFuerModul } from '../core/archivKonfiguration.js';
+import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js'; // Partizipations-Modul (2026-10-27)
 
 // Punkt 5 (Vorschlag, siehe Selbstauskunft im Chat - noch nicht freigegeben):
 // dritter Absatz zum neuen Verhalten ergänzt.
@@ -349,6 +350,7 @@ async function ladeUnsichereOrteDaten(records) {
     const ausAnmerkung = ermittleUnsichereUrkunden(r.unsicherheit_anmerkung, alleSignaturenAbsteigend, signaturZuRecord).filter(Boolean);
     const ausOrtsname = ermittleUrkundenNachOrtsname(r.orte, records);
     const eintrag = {
+      id: r.orte_id || r.orte,
       name: r.orte,
       anmerkung: r.unsicherheit_anmerkung || '(keine Anmerkung hinterlegt)',
       urkunden: Array.from(new Set([...ausAnmerkung, ...ausOrtsname])),
@@ -381,6 +383,17 @@ function baueOrtAbschnitt(ort) {
   anmerkung.className = 'karte-sidebar-ort-anmerkung';
   anmerkung.textContent = ort.anmerkung;
   block.appendChild(anmerkung);
+
+  // Partizipations-Modul (2026-10-27): Vorschlag zu diesem Ort (z. B. Identifizierung, Koordinaten)
+  const vorschlag = baueVorschlagAufklapper({
+    typ: 'ort', id: ort.id, titel: ort.name,
+    felder: [
+      { name: 'orte', label: 'Ortsname / Identifizierung', wert: ort.name },
+      { name: 'koordinaten', label: 'Koordinaten', wert: ort.lat !== null ? `${ort.lat}, ${ort.lon}` : '' },
+      { name: 'unsicherheit_anmerkung', label: 'Anmerkung', wert: ort.anmerkung }
+    ]
+  });
+  if (vorschlag) block.appendChild(vorschlag);
 
   if (ort.urkunden.length === 0) {
     const hinweis = document.createElement('p');

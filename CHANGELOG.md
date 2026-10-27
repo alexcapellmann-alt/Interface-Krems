@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (121) – Partizipations-Modul: Vorschlagsformular (Forminit)
+
+- **Neu, `js/beteiligung/`:**
+  - `vorschlagFormular.js` (Anzeige und Eingabeprüfung) und `sendeVorschlag.js` (einzige Versandstelle, `fetch` POST an Forminit, Public-Modus), getrennt nach Masterprompt Abschnitt 5a.
+  - Versteckt mitgesendet: `bezug_typ`, `bezug_id`, `bezug_titel`, `feld_name`, `inhalt_alt`.
+  - Sichtbar: Feld, Art (Korrektur/Ergänzung/Neuvorschlag), Vorschlag, Begründung, Quelle, Name und E-Mail; Pflicht sind Vorschlag, Name und E-Mail.
+  - Honeypot-Feld `_gotcha`.
+  - Nach dem Senden eine Eingangsbestätigung, ohne die Übernahme vorwegzunehmen.
+- **Platzierung (Wunsch des Autors):**
+  - Sidebars der Urkunden (`sidebar.js`, überall, wo eine Urkunde geöffnet wird), der Personen (`personenliste.js`: Bürgerbuch, Verlassenschaftsinventare) und der unsicheren Orte (`karte.js`).
+  - Mit „σ Angaben unsicher“-Hinweis steht das Formular in dessen aufgeklapptem Feld (`unsicherAbsatz.js`, neue Option `vorschlag`); sonst hinter einem eigenen Knopf „✎ Änderung vorschlagen“.
+  - Die Führungen sind unverändert.
+- **Konfiguration in `data/archiv.csv`:** `beteiligung_aktiv`, `beteiligung_endpunkt`. Das weicht vom Masterprompt ab (dort `constants.js`); Entscheidung des Autors: alle Archiv-Einstellungen in den CSVs. Standardwerte in `archivKonfiguration.js`; `docs/SCHEMA.md` ergänzt.
+- **`css/components.css`:** Stile.
+- Geprüft auf dem Testserver 8845:
+  - Formular im σ-Feld (StaAKr-0001a), Knopf ohne σ (StaAKr-0452), Bürgerbuch BB-0557, 86 unsichere Orte.
+  - Leeres Absenden wird nicht übertragen.
+  - Keine Konsolenfehler.
+  - Ein echter Testversand steht noch aus (Freigabe des Autors).
+- Details: `docs/PROJEKTLOG.md` Eintrag 73.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-26 (120) – Führungen: Zeitleiste als zweite Übersicht
 
 - **`js/fuehrungen/fuehrungenZeitleiste.js` (neu), Route `#fuehrungen/zeitleiste`:**

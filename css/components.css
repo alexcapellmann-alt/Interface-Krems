@@ -740,3 +740,33 @@
 .fz-ohne ul { margin: 0; padding-left: var(--space-4); }
 @media (max-width: 800px) { .fuehrungen-zeitleiste { flex: 0 0 auto; } }
 @media (prefers-reduced-motion: reduce) { .fz-balken { transition: none; } }
+
+/* Partizipations-Modul (js/beteiligung/): Vorschlagsformular in den Sidebars, im σ-Feld oder hinter
+   dem Knopf „Änderung vorschlagen“ (gleiches Bedienmuster wie .unsicher-absatz-btn). */
+.vorschlag-aufklapper { margin-top: var(--space-3); }
+.vorschlag-btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px; padding: var(--space-1) var(--space-3);
+  font: inherit; font-size: var(--fs-sm); color: var(--accent); background: none; border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; }
+.vorschlag-btn:hover { border-color: var(--accent); }
+.vorschlag-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vorschlag-panel { margin-top: var(--space-2); }
+.vorschlag-formular { margin-top: var(--space-2); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--fs-sm); }
+.vorschlag-formular[hidden] { display: none; }
+.vorschlag-einleitung, .vorschlag-datenschutz, .vorschlag-alt, .vorschlag-status { margin: 0; }
+.vorschlag-datenschutz, .vorschlag-alt { color: var(--text-muted); }
+.vorschlag-alt { font-style: italic; }
+.vorschlag-feld { display: flex; flex-direction: column; gap: 2px; }
+.vorschlag-feld label { font-weight: 600; }
+.vorschlag-feld-hinweis { color: var(--text-muted); }
+.vorschlag-feld input, .vorschlag-feld select, .vorschlag-feld textarea { font: inherit; font-size: var(--fs-md); padding: var(--space-1) var(--space-2);
+  min-height: 40px; border: 1px solid #8a8378; border-radius: 4px; background: var(--surface); color: var(--text); width: 100%; box-sizing: border-box; }
+.vorschlag-feld textarea { resize: vertical; }
+.vorschlag-feld :focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.vorschlag-falle { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.vorschlag-senden { align-self: flex-start; min-height: 44px; padding: var(--space-1) var(--space-4); font: inherit; font-weight: 600;
+  color: #fff; background: var(--accent); border: none; border-radius: var(--radius); cursor: pointer; }
+.vorschlag-senden:hover { background: var(--accent-hover); }
+.vorschlag-senden:disabled { opacity: .6; cursor: progress; }
+.vorschlag-senden:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vorschlag-danke { margin: var(--space-2) 0 0; padding: var(--space-3); border-radius: var(--radius); background: #e8f1e4; color: #24451c; font-size: var(--fs-sm); }

@@ -49,7 +49,10 @@ const ARCHIV_ERSATZWERTE = {
   karte_zentrum_lat: '',
   karte_zentrum_lon: '',
   karte_zoom: '',
-  footer_text: ''
+  footer_text: '',
+  // Partizipations-Modul (2026-10-27): Vorschlagsformular, nur mit `ja` und https-Adresse aktiv
+  beteiligung_aktiv: '',
+  beteiligung_endpunkt: ''
 };
 
 let archivWerte = null;

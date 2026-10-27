@@ -423,7 +423,17 @@ export function baueUrkundenDetailInhalt(record) {
   }
   // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
   // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
-  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['datum_unsicher', 'orte_unsicher', 'personen_unsicher']);
+  // Partizipations-Modul (2026-10-27): Vorschlagsformular im σ-Feld bzw. eigener Knopf
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['datum_unsicher', 'orte_unsicher', 'personen_unsicher'], {
+    vorschlag: {
+      typ: 'urkunde', id: alsText(record.signatur), titel: [alsText(record.signatur), alsText(record.datum)].filter(Boolean).join(', '),
+      felder: [
+        { name: 'datum', label: 'Datum', wert: record.datum }, { name: 'regest', label: 'Regest', wert: record.regest },
+        { name: 'orte', label: 'Orte', wert: record.orte }, { name: 'personen', label: 'Personen', wert: record.personen },
+        { name: 'kategorien', label: 'Kategorien', wert: record.kategorien }
+      ]
+    }
+  });
   if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
   return wrapper;
 }
