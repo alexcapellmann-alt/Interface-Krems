@@ -424,8 +424,10 @@ const dynastieName = () => {
 const HABSBURG_BASIS_FARBE = '#7a1f2e';
 // AUFTRAG C1, Punkt 3: Helligkeitsabstufung je Zweig in der Reihenfolge von
 // `dynastie_familien` (Krems: habsburg 0, spanische_habsburger 0.8,
-// habsburg_tirol -0.5, habsburg_lothringen 1.6 - wie bisher fest im Code).
-const ZWEIG_ABSTUFUNGEN = [0, 0.8, -0.5, 1.6];
+// habsburg_tirol -0.5, habsburg_lothringen 0.4 - wie bisher fest im Code).
+// 2026-10-27: Lothringen-Stufe 1.6 -> 0.4; 1.6 ergab ein Pink (#d83751), das bei Joseph II. aus dem
+// Bordeaux-Ton herausfiel (Hinweis des Autors).
+const ZWEIG_ABSTUFUNGEN = [0, 0.8, -0.5, 0.4];
 const GRAU_EHEPARTNERFAMILIE = '#9a9a9a';
 
 // Politische Stellung - Rand/Symbol UND jetzt zusätzlich die
@@ -1297,7 +1299,8 @@ function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
     ])
     .on('zoom', (event) => {
       instanz.zoomTransform = event.transform;
-      zoomInhalt.attr('transform', event.transform);
+      // Die Transform gilt in svg-Koordinaten (Mauszeiger); der Ausschnitt beginnt erst bei RAND.links
+      zoomInhalt.attr('transform', `translate(${-RAND.links},0) ${event.transform}`);
       aktualisiereAchse(event.transform);
     });
   svg.call(zoomVerhalten);
@@ -1310,7 +1313,7 @@ function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
     // seitliches Abschneiden auf schmalen Fenstern), NICHT mehr
     // höhen-begrenzt - siehe Dateikopf-Kommentar ("künstliches Höhenlimit").
     const skala = Math.min(1, breite / baumBreite);
-    const startX = breite / 2 - ((ausdehnung.minX + ausdehnung.maxX) / 2) * skala;
+    const startX = RAND.links + breite / 2 - ((ausdehnung.minX + ausdehnung.maxX) / 2) * skala;
     const startY = RAND.oben - ausdehnung.minY * skala;
     svg.call(zoomVerhalten.transform, d3.zoomIdentity.translate(startX, startY).scale(skala));
   }
@@ -1430,8 +1433,15 @@ function zeichneFamilienbaum() {
   // aus der aktuellen Transform neu (siehe dortiger Kommentar).
   const achseGruppe = svg.append('g').attr('class', 'familienbaum-jahresachse').attr('transform', `translate(${RAND.links},0)`);
 
-  const zoomInhalt = zeichneBaum(svg, modell, plotBereich, zeigeUnsicherheit);
-  zoomInhalt.attr('transform', `translate(${RAND.links},0)`);
+  // 2026-10-27: Baum in eigenem, rechts der Jahresachse beschnittenem Ausschnitt - die Zoom-Transform
+  // überschrieb bisher das translate(RAND.links) und Balken ragten über die Achse (Hinweis des Autors).
+  const ausschnittId = `familienbaum-ausschnitt-${Math.random().toString(36).slice(2, 8)}`;
+  svg.append('clipPath').attr('id', ausschnittId)
+    .append('rect').attr('width', Math.max(breite - RAND.links, 0)).attr('height', hoehe);
+  const ausschnitt = svg.append('g')
+    .attr('transform', `translate(${RAND.links},0)`)
+    .attr('clip-path', `url(#${ausschnittId})`);
+  const zoomInhalt = zeichneBaum(ausschnitt, modell, plotBereich, zeigeUnsicherheit);
 
   instanz.zoomVerhalten = wireZoom(svg, zoomInhalt, achseGruppe, breite - RAND.links, hoehe, { minX, maxX, minY, maxY });
   instanz.letzteBaumausdehnung = { minX, maxX, minY, maxY };
