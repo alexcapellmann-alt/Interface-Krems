@@ -7,6 +7,24 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (136) – Dritte Navigationsebene: Ansichten-Leiste
+
+- **`js/core/ansichtenLeiste.js` (neu):** Ist eine Ansicht geöffnet, steht unter der Bereichs-Leiste eine Reihe mit allen angebotenen Ansichten des Bereichs; die aktuelle ist hervorgehoben (`aria-current`), wie „Urkunden“ darüber.
+  - Die Reihe beginnt unter dem aktiven Eintrag, solange sie dort in eine Zeile passt.
+  - Im Bestand steht sie unter dem Reiter „Bestand“.
+  - Auf den Übersichtsseiten (Galerien) erscheint sie nicht.
+  - Die Hover-Flyouts bleiben.
+- **`app.js`:** `zeigeAnsichtenLeiste()` bei jedem Ansichtswechsel; Abbau beim Zurück zur Übersicht.
+- Damit ist die in (42) eingeführte und später durch Flyouts ersetzte feste Tab-Leiste in anderer Form zurück (Wunsch des Autors).
+- Geprüft auf dem Testserver 8845:
+  - Zeitachse: 6 Urkunden-Ansichten, Zeitachse aktiv; Klick auf „Dot Plot“ wechselt und markiert um.
+  - Chord-Diagramm: 5 Personen-Ansichten; Treemap/Sunburst: 5 Bestand-Ansichten.
+  - Galerie ohne Leiste; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (135) – Über-Seite: „Mitarbeit und Kontakt“ beschreibt das Vorschlagsformular
 
 - `data/ueber.csv` (`mitarbeit`): statt „In Kürze wird dafür ein Formular … zur Verfügung stehen“ jetzt drei Absätze.

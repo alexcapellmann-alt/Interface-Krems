@@ -142,6 +142,7 @@ import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
+import { erzeugeAnsichtenLeiste } from './ansichtenLeiste.js';
 import { erzeugeStartseite } from './startseite.js';
 import { erzeugeBereichsLeiste, erzeugeBereichsLeistenVorschau } from './bereichsLeiste.js';
 import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
@@ -774,6 +775,29 @@ function stelleVizFlyoutSicher(kontext) {
   }
 }
 
+// Dritte Navigationsebene (Wunsch des Autors, 2026-10-27): alle Ansichten des Bereichs, die aktuelle
+// hervorgehoben (js/core/ansichtenLeiste.js). Unter der Bereichs-Leiste; im Bestand (ohne Bereichs-Leiste)
+// in einer eigenen ersten Zeile unter dem Reiter „Bestand“.
+function zeigeAnsichtenLeiste(kontext) {
+  if (kontext.ansichtenLeiste) { kontext.ansichtenLeiste.aktualisiere(kontext.ansichtId); return; }
+  let bereich = document.querySelector('.bereichs-leiste-bereich');
+  if (!bereich) {
+    bereich = erzeugeUnterContainer('bereichs-leiste-bereich');
+    kontext.ansichtenLeisteBereich = bereich;
+  }
+  const ausrichtenAn = kontext.tab === 'bestand'
+    ? document.querySelector('.haupt-navigation a[data-tab="bestand"]')
+    : bereich.querySelector('.bereichs-leiste a[aria-current="page"]');
+  kontext.ansichtenLeiste = erzeugeAnsichtenLeiste(bereich, {
+    ansichten: kontext.bereich.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id)).map((a) => ({ id: a.id, label: a.label })),
+    aktiveId: kontext.ansichtId,
+    zielFuer: (id) => kontext.routeSegmente(id).join('/'),
+    onAuswahl: (id) => navigiereZu(kontext.routeSegmente(id)),
+    ausrichtenAn,
+    bereichLabel: kontext.bereich.label
+  });
+}
+
 function baueTabListe(kontext) {
   return [
     { id: null, label: 'Übersicht', istUebersicht: true },
@@ -786,6 +810,10 @@ function raeumeVizAnsichtAuf(kontext) {
   kontext.aktuellesVizModul?.destroy();
   kontext.aktuellesVizModul = null;
   kontext.flyout?.destroy();
+  kontext.ansichtenLeiste?.destroy();
+  kontext.ansichtenLeiste = null;
+  kontext.ansichtenLeisteBereich?.remove();
+  kontext.ansichtenLeisteBereich = null;
   kontext.unsicherheitsButton?.destroy();
   kontext.bestandSuche?.destroy();
   kontext.bestandSuche = null;
@@ -856,6 +884,7 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     kontext.aktuellesVizModul = mod;
     aktualisiereKleinerBildschirmHinweis(kontext.kleinerBildschirmHinweis, eintrag.id);
     kontext.flyout?.aktualisiere({ tabs: baueTabListe(kontext), aktiverId: kontext.ansichtId });
+    zeigeAnsichtenLeiste(kontext);
   } finally {
     kontext.wirdGewechselt = false;
   }
