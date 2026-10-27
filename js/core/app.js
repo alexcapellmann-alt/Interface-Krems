@@ -141,6 +141,7 @@ import { ladeGecachteCSV } from './datenCache.js';
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
+import { zeigeBestandVorschau } from '../utils/bestandVorschau.js';
 import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
 import { erzeugeAnsichtenLeiste } from './ansichtenLeiste.js';
 import { erzeugeUnterleistenSchalter } from '../utils/unterleistenSchalter.js';
@@ -762,7 +763,9 @@ function stelleVizFlyoutSicher(kontext) {
   if (kontext.tab === 'bestand') {
     kontext.bestandSuche = erzeugeBestandSuche(unsicherheitsContainer, {
       liefereRecords: () => kontext.records,
-      onTreffer: (record) => kontext.aktuellesVizModul?.oeffneDatensatz?.(record.kuerzel) ?? false
+      onTreffer: (record) => kontext.aktuellesVizModul?.oeffneDatensatz?.(record.kuerzel) ?? false,
+      // 2026-10-28: Vorschlag unter der Maus bzw. Pfeiltasten-Auswahl vorab hervorheben
+      onVorschau: (record) => zeigeBestandVorschau(kontext.vizContainer, record ? String(record.kuerzel ?? '').trim() : null)
     });
   }
   // Siehe kontext.eigenerFlyoutNoetig-Kommentar in erzeugeGalerieFlyoutKontext()

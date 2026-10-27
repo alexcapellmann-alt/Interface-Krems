@@ -76,16 +76,47 @@ export function baueKategorieFarbSkala(kategorienNamen) {
 
 export const OHNE_KATEGORIE_FARBE = '#8a8a8a';
 
-// Abstufung der Kategorie-Grundfarbe je Unterkategorie (Helligkeitsvariation
-// derselben Farbe) - Bestände derselben Unterkategorie teilen sich denselben Ton,
-// unterschiedliche Unterkategorien derselben Kategorie sind sichtbar
-// unterscheidbar, bleiben aber erkennbar "verwandt" (gleicher Farbton).
-const HELLIGKEITS_STUFEN = [0, 0.7, -0.5, 1.3, -0.8, 0.35];
+// Palette der Bestand-Visualisierungen (Wunsch des Autors, 2026-10-28, Variante „Vier Familien“): die vier
+// Farbverläufe der Startseite (css/startseite.css, .startseite-slide-bg--1 bis --4) - Tintenblau, Petrol,
+// Braun-Gold, Bordeaux - mit je zwei bis drei Varianten. Reihenfolge abwechselnd nach Familie, damit die
+// nach Größe benachbarten Kategorien nie dieselbe Familie bekommen.
+const BESTAND_PALETTE = [
+  '#2c4a6e', '#3d6f6e', '#6b4a30', '#5c1f2e',
+  '#4f6f94', '#5d8c8a', '#c99a3a', '#8a6a3f',
+  '#8a4a5a', '#1b2f45', '#3a2436'
+];
+
+const zaehleBlaetter = (knoten) => (knoten.children?.length ? knoten.children.reduce((s, k) => s + zaehleBlaetter(k), 0) : 1);
+
+// Nur für Treemap, Sunburst, Icicle, Circle Packing und Gantt (Dot Plot, Parallelkoordinaten und
+// Bürgerbuch behalten baueKategorieFarbSkala()). kategorieKnoten: hierarchieDaten.children aus
+// baueBestandsHierarchie() ohne „ohne Kategorie“. Die größte Kategorie (meiste Bestände) bekommt die
+// erste Farbe; bei Gleichstand entscheidet der Name, damit die Zuordnung in allen fünf Ansichten gleich ist.
+// Mehr Kategorien als Farben: die Palette beginnt von vorn, leicht aufgehellt.
+export function baueBestandFarbSkala(kategorieKnoten) {
+  const sortiert = [...kategorieKnoten].sort((a, b) => zaehleBlaetter(b) - zaehleBlaetter(a) || a.name.localeCompare(b.name, 'de'));
+  const farben = sortiert.map((k, i) => {
+    const basis = BESTAND_PALETTE[i % BESTAND_PALETTE.length];
+    const runde = Math.floor(i / BESTAND_PALETTE.length);
+    return garantiereKontrast(runde ? mischeMitPapier(basis, Math.min(0.5, runde * 0.3)) : basis);
+  });
+  return d3.scaleOrdinal().domain(sortiert.map((k) => k.name)).range(farben);
+}
+
+// Mischt eine Farbe zum Papierton der Seite (--bg, #f7f5f0) hin; anteil 0 = unverändert, 1 = Papier
+function mischeMitPapier(hex, anteil) {
+  return d3.interpolateRgb(hex, '#f7f5f0')(anteil);
+}
+
+// Abstufung der Kategorie-Grundfarbe je Unterkategorie - Bestände derselben Unterkategorie teilen sich
+// denselben Ton, unterschiedliche Unterkategorien derselben Kategorie sind sichtbar unterscheidbar, bleiben
+// aber erkennbar "verwandt" (gleicher Farbton).
+// Seit 2026-10-28 (neue Bestand-Palette): statt heller/dunkler (brighter/darker, ergab grelle Töne)
+// schrittweise zum Papierton der Seite gemischt. Nur von den Bestand-Visualisierungen genutzt.
+const PAPIER_STUFEN = [0, 0.22, 0.4, 0.12, 0.52, 0.31];
 export function farbeFuerUnterkategorie(basisFarbeHex, unterkategorieKnoten) {
   const geschwister = unterkategorieKnoten.parent.children;
   const index = geschwister.indexOf(unterkategorieKnoten);
-  const faktor = HELLIGKEITS_STUFEN[index % HELLIGKEITS_STUFEN.length];
-  const farbe = d3.rgb(basisFarbeHex);
-  const verschoben = (faktor >= 0 ? farbe.brighter(faktor) : farbe.darker(-faktor)).formatHex();
-  return garantiereKontrast(verschoben);
+  const anteil = PAPIER_STUFEN[index % PAPIER_STUFEN.length];
+  return garantiereKontrast(d3.color(mischeMitPapier(basisFarbeHex, anteil)).formatHex());
 }

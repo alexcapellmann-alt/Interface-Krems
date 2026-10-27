@@ -39,7 +39,7 @@
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ACHSEN_SCHRIFTGROESSE, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { baueBestandsHierarchie, baueTooltipText, kategorieVonKnoten, OHNE_KATEGORIE } from '../utils/bestandsHierarchie.js';
-import { baueKategorieFarbSkala, OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
+import { baueBestandFarbSkala, OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
 import {
   baueSidebarGeruest,
   oeffneSidebar as oeffneSidebarModul,
@@ -837,7 +837,7 @@ export function render(container, data, options = {}) {
     mitZeitraum,
     ohneZeitraum,
     kategorienNamen,
-    kategorieFarbSkala: baueKategorieFarbSkala(kategorienNamen),
+    kategorieFarbSkala: baueBestandFarbSkala(hierarchieDaten.children.filter((k) => k.name !== OHNE_KATEGORIE)), // 2026-10-28: Palette „Vier Familien“
     options: { showUncertainty: true, width: null, height: null, ...options },
     letzteBreite: null,
     zoomTransform: null,
