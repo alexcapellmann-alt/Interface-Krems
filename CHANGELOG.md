@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (134) – Startseite: untere Fußzeile entfernt, © aus der oberen
+
+- `app.js`: Die globale Fußzeile (`footer_text` aus `archiv.csv`) ist jetzt auf allen Seiten ausgeblendet, auch auf der Startseite. `archiv.csv` (Anmerkung) und `docs/SCHEMA.md` angepasst.
+- `data/startseite.csv` (`footer_hinweis`): „© “ am Anfang entfernt.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (133) – Hintergrundkarte auch in den Führungen
 
 - `hintergrundKarte.js`:

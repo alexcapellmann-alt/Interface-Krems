@@ -1145,9 +1145,10 @@ function handleRouteChange() {
   const route = aktuelleRoute();
   aktualisiereNavHervorhebung(route.tab);
   aktualisiereSeitenueberschrift(route); // AUFTRAG D, Punkt 1
-  // Wunsch des Autors (2026-10-25): die Fußzeile (`footer_text`) nur noch auf der Startseite.
+  // Wunsch des Autors: die Fußzeile (`footer_text`) seit 2026-10-25 nur noch auf der Startseite, seit
+  // 2026-10-27 auch dort nicht mehr (die Startseite hat ihre eigene Fußzeile, `footer_hinweis`).
   const fusszeile = document.querySelector('.app-footer');
-  if (fusszeile) fusszeile.hidden = Boolean(route.tab);
+  if (fusszeile) fusszeile.hidden = true;
   aktualisiereHintergrundkarte(route); // Stadtplan als Hintergrund der Übersichtsseiten (2026-10-27)
 
   if (aktuellerKontext && aktuellerKontext.tab === route.tab) {
