@@ -1313,7 +1313,7 @@ function setzeBestandFlyout(an) {
   }
 }
 verankereHauptnavFlyouts();
-erzeugeUnterleistenSchalter(document.querySelector('.app-header-inner')); // Unterleisten ein-/ausklappen (2026-10-27)
+erzeugeUnterleistenSchalter(); // Reiter zum Ein-/Ausklappen der Unterleisten (2026-10-27)
 
 // AUFTRAG "Archivspezifische Texte...", Punkt 2.1/2.3/2.4: überträgt die
 // geladenen archiv.csv-Werte in die statischen index.html-Elemente
