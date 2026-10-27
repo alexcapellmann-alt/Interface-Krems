@@ -40,7 +40,7 @@
 // 2-Ebenen-Modell - diese Ausnahme gilt ausschließlich für Icicle.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
-import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE } from '../utils/bestandsHierarchie.js';
+import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE, findeBestandImBaum } from '../utils/bestandsHierarchie.js';
 import {
   passendeTextfarbe,
   baueKategorieFarbSkala,
@@ -593,4 +593,15 @@ export function destroy() {
   instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
+}
+
+// Suchfeld der Bestand-Visualisierungen und Datensatzaufruf: wechselt in die Kategorie des Bestands
+// und wählt ihn aus (öffnet die Sidebar); ein bereits gewählter Bestand bleibt offen.
+export function oeffneDatensatz(kuerzel) {
+  if (!instanz) return false;
+  const treffer = findeBestandImBaum(instanz.hierarchieDaten, kuerzel);
+  if (!treffer) return false;
+  if (instanz.aktuelleKategorieDaten !== treffer.kategorie) wechsleZuKategorie(treffer.kategorie);
+  if (instanz.ausgewaehlterName !== treffer.blatt.name) waehleBestand(treffer.blatt);
+  return true;
 }

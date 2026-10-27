@@ -140,6 +140,7 @@ import { getZustand, setUnsicherheitModus } from './state.js';
 import { ladeGecachteCSV } from './datenCache.js';
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
+import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { erzeugeStartseite } from './startseite.js';
 import { erzeugeBereichsLeiste, erzeugeBereichsLeistenVorschau } from './bereichsLeiste.js';
 import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
@@ -699,6 +700,14 @@ function stelleVizFlyoutSicher(kontext) {
   kontext.unsicherheitsButton = erzeugeUnsicherheitsButton(unsicherheitsContainer, {
     onToggle: (aktiv) => kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv })
   });
+  // Wunsch des Autors (2026-10-27): Suchfeld in jeder Bestand-Visualisierung; ein Treffer öffnet die
+  // Sidebar über oeffneDatensatz(kuerzel) des aktiven Moduls.
+  if (kontext.tab === 'bestand') {
+    kontext.bestandSuche = erzeugeBestandSuche(unsicherheitsContainer, {
+      liefereRecords: () => kontext.records,
+      onTreffer: (record) => kontext.aktuellesVizModul?.oeffneDatensatz?.(record.kuerzel) ?? false
+    });
+  }
   // Siehe kontext.eigenerFlyoutNoetig-Kommentar in erzeugeGalerieFlyoutKontext()
   // oben: für Bestand bewusst ausgelassen (permanenter Icon-Flyout aus Punkt 2
   // sitzt bereits am selben Auslöser).
@@ -724,6 +733,8 @@ function raeumeVizAnsichtAuf(kontext) {
   kontext.aktuellesVizModul = null;
   kontext.flyout?.destroy();
   kontext.unsicherheitsButton?.destroy();
+  kontext.bestandSuche?.destroy();
+  kontext.bestandSuche = null;
   kontext.kleinerBildschirmHinweis?.remove();
   kontext.hinweisBalkenBereich?.remove(); // AUFTRAG B2
   kontext.hinweisBalkenBereich = null;

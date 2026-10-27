@@ -174,3 +174,19 @@ export function baueTooltipText(blatt) {
   }
   return zeilen.join('\n');
 }
+
+// Suchfeld der Bestand-Visualisierungen (bestandSuche.js): sucht in der Hierarchie aus
+// baueBestandsHierarchie() den Bestand mit diesem Kürzel. Ergebnis: { kategorie, blatt } oder null.
+export function findeBestandImBaum(hierarchie, kuerzel) {
+  // beliebig tief (die Module nutzen 2 bis 4 Ebenen); `kategorie` ist immer die oberste Ebene
+  const suche = (knoten) => {
+    if (knoten.record?.kuerzel === kuerzel) return knoten;
+    for (const kind of knoten.children || []) { const t = suche(kind); if (t) return t; }
+    return null;
+  };
+  for (const kategorie of hierarchie?.children || []) {
+    const blatt = suche(kategorie);
+    if (blatt) return { kategorie, blatt };
+  }
+  return null;
+}
