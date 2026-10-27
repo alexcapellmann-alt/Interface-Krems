@@ -39,6 +39,8 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin } from '../utils/sidebar.js';
+import { inventarBezug } from '../beteiligung/bezuege.js';
+import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { farbeFuerVermoegensgruppe, VERMOEGENSGRUPPE_ANZEIGE_REIHENFOLGE } from '../utils/vermoegensgruppenFarben.js';
@@ -113,6 +115,8 @@ function baueListeInhalt(records) {
     const realvermoegen = record['Realvermoegen_fl'] ? `${record['Realvermoegen_fl']} fl.` : '–';
     detail.textContent = `${beruf} · Realvermögen: ${realvermoegen}`;
     item.append(name, detail);
+    const vorschlag = baueVorschlagAufklapper(inventarBezug(record)); // Partizipations-Modul
+    if (vorschlag) item.appendChild(vorschlag);
     liste.appendChild(item);
   });
   return liste;

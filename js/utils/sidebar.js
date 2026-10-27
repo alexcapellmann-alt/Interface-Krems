@@ -68,6 +68,7 @@ import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from './bilder.js';
 import { oeffneLightbox } from './lightbox.js';
 import { baueUnsicherheitAbsatz } from './unsicherAbsatz.js';
 import { baueGenanntePersonenZeile } from './genanntePersonen.js';
+import { urkundeBezug, bestandBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 
 export const STANDARD_SIDEBAR_FELDER = [
   { feld: 'zitierweise', label: 'Zitierweise' },
@@ -115,7 +116,9 @@ function baueSidebarBadges(record, kategorieName, kategorieFarbe) {
   return badges;
 }
 
-export function baueSidebarInhalt(record, { kategorieName, kategorieFarbe, felder = STANDARD_SIDEBAR_FELDER }) {
+// vorschlag (optional, Partizipations-Modul): Bezug für das Vorschlagsformular; ohne Angabe wird
+// ein Bestandsverzeichnis-Eintrag angenommen (bestandBezug), sonst z. B. ein Inventar (parallelKoordinaten.js).
+export function baueSidebarInhalt(record, { kategorieName, kategorieFarbe, felder = STANDARD_SIDEBAR_FELDER, vorschlag }) {
   const wrapper = document.createElement('div');
   wrapper.appendChild(baueSidebarBadges(record, kategorieName, kategorieFarbe));
 
@@ -128,7 +131,7 @@ export function baueSidebarInhalt(record, { kategorieName, kategorieFarbe, felde
 
   // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
   // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
-  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['daten_unsicher']);
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['daten_unsicher'], { vorschlag: vorschlag || bestandBezug(record, felder) });
   if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
 
   return wrapper;
@@ -424,16 +427,7 @@ export function baueUrkundenDetailInhalt(record) {
   // AUFTRAG "Teil 2g", Punkt 1: geteilte σ-Komponente statt "Achtung:
   // Angaben unsicher..." in Rot/Fett - siehe js/utils/unsicherAbsatz.js.
   // Partizipations-Modul (2026-10-27): Vorschlagsformular im σ-Feld bzw. eigener Knopf
-  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['datum_unsicher', 'orte_unsicher', 'personen_unsicher'], {
-    vorschlag: {
-      typ: 'urkunde', id: alsText(record.signatur), titel: [alsText(record.signatur), alsText(record.datum)].filter(Boolean).join(', '),
-      felder: [
-        { name: 'datum', label: 'Datum', wert: record.datum }, { name: 'regest', label: 'Regest', wert: record.regest },
-        { name: 'orte', label: 'Orte', wert: record.orte }, { name: 'personen', label: 'Personen', wert: record.personen },
-        { name: 'kategorien', label: 'Kategorien', wert: record.kategorien }
-      ]
-    }
-  });
+  const unsicherAbsatz = baueUnsicherheitAbsatz(record, ['datum_unsicher', 'orte_unsicher', 'personen_unsicher'], { vorschlag: urkundeBezug(record) });
   if (unsicherAbsatz) wrapper.appendChild(unsicherAbsatz);
   return wrapper;
 }
