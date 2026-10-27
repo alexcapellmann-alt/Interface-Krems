@@ -42,7 +42,7 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE } from '../utils/bestandsHierarchie.js';
 import {
   passendeTextfarbe,
-  baueKategorieFarbSkala,
+  baueBestandFarbSkala,
   OHNE_KATEGORIE_FARBE,
   farbeFuerUnterkategorie
 } from '../utils/kategorieFarben.js';
@@ -697,12 +697,11 @@ export function render(container, data, options = {}) {
   sidebar.schliessenBtn.addEventListener('click', schliesseSidebar);
 
   const hierarchieDaten = baueBestandsHierarchie(mitTextfeldern(data, TEXTFELDER), MINDESTGROESSE_ROH_TREEMAP);
-  const kategorienNamen = hierarchieDaten.children.map((k) => k.name).filter((name) => name !== OHNE_KATEGORIE).sort((a, b) => a.localeCompare(b));
 
   instanz = {
     container,
     hierarchieDaten,
-    kategorieFarbSkala: baueKategorieFarbSkala(kategorienNamen),
+    kategorieFarbSkala: baueBestandFarbSkala(hierarchieDaten.children.filter((k) => k.name !== OHNE_KATEGORIE)), // 2026-10-28: Palette „Vier Familien“
     options: { showUncertainty: true, width: null, height: null, ...options },
     aktuelleKategorieDaten: null,
     ausgewaehlterName: null,

@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (143) – Neue Farbpalette der Bestand-Visualisierungen („Vier Familien“)
+
+- Treemap, Sunburst, Icicle, Circle Packing und Gantt-Diagramm färben die Kategorien nicht mehr gleichmäßig über den Farbkreis (kräftig, Violett/Pink/Grün), sondern mit den vier Farbverläufen der Startseite: Tintenblau, Petrol, Braun-Gold, Bordeaux, je mit Varianten (`baueBestandFarbSkala()` in `js/utils/kategorieFarben.js`).
+- Zuordnung nach Größe: die Kategorie mit den meisten Beständen bekommt Tintenblau (Vermögen und Finanzen), dann Petrol (Verwaltung), Braun (Bevölkerung), Bordeaux (Gesundheit) usw.; die Familien wechseln sich ab. In allen fünf Ansichten dieselbe Farbe je Kategorie.
+- Unterkategorien werden zum Papierton der Seite hin abgestuft statt heller/dunkler verschoben (das ergab grelle Töne). Textkontrast weiterhin über `garantiereKontrast()` gesichert.
+- Die Vorschau-Hervorhebung der Bestand-Suche leuchtet jetzt im Gold der Startseite statt im Akzentblau (sonst auf den blauen Kategorien kaum sichtbar).
+- Unverändert: Dot Plot, Parallelkoordinaten und Bürgerbuch-Zeitleiste (weiter `baueKategorieFarbSkala()`), Grau für „ohne Kategorie“.
+- Geprüft auf dem Testserver 8845 in allen fünf Ansichten; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (142) – Bestand-Suche: Vorschau beim Überfahren der Vorschläge
+
+- Das Bestand-Suchfeld hat eine eigene Vorschlagsliste statt der Browser-`<datalist>` (die meldet kein Überfahren ihrer Einträge). Bis zu 12 Vorschläge, Reihenfolge genau > Wortanfang > Teiltreffer.
+- Zeigt die Maus auf einen Vorschlag oder steht die Pfeiltasten-Auswahl darauf, wird dieser Bestand in der Visualisierung schon vor der Auswahl hervorgehoben (leuchtender Rand), alles andere tritt zurück. Kategorie und Unterkategorie des Bestands bleiben sichtbar (Ringe in Sunburst/Icicle). Zeigt die Ebene den Bestand nicht einzeln (z. B. Circle-Packing-Übersicht), leuchtet seine Kategorie.
+- Klick oder Eingabetaste öffnet den Bestand wie bisher, Escape oder Verlassen der Liste hebt die Hervorhebung auf.
+- Ein gemeinsamer Baustein für alle fünf Bestand-Ansichten (`js/utils/bestandVorschau.js`, liest die an die SVG-Elemente gebundenen d3-Knoten), keine Änderung in den Modulen selbst.
+- Geprüft auf dem Testserver 8845 in Treemap, Sunburst, Icicle, Circle Packing und Gantt-Diagramm, mit Maus und Tastatur; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (141) – Bilderwand-Unsicherheitsknopf, neue Ortsliste, Ortslinks
 
 - Bilderwand: „σ Unsicherheiten anzeigen“ sitzt jetzt links oben in der Ansicht, in den Farben der dunklen Bühne. Die allgemeine Zeile darüber entfällt für diese Ansicht (Registry `eigenerUnsicherheitsButton`), die Bilderwand rückt dadurch nach oben.

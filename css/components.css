@@ -778,6 +778,18 @@
   border: 1px solid #8a8378; border-radius: var(--radius); background: var(--surface); color: var(--text); }
 .bestand-suche input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 .bestand-suche-status { font-size: var(--fs-sm); color: var(--text-muted); }
+/* Eigene Vorschlagsliste (2026-10-28, statt <datalist>): Überfahren hebt den Bestand in der Ansicht hervor */
+.bestand-suche-feld { position: relative; display: inline-block; }
+.bestand-suche-vorschlaege { position: absolute; top: calc(100% + 2px); left: 0; z-index: 60; min-width: 100%; width: max-content; max-width: min(520px, 90vw);
+  max-height: 320px; overflow-y: auto; margin: 0; padding: 4px 0; list-style: none; background: var(--surface); color: var(--text);
+  border: 1px solid #8a8378; border-radius: var(--radius); box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+.bestand-suche-vorschlaege[hidden] { display: none; }
+.bestand-suche-vorschlaege li { padding: 6px 10px; font-size: var(--fs-sm); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bestand-suche-vorschlaege li[aria-selected="true"] { background: var(--bg); box-shadow: inset 3px 0 0 var(--accent); }
+/* Vorläufige Hervorhebung in der Visualisierung (js/utils/bestandVorschau.js) */
+svg.bestand-vorschau-aktiv .bestand-vorschau-andere { opacity: .25; transition: opacity .15s; }
+/* Gold der Startseite (Hero-Knopf) statt --accent: hebt sich auch von den blauen Kategorien ab (2026-10-28) */
+svg.bestand-vorschau-aktiv .bestand-vorschau-treffer { filter: drop-shadow(0 0 2px #e0b429) drop-shadow(0 0 5px #e0b429); }
 @media (max-width: 700px) { .bestand-suche { margin-left: 0; margin-top: var(--space-2); } }
 
 /* Einleitung über den Kacheln eines Bereichs (ansichten.csv, Bereichszeile), z. B. Bestand-Seite */
