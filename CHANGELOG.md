@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (124) – „Erkundung“, reduzierte Ansichten, Bestand-Einleitung, Bógget
+
+- **Tab „Visualisierungen“ heißt „Erkundung“** (`index.html`, `app.js`, Schaltfläche der Startseite in `startseite.csv`). Die Adressen (`#visualisierungen/…`) bleiben unverändert.
+- **Streamgraph → Personen**, Name „Wirtschaftssektoren über die Zeit“ (`archivalienRegistry.js` mit `datenSchluessel: 'buergerbuch'`, `ansichten.csv`).
+- **Nicht mehr angeboten** (`ansichten.csv`, `anbieten = nein`; Code bleibt erhalten):
+  - Bereich Bürgerbuch.
+  - Bereich Verlassenschaften.
+  - In Urkunden: Kalender-Heatmap, Swimlanes, Ridgeline, Horizon Chart, Marimekko, Alluviales Diagramm, Adjazenzmatrix, Arc-Diagramm.
+  - In Personen: Bubble Chart.
+- **Bestand-Seite:** drei Absätze Einleitung über den Kacheln, aus der neuen Bereichszeile `bestand;;Bestand;…` in `ansichten.csv`.
+  - `ansichtenKonfiguration.js` liest die Bereichsbeschreibung (`bereichsEinleitung()`), `app.js` zeigt sie unter der Überschrift; der Platzhalter `{n_bestaende_punkt}` wird aufgelöst.
+  - `css/components.css` angepasst.
+- **`orte.csv` `bogget_belgien`:** Begründung der Unsicherheit nachgetragen (PROJEKTLOG, Datenkorrekturen).
+- **Behoben:** Die Bilderwand-Zeile in `ansichten.csv` (seit 116) enthielt ein Semikolon in der Beschreibung; dadurch waren die Spalten verschoben.
+- Geprüft auf dem Testserver 8845:
+  - Erkundung zeigt Urkunden (6 Ansichten), Personen (5) und Orte (3).
+  - Streamgraph unter Personen.
+  - Bestand-Einleitung mit „315 Bestände“.
+  - Bógget-Begründung in der Sidebar.
+  - Keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (123) – Bestand: Suchfeld in allen Visualisierungen; rollen.csv entfällt
 
 - **Suchfeld (`js/utils/bestandSuche.js`, neu):**

@@ -230,15 +230,8 @@ export const ARCHIVALIENTYPEN = [
       { id: 'bumpChart', label: 'Bump Chart', modulPfad: '../viz/bumpChart.js',
         beschreibung: 'Zeigt, wie sich die Rangfolge der Wirtschaftssektoren von Jahrzehnt zu Jahrzehnt verschiebt.' },
       { id: 'personennetzwerk', label: 'Personennetzwerk', modulPfad: '../viz/personennetzwerk.js',
-        beschreibung: 'Zeigt Bürgschaftsbeziehungen zwischen Personen im Bürgerbuch.' },
-      // AUFTRAG "Streamgraph → Bürgerbuch (Wirtschaftssektoren über die
-      // Zeit)": vierter Eintrag, von `urkunden.ansichten` hierher UMGEZOGEN
-      // (`id`/`modulPfad` unverändert - `streamgraph`/`../viz/streamgraph.js`,
-      // siehe dortiger Dateikopf-Kommentar). `beschreibung` wörtlich aus dem
-      // Auftrag übernommen (im Gegensatz zu den übrigen drei Einträgen oben,
-      // die selbst verfasst wurden - hier lag der Text bereits vor).
-      { id: 'streamgraph', label: 'Streamgraph', modulPfad: '../viz/streamgraph.js',
-        beschreibung: 'Zeigt die zeitliche Entwicklung der Bürgeraufnahmen je Wirtschaftssektor als organisch geschichtete Flächen.' }
+        beschreibung: 'Zeigt Bürgschaftsbeziehungen zwischen Personen im Bürgerbuch.' }
+      // Streamgraph am 2026-10-27 nach `personen.ansichten` verschoben (Wunsch des Autors).
     ]
   },
   {
@@ -365,6 +358,10 @@ export const ARCHIVALIENTYPEN = [
       // Kommentar oben).
       { id: 'personenliste', label: 'Personenliste', modulPfad: '../viz/personenliste.js',
         beschreibung: 'Durchsuchbare, sortierbare Liste aller erfassten Personen mit Nennungshäufigkeit und Zeitspanne.' },
+      // Wunsch des Autors (2026-10-27): aus dem Bereich Bürgerbuch hierher verschoben; zeichnet weiterhin
+      // die Bürgeraufnahmen aus buergerbuch.csv (`datenSchluessel`).
+      { id: 'streamgraph', label: 'Wirtschaftssektoren über die Zeit', modulPfad: '../viz/streamgraph.js', datenSchluessel: 'buergerbuch',
+        beschreibung: 'Zeigt die zeitliche Entwicklung der Bürgeraufnahmen je Wirtschaftssektor als organisch geschichtete Flächen.' },
       // Von `urkunden.ansichten` hierher verschoben (siehe Dateikopf-
       // Kommentar, "SELBST GEFUNDENER REGISTRIERUNGSFEHLER") - bubbleChart.js
       // erwartet personenliste.csv-Records, nicht urkunden.csv.

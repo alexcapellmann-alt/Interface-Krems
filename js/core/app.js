@@ -149,7 +149,7 @@ import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegist
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
 import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke, ersetzePlatzhalterImText } from './archivKonfiguration.js';
-import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn, istNichtAngeboten, NICHT_ANGEBOTEN_TEXTE } from './ansichtenKonfiguration.js';
+import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn, istNichtAngeboten, NICHT_ANGEBOTEN_TEXTE, bereichsEinleitung } from './ansichtenKonfiguration.js';
 import { erzeugeUeberSeite } from './ueberSeite.js';
 import { erzeugeLiteraturSeite } from './literaturSeite.js';
 
@@ -197,7 +197,7 @@ const seitenueberschrift = document.createElement('h1');
 seitenueberschrift.className = 'nur-fuer-hilfsmittel';
 seitenueberschrift.id = 'app-seitenueberschrift';
 
-const TAB_NAMEN = { bestand: 'Bestand', visualisierungen: 'Visualisierungen', fuehrungen: 'Führungen', literatur: 'Literatur', ueber: 'Über das Archiv' };
+const TAB_NAMEN = { bestand: 'Bestand', visualisierungen: 'Erkundung', fuehrungen: 'Führungen', literatur: 'Literatur', ueber: 'Über das Archiv' };
 
 function setzeSeitenueberschrift(teile) {
   const archiv = String(konfigurationswert('archiv_kurzname') || '').trim();
@@ -216,7 +216,7 @@ function aktualisiereSeitenueberschrift(route) {
   if (route.tab === 'visualisierungen') {
     const typ = ARCHIVALIENTYPEN.find((x) => x.typ === a);
     const ansicht = typ?.ansichten.find((x) => x.id === b);
-    return setzeSeitenueberschrift(ansicht ? [ansicht.label, typ.label] : [typ?.label, 'Visualisierungen']);
+    return setzeSeitenueberschrift(ansicht ? [ansicht.label, typ.label] : [typ?.label, 'Erkundung']);
   }
   if (route.tab === 'fuehrungen') {
     const schritt = b === 'ende' ? 'Ende der Führung' : (b ? `Station ${b}` : null);
@@ -676,6 +676,20 @@ function zeigeGalerie(kontext) {
     archivalientyp: { ...kontext.bereich, ansichten: sichtbareAnsichten.map((a) => (mitPlatzhalter(a) ? { ...a, beschreibung: '\u00a0' } : a)) }, // {label, ansichten} - erzeugeVisualisierungsGalerie() kennt nur diese Form, nicht den Namen "archivalientyp"
     onAuswahl: (ansicht) => navigiereZu(kontext.routeSegmente(ansicht.id))
   });
+  // Einleitung über den Kacheln (ansichten.csv, Bereichszeile), z. B. auf der Bestand-Seite
+  const einleitung = bereichsEinleitung(kontext.tab === 'bestand' ? 'bestand' : kontext.bereich.typ);
+  if (einleitung.length) {
+    const block = document.createElement('div');
+    block.className = 'galerie-einleitung';
+    einleitung.forEach((absatz) => {
+      const absatzEl = document.createElement('p');
+      block.appendChild(absatzEl);
+      ersetzePlatzhalterImText(absatz).then((text) => { absatzEl.textContent = text ?? absatz; });
+    });
+    // nach der Überschrift einfügen: erzeugeVisualisierungsGalerie() leert den Container beim Aufbau
+    const titel = galerieContainer.querySelector('.visualisierungs-galerie-titel');
+    if (titel) titel.after(block); else galerieContainer.prepend(block);
+  }
   sichtbareAnsichten.forEach(async (ansicht, index) => {
     if (!mitPlatzhalter(ansicht)) return;
     const text = (await ersetzePlatzhalterImText(ansicht.beschreibung)) ?? ansicht.beschreibungStandard ?? '';
