@@ -14,6 +14,14 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-10-27 – Begründung der Ortsunsicherheit „Bógget, Belgien“ nachgetragen (Wunsch des Autors)
+
+| Datei | Zeile | Spalte | vorher | nachher | Quelle |
+|---|---|---|---|---|---|
+| `orte.csv` | `bogget_belgien` | `unsicherheit_anmerkung` | `(Bocholt, belgisch Limburg).` | `Ortsidentifikation unsicher: Das Regest von StAK-UrkKr-0520 nennt „Bocholt (im Veld bey Bucholt in Flanndern)“. Die Gleichsetzung mit Bocholt in belgisch Limburg, nach der die Koordinaten gesetzt sind, ist aus dem Regest nicht eindeutig ableitbar.` | Regest und `unsicherheit_anmerkung` von `StAK-UrkKr-0520` in `urkunden.csv` |
+
+Die bisherige Anmerkung nannte nur die Deutung, nicht den Grund der Unsicherheit; die Sidebar „Unsichere Orte“ zeigte deshalb keinen Grund. Die Signatur im Text verknüpft den Ort dort zugleich mit der Urkunde.
+
 ### 2026-10-07 – Zwei protokollierte Korrekturen wiederhergestellt (Auftrag D, Teil 0, Freigabe des Autors)
 
 **Hintergrund:** Der Abgleich in Auftrag C2 (`Pruefung_2026-10-03/Nachher_C/C2/datenabgleich_vor_2026-09-22.md`)
@@ -216,6 +224,25 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   (296) stimmte schon VOR der Entfernung nicht mit einer Neuberechnung aus
   `urkunden.csv` überein (298, Abweichung 2) und wird deshalb laut Auftrag
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
+
+---
+
+## 2026-10-27 (76) – Erkundung, Ansichtsauswahl, Bestand-Einleitung
+
+- **Ausblenden über `anbieten = nein`** statt Löschen: Die Module bleiben im Repository und lassen sich über `ansichten.csv` wieder einschalten. Gespeicherte Links auf ausgeblendete Ansichten zeigen den Hinweis „nicht angeboten“.
+- **Folge für Datensatz-Links:**
+  - Belege vom Typ `inventar` (Führungen) verweisen auf die Parallelkoordinaten im ausgeblendeten Bereich Verlassenschaften. Solange er ausgeblendet ist, entfällt dort der Link „Im Archiv ansehen“ (`ermittleAnsicht()` liefert null), ohne Fehler.
+  - Bürgerbuch-Einträge werden weiter in der Personenliste geöffnet.
+- **Streamgraph:** gleiche `id`, jetzt im Bereich Personen, der `buergerbuch.csv` bereits lädt.
+- **Bestand-Einleitung:** Der Text ist selbst verfasst, aus dem Bestandsverzeichnis abgeleitet:
+  - Krems, Stein, eingemeindete Orte wie Hollenburg;
+  - Gattungen (Urkunden, Ratsprotokolle, Rechnungs- und Steuerbücher, Akten, Nachlässe, Vereinsunterlagen, Sammlungen);
+  - Themengliederung und Laufmeter.
+  Die Zahl kommt live über `{n_bestaende_punkt}`.
+- **Fehler beim Umbau, sofort behoben:**
+  - Das Umbauskript entfernte durch einen doppelt vorkommenden Kommentartext zunächst einen ganzen Block aus `archivalienRegistry.js` (Ridgeline bis Bilderwand und den Bürgerbuch-Kopf).
+  - Bemerkt beim Browsertest (Urkunden zeigte nur 3 Ansichten). Die Datei wurde aus dem Commit wiederhergestellt und nur die Streamgraph-Verschiebung erneut, mit Längenprüfung, vorgenommen.
+  - `git diff` zeigt danach nur die beabsichtigten 15 Zeilen.
 
 ---
 

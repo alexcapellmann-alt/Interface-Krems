@@ -32,6 +32,12 @@ export const ANSICHTEN_PFAD = 'data/ansichten.csv';
 // app.js zeigt bei einem direkten Link darauf den Hinweisbalken (wie bei
 // ausgeblendeten Ansichten, B2) statt stillschweigend die Galerie.
 const nichtAngeboten = { bereiche: new Set(), ansichten: new Set() };
+// Einleitung eines Bereichs (Spalte `beschreibung` der Bereichszeile, Absätze mit `|`), z. B. über den
+// Kacheln der Bestand-Seite (Wunsch des Autors, 2026-10-27). Platzhalter wie {n_bestaende_punkt} löst app.js auf.
+const einleitungen = new Map();
+export function bereichsEinleitung(bereichId) {
+  return einleitungen.get(bereichId) || [];
+}
 export function istNichtAngeboten(bereichId, ansichtId = null) {
   return ansichtId ? nichtAngeboten.ansichten.has(`${bereichId}/${ansichtId}`) : nichtAngeboten.bereiche.has(bereichId);
 }
@@ -79,6 +85,8 @@ export function wendeAnsichtenKonfigurationAn(zeilen) {
     const name = alsText(zeile.name);
     const anbieten = alsText(zeile.anbieten).toLowerCase() !== 'nein';
     if (!ansichtId) {
+      const absaetze = (Array.isArray(zeile.beschreibung) ? zeile.beschreibung : [zeile.beschreibung]).map(alsText).filter(Boolean);
+      if (absaetze.length) einleitungen.set(bereichId, absaetze);
       // Zeile beschreibt den Bereich selbst (der Name "Bestand" ist der Reiter der Hauptnavigation und bleibt).
       if (name && bereichId !== 'bestand') bereich.label = name;
       reihenfolgeBereich.set(bereich, alsText(zeile.reihenfolge));
