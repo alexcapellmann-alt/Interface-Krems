@@ -7,6 +7,34 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (138) – Bestand ohne Flyout am aktiven Tab; Schalter „Unterleisten einklappen“
+
+- **`app.js`:** Der Hover-Flyout an „Bestand“ (Hauptnavigation) entfällt, solange der Bestand-Tab aktiv ist (`setzeBestandFlyout()`); auf allen anderen Seiten bleibt er.
+- **`js/utils/unterleistenSchalter.js` (neu):**
+  - Runder Pfeil-Knopf (Chevron) rechts in der Kopfzeile blendet Bereichs- und Ansichten-Leiste aus oder ein.
+  - Sichtbar nur auf Seiten mit Unterleisten.
+  - Der Zustand wird im Browser gemerkt (localStorage, abgesichert); danach rechnen die Ansichten ihre Größe neu.
+  - `aria-expanded` und wechselnde Beschriftung.
+- **`css/components.css`:** Stile.
+- Geprüft auf dem Testserver 8845:
+  - Zeitachse: Leisten aus- und wieder eingeklappt, die Zeichenfläche wächst um 30 px.
+  - Flyout an „Bestand“ auf Erkundung/Literatur ja, im Bestand nein.
+  - Schalter auf Literatur unsichtbar; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-27 (137) – Kein Flyout am aktiven Bereich; Ansichten-Leiste kleiner
+
+- `app.js` (`stelleVizFlyoutSicher()`): Ist eine Ansicht offen, hat der aktive Bereich (z. B. „Urkunden“) kein Hover-Flyout mehr, weil seine Ansichten bereits in der Ansichten-Leiste stehen. Die Flyouts der übrigen Bereiche bleiben.
+- `ansichtenLeiste.js`: Schrift 13 px statt 14 px, Einträge 32 px statt 40 px hoch, engere Abstände.
+- Geprüft auf dem Testserver 8845 (Zeitachse): Hover über „Urkunden“ zeigt kein Flyout, über „Personen“ das Flyout mit dessen Ansichten.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (136) – Dritte Navigationsebene: Ansichten-Leiste
 
 - **`js/core/ansichtenLeiste.js` (neu):** Ist eine Ansicht geöffnet, steht unter der Bereichs-Leiste eine Reihe mit allen angebotenen Ansichten des Bereichs; die aktuelle ist hervorgehoben (`aria-current`), wie „Urkunden“ darüber.
