@@ -141,16 +141,18 @@ function vergleicheNachJahr(a, b) {
 function fuegeStyleEin(container) {
   const style = document.createElement('style');
   style.textContent = `
-    .literatur-wurzel { padding: var(--space-5) var(--space-4); }
+    /* Wunsch des Autors (2026-10-27): die ganze Seite in einer mittigen Lesespalte wie die Über-Seite
+       (ueberSeite.js' .ueber-wurzel: 70ch, margin 0 auto). */
+    .literatur-wurzel { grid-column: 1 / -1; max-width: 70ch; margin: 0 auto; padding: var(--space-5) var(--space-4); }
     .literatur-kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-      max-width: 1200px; margin: 0 auto var(--space-5) auto; }
+      margin: 0 0 var(--space-5) 0; }
     .literatur-kopf h2 { margin: 0; }
 
     /* Punkt 1: Recherche-Karten - breitere Spalte als die Leseliste unten,
        dasselbe Drei-Spalten-Kachelmuster wie startseite.css' .startseite-kacheln. */
-    .literatur-recherche { max-width: 1200px; margin: 0 auto var(--space-6) auto; }
+    .literatur-recherche { margin: 0 0 var(--space-6) 0; }
     .literatur-recherche h3 { margin: 0 0 var(--space-3) 0; }
-    .literatur-recherche-karten { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+    .literatur-recherche-karten { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
     @media (max-width: 900px) {
       .literatur-recherche-karten { grid-template-columns: 1fr; }
     }
@@ -163,7 +165,7 @@ function fuegeStyleEin(container) {
     /* Punkt 2: Kategorien-Sprungmarken + Sortierung, dieselbe max-width wie
        die Recherche-Karten (mehr Platz für bis zu 12 Kategorienamen als die
        70ch-Leseliste darunter erlauben würde). */
-    .literatur-steuerung { max-width: 1200px; margin: 0 auto var(--space-5) auto; display: flex;
+    .literatur-steuerung { margin: 0 0 var(--space-5) 0; display: flex;
       flex-direction: column; gap: var(--space-3); }
     .literatur-kategorien-nav { display: flex; flex-wrap: wrap; gap: var(--space-2); }
     .literatur-kategorien-nav button { min-height: 36px; padding: 4px 12px; border-radius: 999px;

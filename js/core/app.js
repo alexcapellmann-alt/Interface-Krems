@@ -478,10 +478,18 @@ async function renderVisualisierungenTab() {
       if (meineGeneration !== generation) return;
       hinweisContainer.appendChild(pm.erzeugeHinweisBalken([NICHT_ANGEBOTEN_TEXTE.bereich]));
     }
-    const hinweis = document.createElement('p');
-    hinweis.className = 'visualisierungen-hinweis';
-    hinweis.textContent = 'Bitte oben einen Bereich wählen.';
-    hinweisContainer.appendChild(hinweis);
+    // Startseite des Tabs „Erkundung“: Einleitung aus ansichten.csv (Zeile `erkundung;;…`), sonst der kurze Hinweis
+    const titel = document.createElement('h2');
+    titel.textContent = TAB_NAMEN.visualisierungen;
+    const einleitungsBlock = baueEinleitungsBlock(bereichsEinleitung('erkundung'), titel);
+    if (einleitungsBlock) {
+      hinweisContainer.appendChild(einleitungsBlock);
+    } else {
+      const hinweis = document.createElement('p');
+      hinweis.className = 'visualisierungen-hinweis';
+      hinweis.textContent = 'Bitte oben einen Bereich wählen.';
+      hinweisContainer.appendChild(hinweis);
+    }
     aktuellerKontext = { tab: 'visualisierungen', typ: null, hatGalerie: false, destroy: () => bereichsLeiste.destroy() };
     return;
   }
@@ -653,6 +661,29 @@ function raeumeGalerieAuf(kontext) {
   kontext.modus = null;
 }
 
+// Einleitungstext aus ansichten.csv (Bereichszeile) als mittige Lesespalte wie die Über-Seite:
+// Überschrift + Absätze; **fett** wird als Hervorhebung gesetzt, Platzhalter wie {n_bestaende_punkt}
+// werden aufgelöst. Gibt den Block zurück (oder null ohne Text).
+function baueEinleitungsBlock(absaetze, titelElement) {
+  if (!absaetze.length) return null;
+  const block = document.createElement('div');
+  block.className = 'galerie-einleitung';
+  if (titelElement) block.appendChild(titelElement);
+  absaetze.forEach((absatz) => {
+    const absatzEl = document.createElement('p');
+    block.appendChild(absatzEl);
+    ersetzePlatzhalterImText(absatz).then((text) => {
+      absatzEl.textContent = '';
+      String(text ?? absatz).split(/\*\*(.+?)\*\*/).forEach((teil, i) => {
+        if (!teil) return;
+        if (i % 2 === 1) { const b = document.createElement('strong'); b.textContent = teil; absatzEl.appendChild(b); }
+        else absatzEl.appendChild(document.createTextNode(teil));
+      });
+    });
+  });
+  return block;
+}
+
 function zeigeGalerie(kontext) {
   if (kontext.modus === 'galerie') return;
   raeumeVizAnsichtAuf(kontext); // Flyout wird mit abgebaut (siehe dort) - auf der Galerie-Seite gibt es keinen Auslöser-Kontext
@@ -677,19 +708,13 @@ function zeigeGalerie(kontext) {
     onAuswahl: (ansicht) => navigiereZu(kontext.routeSegmente(ansicht.id))
   });
   // Einleitung über den Kacheln (ansichten.csv, Bereichszeile), z. B. auf der Bestand-Seite
-  const einleitung = bereichsEinleitung(kontext.tab === 'bestand' ? 'bestand' : kontext.bereich.typ);
-  if (einleitung.length) {
-    const block = document.createElement('div');
-    block.className = 'galerie-einleitung';
-    einleitung.forEach((absatz) => {
-      const absatzEl = document.createElement('p');
-      block.appendChild(absatzEl);
-      ersetzePlatzhalterImText(absatz).then((text) => { absatzEl.textContent = text ?? absatz; });
-    });
-    // nach der Überschrift einfügen: erzeugeVisualisierungsGalerie() leert den Container beim Aufbau
-    const titel = galerieContainer.querySelector('.visualisierungs-galerie-titel');
-    if (titel) titel.after(block); else galerieContainer.prepend(block);
-  }
+  // Überschrift und Text gemeinsam in der mittigen Lesespalte (wie die Über-Seite); erst nach dem
+  // Aufbau der Galerie einfügen, weil erzeugeVisualisierungsGalerie() den Container leert
+  const einleitungsBlock = baueEinleitungsBlock(
+    bereichsEinleitung(kontext.tab === 'bestand' ? 'bestand' : kontext.bereich.typ),
+    galerieContainer.querySelector('.visualisierungs-galerie-titel')
+  );
+  if (einleitungsBlock) galerieContainer.prepend(einleitungsBlock);
   sichtbareAnsichten.forEach(async (ansicht, index) => {
     if (!mitPlatzhalter(ansicht)) return;
     const text = (await ersetzePlatzhalterImText(ansicht.beschreibung)) ?? ansicht.beschreibungStandard ?? '';
