@@ -11,7 +11,8 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 - **`app.js`:** Der Hover-Flyout an „Bestand“ (Hauptnavigation) entfällt, solange der Bestand-Tab aktiv ist (`setzeBestandFlyout()`); auf allen anderen Seiten bleibt er.
 - **`js/utils/unterleistenSchalter.js` (neu):**
-  - Runder Pfeil-Knopf (Chevron) rechts in der Kopfzeile blendet Bereichs- und Ansichten-Leiste aus oder ein.
+  - Kleiner Reiter mit Pfeil (Chevron) rechts an der Unterkante der untersten Leiste (eingeklappt: unter der Kopfzeile); blendet Bereichs- und Ansichten-Leiste aus oder ein.
+  - Die Lage wird gemessen (ResizeObserver/MutationObserver, da die Leisten je Seite verschieden sind).
   - Sichtbar nur auf Seiten mit Unterleisten.
   - Der Zustand wird im Browser gemerkt (localStorage, abgesichert); danach rechnen die Ansichten ihre Größe neu.
   - `aria-expanded` und wechselnde Beschriftung.
