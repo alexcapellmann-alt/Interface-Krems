@@ -7,6 +7,32 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (128) – Erkundung: „Urkunden“, „Personen“, „Orte“ als Links
+
+- Einleitungstexte (`ansichten.csv`, Bereichszeilen) können jetzt Links enthalten: `[Text](#ziel)`, nur interne Ziele (`app.js`, `fuegeTextMitLinksEin()`; `docs/SCHEMA.md`).
+- Text der Zeile `erkundung`: „Urkunden“, „Personen“ und „Orte“ führen zu `#visualisierungen/urkunden`, `/personen` und `/orte`.
+- Geprüft auf dem Testserver 8845: drei Links, Klick auf „Personen“ öffnet die Galerie mit den fünf Personen-Ansichten.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-27 (127) – Personenliste: „Ferdinand I.“, Egger und Edlinger zusammengeführt
+
+- **„Ferdinand I.“:** `personenliste.csv` (`ferdinand_i`) und das Personenfeld von `StaAKr-0658`/`StaAKr-0763` in `urkunden.csv`. Die Regesten bleiben unverändert.
+- **Wolfgang Egger und Ulrich Edlinger:** Urkunden- und Bürgerbuch-Person jeweils zu einer zusammengeführt (Entscheidung des Autors).
+  - Bürgerbuch-Einträge `BB-0262`/`BB-0237` verweisen jetzt auf `wolfgang_egger`/`ulrich_edlinger`.
+  - Die Unsicherheitsvermerke sind entfernt.
+  - Details: PROJEKTLOG, Datenkorrekturen.
+- **`personenliste.js`:** Spalte „Quelle“ zeigt mehrere Quellen mit Komma. `docs/SCHEMA.md` (`quelle` als Liste).
+- Geprüft auf dem Testserver 8845:
+  - Suche „egger“/„edlinger“ zeigt je eine Zeile ohne σ.
+  - Die Sidebar von Wolfgang Egger listet `StaAKr-0815` und `BB-0262`.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (126) – Einleitungstext auf der Startseite von „Erkundung“
 
 - Text vom Autor geprüft und freigegeben; er steht in `data/ansichten.csv` als neue Zeile `erkundung;;Erkundung;…`.
