@@ -523,7 +523,7 @@ export function render(container, data, options = {}) {
   const style = document.createElement('style');
   style.textContent = `
     .chord-wurzel { display: flex; flex-direction: column; height: 100%; }
-    .chord-werkzeugleiste { display: flex; justify-content: flex-end; margin: 0 0 var(--space-3) 0; flex: 0 0 auto; }
+    .chord-werkzeugleiste { display: flex; justify-content: flex-end; margin: 0 0 var(--space-3) 0; flex: 0 0 auto; min-height: 32px; } /* Platz für den nachgeladenen Info-Button, sonst rutscht das Diagramm nach dem Messen nach unten */
     .chord-chart-bereich { flex: 1 1 auto; overflow: hidden; display: flex; justify-content: center; }
     .chord-sehne { cursor: pointer; }
     .chord-gruppe { cursor: pointer; }
@@ -579,6 +579,25 @@ export function render(container, data, options = {}) {
   });
 
   zeichneChordDiagramm();
+  // Die Leisten über dem Diagramm (Ansichten-Leiste, „σ Unsicherheiten“) entstehen teils erst nach render() und
+  // schieben es nach unten. Rutscht es dadurch an eine andere Stelle, wird es dort neu vermessen (2026-10-27).
+  // Beobachtet werden Änderungen im Seiteninhalt, weil die Leisten dabei ersetzt und nicht nur vergrößert werden.
+  let obenBeimZeichnen = chartContainer.getBoundingClientRect().top;
+  let geplant = false;
+  instanz.lageBeobachter = new MutationObserver(() => {
+    if (geplant) return;
+    geplant = true;
+    setTimeout(() => {
+      geplant = false;
+      if (!instanz || instanz.chartContainer !== chartContainer) return;
+      const oben = chartContainer.getBoundingClientRect().top;
+      if (Math.abs(oben - obenBeimZeichnen) <= 1) return;
+      obenBeimZeichnen = oben;
+      zeichneChordDiagramm();
+    }, 0);
+  });
+  const appInhalt = document.getElementById('app-content');
+  if (appInhalt) instanz.lageBeobachter.observe(appInhalt, { childList: true, subtree: true });
 }
 
 export function resize(neueOptionen = {}) {
@@ -590,6 +609,7 @@ export function resize(neueOptionen = {}) {
 export function destroy() {
   if (!instanz) return;
   if (instanz.infoButton) instanz.infoButton.destroy();
+  instanz.lageBeobachter?.disconnect();
   instanz.container.innerHTML = '';
   instanz = null;
 }
