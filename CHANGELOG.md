@@ -7,6 +7,21 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (131) – Stadtplan von Krems als Hintergrund der Übersichtsseiten
+
+- **`js/utils/hintergrundKarte.js` (neu):**
+  - Baut aus `vendor/karten/krems.json` (OpenStreetMap, wie die Zeitleiste der Führungen) einmal ein SVG und setzt es als sehr dezentes, festes Hintergrundbild (`body.mit-hintergrundkarte`).
+  - Gilt für die Bestand-Seite, die Erkundung-Startseite, die Bereichsseiten Urkunden/Personen/Orte, Literatur und Über.
+  - Nicht für die einzelnen Visualisierungen, die Führungen und die Startseite.
+- **`app.js`:** Umschalten bei jedem Seitenwechsel. **`css/components.css`:** Hintergrundregel.
+- Geprüft auf dem Testserver 8845:
+  - Hintergrund auf den 7 genannten Seiten; Treemap, Zeitachse, Führungen und Startseite ohne.
+  - Text bleibt gut lesbar.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (130) – Willkommenstext ohne Bürgerbuch/Inventare; Bestand-Kacheln mittig
 
 - `data/startseite.csv` (Einleitung): „Dazu kommen die Urkunden mit ihren Regesten sowie die Menschen und Orte, die darin genannt werden.“ (vorher mit Bürgerbuch und Verlassenschaftsinventaren).

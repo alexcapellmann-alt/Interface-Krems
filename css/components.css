@@ -791,3 +791,7 @@
    unvollständige letzte Reihe (Wunsch des Autors, 2026-10-27) */
 .galerie-bereich:has(.galerie-einleitung) .visualisierungs-galerie { display: flex; flex-wrap: wrap; justify-content: center; }
 .galerie-bereich:has(.galerie-einleitung) .visualisierungs-galerie > li { flex: 0 1 230px; display: flex; }
+
+/* Stadtplan von Krems als zurückhaltender Seitenhintergrund der Übersichtsseiten (js/utils/hintergrundKarte.js) */
+body.mit-hintergrundkarte { background-image: var(--hintergrundkarte, none); background-size: cover; background-position: center;
+  background-repeat: no-repeat; background-attachment: fixed; }

@@ -141,6 +141,7 @@ import { ladeGecachteCSV } from './datenCache.js';
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
+import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
 import { erzeugeStartseite } from './startseite.js';
 import { erzeugeBereichsLeiste, erzeugeBereichsLeistenVorschau } from './bereichsLeiste.js';
 import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
@@ -1147,6 +1148,7 @@ function handleRouteChange() {
   // Wunsch des Autors (2026-10-25): die Fußzeile (`footer_text`) nur noch auf der Startseite.
   const fusszeile = document.querySelector('.app-footer');
   if (fusszeile) fusszeile.hidden = Boolean(route.tab);
+  aktualisiereHintergrundkarte(route); // Stadtplan als Hintergrund der Übersichtsseiten (2026-10-27)
 
   if (aktuellerKontext && aktuellerKontext.tab === route.tab) {
     // FOLGEAUFTRAG "...Galerie-Muster für Bestand": Bestand läuft jetzt über
