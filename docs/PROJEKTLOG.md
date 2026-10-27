@@ -219,6 +219,25 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-10-27 (74) – Vorschlagsformular überall
+
+Wunsch des Autors: der Knopf auch in den Regesten-Kacheln und in jeder Sidebar.
+
+**Abdeckung jetzt:**
+- Urkunden-Detail (alle Module, die `zeigeUrkundenDetail`/`zeigeUrkundenSidebar` nutzen: Zeitachse, Dot Plot, Kalender-Heatmap, Chord, Sankey, Karten, Bilderwand …).
+- Regesten-Kacheln.
+- Bürgerbuch- und Inventareinträge der Personenliste.
+- Bestand-Sidebars.
+- Parallele Koordinaten.
+- Vermögensschichtung (je Inventar der Liste).
+- Unsichere Orte der Karte.
+
+**Nicht betroffen:** Listenansichten mit mehreren Urkunden (das Formular steht in der Detailansicht nach einem Klick) und die Führungen.
+
+**Forminit, erlaubte Domains (laut forminit.com/docs/authorized-domains):** Formular → Settings → Authorized Domains, ohne `https://`; `localhost` ist ohne Port möglich. Einsendungen von anderen Domains werden nicht abgelehnt, sondern landen im Spam-Ordner.
+
+---
+
 ## 2026-10-27 (73) – Partizipations-Modul: Vorschlagsformular mit Forminit
 
 **Vorgeschichte:** Masterprompt v4.0–4.4, Abschnitt 5a; bisher nicht umgesetzt. Qualitätsprüfung vom 03.10.2026: „nicht vorhanden“. Der Autor hat ein Forminit-Konto und die Formular-ID `u6sxymvk3fz`.
@@ -236,8 +255,9 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   - Personen: Formular je Bürgerbuch- und Inventareintrag. Die Personenliste selbst hat keine Personen-Detailansicht.
   - Orte: nur in der Sidebar „Unsichere Orte“ der Karte. Ein Marker-Klick im Normalmodus öffnet Urkunden, die ihr eigenes Formular haben.
 
+**Testversand (Freigabe des Autors, 27.10.2026):** Vom Testserver (localhost:8845) aus StaAKr-0452 gesendet, mit „TEST – bitte löschen“, „Test Interface“ und test@example.com. Forminit antwortet mit HTTP 200 in 1,2 s; die Eingangsbestätigung erscheint, ohne Konsolenfehler. Der direkte Versand aus dem Browser (CORS) funktioniert also.
+
 **Offen:**
-- Echter Testversand (CORS des Dienstes ist nicht dokumentiert).
 - In Forminit sollten erlaubte Domains und Honeypot eingestellt werden.
 - Die Datenminimierung (IP, User-Agent) ist nicht geprüft (Masterprompt 5a).
 - Kriterien des Archivs für Annahme und Ablehnung.

@@ -68,6 +68,7 @@ import { baueKategorieFarbSkala } from '../utils/kategorieFarben.js';
 import { parseKommaZahl } from '../utils/verlassenschaftenFelder.js';
 import { farbeFuerVermoegensgruppe, VERMOEGENSGRUPPE_ANZEIGE_REIHENFOLGE } from '../utils/vermoegensgruppenFarben.js';
 import { baueSidebarGeruest, oeffneSidebar, schliesseSidebar, fuegeSidebarStyleEin } from '../utils/sidebar.js';
+import { inventarBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
@@ -290,7 +291,7 @@ function raeumeAuswahlAuf() {
 
 function oeffneDetail(record) {
   const achsen = ANSICHTEN[instanz.ansicht].achsen;
-  oeffneSidebar(instanz.sidebar, baueDetailRecord(record, achsen), { felder: detailFelderFuerAchsen(achsen) });
+  oeffneSidebar(instanz.sidebar, baueDetailRecord(record, achsen), { felder: detailFelderFuerAchsen(achsen), vorschlag: inventarBezug(record) });
 }
 
 // Punkt 2: Escape löst eine fixierte Auswahl (app-weiter document-Listener,

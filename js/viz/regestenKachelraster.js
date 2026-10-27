@@ -92,6 +92,8 @@ import { oeffneLightbox } from '../utils/lightbox.js';
 import { erzeugeFilterleiste } from '../utils/filterleiste.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { urkundeBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
+import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 
 // Auftrag "Geteilter Info-Button", Punkt 3 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
@@ -551,6 +553,14 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
       if (event.target.closest('a')) event.stopPropagation();
     });
     karte.appendChild(genanntePersonenZeile);
+  }
+
+  // Partizipations-Modul (Wunsch des Autors, 2026-10-27): „Änderung vorschlagen“ in jeder Kachel.
+  // Klicks im Formular dürfen die Kachel nicht auf-/zuklappen (wie Foto und Namen oben).
+  const vorschlag = baueVorschlagAufklapper(urkundeBezug(record));
+  if (vorschlag) {
+    vorschlag.addEventListener('click', (event) => event.stopPropagation());
+    karte.appendChild(vorschlag);
   }
 
   // Punkt 1 (Kernstück des Auftrags): Klick-Handler auf der GESAMTEN Kachel

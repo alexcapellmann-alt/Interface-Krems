@@ -7,6 +7,25 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (122) – Vorschlagsformular in allen Sidebars und in den Regesten-Kacheln
+
+- **`js/beteiligung/bezuege.js` (neu):** eine Bezugsbeschreibung je Datensatztyp (Urkunde, Bürgerbuch, Verlassenschaftsinventar, Bestand), gemeinsam genutzt.
+- **Neu mit Formular:**
+  - Regesten-Kacheln (`regestenKachelraster.js`, Knopf in jeder Kachel; Klicks im Formular klappen die Kachel nicht um).
+  - Bestand-Sidebars (`sidebar.js` `baueSidebarInhalt()`: Treemap, Sunburst, Icicle, Circle Packing, Gantt; neue Option `vorschlag`).
+  - Parallele Koordinaten (Inventar).
+  - Vermögensschichtung (je Listeneintrag).
+- `sidebar.js`/`personenliste.js` nutzen jetzt `bezuege.js`.
+- Geprüft auf dem Testserver 8845:
+  - 50/50 Kacheln mit Knopf.
+  - Bestand-Sidebar mit und ohne σ.
+  - Inventar VI-0001 in den Parallelen Koordinaten; 7 Einträge in der Vermögensschichtung.
+  - Keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (121) – Partizipations-Modul: Vorschlagsformular (Forminit)
 
 - **Neu, `js/beteiligung/`:**
@@ -25,7 +44,7 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
   - Formular im σ-Feld (StaAKr-0001a), Knopf ohne σ (StaAKr-0452), Bürgerbuch BB-0557, 86 unsichere Orte.
   - Leeres Absenden wird nicht übertragen.
   - Keine Konsolenfehler.
-  - Ein echter Testversand steht noch aus (Freigabe des Autors).
+  - Testversand (Freigabe des Autors) am 27.10.2026 vom Testserver: Forminit antwortet mit HTTP 200; die Eingangsbestätigung erscheint.
 - Details: `docs/PROJEKTLOG.md` Eintrag 73.
 
 Kein Commit durch Claude Code.
