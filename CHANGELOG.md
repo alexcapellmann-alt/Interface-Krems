@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (133) – Hintergrundkarte auch in den Führungen
+
+- `hintergrundKarte.js`:
+  - Auch auf der Führungsübersicht („Nach Themen“) und den Stationsseiten. Nicht in der Zeitleiste, die einen eigenen Stadtplan hat.
+  - Zweite, helle Fassung des Plans (`--hintergrundkarte-dunkel`) für die dunkle Bühne der Stationen.
+- `css/components.css`: `.fuehrung-station` zeigt den hellen Plan.
+- Geprüft auf dem Testserver 8845: Übersicht mit Plan zwischen den Feldern, Station „Eine Schule im Gasthaus“ mit hellem Plan auf der Bühne.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-27 (132) – Hintergrundkarte: auch Startseite; Ausschnitt mit Stein und Mautern, Ortsnamen
+
+- `hintergrundKarte.js`:
+  - Ausschnitt erweitert (15,552–15,642° O, 48,386–48,426° N): Krems, Stein und gegenüber Mautern mit der Donau.
+  - Dezente Ortsnamen KREMS, STEIN, MAUTERN und „Donau“ (Serifenschrift) im SVG.
+  - Jetzt auch auf der Startseite.
+- `css/components.css`: Auf der Startseite ist die Einleitung leicht durchscheinend und der Kachelbereich durchsichtig, damit die Karte sichtbar wird.
+- Geprüft auf dem Testserver 8845 (1600 px): Startseite und Orte-Seite mit Karte, alle drei Ortsnamen sichtbar.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (131) – Stadtplan von Krems als Hintergrund der Übersichtsseiten
 
 - **`js/utils/hintergrundKarte.js` (neu):**

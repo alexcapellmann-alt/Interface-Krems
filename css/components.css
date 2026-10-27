@@ -795,3 +795,11 @@
 /* Stadtplan von Krems als zurückhaltender Seitenhintergrund der Übersichtsseiten (js/utils/hintergrundKarte.js) */
 body.mit-hintergrundkarte { background-image: var(--hintergrundkarte, none); background-size: cover; background-position: center;
   background-repeat: no-repeat; background-attachment: fixed; }
+
+/* Startseite mit Stadtplan im Hintergrund: Einleitung leicht durchscheinend, Kachelbereich durchsichtig */
+body.mit-hintergrundkarte .startseite-einleitung { background: rgba(255, 255, 255, .72); }
+body.mit-hintergrundkarte .startseite-kachelbereich { background: transparent; }
+
+/* Führungsstationen: der Stadtplan in hellen Linien auf der dunklen Bühne (die Bühne deckt die Seite fast ganz) */
+body.mit-hintergrundkarte .fuehrung-station { background-image: var(--hintergrundkarte-dunkel, none); background-size: cover;
+  background-position: center; background-repeat: no-repeat; }
