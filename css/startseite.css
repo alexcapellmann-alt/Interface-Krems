@@ -208,12 +208,16 @@
 }
 .startseite-kacheln {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Wunsch des Autors (2026-10-27): vier Kacheln symmetrisch - nebeneinander, mittelbreit 2 × 2, schmal untereinander */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .startseite-kacheln { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
   .startseite-kacheln { grid-template-columns: 1fr; }
 }
 .startseite-kachel {

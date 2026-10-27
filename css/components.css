@@ -786,3 +786,8 @@
 
 /* Startseite „Erkundung“: Einleitung in derselben mittigen Lesespalte */
 .visualisierungen-hinweis-bereich { grid-column: 1 / -1; }
+
+/* Galerie mit Einleitung (z. B. Bestand): Kacheln mittig unter der mittigen Lesespalte, auch eine
+   unvollständige letzte Reihe (Wunsch des Autors, 2026-10-27) */
+.galerie-bereich:has(.galerie-einleitung) .visualisierungs-galerie { display: flex; flex-wrap: wrap; justify-content: center; }
+.galerie-bereich:has(.galerie-einleitung) .visualisierungs-galerie > li { flex: 0 1 230px; display: flex; }

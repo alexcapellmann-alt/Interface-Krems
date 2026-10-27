@@ -7,6 +7,28 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (130) – Willkommenstext ohne Bürgerbuch/Inventare; Bestand-Kacheln mittig
+
+- `data/startseite.csv` (Einleitung): „Dazu kommen die Urkunden mit ihren Regesten sowie die Menschen und Orte, die darin genannt werden.“ (vorher mit Bürgerbuch und Verlassenschaftsinventaren).
+- `css/components.css`: In Galerien mit Einleitung (Bestand) stehen die Kacheln mittig unter dem Text, auch eine unvollständige letzte Reihe.
+- Geprüft auf dem Testserver 8845:
+  - 1600 px: fünf Kacheln in einer Reihe, Mitte von Text und Kacheln bei 800 px.
+  - 1024 px: 4 + 1, die fünfte mittig.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-27 (129) – Startseite: vier Kacheln symmetrisch, Slide 3 ausgeblendet
+
+- `css/startseite.css`: `.startseite-kacheln` vier Spalten (max. 1320 px), bis 1100 px 2 × 2, bis 640 px untereinander (vorher drei Spalten, die vierte Kachel allein in der zweiten Reihe).
+- `data/startseite.csv`: `slide_3` („Personen, Familien und Orte …“) `sichtbar = nein`.
+- Geprüft auf dem Testserver 8845: 1600 px vier nebeneinander, 1000 px 2 × 2, Slider mit drei Slides.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (128) – Erkundung: „Urkunden“, „Personen“, „Orte“ als Links
 
 - Einleitungstexte (`ansichten.csv`, Bereichszeilen) können jetzt Links enthalten: `[Text](#ziel)`, nur interne Ziele (`app.js`, `fuegeTextMitLinksEin()`; `docs/SCHEMA.md`).
@@ -19,7 +41,7 @@ Kein Commit durch Claude Code.
 
 ## 2026-10-27 (127) – Personenliste: „Ferdinand I.“, Egger und Edlinger zusammengeführt
 
-- **„Ferdinand I.“:** `personenliste.csv` (`ferdinand_i`) und das Personenfeld von `StaAKr-0658`/`StaAKr-0763` in `urkunden.csv`. Die Regesten bleiben unverändert.
+- **„Ferdinand I.“:** `personenliste.csv` (`ferdinand_i`) und das Personenfeld von `StaAKr-0658`/`StaAKr-0763` in `urkunden.csv`. Auf Wunsch des Autors auch die beiden Regesten („Ferdinand befiehlt …“); die überflüssige Filterzeile `vorname;ferdiand` in `wortwolke_filter.csv` ist entfernt.
 - **Wolfgang Egger und Ulrich Edlinger:** Urkunden- und Bürgerbuch-Person jeweils zu einer zusammengeführt (Entscheidung des Autors).
   - Bürgerbuch-Einträge `BB-0262`/`BB-0237` verweisen jetzt auf `wolfgang_egger`/`ulrich_edlinger`.
   - Die Unsicherheitsvermerke sind entfernt.
