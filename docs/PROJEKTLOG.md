@@ -14,6 +14,18 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-10-27 – StaAKr-0337: Familiennamen nicht mehr als Personen, Komma im Regest, Pezinok ergänzt (Hinweis des Autors)
+
+| Datei | Zeile | Spalte | vorher | nachher |
+|---|---|---|---|---|
+| `urkunden.csv` | `StaAKr-0337` | `regest` | „(die von Posing Liechtenstainer, Ellerbacher, …“ | „(die von Posing, Liechtenstainer, Ellerbacher, …“ (fehlendes Komma) |
+| `urkunden.csv` | `StaAKr-0337` | `personen` / `personen_id` | Friedrich III. + Posing Liechtenstainer, Ellerbacher, Peinkirchner, Gravenegker, Ankchenwerter, Kadauer | nur `Friedrich III.` / `friedrich_iii` |
+| `urkunden.csv` | `StaAKr-0337` | `orte` | `Graz\|Grafenegg\|Kottaun\|Ankenwarth` | `…\|Pezinok, Slowakei` |
+| `personenliste.csv` | `posing_liechtenstainer`, `ellerbacher_1455`, `peinkirchner_1455`, `gravenegker_1455`, `ankchenwerter_1455`, `kadauer_1455` | – | je eine Zeile, nur in `StaAKr-0337` genannt | entfernt |
+| `orte.csv` | `pezinok_slowakei` (neu) | – | – | `Pezinok, Slowakei;48,2894;17,2669;1;nein;` |
+
+Begründung (Autor): Im Regest stehen nur unbestimmte Familien- bzw. Herkunftsnamen („die von …“), keine bestimmbaren Personen. „Posing Liechtenstainer“ entstand durch ein fehlendes Komma. „Posing“ ist der alte deutsche Name der westslowakischen Stadt Pezinok. Sicherungen: `KI-Tribunal\sicherungen\*_vor_StaAKr-0337_2026-10-27.csv`.
+
 ### 2026-10-27 – „Ferdiand I.“ korrigiert; Wolfgang Egger und Ulrich Edlinger zusammengeführt (Entscheidung des Autors)
 
 | Datei | Zeile | Spalte | vorher | nachher |

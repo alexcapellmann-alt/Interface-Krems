@@ -7,6 +7,20 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-27 (139) – StaAKr-0337 bereinigt
+
+- Familiennamen aus dem Regest (die von Posing, Liechtenstainer, Ellerbacher, Peinkirchner, Gravenegker, Ankchenwerter, Kadauer) nicht mehr als Personen.
+  - Urkunde: nur noch Friedrich III.
+  - Sechs Einträge aus `personenliste.csv` entfernt.
+- Regest: Komma zwischen „Posing“ und „Liechtenstainer“ ergänzt.
+- Neuer Ort „Pezinok, Slowakei“ (Posing) in `orte.csv` und in den Orten der Urkunde.
+- Details: PROJEKTLOG, Datenkorrekturen.
+- Geprüft auf dem Testserver 8845: Sidebar zeigt Personen „Friedrich III.“, Orte mit Pezinok, Regest mit Komma.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-27 (138) – Bestand ohne Flyout am aktiven Tab; Schalter „Unterleisten einklappen“
 
 - **`app.js`:** Der Hover-Flyout an „Bestand“ (Hauptnavigation) entfällt, solange der Bestand-Tab aktiv ist (`setzeBestandFlyout()`); auf allen anderen Seiten bleibt er.
