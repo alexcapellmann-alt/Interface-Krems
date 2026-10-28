@@ -57,7 +57,7 @@
 // dieser Datei nötig.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
-import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE, findeBestandImBaum } from '../utils/bestandsHierarchie.js';
+import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE, findeBestandImBaum, nurUnsichereBestaende, zeigeKeineUnsicherenBestaende } from '../utils/bestandsHierarchie.js';
 import {
   passendeTextfarbe,
   baueBestandFarbSkala,
@@ -569,7 +569,16 @@ function zeichneSunburst() {
   const aussenRadius = Math.max(Math.min(breite, hoehe) / 2 - 8, INNERER_RADIUS + 20);
   const inKategorieAnsicht = !!aktuelleKategorieDaten;
 
-  const anzeigeDaten = aktuelleKategorieDaten || hierarchieDaten;
+  // 2026-10-28: mit „Unsicherheiten anzeigen“ nur unsichere Bestände; die Kategorie über ihren Namen
+  // im vollständigen Baum suchen, da sie auch aus der gefilterten Übersicht gewählt worden sein kann
+  const basisDaten = aktuelleKategorieDaten
+    ? (hierarchieDaten.children.find((k) => k.name === aktuelleKategorieDaten.name) || aktuelleKategorieDaten)
+    : hierarchieDaten;
+  const anzeigeDaten = zeigeUnsicherheit ? nurUnsichereBestaende(basisDaten) : basisDaten;
+  if (!anzeigeDaten) {
+    zeigeKeineUnsicherenBestaende(svgBereich);
+    return;
+  }
   const wurzel = d3.hierarchy(anzeigeDaten).sum((d) => Math.sqrt(d.value || 0)).sort((a, b) => b.value - a.value);
   d3.partition().size([2 * Math.PI, aussenRadius])(wurzel);
 

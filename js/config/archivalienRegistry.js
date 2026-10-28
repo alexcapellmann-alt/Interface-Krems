@@ -203,7 +203,8 @@ export const ARCHIVALIENTYPEN = [
         beschreibung: 'Personen entlang einer Achse, Bögen verbinden die am häufigsten gemeinsam Genannten.' },
       { id: 'sankey', label: 'Kategoriefluss', modulPfad: '../viz/sankey.js',
         beschreibung: 'Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.' },
-      { id: 'wortwolke', label: 'Wortwolke', modulPfad: '../viz/wortwolke.js',
+      // `ohneUnsicherheitsButton` (2026-10-28): die Ansicht kennzeichnet keine Unsicherheiten, Knopf ausgeblendet
+      { id: 'wortwolke', label: 'Wortwolke', modulPfad: '../viz/wortwolke.js', ohneUnsicherheitsButton: true,
         beschreibung: 'Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.' },
       // Wunsch des Autors (2026-10-25): Darstellungsform des Theaterzettel-Prototyps mit den Urkunden.
       // `eigenerUnsicherheitsButton` (2026-10-28): der Knopf sitzt in der Ansicht selbst, links oben
@@ -393,7 +394,7 @@ export const ARCHIVALIENTYPEN = [
         beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' },
       // Wunsch des Autors (2026-10-28): das Fehlen von Frauen im Bürgerbuch sichtbar machen (ohne datenSchluessel:
       // braucht buergerbuch und personenliste)
-      { id: 'buergerinnen', label: 'Bürgerinnen?', modulPfad: '../viz/buergerinnen.js',
+      { id: 'buergerinnen', label: 'Bürgerinnen?', modulPfad: '../viz/buergerinnen.js', ohneUnsicherheitsButton: true,
         beschreibung: 'Ein Punkt für jede der Personen im Bürgerbuch. Ein Klick ordnet sie nach Geschlecht.' }
     ]
   },

@@ -1041,8 +1041,8 @@ function zeichneGantt() {
   const zeitbereichBreite = Math.max(breite - NAMENSSPALTE_BREITE, 200);
   const gesamtHoehe = alleZeilen.length * ZEILE_GESAMT;
 
-  const jahresSpanne = mitZeitraum.length > 0
-    ? [d3.min(mitZeitraum, (d) => d.von), d3.max(mitZeitraum, (d) => d.bis)]
+  const jahresSpanne = instanz.alleMitZeitraum.length > 0
+    ? [d3.min(instanz.alleMitZeitraum, (d) => d.von), d3.max(instanz.alleMitZeitraum, (d) => d.bis)]
     : [1100, 2025];
   // Root-Cause-Fix (siehe PROJEKTLOG): .nice() rundete die Domain bei der
   // realen Spanne 1108-2024 auf [1100, 2100] auf - ein willkürlicher,
@@ -1180,6 +1180,8 @@ export function render(container, data, options = {}) {
     container,
     wurzel,
     sidebar,
+    alleMitZeitraum: mitZeitraum,
+    alleOhneZeitraum: ohneZeitraum,
     mitZeitraum,
     ohneZeitraum,
     kategorienNamen,
@@ -1195,6 +1197,7 @@ export function render(container, data, options = {}) {
     kategorieElemente: null,
     wechseltModus: false
   };
+  wendeUnsicherheitsFilterAn();
   // Zurück aus einem Bestand in die Liste seiner Kategorie (Kategorie-Ansicht)
   sidebar.zurueckBtn.addEventListener('click', () => {
     if (instanz?.sidebar._kategorieListe) zeigeKategorieListe(instanz.sidebar._kategorieListe);
@@ -1214,7 +1217,17 @@ export function render(container, data, options = {}) {
 export function resize(neueOptionen = {}) {
   if (!instanz) return;
   instanz.options = { ...instanz.options, ...neueOptionen };
+  wendeUnsicherheitsFilterAn();
   zeichneGantt();
+}
+
+// Wunsch des Autors (2026-10-28): „Unsicherheiten anzeigen“ zeigt nur die unsicher markierten Bestände
+// (Einzelbestände wie Kategorien); die Zeitachse behält die Spanne aller Bestände.
+function wendeUnsicherheitsFilterAn() {
+  const filter = instanz.options.showUncertainty ? (b) => b.data.record.daten_unsicher : () => true;
+  instanz.mitZeitraum = instanz.alleMitZeitraum.filter(filter);
+  instanz.ohneZeitraum = instanz.alleOhneZeitraum.filter(filter);
+  instanz.kategorieZeilen = baueKategorieZeilen(instanz.mitZeitraum, instanz.ohneZeitraum);
 }
 
 export function destroy() {

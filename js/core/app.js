@@ -948,8 +948,9 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     setUnsicherheitModus(false); // Abschnitt 11, wie ansichtWechseln.js: setzt sich bei jedem Wechsel zurück
     kontext.unsicherheitsButton.setzeZurueck();
     // 2026-10-28: Ansichten mit eigenem Unsicherheits-Knopf (Registry `eigenerUnsicherheitsButton`, z. B. die
-    // Bilderwand) blenden die allgemeine Zeile darüber aus, damit sie die Ansicht nicht nach unten schiebt
-    kontext.unsicherheitsContainer.style.display = eintrag.eigenerUnsicherheitsButton ? 'none' : '';
+    // Bilderwand) blenden die allgemeine Zeile darüber aus, damit sie die Ansicht nicht nach unten schiebt;
+    // ebenso Ansichten ohne Unsicherheitskennzeichnung (`ohneUnsicherheitsButton`: Wortwolke, Bürgerinnen?)
+    kontext.unsicherheitsContainer.style.display = eintrag.eigenerUnsicherheitsButton || eintrag.ohneUnsicherheitsButton ? 'none' : '';
 
     // KLEINAUFTRAG "Familienbaum & Personenliste...": siehe identischer
     // Kommentar in renderVisualisierungenTab()'s ladeModulUndRender() oben.
