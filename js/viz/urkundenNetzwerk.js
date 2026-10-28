@@ -365,7 +365,7 @@ function baueInfo(leiste) {
     const texte = [];
     let text = cfg?.text;
     if (!cfg || cfg.eintragFehlt) {
-      text = 'Für diese Ansicht ist in infotexte.csv keine Erklärung hinterlegt.';
+      text = 'Für diese Ansicht ist keine Erklärung hinterlegt.'; // ohne Dateinamen (2026-10-28)
       texte.push('Für diese Ansicht (urkundenNetzwerk) gibt es keinen Eintrag in infotexte.csv, oder die Datei fehlt. Der Info-Button zeigt deshalb keine Erklärung.');
     } else if (cfg.fehlend.length) {
       texte.push(`Im Info-Text dieser Ansicht (infotexte.csv) konnten diese Werte nicht berechnet werden: ${cfg.fehlend.join(', ')}. Dort steht „${NICHT_BERECHENBAR}“.`);

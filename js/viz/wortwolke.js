@@ -178,7 +178,8 @@ function baueFilterAbsatz() {
     if (filter.vornamen.size) teile.push(`${anzahl(filter.vornamen.size, 'Vorname', 'Vornamen')} (${nennungen(st.vorname)})`);
     if (teile.length) {
       const aufzaehlung = teile.length > 1 ? `${teile.slice(0, -1).join(', ')} und ${teile[teile.length - 1]}` : teile[0];
-      saetze.push(`Für dieses Archiv werden zusätzlich ${aufzaehlung} ausgelassen (Datei wortwolke_filter.csv).`);
+      // seit 2026-10-28 ohne Dateinamen (Infotexte nennen keine internen Dateien, Wunsch des Autors)
+      saetze.push(`Für dieses Archiv werden zusätzlich ${aufzaehlung} ausgelassen.`);
     }
     if (st.schreibweisen.size) {
       saetze.push(`${anzahl(st.schreibweisen.size, 'Schreibweise wird', 'Schreibweisen werden')} unter ${anzahl(new Set(st.schreibweisen.values()).size, 'Hauptform', 'Hauptformen')} zusammengezählt, ${beispiel(st.schreibweisen, st.roh)}.`);
@@ -192,9 +193,8 @@ function baueFilterAbsatz() {
       const verb = st.beugungen.size === 1 ? 'wird' : 'werden';
       saetze.push(`Bei den ${n} häufigsten Wörtern ${verb} außerdem ${formen} unter ${anzahl(new Set(st.beugungen.values()).size, 'Grundform', 'Grundformen')} zusammengezählt, ${beispiel(st.beugungen, st.roh)}.`);
     }
-    if (filter.uebergangen) {
-      saetze.push(`${anzahl(filter.uebergangen, 'Zeile', 'Zeilen')} der Filterdatei ${filter.uebergangen === 1 ? 'wurde' : 'wurden'} nicht verwendet (unbekannter Typ oder fehlende Leitform).`);
-    }
+    // Nicht verwendete Zeilen der Filterdatei (filter.uebergangen) stehen seit 2026-10-28 nicht mehr im Infotext -
+    // eine Konfigurationsmeldung, kein Inhalt für Besucher.
   }
   absatz.textContent = saetze.join(' ');
   return absatz;
