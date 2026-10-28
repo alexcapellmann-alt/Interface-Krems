@@ -142,6 +142,7 @@ import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { zeigeBestandVorschau } from '../utils/bestandVorschau.js';
+import { erfasseFormen, spieleUebergang } from '../utils/bestandUebergang.js';
 import { aktiviereSidebarUmschalter } from '../utils/sidebarUmschalter.js';
 import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
 import { erzeugeAnsichtenLeiste } from './ansichtenLeiste.js';
@@ -770,11 +771,11 @@ function stelleVizFlyoutSicher(kontext) {
       // 2026-10-28: Vorschlag unter der Maus bzw. Pfeiltasten-Auswahl vorab hervorheben
       onVorschau: (record) => zeigeBestandVorschau(kontext.vizContainer, record ? String(record.kuerzel ?? '').trim() : null)
     });
-    // 2026-10-28: Knöpfe „Ansicht zu … wechseln“ für die übrigen angebotenen Bestand-Ansichten
+    // 2026-10-28: Knopfgruppe „Ansichten“ (Bestand-Bühne, siehe zeigeBestandDarstellung())
     kontext.ansichtWechselLeiste = document.createElement('div');
     kontext.ansichtWechselLeiste.className = 'ansicht-wechsel-leiste';
     kontext.ansichtWechselLeiste.setAttribute('role', 'group');
-    kontext.ansichtWechselLeiste.setAttribute('aria-label', 'Ansicht wechseln');
+    kontext.ansichtWechselLeiste.setAttribute('aria-label', 'Darstellung der Bestände');
     unsicherheitsContainer.appendChild(kontext.ansichtWechselLeiste);
   }
   // Siehe kontext.eigenerFlyoutNoetig-Kommentar in erzeugeGalerieFlyoutKontext()
@@ -787,22 +788,37 @@ function stelleVizFlyoutSicher(kontext) {
   kontext.flyout = null;
 }
 
-// Knöpfe „Ansicht zu … wechseln“ (Wunsch des Autors, 2026-10-28): je ein Knopf für jede andere angebotene
-// Ansicht des Bereichs (derzeit nur im Bestand, siehe stelleVizFlyoutSicher()).
-function zeigeAnsichtWechselKnoepfe(kontext) {
+// Bestand-Bühne (Wunsch des Autors, 2026-10-28): eine Knopfgruppe „Ansichten“ (Treemap | Sunburst | Laufzeit)
+// statt einzelner Knöpfe „Ansicht zu … wechseln“. Ein Wechsel läuft als fließender Übergang
+// (js/utils/bestandUebergang.js, in wechsleZuAnsicht()); Einzelbestände | Kategorien wählt das
+// Gantt-Diagramm in seiner eigenen Werkzeugleiste.
+const DARSTELLUNG_BESCHRIFTUNG = { ganttDiagramm: 'Laufzeit' };
+
+function zeigeBestandDarstellung(kontext) {
   const leiste = kontext.ansichtWechselLeiste;
   if (!leiste) return;
   leiste.innerHTML = '';
-  kontext.bereich.ansichten
-    .filter((a) => a.id !== kontext.ansichtId && !istAnsichtAusgeblendet(a.id))
-    .forEach((a) => {
-      const knopf = document.createElement('button');
-      knopf.type = 'button';
-      knopf.className = 'ansicht-wechsel-knopf';
-      knopf.textContent = `Ansicht zu ${a.label} wechseln`;
-      knopf.addEventListener('click', () => navigiereZu(kontext.routeSegmente(a.id)));
-      leiste.appendChild(knopf);
-    });
+  const angeboten = kontext.bereich.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id));
+  if (angeboten.length < 2) return;
+  const gruppe = document.createElement('div');
+  gruppe.className = 'darstellung-gruppe';
+  gruppe.setAttribute('role', 'group');
+  gruppe.setAttribute('aria-label', 'Ansichten');
+  const titel = document.createElement('span');
+  titel.className = 'darstellung-titel';
+  titel.textContent = 'Ansichten';
+  gruppe.appendChild(titel);
+  angeboten.forEach((a) => {
+    const aktiv = kontext.ansichtId === a.id;
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.className = 'darstellung-knopf';
+    knopf.textContent = DARSTELLUNG_BESCHRIFTUNG[a.id] || a.label;
+    knopf.setAttribute('aria-pressed', String(aktiv));
+    knopf.addEventListener('click', () => { if (!aktiv) navigiereZu(kontext.routeSegmente(a.id)); });
+    gruppe.appendChild(knopf);
+  });
+  leiste.appendChild(gruppe);
 }
 
 // Dritte Navigationsebene (Wunsch des Autors, 2026-10-27): alle Ansichten des Bereichs, die aktuelle
@@ -900,6 +916,8 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     const mod = await import(eintrag.modulPfad);
     if (meineGeneration !== generation) return;
 
+    // Bestand-Bühne (2026-10-28): Umrisse der bisherigen Bestand-Ansicht festhalten, bevor sie abgebaut wird
+    const formenVorher = kontext.tab === 'bestand' && kontext.aktuellesVizModul ? erfasseFormen(kontext.vizContainer) : null;
     if (kontext.aktuellesVizModul) {
       try { kontext.aktuellesVizModul.destroy(); } finally { kontext.aktuellesVizModul = null; }
     }
@@ -920,7 +938,8 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     aktualisiereKleinerBildschirmHinweis(kontext.kleinerBildschirmHinweis, eintrag.id);
     kontext.flyout?.aktualisiere({ tabs: baueTabListe(kontext), aktiverId: kontext.ansichtId });
     zeigeAnsichtenLeiste(kontext);
-    zeigeAnsichtWechselKnoepfe(kontext);
+    zeigeBestandDarstellung(kontext);
+    if (formenVorher) spieleUebergang(formenVorher, kontext.vizContainer);
   } finally {
     kontext.wirdGewechselt = false;
   }

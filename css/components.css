@@ -778,14 +778,25 @@
   border: 1px solid #8a8378; border-radius: var(--radius); background: var(--surface); color: var(--text); }
 .bestand-suche input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 .bestand-suche-status { font-size: var(--fs-sm); color: var(--text-muted); }
-/* Knöpfe „Ansicht zu … wechseln“ im Bestand (2026-10-28), rechts neben dem Suchfeld */
-.ansicht-wechsel-leiste { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); margin-left: var(--space-4); }
+/* Bestand-Bühne (2026-10-28): Knopfgruppe „Ansichten“ (Treemap | Sunburst | Laufzeit) rechts neben dem Suchfeld */
+.ansicht-wechsel-leiste { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); margin-left: var(--space-4); }
 .ansicht-wechsel-leiste:empty { display: none; }
-.ansicht-wechsel-knopf { font: inherit; font-size: var(--fs-sm); min-height: 40px; padding: var(--space-1) var(--space-3); cursor: pointer;
-  border: 1px solid var(--accent); border-radius: var(--radius); background: var(--surface); color: var(--accent); }
-.ansicht-wechsel-knopf:hover { background: var(--accent); color: #fff; }
-.ansicht-wechsel-knopf:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.darstellung-gruppe { display: inline-flex; align-items: center; }
+.darstellung-titel { font-size: var(--fs-sm); font-weight: 600; margin-right: var(--space-2); }
+.darstellung-knopf { font: inherit; font-size: var(--fs-sm); min-height: 40px; padding: var(--space-1) var(--space-3); cursor: pointer;
+  border: 1px solid var(--accent); background: var(--surface); color: var(--accent); margin-left: -1px; }
+.darstellung-titel + .darstellung-knopf { border-radius: var(--radius) 0 0 var(--radius); margin-left: 0; }
+.darstellung-knopf:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.darstellung-titel + .darstellung-knopf:last-child { border-radius: var(--radius); }
+.darstellung-knopf:hover { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.darstellung-knopf[aria-pressed="true"] { background: var(--accent); color: #fff; cursor: default; }
+.darstellung-knopf:focus-visible { outline: 3px solid #e0b429; outline-offset: 2px; position: relative; }
 @media (max-width: 700px) { .ansicht-wechsel-leiste { margin-left: 0; margin-top: var(--space-2); } }
+/* Übergang zwischen den Bestand-Ansichten (js/utils/bestandUebergang.js): die neue Ansicht wartet unsichtbar,
+   bis die Formen an ihrem Platz sind, und blendet dann ein */
+.bestand-uebergang { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.viz-inhalt svg { transition: opacity .3s ease; }
+.viz-inhalt.bestand-uebergang-laeuft svg { opacity: 0; transition: none; }
 
 /* Eigene Vorschlagsliste (2026-10-28, statt <datalist>): Überfahren hebt den Bestand in der Ansicht hervor */
 .bestand-suche-feld { position: relative; display: inline-block; }

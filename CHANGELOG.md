@@ -7,6 +7,75 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (152) – Gantt: farbige Namen in der linken Spalte
+
+- Kategorie-Ansicht: die Kategorienamen in der Namensspalte stehen in ihrer Kategoriefarbe (für die Lesbarkeit abgedunkelt, `lesbareTextfarbe()`); die Legende oben entfällt dort, weil die Namen sie ersetzen.
+- Einzelbestände: jeder Bestandsname in der Farbe seiner Kategorie; die Legende (farbige Namen, seit Eintrag 150 ohne Kästchen) bleibt dort als Schlüssel.
+- Geprüft auf dem Testserver 8845.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (151) – Gantt-Kategorien: gemeinsamer Maßstab der Dichtebänder
+
+- Die Bänder der Kategorie-Ansicht haben jetzt einen gemeinsamen Maßstab für alle Kategorien, mit der Quadratwurzel gestaucht. Sie zeigen damit Zeit und Menge: Vermögen und Finanzen (92,9 lfm) bis 34 px dick, Verwaltung 29 px, Religion (1 Bestand, 0,1 lfm) nur noch eine dünne Linie.
+- Vorher war jede Zeile auf ihr eigenes Maximum bezogen; eine Kategorie mit einem einzigen Bestand erschien so als voller Block (Hinweis des Autors).
+- Infotext angepasst. Geprüft auf dem Testserver 8845.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (150) – Gantt-Legende: farbige Kategorienamen
+
+- Die Legende des Gantt-Diagramms zeigt die Kategorienamen in ihrer Farbe statt farbiger Kästchen davor. Zu helle Töne (Gold, helles Petrol) werden für die Schrift so weit abgedunkelt, dass sie auf dem Papierton mindestens 4,5:1 Kontrast haben (`lesbareTextfarbe()` in `kategorieFarben.js`).
+- Geprüft auf dem Testserver 8845.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (149) – Bestand-Bühne: eine Gruppe „Ansichten“
+
+- Statt der Gruppen „Tektonik“ und „Laufzeit“ eine Knopfgruppe **Ansichten**: Treemap | Sunburst | Laufzeit (Laufzeit = Gantt-Diagramm). Die fließenden Übergänge zwischen den drei bleiben.
+- Der Schalter „Einzelbestände | Kategorien“ steht wieder in der Werkzeugleiste des Gantt-Diagramms (wie nach Eintrag 147), mit dem animierten Wechsel. Die Schnittstelle `setzeModus()`/`liesModus()` und das Ereignis `bestand-darstellung` entfallen wieder.
+- Geprüft auf dem Testserver 8845: Knöpfe und gedrückter Zustand, Übergänge Treemap ↔ Laufzeit ↔ Sunburst (315 bzw. 353 Formen), Schalter im Gantt-Diagramm; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (148) – Bestand-Bühne: „Tektonik / Laufzeit“ mit fließenden Übergängen
+
+- Im Bestand ersetzen zwei Knopfgruppen die Knöpfe „Ansicht zu … wechseln“: **Tektonik** (Treemap | Sunburst) und **Laufzeit** (Einzelbestände | Kategorien). Der gedrückte Knopf zeigt die aktuelle Darstellung (`zeigeBestandDarstellung()` in `app.js`).
+- Fließende Übergänge zwischen allen Darstellungen (`js/utils/bestandUebergang.js`): Vor dem Wechsel wird der Umriss jedes Bestands festgehalten, danach verwandelt er sich in seinen neuen Umriss - Kachel in Balken, Kachel in Ringsegment, Balken in Kategorieband und zurück. Gibt es eine Form auf der anderen Seite nicht (z. B. Einzelbestand ↔ Kategorie, Unterkategorie-Ring der Sunburst), wandert sie zur bzw. aus der Form ihrer Kategorie. Auch Bestände weiter unten in der Gantt-Liste fliegen herein bzw. hinaus.
+  - Technik: Umrisse als Polygone aus je 24 Punkten (gleiche Umlaufrichtung) über eine Überlagerung überblendet, 0,9 s; die neue Ansicht blendet danach ein. Die Module bleiben unverändert und voll bedienbar. Bei „Bewegung reduzieren“ oder verborgenem Tab ohne Animation.
+  - Der Zwischenschritt über die Icicle ist nicht nötig: die Umriss-Überblendung verwandelt Rechteck und Bogen direkt.
+  - Gilt für jeden Wechsel zwischen Bestand-Ansichten, auch über die Ansichten-Leiste.
+- Gantt-Diagramm: der eigene Schalter „Einzelbestände | Kategorien“ steht jetzt in der Gruppe „Laufzeit“ (`setzeModus()`, `liesModus()`, Ereignis `bestand-darstellung`); „Kategorien“ aus der Treemap öffnet das Gantt-Diagramm direkt in der Kategorie-Ansicht.
+- Die drei Kacheln der Bestand-Seite bleiben und öffnen die jeweilige Darstellung.
+- Geprüft auf dem Testserver 8845: alle Wechsel in beide Richtungen (315 Bestände plus Kategorien im Übergang, Verlauf über die Zeit gemessen), Endzustand korrekt; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (147) – Gantt-Diagramm: Kategorie-Ansicht mit Laufmeter-Dichte, animierter Wechsel
+
+- Neuer Schalter „Einzelbestände | Kategorien“ in der Werkzeugleiste des Gantt-Diagramms (erster Schritt zur geplanten „Bestand-Bühne“ mit fließenden Übergängen zwischen Tektonik und Laufzeit).
+- Kategorie-Ansicht: eine Zeile je Kategorie (11), sortiert nach zeitlichem Schwerpunkt (nach Laufmetern gewichtete Laufzeitmitte). Ein Dichteband zeigt, aus welcher Zeit die Unterlagen stammen: Dicke = Laufmeter je Jahr, der Umfang eines Bestands gleichmäßig auf seine Laufzeit verteilt, jede Zeile auf ihr eigenes Maximum bezogen. Dünne Linie = frühestes bis spätestes Jahr. Namensspalte mit Anzahl und Laufmetern; Tooltip mit Spanne, Schwerpunkt und (bei „Unsicherheiten anzeigen“) Zahl der unsicheren Bestände, rot gestrichelter Rand.
+- Klick auf eine Kategorie: Sidebar mit ihren Beständen (nach Beginn), Klick öffnet einen Bestand, „Zurück“ führt zur Liste, zweiter Klick auf die Kategorie schließt.
+- Animierter Wechsel: Die Balken gleiten in die Zeile ihrer Kategorie und verblassen, dann wachsen die Bänder aus ihrer Mittellinie; zurück ziehen sich die Bänder zusammen und die Balken fächern aus der Kategoriezeile in ihre eigenen Zeilen auf. Bei „Bewegung reduzieren“ oder verborgenem Tab ohne Animation; jeder Schritt endet zusätzlich nach fester Zeit im Endzustand.
+- Bestand-Suche: Vorschau hebt in der Kategorie-Ansicht die Kategorie hervor, die Auswahl wechselt zu den Einzelbeständen.
+- Zoom und Verschieben der Zeitachse gelten in beiden Ansichten (`wireZoom()` nimmt jetzt einen allgemeinen `aktualisiere`-Rückruf). Infotext ergänzt.
+- 16 Bestände ohne Laufmeterangabe gehen nicht in die Dichte ein, werden aber gezählt; Bestände ohne Zeitraum stehen im Tooltip.
+- Geprüft auf dem Testserver 8845: Wechsel in beide Richtungen (alle 297 Balken am richtigen Platz), Sidebar, Suche, Unsicherheiten, Fenstergröße; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (146) – Bestand-Galerie wie Urkunden, Personen und Orte
 
 - Die Kacheln der Bestand-Seite (Treemap, Sunburst, Gantt-Diagramm) sind jetzt ebenfalls groß und farbig (`vollflaechig` für alle Galerien). Die Einleitung bleibt vollständig sichtbar darüber, die Kacheln teilen sich die restliche Höhe; bei wenig Platz bleiben sie mindestens 200 px hoch und die Seite scrollt.
