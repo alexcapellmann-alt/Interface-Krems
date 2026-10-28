@@ -292,7 +292,9 @@ const ANDERE_KATEGORIEN = 'Andere Kategorien';
 // Punkt 4 (siehe Dateikopf-Kommentar) - ersetzt die frühere feste
 // "Top 20"-Regel (TOP_ORTE_ANZAHL) durch dieselbe schwellenwertbasierte
 // Bündelung wie bei den Kategorien.
-const ORT_BUENDELUNG_SCHWELLE = 15;
+// 2026-10-28 (Wunsch des Autors): 15 -> 17, damit Rehberg bei Krems (16) und Dürnstein (15) unter „Andere Orte“
+// fallen; einzeln bleiben die 11 Orte ab 18 Verbindungen (Wien bis Graz).
+const ORT_BUENDELUNG_SCHWELLE = 17;
 // Punkt 4 (siehe Dateikopf-Kommentar) - Obergrenze für die Bestandteile-
 // Liste im "Andere Orte"-Tooltip (bis zu 243 einzelne Ortsnamen wären
 // unlesbar) - eigene, transparent dokumentierte Entscheidung, siehe
