@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (178) – Wortwolke kräftiger, Sidebar im Urkundennetzwerk, Chord und Streamgraph
+
+- `wortwolke.js`: Wortfarben gesättigter (`WORT_SAETTIGUNG` 1,45, danach wie bisher auf Lesbarkeit abgedunkelt), Deckkraft 0,8–1 statt 0,5–1.
+- `chordDiagramm.js`: Klick auf eine leere Stelle schließt die offene Sidebar (und hebt die gewählte Sehne auf).
+- `urkundenNetzwerk.js`: Klick auf eine Person öffnet zusätzlich die Sidebar mit allen Urkunden, in denen sie vorkommt (Liste → Detail wie im Chord). Sie schließt mit der Auswahl (leere Fläche, zweiter Klick, Esc) und über ihr ×; nach einem Neuaufbau (Unsicherheiten-Knopf) bleibt sie offen. Die Urkundenliste im Detailbereich unter dem Netz entfällt dafür; Partnerliste und Link zur Personenliste bleiben.
+- `streamgraph.js`: kein rechteckiger Fokusrahmen mehr beim Klick auf einen Strom; auch der Tastaturfokus zeigt jetzt die Kontur der Fläche wie beim Überfahren.
+- Geprüft auf dem Testserver 8845: Chord (Sehne öffnet, Leerklick schließt), Urkundennetzwerk (Friedrich III.: 136 Urkunden in der Sidebar, offen nach Umschalten der Unsicherheiten, Leerklick schließt), Streamgraph (`outline: none`, Auswahl bleibt), Wortwolke; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (177) – Stammbaum: Legende neben dem Unsicherheiten-Knopf, Ehe-Symbol, hervorgehobene Linien
 
 - `familienbaum.js`: Legende aus dem Info-Popover in die Zeile neben „Unsicherheiten anzeigen“ verlegt (kurze Beschriftungen, bricht bei schmalem Fenster um); zusätzlich Einträge für Ehe-Symbol und die beiden Linienarten, „unsichere Angabe“ nur bei eingeschalteten Unsicherheiten. Wird beim Verlassen der Ansicht entfernt. Fehlt die Knopfzeile, bleibt sie wie bisher im Info-Popover.

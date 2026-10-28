@@ -26,6 +26,8 @@
 // nach über die Häufigkeitsränge verteilt, damit benachbarte Wörter sich unterscheiden - ohne inhaltliche
 // Bedeutung (ein Wort ist keiner einzelnen Urkunden-Kategorie zugeordnet). Für die Lesbarkeit abgedunkelt
 // (lesbareTextfarbe()); die Deckkraft nach Häufigkeit bleibt. Vorher einheitlich CAT_COLORS.default.
+// 2026-10-28 (Wunsch des Autors, „farblich etwas deutlicher“): Palettenfarben gesättigter (WORT_SAETTIGUNG) und
+// Deckkraft 0,8–1 statt 0,5–1.
 //
 // AUFTRAG F: archivspezifische Filter aus data/wortwolke_filter.csv (optional,
 // siehe docs/SCHEMA.md 13.7). Reihenfolge: Ein Wort entfällt, wenn es selbst oder
@@ -35,6 +37,13 @@
 // allgemeinen Füllwörter unten). Der Info-Button nennt die angewendeten Filter.
 
 import { BESTAND_PALETTE, lesbareTextfarbe } from '../utils/kategorieFarben.js';
+
+const WORT_SAETTIGUNG = 1.45;
+function wortFarbe(i) {
+  const farbe = d3.hsl(BESTAND_PALETTE[i % BESTAND_PALETTE.length]);
+  farbe.s = Math.min(1, farbe.s * WORT_SAETTIGUNG);
+  return lesbareTextfarbe(farbe.formatHex());
+}
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul, konfigurationsliste } from '../core/archivKonfiguration.js';
@@ -280,7 +289,7 @@ function zeichneWortwolke() {
   const woerter = zaehleWorthaeufigkeit(records, instanz.filter);
   const maxAnzahl = d3.max(woerter, (w) => w.anzahl) || 1;
   const schriftgroessenSkala = d3.scaleSqrt().domain([1, maxAnzahl]).range([SCHRIFTGROESSE.min, SCHRIFTGROESSE.max]);
-  const opazitaetSkala = d3.scaleLinear().domain([1, maxAnzahl]).range([0.5, 1]);
+  const opazitaetSkala = d3.scaleLinear().domain([1, maxAnzahl]).range([0.8, 1]);
   woerter.forEach((w) => { w.schriftgroesse = schriftgroessenSkala(w.anzahl); });
 
   const canvas = document.createElement('canvas');
@@ -310,7 +319,7 @@ function zeichneWortwolke() {
     .attr('x', (w) => w.x).attr('y', (w) => w.y)
     .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
     .attr('font-size', (w) => w.schriftgroesse)
-    .attr('fill', (w, i) => lesbareTextfarbe(BESTAND_PALETTE[i % BESTAND_PALETTE.length]))
+    .attr('fill', (w, i) => wortFarbe(i))
     .attr('fill-opacity', (w) => opazitaetSkala(w.anzahl))
     .text((w) => w.text)
     .attr('role', 'button')
