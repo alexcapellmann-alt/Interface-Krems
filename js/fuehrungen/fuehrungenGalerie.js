@@ -42,7 +42,7 @@ function gruppiereNachThemenbereich(fuehrungen) {
   return reihenfolge.map((themenbereich) => [themenbereich, gruppen.get(themenbereich)]);
 }
 
-// Ein Eintrag der Titelliste: Titel (+ Entwurf-Markierung, Zeitraum), Klick
+// Ein Eintrag der Titelliste: Titel (+ Zeitraum), Klick
 // führt zu Station 1; ggf. „Fortsetzen“ für eine pausierte Führung und der
 // Prüfhinweis zur Kurzbeschreibung wie bisher an der Kachel.
 function baueTitelEintrag(fuehrung, pausiert) {
@@ -55,12 +55,6 @@ function baueTitelEintrag(fuehrung, pausiert) {
   const titel = document.createElement('span');
   titel.textContent = fuehrung.fuehrung_titel || fuehrung.fuehrung_id;
   link.appendChild(titel);
-  if (fuehrung.status === 'entwurf') {
-    const badge = document.createElement('span');
-    badge.className = 'fuehrung-kachel-entwurf';
-    badge.textContent = 'Entwurf';
-    link.appendChild(badge);
-  }
   if (fuehrung.zeitraum) {
     const zeit = document.createElement('span');
     zeit.className = 'fuehrungen-feld-zeitraum';

@@ -274,7 +274,7 @@ export async function render(container) {
     titel.textContent = e.f.fuehrung_titel;
     a.appendChild(titel);
     const zeitText = e.f.zeitraum || `${e.z.von}–${e.z.bis}`;
-    a.setAttribute('aria-label', `${e.f.fuehrung_titel}, ${zeitText}, ${e.f.themenbereich}${e.f.status === 'entwurf' ? ', Entwurf' : ''}`);
+    a.setAttribute('aria-label', `${e.f.fuehrung_titel}, ${zeitText}, ${e.f.themenbereich}`);
     a.addEventListener('mouseenter', () => zeigeTipp(e));
     a.addEventListener('focus', () => zeigeTipp(e));
     a.addEventListener('mouseleave', versteckeTipp);
