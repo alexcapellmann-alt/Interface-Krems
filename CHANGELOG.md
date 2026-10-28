@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (177) – Stammbaum: Legende neben dem Unsicherheiten-Knopf, Ehe-Symbol, hervorgehobene Linien
+
+- `familienbaum.js`: Legende aus dem Info-Popover in die Zeile neben „Unsicherheiten anzeigen“ verlegt (kurze Beschriftungen, bricht bei schmalem Fenster um); zusätzlich Einträge für Ehe-Symbol und die beiden Linienarten, „unsichere Angabe“ nur bei eingeschalteten Unsicherheiten. Wird beim Verlassen der Ansicht entfernt. Fehlt die Knopfzeile, bleibt sie wie bisher im Info-Popover.
+- Ehen: liegende Acht (Lemniskate, Goldton mit weißem Hof) statt gestrichelter Verbindungslinie; liegen die Partner nicht nebeneinander, führt eine feine Haarlinie von beiden Kästchen zum Symbol. Die Linien zu den Kindern beginnen am Symbol.
+- Hover/Klick: Linien der gewählten Person 4 px dick, zu den Eltern blau durchgezogen, zu den Kindern grün gestrichelt; Ehe-Symbol und Haarlinie werden kräftiger. Linienstärken jetzt zoomunabhängig (`vector-effect: non-scaling-stroke`, Grundlinie 1,2 px) – in der Übersicht sind die Linien dadurch sichtbarer als vorher.
+- `desc`-Text ergänzt; `infotexte.csv`: nur die Anmerkungsspalte angepasst.
+- Geprüft auf dem Testserver 8845 (800 und 1500 px breit): Albrecht II. zeigt 1 Elternlinie und 4 Kinderlinien; Legende einmalig vorhanden und nach Wechsel zur Personenliste entfernt; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (176) – Laufzeit: keine roten Strichrahmen mehr für unsichere Bestände
 
 - `ganttDiagramm.js`: rote gestrichelte Kennzeichnung entfernt an Balken (jetzt weißer Rand wie alle), an den Platzhaltern „ohne Zeitangabe“ (gestrichelt in Kategoriefarbe wie alle übrigen) und an den Kategorie-Bändern. Warnsymbol und Tooltip-Zeile („… davon mit unsicheren Angaben“) bleiben; `desc`-Text angepasst.
