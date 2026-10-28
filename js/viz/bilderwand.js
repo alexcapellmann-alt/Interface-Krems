@@ -50,7 +50,8 @@ const SPRITE_MANIFEST = 'fotos/sprites/urkunden.json';
 const DAUER = 750;
 const FARBE = {
   buehne: '#17222c', papier: '#ebe3cf', text: '#d9d4c7', gedaempft: '#9a978f', linie: '#3a4550',
-  akzent: '#f2d48a', flaeche: '#6f6a5f', unsicher: '#e0675a', karte: '#9a978f'
+  akzent: '#f2d48a', flaeche: '#6f6a5f', unsicher: '#e0675a', karte: '#9a978f',
+  kreis: '#b8964f' // Ortskreise der Karte, etwas dunkler als `akzent` (Wunsch des Autors, 2026-10-28)
 };
 const SCHRIFT = "'Inter', system-ui, sans-serif";
 // Grundkarte Niederösterreich und Umgebung (Natural Earth, erzeugt mit
@@ -605,7 +606,7 @@ function zeichneOrtsverbindungen(ctx, a, haupt, pos) {
     });
   });
   // verbundene Orte: klein und gedämpft
-  ctx.fillStyle = FARBE.akzent;
+  ctx.fillStyle = FARBE.kreis;
   verbunden.forEach((z, j) => {
     const q = pos(j); if (!q) return;
     ctx.globalAlpha = A * 0.45; ctx.beginPath(); ctx.arc(q[0], q[1], 1.8 + 2.5 * Math.sqrt(z / max), 0, 7); ctx.fill();
@@ -615,8 +616,8 @@ function zeichneOrtsverbindungen(ctx, a, haupt, pos) {
   haupt.forEach((m) => {
     const q = pos(m); if (!q) return;
     const [x, y] = q, r = 7;
-    ctx.fillStyle = FARBE.akzent;
-    ctx.globalAlpha = 0.25 * A; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 7); ctx.fill();
+    ctx.fillStyle = FARBE.kreis;
+    ctx.globalAlpha = 0.18 * A; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 7); ctx.fill();
     ctx.globalAlpha = A; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
     ctx.fillStyle = FARBE.buehne; ctx.globalAlpha = A * 0.8; ctx.fillText(terms[m], x + r + 7, y + 1);
     ctx.fillStyle = FARBE.akzent; ctx.globalAlpha = A; ctx.fillText(terms[m], x + r + 6, y);
@@ -652,7 +653,7 @@ function zeichneKarte(ctx, a) {
       return;
     }
     const r = 3 + 9 * Math.sqrt(n / max);
-    ctx.globalAlpha = 0.25 * Math.max(a, 0.4); ctx.fillStyle = FARBE.akzent;
+    ctx.globalAlpha = 0.18 * Math.max(a, 0.4); ctx.fillStyle = FARBE.kreis;
     ctx.beginPath(); ctx.arc(x, y, r + 5, 0, 7); ctx.fill();
     ctx.globalAlpha = Math.max(a, 0.4);
     ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
@@ -861,7 +862,8 @@ function verdrahte() {
     if (I.drag && !I.drag.moved) {
       const r = cv.getBoundingClientRect();
       const t = hit(e.clientX - r.left, e.clientY - r.top);
-      if (t) oeffneSidebar(t);
+      // zweiter Klick auf dieselbe Urkunde klappt die Sidebar wieder ein (interface-weite Regel, 2026-10-28)
+      if (t) (t === I.ausgewaehlt && I.sidebar.sidebar.classList.contains('offen') ? schliesseSidebar() : oeffneSidebar(t));
     }
     I.drag = null;
   });

@@ -134,10 +134,13 @@ function istUnsicherenKnoten(d, zeigeUnsicherheit) {
 // Funktion statt inline dupliziertem Ausdruck, weil sie an ZWEI Stellen
 // exakt gleich gebraucht wird: beim initialen Zeichnen und beim
 // Zurücksetzen nach "blur".
-function randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie }) {
+// `blatt` (2026-10-28): einzelne Bestände bekommen eine dünnere Trennlinie - im äußeren Ring liegen über
+// 300 schmale Segmente, deren 1-px-Rand die Farbe sonst zur Hälfte weiß überdeckte (die Sunburst wirkte
+// dadurch blasser als die Treemap mit derselben Palette).
+function randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie, blatt = false }) {
   if (istAusgewaehlt) return { stroke: AUSWAHL_FARBE, breite: 2, dasharray: null };
   if (istUnsicher) return { stroke: '#c0392b', breite: 2, dasharray: '4,3' };
-  return { stroke: '#ffffff', breite: 1, dasharray: ohneKategorie ? '4,3' : null };
+  return { stroke: '#ffffff', breite: blatt ? 0.35 : 1, dasharray: ohneKategorie ? '4,3' : null };
 }
 
 // Punkt A: der browserseitige Standard-Fokusrahmen (:focus-visible in
@@ -631,7 +634,7 @@ function zeichneSunburst() {
   const bogen = d3.arc()
     .startAngle((d) => d.x0)
     .endAngle((d) => d.x1)
-    .padAngle(0.004)
+    .padAngle((d) => (d.children ? 0.004 : 0.0008)) // schmale Bestand-Segmente ohne breite Lücke (2026-10-28)
     .padRadius(aussenRadius)
     .innerRadius((d) => d.y0)
     .outerRadius((d) => d.y1);
@@ -727,7 +730,7 @@ function zeichneSunburst() {
       }
 
       const textFarbe = passendeTextfarbe(farbe);
-      const ruheZustand = () => randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie });
+      const ruheZustand = () => randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie, blatt: !d.children });
       const stil = ruheZustand();
 
       const pfad = gruppe.append('path')
