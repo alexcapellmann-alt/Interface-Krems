@@ -7,6 +7,27 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (173) – Treemap, Sunburst, Laufzeit: „Unsicherheiten anzeigen“ zeigt nur unsichere Bestände
+
+- Bisher wurden unsichere Bestände (21 von 315, `daten_unsicher`) nur markiert; jetzt blendet der Knopf alle übrigen aus.
+- `bestandsHierarchie.js`: `nurUnsichereBestaende()` (gefilterte Kopie des Baums ohne leer gewordene Kategorien/Unterkategorien) und `zeigeKeineUnsicherenBestaende()` (Hinweis „In dieser Kategorie ist kein Bestand als unsicher markiert.“, wenn eine bereits gewählte Kategorie keinen unsicheren Bestand enthält; Stil `.bestand-keine-unsicheren` in `components.css`).
+- `treemap.js`, `sunburst.js`: Übersicht und Kategorie-Ansicht mit dem Filter; die Kategorie wird über ihren Namen im vollständigen Baum gesucht, damit nach dem Ausschalten wieder alle Bestände erscheinen.
+- `ganttDiagramm.js`: `wendeUnsicherheitsFilterAn()` filtert Einzelbestände und die Kategorie-Zeilen; die Zeitachse behält die Spanne aller Bestände.
+- Geprüft auf dem Testserver 8845: Treemap/Sunburst/Laufzeit zeigen nur die 21 unsicheren Bestände (Laufzeit: 3 mit, 18 ohne Zeitangabe; Kategorien-Modus: 3 Zeilen), nach dem Ausschalten wieder alle 315; Hinweis in der Kategorie „Religion“; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (172) – Kein Unsicherheiten-Knopf in Wortwolke und „Bürgerinnen?“
+
+- Beide Ansichten kennzeichnen keine Unsicherheiten; der Knopf „σ Unsicherheiten anzeigen“ blieb dort wirkungslos. Neues Registry-Merkmal `ohneUnsicherheitsButton` (`archivalienRegistry.js`); `app.js` blendet die Knopfzeile dann aus, wie bei `eigenerUnsicherheitsButton` (Bilderwand).
+- Geprüft auf dem Testserver 8845: Knopf fehlt in Wortwolke und „Bürgerinnen?“, ist in Dot Plot, Zeitachse und Personenliste nach dem Wechsel wieder da; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (171) – Führungen: keine „Entwurf“-Markierung mehr, Stationswechsel als Schiebeeffekt
 
 - „Entwurf“-Plakette entfernt aus Führungsliste (`fuehrungenGalerie.js`), Stationskopf (`fuehrungStation.js`), Abschlussbildschirm (`fuehrungAbschluss.js`) und dem Bildschirmleser-Text der Zeitleiste (`fuehrungenZeitleiste.js`); zugehörige CSS-Regeln und Farbvariablen in `components.css` entfernt. Die Spalte `status` in `data/fuehrungen.csv` bleibt unverändert.

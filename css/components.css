@@ -851,3 +851,6 @@ body.mit-hintergrundkarte .fuehrung-station { background-image: var(--hintergrun
 body.unterleisten-eingeklappt .unterleisten-schalter svg { transform: rotate(180deg); }
 body.unterleisten-eingeklappt .bereichs-leiste-bereich { display: none; }
 @media (prefers-reduced-motion: reduce) { .unterleisten-schalter, .unterleisten-schalter svg { transition: none; } }
+
+/* Bestand-Ansichten mit „Unsicherheiten anzeigen“, wenn die gewählte Kategorie keinen unsicheren Bestand hat (2026-10-28) */
+.bestand-keine-unsicheren { margin: var(--space-4); color: var(--text-muted); }

@@ -114,6 +114,23 @@ export function baueBestandsHierarchie(records, mindestgroesse = MINDESTGROESSE)
   };
 }
 
+// Wunsch des Autors (2026-10-28): „Unsicherheiten anzeigen“ zeigt in Treemap und Sunburst nur die
+// unsicher markierten Bestände. Kopie des (Teil-)Baums ohne sichere Bestände und ohne leer gewordene
+// Kategorien/Unterkategorien; null, wenn darin kein unsicherer Bestand liegt.
+export function nurUnsichereBestaende(knoten) {
+  if (knoten.record) return knoten.record.daten_unsicher ? knoten : null;
+  const kinder = (knoten.children || []).map(nurUnsichereBestaende).filter(Boolean);
+  return kinder.length ? { ...knoten, children: kinder } : null;
+}
+
+// Hinweis an Stelle der Grafik, wenn der Filter nichts übrig lässt
+export function zeigeKeineUnsicherenBestaende(ziel) {
+  const p = document.createElement('p');
+  p.className = 'bestand-keine-unsicheren';
+  p.textContent = 'In dieser Kategorie ist kein Bestand als unsicher markiert.';
+  ziel.appendChild(p);
+}
+
 // Ermittelt für einen beliebigen Knoten (Kategorie-, Unterkategorie- oder
 // Bestand-Ebene) die zugehörige Top-Level-Kategorie - robust über
 // d.ancestors() (schließt d selbst ein) nach `ebenenTyp === EBENENTYP_KATEGORIE`,

@@ -39,7 +39,7 @@
 // derselben Kachel auftreten.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
-import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE } from '../utils/bestandsHierarchie.js';
+import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE, nurUnsichereBestaende, zeigeKeineUnsicherenBestaende } from '../utils/bestandsHierarchie.js';
 import {
   passendeTextfarbe,
   baueBestandFarbSkala,
@@ -644,7 +644,16 @@ function zeichneTreemap() {
   // Werkzeugleisten-Titel steht, nicht innerhalb der SVG).
   const topPaddingFuer = (knoten) => (!inKategorieAnsicht && knoten.depth === 1 ? RAND_OBEN_WURZEL : 0);
 
-  const anzeigeDaten = aktuelleKategorieDaten || hierarchieDaten;
+  // 2026-10-28: mit „Unsicherheiten anzeigen“ nur unsichere Bestände; die Kategorie über ihren Namen
+  // im vollständigen Baum suchen, da sie auch aus der gefilterten Übersicht gewählt worden sein kann
+  const basisDaten = aktuelleKategorieDaten
+    ? (hierarchieDaten.children.find((k) => k.name === aktuelleKategorieDaten.name) || aktuelleKategorieDaten)
+    : hierarchieDaten;
+  const anzeigeDaten = zeigeUnsicherheit ? nurUnsichereBestaende(basisDaten) : basisDaten;
+  if (!anzeigeDaten) {
+    zeigeKeineUnsicherenBestaende(svgBereich);
+    return;
+  }
   const wurzel = d3.hierarchy(anzeigeDaten).sum((d) => Math.sqrt(d.value || 0)).sort((a, b) => b.value - a.value);
   d3.treemap().size([breite, hoehe]).paddingOuter(RAND_AUSSEN).paddingTop(topPaddingFuer).paddingInner(1).round(true)(wurzel);
   korrigiereMindesthoehen(wurzel, topPaddingFuer);
