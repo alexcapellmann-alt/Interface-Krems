@@ -642,7 +642,7 @@ Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Beide Date
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `station` | Text | **Pflicht** | `tor`, `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen) oder `vermoegenslos` (graue Säule links neben dem Text); andere Werte werden übergangen |
+| `station` | Text | **Pflicht** | `tor`, `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen), `vermoegenslos` (graue Säule links neben dem Text) `klerus` (Stadt und Kirche: rechts das Steiner Tor aus allen Punkten, auch denen der grauen Säule, und eine kleine Kirche mit Kreuz aus den Münzen) oder `reformation` (die Punkte des Tors bilden links neben dem Text ein Kreuz, die Kirche bleibt); andere Werte werden übergangen |
 | `knopf` | Text | **Pflicht** außer bei `tor` | Name des Weiter-Pfeils, der zu dieser Folie führt (Tooltip und Bildschirmleser) |
 | `unterzeile` | Text | nein | Zeile unter „N Personen“ in dieser Station |
 | `muenze_gulden` | Zahl | nein | Gulden je Münze (erster gefundener Wert gilt; Vorgabe 1 000) |

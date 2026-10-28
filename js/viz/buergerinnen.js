@@ -23,7 +23,10 @@
 // Bürgerschaft nach Schicht (links Kleinhändler und Hauer, rechts reiche Handelsleute), daneben links ein kurzer
 // Text → Goldmünzen regnen in die schon reservierten Felder unter den Säulen (Gesamtvermögen je Schicht), Text kommt
 // dazu → links neben dem Text steigt Punkt für Punkt die Säule der Inwohner und Hilfskräfte ohne Bürgerrecht auf
-// (mindestens so viele, ohne Münzen). In den drei Vermögens-Folien steht ein Punkt für einen Anteil der
+// (mindestens so viele, ohne Münzen) → Stadt und Kirche (Folie `klerus`, Beginn der Reformations-Erzählung): rechts
+// formen alle blauen und violetten Punkte wieder das Steiner Tor, die Münzen eine kleine goldene Kirche; der Text
+// bleibt an seinem Platz → Reformation (Folie `reformation`): die Punkte des Tors wandern links neben den Text und
+// bilden ein blau-lila Kreuz, die Kirche bleibt stehen. In den drei Vermögens-Folien steht ein Punkt für einen Anteil der
 // Bürgerschaft, nicht für eine bestimmte Person (kein Klick, Tooltip nennt die Schicht). Knöpfe, Texte und Münzwert
 // stehen in data/buergerinnen_stationen.csv, Anteile und Gulden-Spannen in data/buergerinnen_schichten.csv (siehe
 // docs/SCHEMA.md 13.8); Vermögen einer Schicht = Haushalte × Mittelwert.
@@ -46,14 +49,27 @@ const FARBE = '#2c4a6e';          // Tintenblau der Seite
 const RAHMEN = '#9a9081';         // warmes Grau für leere Rahmen und die Säule ohne Bürgerrecht
 const AUSWAHL = '#e0b429';        // Ring um den gewählten Punkt (wie der Fokusrahmen des Knopfs)
 const FRAUEN_FARBE = '#7a5a8c';   // symbolische Frauen-Punkte (gedämpftes Violett, unterscheidbar vom Tintenblau)
-// Haushalte (Vermögens-Folien): eigene Farbe, weil sich darin Männer (Tintenblau) und Frauen (Violett) vereinen;
-// beim Verschmelzen gehen beide Punktfarben fließend in diese über (Wunsch des Autors, 2026-10-28)
-const HAUSHALT_FARBE = '#1f8a83';
+// Haushalte (Vermögens-Folien): Mischfarbe aus Männern (Tintenblau #2c4a6e) und Frauen (Violett #7a5a8c), genau
+// die Mitte beider; beim Verschmelzen gehen beide Punktfarben fließend in sie über (Wunsch des Autors, 2026-10-28;
+// zuvor kurz Türkis)
+const HAUSHALT_FARBE = '#53527d';
 const GOLD = '#c9a227';           // Münzen (wie die Regierungszeit im Stammbaum)
 const GOLD_RAND = '#8a6d1a';
 const DAUER = 1300;
 const LEINWAND_UEBERSTAND = 60;   // px: die Leinwand reicht unter die Bühne (Punkte, die von unten aufsteigen)
 const STAFFELUNG = 250;           // ms: so weit setzen sich die Punkte zeitversetzt in Bewegung
+// Folien `klerus`/`reformation`: Formen in eigenen kleinen Koordinatenfeldern - Kreuz aus den Bürgerpunkten,
+// kleine Kirche (Turm mit Helm und kleinem Kreuz, Schiff mit Satteldach, Tür ausgespart) aus den Münzen
+const KREUZ = { w: 100, h: 150, flaechen: ['M40,0 H60 V150 H40 Z', 'M8,32 H92 V52 H8 Z'] };
+const KIRCHE = {
+  w: 120, h: 126,
+  flaechen: [
+    'M21.5,0 H24.5 V18 H21.5 Z', 'M17,4.5 H28 V7.5 H17 Z',          // Kreuz auf dem Turm
+    'M10,48 H36 V126 H10 Z', 'M8,49 L23,16 L38,49 Z',             // Turm, Helm
+    'M36,76 H114 V126 H36 Z', 'M33,77 L74,46 L117,77 Z'           // Schiff, Dach
+  ],
+  aussparungen: ['M66,126 V110 A8,8 0 0 1 82,110 V126 Z', 'M19,66 H27 V78 H19 Z'] // Tür, Turmfenster
+};
 const REGEN_START = 700;          // ms bis der Münzregen beginnt (die Seite scrollt vorher zu den Münzfeldern)
 const REGEN_DAUER = 2600;         // ms, über die sich der Regen von der untersten bis zur obersten Reihe verteilt
 const KOPF_SPALTEN = 64;          // Platz über den Spalten für Überschrift und Zahl
@@ -64,7 +80,7 @@ const SCHICHTEN_DATEI = 'data/buergerinnen_schichten.csv';
 const OHNE_BUERGERRECHT = 'ohne_buergerrecht'; // id der grauen Säule in buergerinnen_schichten.csv
 const STANDARD_MUENZE = 1000;     // Gulden je Münze, falls die Stationsdatei keinen Wert nennt
 const STANDARD_UNTERZEILE = 'Neubürger und ihre Bürgen, ein Punkt je Person';
-const BEKANNTE_STATIONEN = ['tor', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos'];
+const BEKANNTE_STATIONEN = ['tor', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation'];
 const VERMOEGEN_STATIONEN = ['schichten', 'muenzen', 'vermoegenslos']; // gemeinsames Säulen-Layout
 // Beiwerk je Folie (siehe zeichneTeile())
 const TEILE = {
@@ -72,7 +88,9 @@ const TEILE = {
   frauen: ['geschlecht'],
   schichten: ['koepfe', 'muenzen', 'legende'], // Münzen schon angelegt, aber verborgen (der Regen startet ohne Aufbau)
   muenzen: ['koepfe', 'werte', 'muenzen', 'legende'],
-  vermoegenslos: ['koepfe', 'werte', 'muenzen', 'grau', 'legende']
+  vermoegenslos: ['koepfe', 'werte', 'muenzen', 'grau', 'legende'],
+  klerus: ['muenzen'],
+  reformation: ['muenzen']
 };
 const PERSONEN_STATIONEN = ['tor', 'geschlecht', 'frauen']; // dort steht ein Punkt für eine Person (Klick öffnet die Sidebar)
 // ohne Stationsdatei: Tor und Geschlecht ohne Text
@@ -156,9 +174,9 @@ const TOR_AUSSPARUNGEN = [
 // um Torbogen und Fenster), damit Dachschwünge und Bögen glatt verlaufen; dann füllt ein versetztes Gitter das Innere
 // mit Abstand zur Randreihe. Der Abstand wird so gesucht, dass mindestens n Punkte entstehen; überzählige fallen im
 // Inneren gleichmäßig verteilt weg, die Randreihe bleibt vollständig. Ergebnis je Punktzahl zwischengespeichert.
-let torPunkteCache = null;
+const torPunkteCache = new Map(); // je Punktzahl
 function torPunkte(n) {
-  if (torPunkteCache?.n === n) return torPunkteCache.punkte;
+  if (torPunkteCache.has(n)) return torPunkteCache.get(n).punkte;
   // Form einmal als Maske zeichnen (Flächen, dann Aussparungen herausgestanzt) - Abfragen sind dann nur noch
   // ein Blick in die Bilddaten statt Pfadtests
   const mb = TOR.x0 + TOR.breite + 2, mh = TOR.y0 + TOR.hoehe + 2;
@@ -255,16 +273,64 @@ function torPunkte(n) {
     : bester.inneres;
   // Reihenfolge von oben nach unten, damit Nachbarn im Feld auch in der Liste nah beieinander liegen
   const punkte = [...bester.rand, ...inneres].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
-  torPunkteCache = { n, punkte, abstand: klein };
+  torPunkteCache.set(n, { punkte, abstand: klein });
   return punkte;
 }
 
 function torForm(n, b, h) {
+  return torFormIn(n, { x: b * 0.05, y: 6, b: b * 0.9, h: h - 12 });
+}
+
+// Tor in einem Rechteck (zentriert, Seitenverhältnis bleibt)
+function torFormIn(n, r) {
   const punkte = torPunkte(n);
-  const skala = Math.min((h - 12) / TOR.hoehe, (b * 0.9) / TOR.breite);
-  const ox = (b - TOR.breite * skala) / 2 - TOR.x0 * skala;
-  const oy = (h - TOR.hoehe * skala) / 2 - TOR.y0 * skala;
-  return { zelle: torPunkteCache.abstand * skala, pos: (i) => { const [x, y] = punkte[i % punkte.length] || [512, 900]; return [ox + x * skala, oy + y * skala]; } };
+  const skala = Math.min(r.h / TOR.hoehe, r.b / TOR.breite);
+  const ox = r.x + (r.b - TOR.breite * skala) / 2 - TOR.x0 * skala;
+  const oy = r.y + (r.h - TOR.hoehe * skala) / 2 - TOR.y0 * skala;
+  return { zelle: torPunkteCache.get(n).abstand * skala, pos: (i) => { const [x, y] = punkte[i % punkte.length] || [512, 900]; return [ox + x * skala, oy + y * skala]; } };
+}
+
+// n Punkte auf versetztem Gitter innerhalb einer Form (Flächen als Pfade im Feld form.w × form.h); Abstand per Suche
+const formCache = new Map();
+function formRaster(name, n, flaechen, form, aussparungen = []) {
+  const schluessel = `${name}|${n}`;
+  if (formCache.has(schluessel)) return formCache.get(schluessel);
+  const aufl = 4;
+  const c = document.createElement('canvas');
+  c.width = form.w * aufl;
+  c.height = form.h * aufl;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.scale(aufl, aufl);
+  flaechen.forEach((d) => ctx.fill(new Path2D(d)));
+  ctx.globalCompositeOperation = 'destination-out';
+  aussparungen.forEach((d) => ctx.fill(new Path2D(d)));
+  const maske = ctx.getImageData(0, 0, c.width, c.height).data;
+  const innen = (x, y) => {
+    const xi = Math.round(x * aufl), yi = Math.round(y * aufl);
+    return xi >= 0 && yi >= 0 && xi < c.width && yi < c.height && maske[(yi * c.width + xi) * 4 + 3] > 127;
+  };
+  const gitter = (a) => {
+    const liste = [];
+    const za = a * 0.866;
+    for (let k = 0, y = za / 2; y < form.h; k += 1, y += za) {
+      for (let x = k % 2 ? a : a / 2; x < form.w; x += a) if (innen(x, y)) liste.push([x, y]);
+    }
+    return liste;
+  };
+  let klein = 0.1, gross = 40;
+  for (let i = 0; i < 18; i += 1) { const m = (klein + gross) / 2; if (gitter(m).length >= n) klein = m; else gross = m; }
+  const alle = gitter(klein);
+  const punkte = alle.length > n ? Array.from({ length: n }, (_, i) => alle[Math.floor((i * alle.length) / n)]) : alle;
+  const ergebnis = { punkte, abstand: klein };
+  formCache.set(schluessel, ergebnis);
+  return ergebnis;
+}
+
+// Form in ein Rechteck legen (zentriert, Seitenverhältnis bleibt)
+function inRechteck(form, r) {
+  const skala = Math.min(r.b / form.w, r.h / form.h);
+  const ox = r.x + (r.b - form.w * skala) / 2, oy = r.y + (r.h - form.h * skala) / 2;
+  return { skala, pos: ([x, y]) => [ox + x * skala, oy + y * skala] };
 }
 
 // Raster für n Punkte in einem Rechteck: Zellgröße so, dass alle hineinpassen
@@ -444,6 +510,9 @@ function berechneLayout(station = instanz.station) {
   const basis = { b, h, feld, radiusFeld, station, benoetigt: 0, text: null, art: station };
   if (station === 'geschlecht' || station === 'frauen') return { ...basis, ...layoutGeschlecht(b, h, radiusFeld), art: 'geschlecht' };
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b), art: 'vermoegen' };
+  if ((station === 'klerus' || station === 'reformation') && instanz.schichten) {
+    return { ...basis, ...layoutKlerus(b, station === 'reformation'), art: 'klerus' };
+  }
   return { ...basis, ziel: (p, i) => feld.pos(i), radius: radiusFeld };
 }
 
@@ -483,6 +552,67 @@ function layoutGeschlecht(b, h, radiusFeld) {
     text: breit ? { x: b / 2 - textBreite / 2, b: textBreite, top: 4 } : null,
     frauZiel: posSymbolisch,
     links, rechts, spaltenHoehe, maenner, frauen
+  };
+}
+
+// Folien `klerus` und `reformation`: Der Text steht an derselben Stelle wie auf den Vermögens-Folien (zwischen
+// dem Platz der grauen Säule und den Bürgersäulen). Rechts daneben die kleine goldene Kirche aus allen Münzen und -
+// auf `klerus` - das Steiner Tor aus allen blauen, violetten und braunen (Inwohner und Hilfskräfte) Punkten,
+// gemischt; auf `reformation` wandern diese
+// Punkte links neben den Text und bilden dort ein Kreuz. Schmal: Tor bzw. Kreuz links, Kirche rechts, Text darunter.
+function layoutKlerus(b, mitKreuz) {
+  const { personen, schichten, muenzeGulden } = instanz;
+  const h = instanz.basisHoehe;
+  const LV = layoutVermoegen(b);
+  const luecke = Math.max(14, b * 0.025);
+  let torR, kircheR, kreuzR;
+  if (LV.text) {
+    const x2 = LV.text.x + LV.text.b + luecke;
+    const rest = b - x2;
+    torR = { x: x2, y: 8, b: rest * 0.58, h: h - 16 };
+    kircheR = { x: x2 + rest * 0.62, y: h * 0.42, b: rest * 0.38, h: h * 0.52 };
+    kreuzR = { x: 0, y: 8, b: LV.text.x - luecke, h: h - 16 };
+  } else {
+    torR = { x: 0, y: 8, b: b * 0.6, h: h - 16 };
+    kreuzR = torR;
+    kircheR = { x: b * 0.62, y: h * 0.45, b: b * 0.38, h: h * 0.5 };
+  }
+  const n = personen.length;
+  // alle Männer, Frauen und Inwohner/Hilfskräfte (graue Säule), gemischt (fester Zufall), bilden Tor bzw. Kreuz
+  const mitGrauen = Boolean(instanz.graue);
+  const reihe = [];
+  for (let i = 0; i < n; i += 1) {
+    reihe.push(['m', i], ['f', i]);
+    if (mitGrauen) reihe.push(['g', i]);
+  }
+  const versatzVon = { m: 0, f: 7919, g: 15887 };
+  const mischWert = ([art, i]) => (Math.imul(i + versatzVon[art], 2654435761) >>> 0);
+  reihe.sort((a, c) => mischWert(a) - mischWert(c));
+  const platz = { m: new Map(), f: new Map(), g: new Map() };
+  reihe.forEach(([art, i], k) => platz[art].set(i, k));
+  let pos, zelle;
+  if (mitKreuz) {
+    const kreuz = inRechteck(KREUZ, kreuzR);
+    const raster = formRaster('kreuz', reihe.length, KREUZ.flaechen, KREUZ);
+    pos = (k) => kreuz.pos(raster.punkte[k % raster.punkte.length]);
+    zelle = raster.abstand * kreuz.skala;
+  } else {
+    const tor = torFormIn(reihe.length, torR);
+    pos = tor.pos;
+    zelle = tor.zelle;
+  }
+  // Kirche aus allen Münzen
+  const muenzAnzahl = schichten.buerger.reduce((summe, sch) => summe + Math.ceil(sch.summe / muenzeGulden - 1e-9), 0);
+  const kirche = inRechteck(KIRCHE, kircheR);
+  const kirchenRaster = formRaster('kirche', muenzAnzahl, KIRCHE.flaechen, KIRCHE, KIRCHE.aussparungen);
+  return {
+    ziel: (p) => pos(platz.m.get(p.nr)),
+    frauZiel: (j) => pos(platz.f.get(j)),
+    grauZiel: mitGrauen ? (j) => pos(platz.g.get(j)) : null,
+    kirchenZiel: (i) => kirche.pos(kirchenRaster.punkte[i % kirchenRaster.punkte.length]),
+    kirchenRadius: Math.max(0.6, kirchenRaster.abstand * kirche.skala * 0.42),
+    radius: Math.max(0.8, zelle * 0.4),
+    text: LV.text
   };
 }
 
@@ -607,6 +737,7 @@ function beendeBewegung(name, { schreiben = true } = {}) {
     });
   }
   if (schreiben) b.knoten.forEach((k) => k.setAttribute('fill', b.farbeNach));
+  if (schreiben && b.zielRadien) b.knoten.forEach((k, i) => k.setAttribute('r', b.zielRadien[i].toFixed(2)));
   b.gruppe.style.visibility = '';
 }
 
@@ -632,20 +763,53 @@ function zeichneLeinwand() {
     const vergangen = jetzt - b.beginn;
     let farbStufe = -1;
     let alleFertig = true;
+    // einfarbig, ohne Deckkraftverlauf (Münzen): alle Kreise in einem Pfad, ein einziges fill()
+    if (b.farbeVon === b.farbeNach && !b.deckkraft) {
+      ctx.fillStyle = b.farben[0];
+      ctx.globalAlpha = b.fuell[0];
+      ctx.beginPath();
+      for (let i = 0; i < b.knoten.length; i += 1) {
+        const t = Math.min(1, Math.max(0, (vergangen - b.verzoegerung[i]) / b.dauer));
+        if (t < 1) alleFertig = false;
+        const e = t <= 0 ? 0 : (t >= 1 ? 1 : b.ease(t));
+        b.e[i] = e;
+        const r = b.radiusNach === undefined ? b.radius : b.radius + (b.radiusNach - b.radius) * e;
+        const x = b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, y = b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e;
+        ctx.moveTo(x + r, y);
+        ctx.arc(x, y, r, 0, VOLLKREIS);
+      }
+      ctx.fill();
+      if (alleFertig) beendeBewegung(name);
+      return;
+    }
+    // Punkte nach Farbstufe und (auf 1/20 gerundeter) Deckkraft bündeln: je Bündel ein Pfad und ein fill()
+    const buendel = new Map();
     for (let i = 0; i < b.knoten.length; i += 1) {
       const t = Math.min(1, Math.max(0, (vergangen - b.verzoegerung[i]) / b.dauer));
       if (t < 1) alleFertig = false;
       const e = t <= 0 ? 0 : (t >= 1 ? 1 : b.ease(t));
       b.e[i] = e;
-      const a = (b.deckkraft ? b.deckkraft(e) : 1) * b.fuell[i];
-      if (a <= 0.004) continue;
-      const stufe = Math.round(e * 20);
-      if (stufe !== farbStufe) { ctx.fillStyle = b.farben[stufe]; farbStufe = stufe; }
-      ctx.globalAlpha = a;
-      ctx.beginPath();
-      ctx.arc(b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e, b.radius, 0, VOLLKREIS);
-      ctx.fill();
+      const a = Math.round((b.deckkraft ? b.deckkraft(e) : 1) * b.fuell[i] * 20);
+      if (a <= 0) continue;
+      const schluessel = Math.round(e * 20) * 32 + a;
+      let liste = buendel.get(schluessel);
+      if (!liste) { liste = []; buendel.set(schluessel, liste); }
+      liste.push(i, e);
     }
+    buendel.forEach((liste, schluessel) => {
+      const stufe = Math.floor(schluessel / 32);
+      if (stufe !== farbStufe) { ctx.fillStyle = b.farben[stufe]; farbStufe = stufe; }
+      ctx.globalAlpha = (schluessel % 32) / 20;
+      ctx.beginPath();
+      for (let k = 0; k < liste.length; k += 2) {
+        const i = liste[k], e = liste[k + 1];
+        const r = b.radiusNach === undefined ? b.radius : b.radius + (b.radiusNach - b.radius) * e;
+        const x = b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, y = b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e;
+        ctx.moveTo(x + r, y);
+        ctx.arc(x, y, r, 0, VOLLKREIS);
+      }
+      ctx.fill();
+    });
     if (alleFertig) beendeBewegung(name);
   });
   ctx.globalAlpha = 1;
@@ -702,13 +866,17 @@ function zeichneFrauen(L, mitAnimation) {
   const { frauenPunkte: sel, personen } = instanz;
   if (!sel) return;
   const knoten = sel.nodes();
-  const sichtbar = L.station === 'frauen';
+  const sichtbar = ['frauen', 'klerus', 'reformation'].includes(L.station);
   const warSichtbar = instanz.frauenSichtbar;
   instanz.frauenSichtbar = sichtbar;
   sel.attr('r', L.radius).style('pointer-events', sichtbar ? null : 'none');
   const unten = Math.max(L.h, L.benoetigt || 0) + 30;
   const spalte = sichtbar ? knoten.map((k, j) => L.frauZiel(j)) : null;
   const aktuell = lageVon('frauen', knoten).map(([x, y]) => [x, y]);
+  if (mitAnimation && sichtbar && warSichtbar) { // z. B. vom Tor ins Kreuz: einfach mitwandern
+    animiere(knoten, aktuell, spalte, { verzoegerung: knoten.map((k, j) => personen[j].verzoegerung * STAFFELUNG), dauer: DAUER, deckkraft: () => 1 });
+    return;
+  }
   if (!mitAnimation || sichtbar === warSichtbar) {
     beendeBewegung('frauen', { schreiben: false });
     if (sichtbar) knoten.forEach((k, j) => { k.setAttribute('cx', spalte[j][0]); k.setAttribute('cy', spalte[j][1]); k.setAttribute('opacity', 1); k.setAttribute('fill', FRAUEN_FARBE); });
@@ -720,8 +888,9 @@ function zeichneFrauen(L, mitAnimation) {
   if (sichtbar && V?.art === 'vermoegen') {
     // aus den Haushalten lösen
     const start = knoten.map((k, j) => V.ziel(personen[j], j));
-    animiere(knoten, start, spalte,
-      { verzoegerung: knoten.map((k, j) => versatz(j)), dauer: DAUER, deckkraft: (e) => Math.min(1, e * 2.5) });
+    animiere(knoten, start, spalte, {
+      verzoegerung: knoten.map((k, j) => (L.frauVerz ? L.frauVerz(j) : versatz(j))), dauer: DAUER, deckkraft: (e) => Math.min(1, e * 2.5)
+    });
   } else if (sichtbar) {
     // Reihe für Reihe von unten in die Spalte steigen
     const ys = spalte.map(([, y]) => y);
@@ -746,16 +915,28 @@ function zeichneFrauen(L, mitAnimation) {
   }
 }
 
-// Graue Punkte (Inwohner und Hilfskräfte): steigen punktweise von unten in ihre Säule bzw. sinken wieder hinab
+// Graue Punkte (Inwohner und Hilfskräfte): steigen punktweise von unten in ihre Säule bzw. sinken wieder hinab;
+// auf den Folien klerus/reformation sind sie Teil von Tor und Kreuz
 function zeichneGraue(L, mitAnimation) {
   const { graue } = instanz;
   if (!graue) return;
-  const sichtbar = L.station === 'vermoegenslos' && Boolean(L.grauZiel);
+  const sichtbar = ['vermoegenslos', 'klerus', 'reformation'].includes(L.station) && Boolean(L.grauZiel);
   const warSichtbar = instanz.graueSichtbar;
   instanz.graueSichtbar = sichtbar;
   const unten = Math.max(L.h, L.benoetigt || 0) + 30;
   const ziel = (j) => (L.grauZiel ? L.grauZiel(j) : [-40, unten]);
   graue.interrupt('grau').style('pointer-events', sichtbar ? null : 'none').attr('r', L.radius);
+  if (mitAnimation && sichtbar && warSichtbar) {
+    // von der Säule ins Tor, vom Tor ins Kreuz und zurück: über die Leinwand (gefüllt gezeichnet, am Ende wieder hohl)
+    const knoten = graue.nodes();
+    starteBewegung('graue', {
+      gruppe: knoten[0].parentNode, knoten, start: lageVon('graue', knoten).map(([x, y]) => [x, y]), ziel: knoten.map((k, j) => ziel(j)),
+      ebene: 0.5, farbeVon: RAHMEN, farbeNach: RAHMEN, fuell: knoten.map(() => 0.9), radius: L.radius,
+      verzoegerung: knoten.map((k, j) => (((j * 7919) % 997) / 997) * STAFFELUNG), dauer: DAUER, ease: d3.easeCubicInOut
+    });
+    return;
+  }
+  beendeBewegung('graue', { schreiben: false });
   if (!mitAnimation || sichtbar === warSichtbar) {
     graue.attr('cx', (j) => ziel(j)[0]).attr('cy', (j) => (sichtbar ? ziel(j)[1] : unten)).attr('opacity', sichtbar ? 1 : 0);
     return;
@@ -779,13 +960,14 @@ function zeichneGraue(L, mitAnimation) {
 function zeichneTeile(L, mitAnimation) {
   const { ebeneSpalten, ebeneMuenzen } = instanz;
   const schluessel = `${L.art}|${Math.round(L.b)}`;
+  const schluesselVon = (teil) => (teil === 'muenzen' ? `geld|${Math.round(L.b)}` : schluessel); // Münzen bleiben bis zur Folie klerus
   const jetzt = new Set(TEILE[L.station] || []);
   const bestehend = new Map();
   [ebeneSpalten, ebeneMuenzen].forEach((ebene) => ebene.selectAll(':scope > g[data-teil]').each(function () {
     bestehend.set(this.dataset.teil, d3.select(this));
   }));
   bestehend.forEach((g, teil) => {
-    if (jetzt.has(teil) && g.attr('data-schluessel') === schluessel && teil !== 'legende') { // bleibt stehen
+    if (jetzt.has(teil) && g.attr('data-schluessel') === schluesselVon(teil) && teil !== 'legende') { // bleibt stehen
       AKTUALISIERER[teil]?.(g, L, mitAnimation);
       return;
     }
@@ -802,7 +984,7 @@ function zeichneTeile(L, mitAnimation) {
     if (bestehend.has(teil)) return;
     const neu = mitAnimation && !instanz.teileVorher?.has(teil);
     const ebene = teil === 'muenzen' ? ebeneMuenzen : ebeneSpalten;
-    const g = ebene.append('g').attr('data-teil', teil).attr('data-schluessel', schluessel);
+    const g = ebene.append('g').attr('data-teil', teil).attr('data-schluessel', schluesselVon(teil));
     ZEICHNER[teil]?.(g, L, neu);
   });
   instanz.teileVorher = jetzt;
@@ -812,6 +994,12 @@ function zeichneTeile(L, mitAnimation) {
 const AKTUALISIERER = {
   // Münzen: auf „schichten“ verborgen, ab „muenzen“ sichtbar; beim Vorwärtsschritt regnen sie, rückwärts blenden sie aus
   muenzen(g, L, mitAnimation) {
+    // Folien klerus/reformation: die Münzen fliegen zur Kirche bzw. von dort zurück in ihre Felder
+    const inKirche = L.art === 'klerus';
+    if (inKirche || g.property('__inKirche')) {
+      if (inKirche !== Boolean(g.property('__inKirche'))) morpheMuenzen(g, L, inKirche, mitAnimation);
+      return;
+    }
     const sichtbar = L.station !== 'schichten';
     const warSichtbar = g.attr('display') !== 'none';
     if (sichtbar === warSichtbar) return;
@@ -829,6 +1017,29 @@ const AKTUALISIERER = {
   }
 };
 
+// Münzen zur Kirche (Folien klerus/reformation) bzw. zurück in die Münzfelder; Radius wird mit überblendet
+function morpheMuenzen(g, L, inKirche, mitAnimation) {
+  baueMuenzen(g);
+  instanz.regenSchleife?.stop();
+  g.property('__inKirche', inKirche);
+  g.attr('display', null).attr('opacity', null);
+  const liste = g.property('__muenzen');
+  const knoten = liste.map((m) => m.knoten);
+  const ziel = inKirche ? liste.map((m, i) => L.kirchenZiel(i)) : liste.map((m) => [m.x, m.y]);
+  const zielRadien = inKirche ? liste.map(() => L.kirchenRadius) : liste.map((m) => m.r);
+  if (!mitAnimation) {
+    beendeBewegung('muenzen', { schreiben: false });
+    knoten.forEach((k, i) => { k.setAttribute('cx', ziel[i][0].toFixed(1)); k.setAttribute('cy', ziel[i][1].toFixed(1)); k.setAttribute('r', zielRadien[i].toFixed(2)); k.setAttribute('opacity', 1); });
+    return;
+  }
+  starteBewegung('muenzen', {
+    gruppe: g.node(), knoten, start: lageVon('muenzen', knoten).map(([x, y]) => [x, y]), ziel, ebene: 0,
+    farbeVon: GOLD, farbeNach: GOLD, fuell: knoten.map(() => 1),
+    radius: Number(knoten[0].getAttribute('r')) || 3, radiusNach: zielRadien[0], zielRadien,
+    verzoegerung: liste.map((m, i) => (((i * 7919) % 997) / 997) * 450), dauer: DAUER + 200, ease: d3.easeCubicInOut
+  });
+}
+
 // Münzen eines Münzen-Teils einmal anlegen; je Münze Knoten, Zielhöhe und Reihe für regne()
 function baueMuenzen(g) {
   if (g.property('__muenzen')) return;
@@ -845,7 +1056,10 @@ function baueMuenzen(g) {
       .attr('cx', (j) => s.muenzPos(j)[0]).attr('cy', (j) => s.muenzPos(j)[1])
       .attr('r', (j) => L.muenzRadius * (j === anzahl - 1 && rest > 0 ? Math.sqrt(rest) : 1))
       .attr('fill', GOLD).attr('stroke', GOLD_RAND).attr('stroke-width', 0.6)
-      .each(function (j) { liste.push({ knoten: this, y: s.muenzPos(j)[1], reihe: Math.floor(j / s.mProZeile), reihen: Math.max(1, s.muenzReihen), j }); });
+      .each(function (j) {
+        liste.push({ knoten: this, x: s.muenzPos(j)[0], y: s.muenzPos(j)[1], r: Number(this.getAttribute('r')),
+          reihe: Math.floor(j / s.mProZeile), reihen: Math.max(1, s.muenzReihen), j });
+      });
   });
   g.property('__muenzen', liste);
 }
@@ -944,6 +1158,11 @@ const ZEICHNER = {
   // Auf „schichten“ verborgen und erst angelegt, wenn die Punkte angekommen sind (sonst stockt der Anfang des
   // Morphens); spätestens beim Weiterklicken legt AKTUALISIERER.muenzen sie an.
   muenzen(g, L, neu) {
+    if (L.art === 'klerus') {
+      g.property('__layout', berechneLayout('muenzen'));
+      morpheMuenzen(g, L, true, false);
+      return;
+    }
     g.property('__layout', L);
     if (L.station === 'schichten') {
       g.attr('display', 'none');
@@ -1086,6 +1305,8 @@ function markiereAuswahl() {
 function stationsBeschriftung() {
   const { station, layout: L, schichten, personen } = instanz;
   if (station === 'geschlecht') return `${zahl(L.maenner.length)} Männer und ${zahl(L.frauen.length)} Frauen im Bürgerbuch`;
+  if (station === 'klerus') return 'Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden wieder das Steiner Tor, daneben eine kleine Kirche mit Kreuz aus den Münzen';
+  if (station === 'reformation') return 'Reformation: Die Punkte der Bürgerschaft bilden ein Kreuz, daneben die kleine Kirche aus den Münzen';
   if (station === 'frauen') return `${zahl(L.maenner.length)} Männer im Bürgerbuch, daneben ebenso viele symbolische Punkte für die Frauen, die es nicht nennt`;
   if (VERMOEGEN_STATIONEN.includes(station) && schichten) {
     const teile = schichten.buerger.map((s) => (station === 'schichten'
@@ -1123,6 +1344,10 @@ function geheZu(index) {
   zeichne(true);
   instanz.svg.attr('aria-label', stationsBeschriftung());
   if (instanz.station === 'muenzen' && index > vorher) zeigeMuenzfelder();
+  if (instanz.station === 'klerus') { // Bühne wieder ganz zeigen (die Münzfelder lagen weiter unten)
+    const oben = instanz.svg.node().getBoundingClientRect().top + window.scrollY - 90;
+    if (window.scrollY > oben + 20) window.scrollTo({ top: Math.max(0, oben), behavior: ohneAnimation() ? 'auto' : 'smooth' });
+  }
   aktualisiereSteuerung();
   // verschwindet der gedrückte Knopf (erste/letzte Folie), bleibt der Fokus auf dem anderen
   if (fokusWar === instanz.weiterKnopf && instanz.weiterKnopf.hidden) instanz.zurueckKnopf.focus();
@@ -1157,6 +1382,19 @@ async function ladeStationsdaten() {
     }
   }
   aktualisiereSteuerung();
+  // Formen der Folien klerus/reformation (Tor mit mehr Punkten, Kirche, Kreuz) im Leerlauf vorab berechnen - beim Klick
+  // kosteten sie sonst ein Bild von rund 0,3 s; die Ergebnisse hängen nicht von der Fensterbreite ab
+  if (instanz.schichten && instanz.stationen.some((s) => s.id === 'klerus' || s.id === 'reformation')) {
+    // nur, wenn gerade nichts in Bewegung ist (sonst stockt ein laufender Übergang); sonst eine Sekunde später erneut
+    const vorab = () => {
+      if (!instanz) return;
+      if (instanz.leinwandSchleife || Date.now() < instanz.animationBis) { setTimeout(plane, 1000); return; }
+      layoutKlerus(instanz.buehne.clientWidth || 900, false);
+      layoutKlerus(instanz.buehne.clientWidth || 900, true);
+    };
+    const plane = () => (window.requestIdleCallback ? window.requestIdleCallback(vorab, { timeout: 4000 }) : vorab());
+    setTimeout(plane, 1500);
+  }
 }
 
 export function render(container, data, options = {}) {
@@ -1218,6 +1456,7 @@ export function render(container, data, options = {}) {
         zeigeTooltip(`${p.name}\n${zeile}`, this, container);
         return;
       }
+      if (instanz.station === 'klerus' || instanz.station === 'reformation') return;
       const s = instanz.schichten?.buerger[instanz.zuordnung[p.nr].k];
       if (s) zeigeTooltip(`${s.name}\n1 von ${zahl(s.anzahl)} Haushalten (Anteil, keine bestimmte Person)`, this, container);
     })

@@ -7,6 +7,49 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (196) – Bürgerinnen?: Inwohner und Hilfskräfte im Tor, Kreuz auf der Kirche, Leinwand schneller
+
+- Wunsch des Autors: Auch die braunen Punkte der Inwohner und Hilfskräfte (graue Säule) bilden auf „Stadt und Kirche“ das Steiner Tor mit (jetzt 7 965 Punkte, gemischt mit Bürgern und Frauen) und wandern auf „Die Reformation“ mit ins Kreuz; zurück gehen sie wieder in ihre Säule. Zwischen Säule, Tor und Kreuz bewegen sie sich über die Leinwand (`zeichneGraue()`, `layoutKlerus()` mit `grauZiel`).
+- Die goldene Kirche hat ein kleines Kreuz auf der Turmspitze (`KIRCHE`: Formen 14 Einheiten tiefer, Kreuz darüber).
+- Leinwand: Punkte gleicher Farbstufe und (auf 1/20 gerundeter) Deckkraft werden gebündelt in einem Pfad gezeichnet (vorher je Punkt ein eigener Zeichenaufruf; mit den zusätzlichen Punkten brauchten 35 von 125 Bildern über 30 ms). Die Vorab-Berechnung der Formen für Tor/Kirche/Kreuz wartet, bis keine Bewegung läuft (sie fiel sonst in den ersten Übergang, ein Bild von 245 ms).
+- Gemessen auf dem Testserver 8845 (1400 × 800): alle Folien vor und zurück, je 1–7 Bilder über 30 ms (meist das Klickbild), sonst rund 17 ms; braune Punkte im Tor (2 655), im Kreuz (2 655) und zurück in der Säule (2 655); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (195) – Bürgerinnen?: Kirche statt Kreuz und Weinglas, neue Folie „Die Reformation“
+
+- Folie `klerus` umgebaut (Wunsch des Autors): Weinglas entfernt; alle blauen und violetten Punkte (5 310, gemischt) bilden rechts das Steiner Tor, die 4 443 Münzen statt des Kreuzes eine kleine goldene Kirche (Turm mit Helm, Schiff mit Satteldach, Tür und Turmfenster ausgespart; `KIRCHE`, `formRaster()` mit Aussparungen). Der Text steht an derselben Stelle wie auf „Wer fehlt noch?“ (zwischen dem Platz der grauen Säule und den Bürgersäulen; `layoutKlerus()` übernimmt ihn aus `layoutVermoegen()`).
+- Neue Folie `reformation` („Die Reformation“, „Krems um 1550–1580“): Die Punkte des Tors wandern links neben den Text und bilden ein blau-lila Kreuz; die Kirche bleibt stehen; zurück wandern sie wieder ins Tor. Frauen-Punkte bewegen sich zwischen zwei Folien, auf denen sie sichtbar sind, einfach mit.
+- `buergerinnen_stationen.csv`: Text von `klerus` gekürzt (Weingärten, Weinschank, Konkurrenz), neue Zeile `reformation` mit Beispieltext (Hinwendung quer durch alle Schichten, Stiftungsgeld für Schule und Spital, Händler finanzieren Prediger, Bücher und Stipendien). `docs/SCHEMA.md` 13.8 und `infotexte.csv` ergänzt.
+- Aufgeräumt: Weinglas-Konstanten und `umrissPunkte()` entfernt; ein bei Eintrag 194 verrutschter Kommentar zu `STAFFELUNG` wieder an seiner Zeile.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Textposition auf allen drei Folien gleich (links 273 px, 325 px breit), Bilder von Tor, Kirche und Kreuz, Rückweg bis „Wer fehlt noch?“ (Haushalte, Münzen, graue Säule wieder richtig); Bilder während der Bewegung meist rund 17 ms; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (194) – Bürgerinnen?: Folie „Stadt und Kirche“ (Kreuz, Weinglas, Steiner Tor)
+
+- Neue Folie `klerus` nach „Wer fehlt noch?“ (Wunsch des Autors, Beginn der Reformations-Erzählung): Die 4 443 Münzen fliegen rechts zu einem goldenen Kreuz zusammen (Radius wird dabei kleiner), daneben bilden 170 blaue Punkte den Umriss eines Weinglases, das sich anschließend von unten mit 320 violetten Punkten füllt; alle übrigen blauen und violetten Punkte (4 830, gemischt) formen wieder das Steiner Tor; graue Säule, Beschriftungen und Legende blenden aus; links der Text. Schmal: Tor oben, Kreuz und Glas darunter. Beim Weiterklicken scrollt die Seite wieder an den Anfang der Bühne. Zurück läuft alles umgekehrt, die graue Säule steigt erst auf, wenn Punkte und Münzen angekommen sind.
+- Technik: `layoutKlerus()`, `torFormIn()` (Tor in einem Rechteck, Zwischenspeicher jetzt je Punktzahl), `formRaster()` (Punkte im Gitter innerhalb einer Form) und `umrissPunkte()` (Punkte entlang eines Pfads); `morpheMuenzen()` über die Leinwand (Münzen in einem einzigen Pfad gezeichnet), Münzen-Teil bleibt über die Folien hinweg bestehen; Formen werden nach dem Laden im Leerlauf vorab berechnet (sonst erstes Bild ~0,3 s).
+- `buergerinnen_stationen.csv`: Zeile `klerus` („Stadt und Kirche“, „Krems um 1550“) mit Beispieltext zu Weingärten und Weinschank des Klerus und zur Reformation; `docs/SCHEMA.md` 13.8 und `infotexte.csv` ergänzt.
+- Gemessen auf dem Testserver 8845 (1400 × 800): vor und zurück je rund 260 Bilder, davon 2–7 über 30 ms (eines davon das Klickbild), sonst rund 17 ms; nach dem Zurückgehen alle 2 655 grauen Punkte und die Münzen in ihren Feldern; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (193) – Bürgerinnen?: Haushaltspunkte in der Mischfarbe aus Blau und Lila
+
+- Wunsch des Autors: Die Schichtpunkte nicht türkis, sondern als Mischung aus dem Blau der Männer (`#2c4a6e`) und dem Lila der Frauen (`#7a5a8c`). `HAUSHALT_FARBE` ist jetzt genau die Mitte beider, `#53527d`; Farbübergang beim Verschmelzen und Legende unverändert über diese Konstante.
+- Geprüft auf dem Testserver 8845: Schichtpunkte und Legendenpunkt in `#53527d`, zurück Männer blau und Frauen lila; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (192) – Bürgerinnen?: Haushalte in Türkis, Farbübergang beim Verschmelzen
 
 - Wunsch des Autors: In den Vermögens-Folien vereinen sich Männer (Tintenblau) und Frauen (Violett) zu Haushalten - die Schichtpunkte sollen deshalb nicht mehr blau sein. Neue Farbe `HAUSHALT_FARBE` (Türkis, `#1f8a83`) für die Schichtpunkte und den Legendenpunkt; beim Verschmelzen gehen Männer- und Frauenpunkte während der Bewegung fließend in Türkis über, zurück wieder in Blau bzw. Violett (Leinwand mit vorab berechnetem Farbverlauf in 21 Stufen, `farbeVon`/`farbeNach` je Bewegung, am Ende als `fill` in die SVG-Kreise geschrieben).
