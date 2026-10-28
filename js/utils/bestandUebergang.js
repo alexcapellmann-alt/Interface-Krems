@@ -112,17 +112,18 @@ export function spieleUebergang(vorher, container) {
     const nachher = erfasseFormen(container);
     if (!nachher.size) { fertig(); return; }
 
-    // Paare: gleiche Form, sonst die Form des nächsten Vorfahren auf der anderen Seite
+    // Paare: gleiche Form, sonst die Form des nächsten Vorfahren auf der anderen Seite; ohne beides
+    // blendet die Form an ihrem Platz ein bzw. aus (2026-10-28, z. B. beim Filter „Unsicherheiten anzeigen“)
     const paare = [];
     const findeIn = (formen, f) => f.vorfahren.map((k) => formen.get(k)).find(Boolean);
     nachher.forEach((ziel, key) => {
-      const start = vorher.get(key) || findeIn(vorher, ziel);
-      if (start && (sichtbar(start.box) || sichtbar(ziel.box))) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: ziel.farbe, opVon: vorher.has(key) ? 1 : 0.25, opNach: 1 });
+      const start = vorher.get(key) || findeIn(vorher, ziel) || ziel;
+      if (sichtbar(start.box) || sichtbar(ziel.box)) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: ziel.farbe, opVon: vorher.has(key) ? 1 : (start === ziel ? 0 : 0.25), opNach: 1 });
     });
     vorher.forEach((start, key) => {
       if (nachher.has(key)) return;
-      const ziel = findeIn(nachher, start);
-      if (ziel && (sichtbar(start.box) || sichtbar(ziel.box))) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: start.farbe, opVon: 1, opNach: 0 });
+      const ziel = findeIn(nachher, start) || start;
+      if (sichtbar(start.box) || sichtbar(ziel.box)) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: start.farbe, opVon: 1, opNach: 0 });
     });
     if (!paare.length) { fertig(); return; }
     paare.splice(MAX_FORMEN);

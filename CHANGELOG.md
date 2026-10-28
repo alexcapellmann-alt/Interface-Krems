@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (174) – Bestand: Morph-Übergang beim Unsicherheiten-Filter
+
+- `app.js` (Bestand-Werkzeugleiste): der Knopf „σ Unsicherheiten anzeigen/ausblenden“ hält die Formen vor dem Neuzeichnen fest und spielt danach denselben Übergang wie beim Ansichtswechsel (`bestandUebergang.js`): verbleibende Bestände gleiten an ihren neuen Platz, die übrigen ziehen sich in ihre Kategorie zurück bzw. kommen aus ihr.
+- `bestandUebergang.js`: Formen ohne Gegenstück und ohne Kategorie auf der anderen Seite blenden jetzt an ihrem Platz aus bzw. ein, statt ohne Übergang zu verschwinden oder erst am Ende aufzutauchen (gilt auch für den Ansichtswechsel).
+- Geprüft auf dem Testserver 8845: Treemap, Sunburst, Laufzeit, jeweils ein- und ausschalten; Überlagerung danach entfernt; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (173) – Treemap, Sunburst, Laufzeit: „Unsicherheiten anzeigen“ zeigt nur unsichere Bestände
 
 - Bisher wurden unsichere Bestände (21 von 315, `daten_unsicher`) nur markiert; jetzt blendet der Knopf alle übrigen aus.

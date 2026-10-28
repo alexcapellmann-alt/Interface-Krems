@@ -761,7 +761,12 @@ function stelleVizFlyoutSicher(kontext) {
   kontext.kleinerBildschirmHinweis = erzeugeKleinerBildschirmHinweis();
   kontext.vizContainer = erzeugeUnterContainer('viz-inhalt');
   kontext.unsicherheitsButton = erzeugeUnsicherheitsButton(unsicherheitsContainer, {
-    onToggle: (aktiv) => kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv })
+    onToggle: (aktiv) => {
+      // 2026-10-28: in den Bestand-Ansichten filtert der Knopf; die Formen gleiten dabei an ihren neuen Platz
+      const formenVorher = kontext.tab === 'bestand' ? erfasseFormen(kontext.vizContainer) : null;
+      kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv });
+      if (formenVorher) spieleUebergang(formenVorher, kontext.vizContainer);
+    }
   });
   // Wunsch des Autors (2026-10-27): Suchfeld in jeder Bestand-Visualisierung; ein Treffer öffnet die
   // Sidebar über oeffneDatensatz(kuerzel) des aktiven Moduls.
