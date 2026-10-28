@@ -560,7 +560,9 @@ export function verankereIconFlyout(ausloeser, { eintraege, onAktivieren }) {
     rendereInhalt: (panel) => {
       panel.innerHTML = '';
       fuegeFlyoutStyleEin(panel);
-      panel.appendChild(baueIconListe(eintraege, (id) => {
+      // `eintraege` darf seit 2026-10-28 eine Funktion sein: sie wird bei jedem Öffnen neu gelesen (der Bestand-
+      // Flyout entsteht vor dem Laden von ansichten.csv und zeigte sonst ausgeblendete Ansichten an)
+      panel.appendChild(baueIconListe(typeof eintraege === 'function' ? eintraege() : eintraege, (id) => {
         onAktivieren(id);
         kern.schliesse();
       }));

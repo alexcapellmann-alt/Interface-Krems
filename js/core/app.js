@@ -1389,7 +1389,8 @@ function setzeBestandFlyout(an) {
   if (an && !bestandIconFlyout) {
     const bestandLink = document.querySelector('.haupt-navigation a[data-tab="bestand"]');
     bestandIconFlyout = verankereIconFlyout(bestandLink, {
-      eintraege: BESTAND_ANSICHTEN.map((a) => ({ id: a.id, label: a.label })),
+      // bei jedem Öffnen neu: ansichten.csv (Ausblenden, Namen) wird erst nach dem Start geladen
+      eintraege: () => BESTAND_ANSICHTEN.filter((a) => !istAnsichtAusgeblendet(a.id)).map((a) => ({ id: a.id, label: a.label })),
       onAktivieren: (id) => navigiereZu(['bestand', id])
     });
   } else if (!an && bestandIconFlyout) {

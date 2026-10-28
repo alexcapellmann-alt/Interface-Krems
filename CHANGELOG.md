@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (165) – Bestand-Flyout nach dem Laden richtig, Urkundennetzwerk mit Mausrad-Zoom
+
+- Bestand-Flyout in der Hauptnavigation: zeigte direkt nach dem Laden noch Icicle und Circle Packing (Klick ergab einen Fehlerhinweis) - der Flyout entstand vor dem Laden von `ansichten.csv` aus einer Kopie der Ansichtsliste. Jetzt wird die Liste bei jedem Öffnen neu gelesen und ausgeblendete Ansichten weggelassen (`eintraege` als Funktion in `verankereIconFlyout()`, `visualisierungsTabs.js`). Gilt auch für geänderte Namen.
+- Urkundennetzwerk: Zoom per Mausrad ohne Strg-Taste (wie im Stammbaum); die Zeichenfläche ist durchsichtig, der Stadtplan im Hintergrund ist über die ganze Fläche sichtbar (vorher deckte sie ihn mit der Seitenfarbe ab). Infotext angepasst.
+- Geprüft auf dem Testserver 8845; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (164) – Ansichten umbenannt
 
 - Neue Namen (`ansichten.csv` und als Vorgabe in `archivalienRegistry.js`): Habsburg-Zeitleistenbaum → **Stammbaum**, Chord-Diagramm → **Soziale Gruppen**, Personennetzwerk (Urkunden) → **Urkundennetzwerk**, Regesten-Kachelraster → **Regesten**, Sankey → **Kategoriefluss**, Bipartite Flow Map → **Karte Soziale Gruppen**. Die internen Kennungen (z. B. `#visualisierungen/urkunden/sankey`) bleiben, Links und Führungen funktionieren unverändert.
