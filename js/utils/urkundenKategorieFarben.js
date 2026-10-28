@@ -23,7 +23,15 @@
 // Seitenhintergrund #f7f5f0 (grafische Elemente) und mindestens 4,5:1 für
 // weiße Beschriftung; Abstand zu jeder festen Krems-Farbe mindestens ΔE 20.
 
+// Seit 2026-10-28 (Wunsch des Autors): die Kategorien, die in den Daten vorkommen, bekommen die Palette der
+// Bestand-Ansichten (kategorieFarben.js, paletteFarbeNachRang()) - nach Häufigkeit (Zahl der Urkunden mit
+// dieser Kategorie, bei Gleichstand nach Name), die häufigste zuerst, die vier Farbfamilien abwechselnd.
+// Damit stimmen Zeitachse, Dot Plot, Sankey, Regesten-Kachelraster und Sidebars mit Treemap & Co. überein.
+// Die feste Tabelle CAT_COLORS und die automatische Liste unten gelten nur noch, solange keine Daten
+// geladen sind bzw. für Namen außerhalb der Daten.
+
 import { CAT_COLORS } from '../config/constants.js';
+import { paletteFarbeNachRang } from './kategorieFarben.js';
 
 export const AUTOMATISCHE_FARBEN = [
   '#414e1a', '#2828d9', '#264c73', '#6c4013', '#aa26d7', '#1b5252', '#297a52', '#d02525',
@@ -36,6 +44,7 @@ const TECHNISCHE_SCHLUESSEL = new Set(['default', '__unbekannt__']);
 const FESTE_KATEGORIEN = Object.keys(CAT_COLORS).filter((schluessel) => !TECHNISCHE_SCHLUESSEL.has(schluessel));
 
 let vergebenePlaetze = new Map(); // Kategoriename -> Platz in AUTOMATISCHE_FARBEN
+let paletteFarben = new Map(); // seit 2026-10-28: Kategoriename -> Farbe aus der gemeinsamen Palette
 let unbekannteKategorien = [];
 let vorhandeneKategorien = null; // null = noch keine Daten (dann gilt die feste Tabelle)
 
@@ -58,6 +67,11 @@ function kategorienDesRecords(record) {
 // in der festen Tabelle stehen. Aufruf durch app.js, sobald urkunden.csv
 // geladen ist (vor dem Zeichnen jeder Ansicht).
 export function vergibKategorieFarben(urkundenRecords = []) {
+  const haeufigkeit = new Map();
+  urkundenRecords.forEach((r) => new Set(kategorienDesRecords(r)).forEach((k) => haeufigkeit.set(k, (haeufigkeit.get(k) || 0) + 1)));
+  paletteFarben = new Map([...haeufigkeit.keys()]
+    .sort((a, b) => haeufigkeit.get(b) - haeufigkeit.get(a) || a.localeCompare(b, 'de'))
+    .map((k, i) => [k, paletteFarbeNachRang(i)]));
   const alle = new Set(urkundenRecords.flatMap(kategorienDesRecords));
   vorhandeneKategorien = alle;
   unbekannteKategorien = [...alle].filter((k) => !(k in CAT_COLORS)).sort((a, b) => a.localeCompare(b, 'de'));
@@ -76,6 +90,7 @@ export function vergibKategorieFarben(urkundenRecords = []) {
 // Farbe einer Kategorie: feste Farbe, sonst die vergebene automatische,
 // sonst (kein Datenwert) das bisherige Grau.
 export function farbeFuerUrkundenKategorie(kategorie) {
+  if (paletteFarben.has(kategorie)) return paletteFarben.get(kategorie);
   if (kategorie in CAT_COLORS && !TECHNISCHE_SCHLUESSEL.has(kategorie)) return CAT_COLORS[kategorie];
   if (vergebenePlaetze.has(kategorie)) return AUTOMATISCHE_FARBEN[vergebenePlaetze.get(kategorie)];
   return CAT_COLORS.default;

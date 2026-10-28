@@ -792,6 +792,10 @@
 .darstellung-knopf[aria-pressed="true"] { background: var(--accent); color: #fff; cursor: default; }
 .darstellung-knopf:focus-visible { outline: 3px solid #e0b429; outline-offset: 2px; position: relative; }
 @media (max-width: 700px) { .ansicht-wechsel-leiste { margin-left: 0; margin-top: var(--space-2); } }
+/* Wechsel zwischen den Kartenansichten der Orte (2026-10-28): kurzes Einblenden über stehendem Ausschnitt */
+@keyframes karten-einblenden { from { opacity: .35; } to { opacity: 1; } }
+.viz-inhalt.karten-einblenden { animation: karten-einblenden .45s ease; }
+@media (prefers-reduced-motion: reduce) { .viz-inhalt.karten-einblenden { animation: none; } }
 /* Übergang zwischen den Bestand-Ansichten (js/utils/bestandUebergang.js): die neue Ansicht wartet unsichtbar,
    bis die Formen an ihrem Platz sind, und blendet dann ein */
 .bestand-uebergang { position: fixed; inset: 0; z-index: 90; pointer-events: none; }

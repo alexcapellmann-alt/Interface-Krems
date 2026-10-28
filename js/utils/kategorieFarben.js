@@ -105,12 +105,16 @@ const zaehleBlaetter = (knoten) => (knoten.children?.length ? knoten.children.re
 // Mehr Kategorien als Farben: die Palette beginnt von vorn, leicht aufgehellt.
 export function baueBestandFarbSkala(kategorieKnoten) {
   const sortiert = [...kategorieKnoten].sort((a, b) => zaehleBlaetter(b) - zaehleBlaetter(a) || a.name.localeCompare(b.name, 'de'));
-  const farben = sortiert.map((k, i) => {
-    const basis = BESTAND_PALETTE[i % BESTAND_PALETTE.length];
-    const runde = Math.floor(i / BESTAND_PALETTE.length);
-    return garantiereKontrast(runde ? mischeMitPapier(basis, Math.min(0.5, runde * 0.3)) : basis);
-  });
-  return d3.scaleOrdinal().domain(sortiert.map((k) => k.name)).range(farben);
+  return d3.scaleOrdinal().domain(sortiert.map((k) => k.name)).range(sortiert.map((k, i) => paletteFarbeNachRang(i)));
+}
+
+// Farbe für den Rang i (0 = größte Kategorie): BESTAND_PALETTE der Reihe nach; mehr Kategorien als Farben
+// beginnen von vorn, leicht aufgehellt. Seit 2026-10-28 auch für die Urkunden-Kategorien
+// (urkundenKategorieFarben.js), damit beide Bereiche dieselbe Farbwelt haben.
+export function paletteFarbeNachRang(i) {
+  const basis = BESTAND_PALETTE[i % BESTAND_PALETTE.length];
+  const runde = Math.floor(i / BESTAND_PALETTE.length);
+  return garantiereKontrast(runde ? d3.color(mischeMitPapier(basis, Math.min(0.5, runde * 0.3))).formatHex() : basis);
 }
 
 // Mischt eine Farbe zum Papierton der Seite (--bg, #f7f5f0) hin; anteil 0 = unverändert, 1 = Papier

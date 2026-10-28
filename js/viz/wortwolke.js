@@ -22,8 +22,10 @@
 // bei datePrecision.js) - historisches Deutsch in den Regesten kann Wörter enthalten,
 // die eine allgemeine Liste nicht abdeckt.
 //
-// Farbe: CAT_COLORS.default mit Deckkraft nach Häufigkeit (kein Kategorie-Bezug,
-// ein Wort ist keiner einzelnen Urkunden-Kategorie zugeordnet).
+// Farbe: seit 2026-10-28 (Wunsch des Autors) die Palette der Bestand-Ansichten (BESTAND_PALETTE), der Reihe
+// nach über die Häufigkeitsränge verteilt, damit benachbarte Wörter sich unterscheiden - ohne inhaltliche
+// Bedeutung (ein Wort ist keiner einzelnen Urkunden-Kategorie zugeordnet). Für die Lesbarkeit abgedunkelt
+// (lesbareTextfarbe()); die Deckkraft nach Häufigkeit bleibt. Vorher einheitlich CAT_COLORS.default.
 //
 // AUFTRAG F: archivspezifische Filter aus data/wortwolke_filter.csv (optional,
 // siehe docs/SCHEMA.md 13.7). Reihenfolge: Ein Wort entfällt, wenn es selbst oder
@@ -32,13 +34,14 @@
 // Datei, ist sie leer oder unbrauchbar, zählt die Wolke wie vorher (nur die
 // allgemeinen Füllwörter unten). Der Info-Button nennt die angewendeten Filter.
 
-import { CAT_COLORS } from '../config/constants.js';
+import { BESTAND_PALETTE, lesbareTextfarbe } from '../utils/kategorieFarben.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { alsText } from '../utils/textwert.js';
 import { ladeGecachteCSV } from '../core/datenCache.js';
 import { holeDateiZustand } from '../core/dataLoader.js';
+import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
 
@@ -121,6 +124,7 @@ function auslassGrund(wort, leitform, grossgeschrieben, filter) {
 // Mit Filter hält instanz.filterStatistik die Zahlen für den Info-Button fest.
 function zaehleWorthaeufigkeit(records, filter = null) {
   const zaehlung = new Map();
+  const belege = new Map(); // seit 2026-10-28: Urkunden je Wort (für die Sidebar beim Klick)
   const statistik = { liste: 0, vorname: 0, roemisch: 0, roh: new Map(), schreibweisen: new Map(), beugungen: new Map() };
   records.forEach((record) => {
     const original = bereinigeRegestText(record.regest);
@@ -141,13 +145,15 @@ function zaehleWorthaeufigkeit(records, filter = null) {
         zielwort = leitform;
       }
       zaehlung.set(zielwort, (zaehlung.get(zielwort) || 0) + 1);
+      if (!belege.has(zielwort)) belege.set(zielwort, new Set());
+      belege.get(zielwort).add(record);
     }
   });
   if (instanz) instanz.filterStatistik = filter ? statistik : null;
   return Array.from(zaehlung.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, MAX_WOERTER)
-    .map(([text, anzahl]) => ({ text, anzahl }));
+    .map(([text, anzahl]) => ({ text, anzahl, urkunden: [...belege.get(text)] }));
 }
 
 // AUFTRAG F: Absatz für den Info-Button, alle Zahlen aus der aktuellen Zählung.
@@ -240,7 +246,10 @@ function platziereWoerter(woerter, breite, hoehe, canvasKontext) {
 // Dasselbe "bei jedem Redraw neu einfügen"-Muster wie karte.js' fuegeStyleEin().
 function fuegeStyleEin(container) {
   const style = document.createElement('style');
-  style.textContent = `.wortwolke-werkzeugleiste { display: flex; justify-content: flex-end; margin-bottom: 6px; }`;
+  style.textContent = `.wortwolke-werkzeugleiste { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+    .wolken-wort { cursor: pointer; }
+    .wolken-wort:hover, .wolken-wort:focus-visible { text-decoration: underline; outline: none; }
+    .wolken-wort.ausgewaehlt { font-weight: 700; text-decoration: underline; }`;
   container.appendChild(style);
 }
 
@@ -249,6 +258,13 @@ function zeichneWortwolke() {
   if (instanz.infoButton) instanz.infoButton.destroy();
   container.innerHTML = '';
   fuegeStyleEin(container);
+  fuegeSidebarStyleEin(container);
+  instanz.sidebar = baueSidebarGeruest(container);
+  instanz.sidebar.schliessenBtn.addEventListener('click', () => {
+    instanz.ausgewaehltesWort = null;
+    markiereAuswahl();
+    schliesseSidebar(instanz.sidebar, container);
+  });
 
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'wortwolke-werkzeugleiste';
@@ -274,7 +290,7 @@ function zeichneWortwolke() {
   const svg = d3.select(container).append('svg')
     .attr('width', breite).attr('height', hoehe)
     .attr('viewBox', `0 0 ${breite} ${hoehe}`)
-    .attr('role', 'img')
+    .attr('role', 'group') // seit 2026-10-28 bedienbare Wörter (Klick öffnet die Urkunden)
     .attr('aria-label', 'Wortwolke der häufigsten Wörter aus den Urkunden-Regesten');
 
   svg.append('desc').text(
@@ -294,11 +310,16 @@ function zeichneWortwolke() {
     .attr('x', (w) => w.x).attr('y', (w) => w.y)
     .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
     .attr('font-size', (w) => w.schriftgroesse)
-    .attr('fill', CAT_COLORS.default)
+    .attr('fill', (w, i) => lesbareTextfarbe(BESTAND_PALETTE[i % BESTAND_PALETTE.length]))
     .attr('fill-opacity', (w) => opazitaetSkala(w.anzahl))
     .text((w) => w.text)
-    .on('mouseenter focus', function (event, w) { zeigeTooltip(`${w.text}: ${w.anzahl} Nennung(en)`, this, container); })
-    .on('mouseleave blur', () => versteckeTooltip());
+    .attr('role', 'button')
+    .attr('aria-label', (w) => `${w.text}, ${nennungen(w.anzahl)} in ${anzahl(w.urkunden.length, 'Urkunde', 'Urkunden')}, Urkunden anzeigen`)
+    .on('mouseenter focus', function (event, w) { zeigeTooltip(`${w.text}: ${nennungen(w.anzahl)} in ${anzahl(w.urkunden.length, 'Urkunde', 'Urkunden')}`, this, container); })
+    .on('mouseleave blur', () => versteckeTooltip())
+    .on('click', (event, w) => waehleWort(w))
+    .on('keydown', (event, w) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); waehleWort(w); } });
+  markiereAuswahl();
 
   if (nichtPlatziert.length > 0) {
     const hinweis = document.createElement('p');
@@ -310,11 +331,34 @@ function zeichneWortwolke() {
   }
 }
 
+// Klick auf ein Wort (Wunsch des Autors, 2026-10-28): Sidebar mit den Urkunden, in deren Regest das Wort
+// (oder eine unter ihm gezählte Schreibweise bzw. Beugungsform) vorkommt - eine öffnet direkt, mehrere als
+// Liste, nach Datum. Ein zweiter Klick auf dasselbe Wort schließt sie wieder.
+const sortierwert = (r) => alsText(r.datum_normiert) || alsText(r.jahr) || '';
+
+function waehleWort(w) {
+  const offen = instanz.sidebar.sidebar.classList.contains('offen');
+  if (offen && instanz.ausgewaehltesWort === w.text) {
+    instanz.ausgewaehltesWort = null;
+    markiereAuswahl();
+    schliesseSidebar(instanz.sidebar, instanz.container);
+    return;
+  }
+  instanz.ausgewaehltesWort = w.text;
+  markiereAuswahl();
+  const urkunden = [...w.urkunden].sort((a, b) => sortierwert(a).localeCompare(sortierwert(b)));
+  zeigeUrkundenSidebar(instanz.sidebar, `„${w.text}“ – ${anzahl(urkunden.length, 'Urkunde', 'Urkunden')}`, urkunden);
+}
+
+function markiereAuswahl() {
+  d3.select(instanz.container).selectAll('text.wolken-wort').classed('ausgewaehlt', (w) => w.text === instanz.ausgewaehltesWort);
+}
+
 export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
-  instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options }, infoButton: null, filter: null, filterGeladen: false };
+  instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options }, infoButton: null, filter: null, filterGeladen: false, sidebar: null, ausgewaehltesWort: null };
   // AUFTRAG F: Filterdatei erst beim Öffnen der Wolke (die zentrale Prüfung hat sie
   // vorher über denselben Cache geladen); gezeichnet wird, sobald sie vorliegt.
   // Hat die Prüfung die Datei schon als fehlend erkannt, nicht erneut anfragen

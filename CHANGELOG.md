@@ -7,6 +7,48 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (156) – Urkunden-Kategorien in der gemeinsamen Palette
+
+- Die Kategorien der Urkunden haben jetzt die Palette der Bestand-Ansichten („Vier Familien“): nach Häufigkeit (Zahl der Urkunden mit dieser Kategorie) der Reihe nach, die Familien abwechselnd - Vermögen und Finanzen Tintenblau, Rechtswesen Petrol, Politik Braun, Verwaltung Bordeaux, Wirtschaft Graublau, Religion helles Petrol, Bevölkerung Gold usw.; die fünf seltensten (1-5 Urkunden) in aufgehellten Tönen. Vorher die feste Tabelle `CAT_COLORS` bzw. ein Farbkreis.
+- Gilt für Zeitachse, Sankey, Regesten-Kachelraster, die Kategorie-Abzeichen der Sidebars und die ausgeblendeten Urkunden-Ansichten (`farbeFuerUrkundenKategorie()` in `urkundenKategorieFarben.js`). Der Dot Plot verwendet jetzt dieselbe Funktion statt einer eigenen Farbkreis-Skala - dieselbe Kategorie hat damit überall dieselbe Farbe.
+- Neu `paletteFarbeNachRang()` in `kategorieFarben.js` (gemeinsam für Bestand und Urkunden). Grau für „ohne Kategorie“ bzw. „Andere Kategorien“ bleibt.
+- Geprüft auf dem Testserver 8845: Zeitachse, Dot Plot und Sankey mit identischen Farben je Kategorie, Kachel-Abzeichen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (155) – Wortwolke: fünf Wörter ausgelassen, Klick öffnet die Urkunden
+
+- `wortwolke_filter.csv`: „kein“, „bis“, „neu“, „sollte“, „welche“ werden ausgelassen.
+- Klick (oder Eingabetaste) auf ein Wort öffnet die Sidebar mit den Urkunden, in deren Regest es vorkommt, einschließlich der unter ihm gezählten Schreibweisen und Beugungsformen; nach Datum sortiert, eine Urkunde öffnet direkt, mehrere als Liste mit Klick zur Detailansicht. Das gewählte Wort ist fett unterstrichen, ein zweiter Klick schließt die Sidebar. Tooltip und Bildschirmleser nennen Nennungen und Urkundenzahl. Die Wolke ist jetzt eine bedienbare Gruppe (`role="group"` statt `img`). Infotext ergänzt.
+- Geprüft auf dem Testserver 8845 (z. B. „weingarten“: 111 Urkunden, „bürger“: 251); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (154) – Stadtplan auf allen Seiten, farbige Wortwolke
+
+- Der zurückhaltende Stadtplan von Krems und Stein liegt jetzt auf allen Seiten im Hintergrund, auch in den einzelnen Visualisierungen (vorher nur Startseite, Übersichtsseiten, Führungen, Literatur, Über). Ausnahme: die Zeitleiste der Führungen, die denselben Stadtplan selbst zeichnet (`seiteMitHintergrundkarte()` in `hintergrundKarte.js`).
+- Wortwolke: die Wörter tragen die Palette der Bestand-Ansichten (`BESTAND_PALETTE`), der Reihe nach über die Häufigkeitsränge verteilt, ohne inhaltliche Bedeutung; für die Lesbarkeit abgedunkelt (`lesbareTextfarbe()`), die Deckkraft nach Häufigkeit bleibt. Vorher einheitlich `CAT_COLORS.default`.
+- Geprüft auf dem Testserver 8845 (Wortwolke mit 11 Farben auf 90 Wörtern; Stadtplan in Treemap, Zeitachse, Personenliste, Karte, Führungen, Literatur, nicht in der Führungs-Zeitleiste).
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (153) – Orte: Knopfgruppe „Ansichten“ für die drei Karten, Ausschnitt bleibt stehen
+
+- Karte, Verbindungskarte und Bipartite Flow Map haben dieselbe Knopfgruppe **Ansichten** wie der Bestand (Karte | Verbindungskarte | Bipartite Flow Map), neben „σ Unsicherheiten anzeigen“. Die Ortsliste gehört nicht dazu.
+- Beim Wechsel zwischen den drei Karten bleibt der Kartenausschnitt (Mitte und Zoomstufe) stehen, nur die Zeichnung darüber wechselt und blendet kurz ein. Neu `js/utils/kartenAusschnitt.js`: merkt sich den Ausschnitt der bisherigen Leaflet-Karte; die nächste neue Karte nimmt ihn bei ihren ersten Positionierungen (bis 4 s oder bis man selbst zieht, zoomt oder scrollt). Die drei Module bleiben unverändert. Öffnet man eine Karte neu (Galerie, Link), zeigt sie wie bisher alle Orte.
+- `app.js`: die Knopfgruppe ist allgemein geworden (`ANSICHT_GRUPPEN`: Bestand mit Formübergang, Orte mit Kartenausschnitt; `zeigeAnsichtGruppe()` statt `zeigeBestandDarstellung()`).
+- Geprüft auf dem Testserver 8845: Zoom 10 bleibt über Karte → Verbindungskarte → Bipartite Flow Map → Karte gleich (dieselben Kacheln), Overlays richtig, Galerie-Einstieg mit Gesamtübersicht, Bestand unverändert; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (152) – Gantt: farbige Namen in der linken Spalte
 
 - Kategorie-Ansicht: die Kategorienamen in der Namensspalte stehen in ihrer Kategoriefarbe (für die Lesbarkeit abgedunkelt, `lesbareTextfarbe()`); die Legende oben entfällt dort, weil die Namen sie ersetzen.
