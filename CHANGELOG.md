@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (146) – Bestand-Galerie wie Urkunden, Personen und Orte
+
+- Die Kacheln der Bestand-Seite (Treemap, Sunburst, Gantt-Diagramm) sind jetzt ebenfalls groß und farbig (`vollflaechig` für alle Galerien). Die Einleitung bleibt vollständig sichtbar darüber, die Kacheln teilen sich die restliche Höhe; bei wenig Platz bleiben sie mindestens 200 px hoch und die Seite scrollt.
+- Die bisherige Regel „Kacheln mittig unter der Einleitung“ gilt nur noch für Galerien ohne die neue Darstellung (`components.css`).
+- Geprüft auf dem Testserver 8845 (1600 × 900 ohne Schiebebalken, 1366 × 650, Mobilansicht 375 px; Text und Kacheln überlappen nie).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (145) – Galerien von Urkunden, Personen und Orte bildschirmfüllend und farbig
 
 - Die Übersichtsseiten der Bereiche Urkunden, Personen und Orte zeigen ihre Ansichten als große Kacheln, die wie die Themen der Führungen die ganze Fläche ausfüllen: Urkunden 3 × 2, Orte 2 × 2, Personen 3 + 2 (kürzere Zeile mittig). Allgemein bis 3 Kacheln eine Zeile, bis 8 zwei, darüber drei (`vollflaechig` in `erzeugeVisualisierungsGalerie()`).

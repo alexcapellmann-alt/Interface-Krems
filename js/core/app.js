@@ -725,8 +725,8 @@ function zeigeGalerie(kontext) {
   kontext.galerie = erzeugeVisualisierungsGalerie(galerieContainer, {
     archivalientyp: { ...kontext.bereich, ansichten: sichtbareAnsichten.map((a) => (mitPlatzhalter(a) ? { ...a, beschreibung: '\u00a0' } : a)) }, // {label, ansichten} - erzeugeVisualisierungsGalerie() kennt nur diese Form, nicht den Namen "archivalientyp"
     onAuswahl: (ansicht) => navigiereZu(kontext.routeSegmente(ansicht.id)),
-    // 2026-10-28: Urkunden, Personen und Orte bildschirmfüllend und farbig, der Bestand bleibt mit Einleitung
-    vollflaechig: kontext.tab === 'visualisierungen'
+    // 2026-10-28: Urkunden, Personen, Orte und (mit Einleitung darüber) der Bestand bildschirmfüllend und farbig
+    vollflaechig: true
   });
   // Einleitung über den Kacheln (ansichten.csv, Bereichszeile), z. B. auf der Bestand-Seite
   // Überschrift und Text gemeinsam in der mittigen Lesespalte (wie die Über-Seite); erst nach dem
