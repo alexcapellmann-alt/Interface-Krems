@@ -20,8 +20,7 @@
 // - Namen vollständig, 11 px, unter dem Kreis. Layout „V5 kompakt“ aus Phase 1:
 //   Kollisionsradius = max(Kreisradius, halbe Namensbreite) + Abstand, Namensbreite
 //   per getComputedTextLength() gemessen; Personen ohne Verbindung ohne Ring.
-// - Maßstab 1; Ziehen verschiebt, Mausrad zoomt nur mit Strg (sonst scrollt die
-//   Seite). Ist das Netz breiter als die Ansicht (Phone), beginnt der Ausschnitt bei
+// - Maßstab 1; Ziehen verschiebt, Mausrad zoomt (bis 2026-10-28 nur mit Strg). Ist das Netz breiter als die Ansicht (Phone), beginnt der Ausschnitt bei
 //   der meistgenannten Person; der Ausschnitt folgt dem Tastaturfokus.
 // - Fokus-Modus: Klick/Eingabe/Leertaste zeigt eine Person, ihre gezeigten Partner
 //   und die Kanten zu ihr; alles andere tritt auf FOKUS_DECKKRAFT zurück. Zurück per
@@ -293,9 +292,9 @@ function zeichneNetz(ziel) {
     .attr('role', 'group')
     .attr('aria-label', `Personennetzwerk der Urkunden: ${mitZahl(punkte.length, 'Person', 'Personen')}, ${mitZahl(linien.length, 'Verbindung', 'Verbindungen')}`);
   const ebene = svg.append('g');
-  // Ziehen verschiebt; Mausrad nur mit Strg (sonst scrollt die Seite).
+  // Ziehen verschiebt, Mausrad zoomt (seit 2026-10-28 ohne Strg, Wunsch des Autors - wie im Stammbaum)
   const zoom = d3.zoom().scaleExtent([0.3, 4])
-    .filter((e) => (e.type === 'wheel' ? e.ctrlKey : !e.button))
+    .filter((e) => e.type === 'wheel' || !e.button)
     .on('zoom', (e) => ebene.attr('transform', e.transform));
   svg.call(zoom);
   instanz.svg = svg;
@@ -389,7 +388,7 @@ function fuegeStyleEin(container) {
     .unetz-knoten:focus { outline: none; }
     .unetz-fokusring { fill: none; stroke: ${FARBE.rand}; stroke-width: 2.5; stroke-opacity: 0; }
     .unetz-knoten:focus-visible .unetz-fokusring { stroke-opacity: 1; }
-    .unetz-svg { display: block; max-width: 100%; background: var(--bg); cursor: grab; touch-action: none; }
+    .unetz-svg { display: block; max-width: 100%; background: transparent; cursor: grab; touch-action: none; } /* durchsichtig (2026-10-28): Stadtplan im Hintergrund sichtbar */
     .unetz-detail { margin-top: var(--space-2); font-size: var(--fs-sm); }
     .unetz-detail p { margin: 0 0 var(--space-1) 0; }
     .unetz-detail-titel { font-size: var(--fs-h3); margin: 0 0 var(--space-1) 0; }
