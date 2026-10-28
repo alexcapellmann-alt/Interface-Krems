@@ -634,6 +634,34 @@ Beispiel (Krems, Auszug): `regel;roemische_zahlen;;` · `auslassen;daß;;` · `v
 
 **Verhalten bei fehlender oder leerer Datei:** keine archivspezifische Filterung, kein Hinweis; die Wolke zählt wie vor Auftrag F. Ist die Datei vorhanden, aber unbrauchbar (Spalte `typ`/`wort` fehlt, falsches Trennzeichen): Wolke ungefiltert, dazu ein Hinweisbalken.
 
+### 13.8 buergerinnen_stationen.csv und buergerinnen_schichten.csv - Stationen der Ansicht „Bürgerinnen?“ (neu, 2026-10-28)
+
+Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Beide Dateien sind **optional** und werden erst geladen, wenn die Ansicht geöffnet wird.
+
+**buergerinnen_stationen.csv** - eine Zeile je Folie, in dieser Reihenfolge. Die Ansicht zeigt immer nur einen Weiter-Knopf (hüpfender Pfeil nach unten; `knopf` der nächsten Folie ist sein Name für Bildschirmleser und sein Tooltip) und einen Zurück-Knopf. `tor` ist immer die erste Folie.
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `station` | Text | **Pflicht** | `tor`, `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen) oder `vermoegenslos` (graue Säule links neben dem Text); andere Werte werden übergangen |
+| `knopf` | Text | **Pflicht** außer bei `tor` | Name des Weiter-Pfeils, der zu dieser Folie führt (Tooltip und Bildschirmleser) |
+| `unterzeile` | Text | nein | Zeile unter „N Personen“ in dieser Station |
+| `muenze_gulden` | Zahl | nein | Gulden je Münze (erster gefundener Wert gilt; Vorgabe 1 000) |
+| `text_anhaengen` | `ja`/`nein` | nein | `ja`: der Text kommt zum Text der vorigen Folie dazu (wird angehängt und eingeblendet), statt ihn zu ersetzen |
+| `text` | Text | nein | Erklärung der Station; Absätze mit `\|` getrennt. `[[personen_id=Name]]` wird ein Knopf, der die Person zeigt und ihre Sidebar öffnet; `[Text](#ziel)` ein Link innerhalb der Seite; Platzhalter `{anteil:id}` (Prozent des Vermögens), `{summe:id}`, `{mittel:id}`, `{anzahl:id}` (id aus der Schichten-Datei) und `{muenze}` werden beim Zeichnen berechnet. Felder mit `;` in Anführungszeichen setzen. |
+
+**buergerinnen_schichten.csv** - eine Zeile je Säule, von links nach rechts:
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `id` | Text | **Pflicht** | Kennung, z. B. `unterschicht`; `ohne_buergerrecht` ist die graue Säule der Folie `vermoegenslos` |
+| `name` | Text | **Pflicht** | Säulenüberschrift |
+| `anteil_prozent` | Zahl | **Pflicht** außer bei `ohne_buergerrecht` | Anteil der Haushalte; die Punkte werden danach aufgeteilt (die letzte Schicht bekommt den Rundungsrest) |
+| `gulden_von`, `gulden_bis` | Zahl | **Pflicht** außer bei `ohne_buergerrecht` | Spanne des Vermögens je Haushalt; gerechnet wird mit dem Mittelwert. Vermögen der Schicht = Haushalte × Mittelwert, Münzen = Vermögen ÷ `muenze_gulden` |
+| `beschreibung` | Text | nein | Tooltip der Säule; bei `ohne_buergerrecht` steht sie unter dem leeren Feld |
+| `quelle` | Text | nein | wird nicht ausgewertet (Herkunft der Werte, kein `;`) |
+
+**Verhalten bei fehlender Datei:** Ohne Stationsdatei gibt es nur die Folgen Steiner Tor → „Nach Geschlecht ordnen“, ohne Text. Ohne Schichten-Datei (oder ohne Zeile mit `anteil_prozent`) entfallen die drei Vermögens-Folien; ohne Zeile `ohne_buergerrecht` entfällt `vermoegenslos`.
+
 ---
 
 ## 14. Neues Archiv einrichten (Anleitung, Stand Auftrag C1, 2026-10-03)

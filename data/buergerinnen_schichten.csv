@@ -1,0 +1,5 @@
+id;name;anteil_prozent;gulden_von;gulden_bis;beschreibung;quelle
+unterschicht;Kleinhändler und Hauer;50;0;100;Kleine Handwerker, Kleinhändler und Hauer mit wenig Besitz;Schönfellner, Haussteuerbuch 1581: Besitz unter 100 fl. Mittelwert 50 fl angenommen (keine Untergrenze genannt)
+mittelschicht;Wohlhabende Zunfthandwerker;40;500;2000;Zunfthandwerker mit eigenem Haus;Schönfellner: Nachlässe von 500 bis 2 000 fl
+oberschicht;Reiche Handelsleute;10;5000;18000;Eisen-, Tuch- und Leinenhändler;Schönfellner: Vermögen von 5 000 bis 18 000 fl
+ohne_buergerrecht;Inwohner und Hilfskräfte;;0;0;Taglöhner, Hilfskräfte im Weinbau, Gesellen und Dienstboten;Schönfellner: mindestens die Hälfte der rund 4 000 Einwohner ohne Haus und Bürgerrecht

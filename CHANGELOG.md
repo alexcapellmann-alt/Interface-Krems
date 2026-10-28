@@ -7,6 +7,93 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (192) – Bürgerinnen?: Haushalte in Türkis, Farbübergang beim Verschmelzen
+
+- Wunsch des Autors: In den Vermögens-Folien vereinen sich Männer (Tintenblau) und Frauen (Violett) zu Haushalten - die Schichtpunkte sollen deshalb nicht mehr blau sein. Neue Farbe `HAUSHALT_FARBE` (Türkis, `#1f8a83`) für die Schichtpunkte und den Legendenpunkt; beim Verschmelzen gehen Männer- und Frauenpunkte während der Bewegung fließend in Türkis über, zurück wieder in Blau bzw. Violett (Leinwand mit vorab berechnetem Farbverlauf in 21 Stufen, `farbeVon`/`farbeNach` je Bewegung, am Ende als `fill` in die SVG-Kreise geschrieben).
+- Geprüft auf dem Testserver 8845 (1400 × 800): Bild mitten im Verschmelzen, danach alle Schichtpunkte und Legende türkis, zurück Männer blau und Frauen violett; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (191) – Bürgerinnen?: Folie „Wo waren die Frauen?“, Bewegungen auf einer Leinwand
+
+- Neue Folie `frauen` zwischen „Nach Geschlecht ordnen“ und „Nach Vermögen ordnen“ (Wunsch des Autors): Der Pfeil lässt die leere Frauen-Spalte Reihe für Reihe von unten mit ebenso vielen Punkten füllen wie Männer (2 655, gedämpftes Violett, symbolisch, keine bestimmte Person, kein Klick); das gestrichelte leere Feld blendet aus (`TEILE.geschlecht` = Köpfe + `leeresFeld`), neuer Text erscheint. Weiter zu den Schichten fliegt jede Frau zum Punkt ihres Haushalts und verschmilzt mit ihm; zurück lösen sich die Frauen aus den Haushalten bzw. sinken hinab.
+- `buergerinnen_stationen.csv`: Zeile `frauen` („Wo waren die Frauen?“) mit Text zu Frauen im Wirtschaftsleben, Verlassenschaftsinventaren und Testamenten, Hinweis auf die symbolischen Punkte und Link zur Führung „Frauen im Archiv“ (dieser Absatz aus der Geschlecht-Folie hierher verschoben); Text der Schichten-Folie beginnt mit „Mann und Frau bildeten zusammen einen Haushalt …“. `docs/SCHEMA.md` 13.8 und `infotexte.csv` ergänzt.
+- Flüssigkeit: Beim Verschmelzen bewegten sich 5 310 SVG-Kreise gleichzeitig (Bilder 30–58 ms). Jetzt werden Bewegungen der Personen- und Frauen-Punkte auf einer Leinwand (Canvas) über der Grafik gezeichnet (`starteBewegung()`, `zeichneLeinwand()`, eine gemeinsame Schleife); die SVG-Gruppe ist währenddessen verborgen und steht am Ende am Ziel. Die Uhr einer Bewegung startet mit dem ersten gezeichneten Bild. Ohne Bewegung hat die Leinwand keine Fläche (sonst blieb nach einer Größenänderung ein waagrechter Scrollbalken).
+- Gemessen auf dem Testserver 8845 (1400 × 800): alle Folien vor und zurück, während der Bewegung durchgehend rund 17 ms je Bild (nur das Bild des Klicks selbst ist länger); Frauen-Spalte 2 655 Punkte, nach dem Verschmelzen 0 sichtbar, zurück wieder 2 655; 375 × 812 ohne Überlauf; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (190) – Bürgerinnen?: Morph Männer → Schichten wieder flüssig
+
+- Rückmeldung des Autors: Seit Eintrag 189 stockte der Anfang des Morphs von den Männern zu den Schichten (rückwärts flüssig). Ursache: Die 4 443 Münzen wurden genau beim Start dieses Morphs verborgen angelegt (erste Bilder 37/41 ms). Jetzt legt `baueMuenzen()` sie erst an, wenn die Punkte angekommen sind (`DAUER + STAFFELUNG + 200` ms); klickt man schneller weiter, legt `AKTUALISIERER.muenzen` sie unmittelbar vor dem Regen an.
+- Gemessen auf dem Testserver 8845 (1400 × 800): Morph Männer → Schichten 23/25 ms in den ersten Bildern, danach rund 17 ms; Münzregen unverändert (alle 4 443 landen, auch bei schnellem Weiterklicken); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (189) – Bürgerinnen?: Münzregen ohne Ruckeln am Anfang
+
+- „Der Anfang des Münzregens ruckelt“ (Rückmeldung des Autors; die graue Säule läuft flüssig). Drei Ursachen beim Klick auf den Weiter-Pfeil: (1) die 4 443 Münzen wurden erst in diesem Moment erzeugt, (2) jede bekam eine eigene d3-Transition, (3) die Punktschleife setzte 1,5 s lang in jedem Bild alle 2 655 Punkte neu, obwohl sie sich in diesem Schritt nicht bewegen.
+- Jetzt: Die Münzen werden schon auf der Folie „Nach Vermögen ordnen“ angelegt und verborgen (`TEILE.schichten` enthält `muenzen`, `AKTUALISIERER.muenzen` schaltet sie je Folie); `regne()` lässt sie über eine einzige `d3.timer`-Schleife fallen, die erst nach dem Scrollen startet (`REGEN_START` 700 ms); `bewegePunkte()` lässt Punkte, die schon am Ziel stehen, unberührt. Rückwärts blenden die Münzen aus und bleiben verborgen angelegt.
+- Gemessen auf dem Testserver 8845 bei sichtbarem Browserbereich (1400 × 800): ein einziges Bild von 56 ms direkt beim Klick (noch vor jeder Bewegung), danach während Scrollen und Regen durchgehend rund 17 ms; alle 4 443 Münzen landen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (188) – Bürgerinnen?: flüssigeres Morphen, nur noch der Pfeil als Weiter-Knopf
+
+- „Am Anfang ruckelt das Morphen, sichtbar ist nur die zweite Hälfte“ (Rückmeldung des Autors). Gemessen: Jeder Punkt startete mit bis zu ~0,7 s Verzögerung und langsamem Anlauf, im ersten Drittel bewegte sich kaum etwas; während der Hauptbewegung brauchten die Bilder 25–33 ms, weil jeder der 2 655 Punkte eine eigene d3-Transition mit vier Attributen hatte. Jetzt `bewegePunkte()`: eine einzige `d3.timer`-Schleife setzt je Bild nur `cx`/`cy` der Punkte, die gerade unterwegs sind; Größe und Deckkraft springen gleich auf den Zielwert; Verzögerung höchstens `STAFFELUNG` = 250 ms. Gemessen danach: Bewegung beginnt sofort, Bilder 17–21 ms.
+- Sprechende Knöpfe entfernt: Weiter ist nur noch der hüpfende Pfeil (runder Knopf, 52 px); der Name der nächsten Folie steht in `aria-label` („Weiter: …“) und als Tooltip. „Zurück“ bleibt. `docs/SCHEMA.md` 13.8 und `infotexte.csv` angepasst.
+- Geprüft auf dem Testserver 8845 bei sichtbarem Browserbereich (1400 × 800): Bildabstände und Punktpositionen über die Zeit gemessen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (187) – Bürgerinnen?: Münzregen sichtbar, Steuerung bleibt oben
+
+- Münzregen „funktioniert nicht“ (Rückmeldung des Autors): Er lief, aber unterhalb des sichtbaren Bereichs - bei 800 px Fensterhöhe beginnen die Münzfelder bei rund 750 px - und war nach gut einer Sekunde vorbei. Jetzt scrollt die Seite beim Weiterklicken auf „Vermögen zeigen“ sanft, bis die Münzfelder in der unteren Bildschirmhälfte stehen (`zeigeMuenzfelder()`); danach fallen die Münzen eine sichtbare Strecke (160–320 px) hinter den Punkten herab und landen mit kleinem Aufprall (`easeBounceOut`), über 2,6 s verteilt, unterste Reihen zuerst (`REGEN_START`, `REGEN_DAUER`).
+- Weiter-/Zurück-Knöpfe stehen jetzt in einer eigenen Leiste, die beim Scrollen oben am Fenster stehen bleibt (`position: sticky`), damit der Pfeil nach dem Sprung zu den Münzen erreichbar bleibt; die Leiste fängt außerhalb der Knöpfe keine Klicks ab.
+- Geprüft auf dem Testserver 8845 bei sichtbarem Browserbereich (1400 × 800): Bildfolge während des Regens, alle 4 443 Münzen landen, Knöpfe nach dem Scrollen sichtbar; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (186) – Bürgerinnen?: Folien mit Weiter-Pfeil, Münzregen, Morph-Fehler behoben
+
+- Morphen funktionierte nicht (Rückmeldung des Autors): Wurde die Bühne beim Wechsel höher, erschien der Scrollbalken der Seite, die Bühne wurde dadurch schmaler und die Breitenüberwachung zeichnete sofort ohne Übergang neu. Jetzt erzwingt `passeHoeheAn()` das Layout vor dem Zeichnen, `zeichne()` merkt sich die gezeichnete Breite, und echte Breitenänderungen während eines Übergangs werden erst danach nachgezeichnet. Übergänge benannt (`lage`, `grau`, `regen`), damit sie sich nicht gegenseitig abbrechen.
+- Folien statt Knopfgruppe: immer nur ein sprechender Weiter-Knopf (Name der nächsten Folie, darunter ein hüpfender Pfeil nach unten) und ein Zurück-Knopf; auf der ersten Folie kein Zurück, auf der letzten kein Weiter (`.bgi-weiter[hidden]` – `display: inline-flex` hatte das `hidden` überschrieben).
+- Folge: Steiner Tor → Nach Geschlecht ordnen → Nach Vermögen ordnen (aus den Männern werden drei Säulen, links Text) → Vermögen zeigen (Goldmünzen regnen in die bereits reservierten Felder, unterste Reihen zuerst; Werte unter der Grundlinie; Text kommt dazu) → Wer fehlt noch? (links neben dem Text steigt die graue Säule Punkt für Punkt von unten auf; Text kommt dazu). Rückwärts blenden Münzen und Werte aus, die grauen Punkte sinken hinab.
+- Gemeinsames Layout für die drei Vermögens-Folien (Platz der grauen Säule, Text, drei Säulen, Münzfelder), damit beim Weiterklicken nichts springt; Beiwerk in Teilen (`TEILE`, `zeichneTeile()`): Neues wird eingeblendet, Bleibendes bleibt stehen, Wegfallendes blendet aus.
+- Schichten umbenannt: Kleinhändler und Hauer, Wohlhabende Zunfthandwerker, Reiche Handelsleute; graue Säule „Inwohner und Hilfskräfte“. Lange Namen werden über der Säule umbrochen.
+- `buergerinnen_stationen.csv`: Folien `schichten` und `muenzen` statt `vermoegen`, neue Spalte `text_anhaengen` (ja = Text kommt zum vorigen dazu); kurze Beispieltexte für die drei Vermögens-Folien. `docs/SCHEMA.md` 13.8 und `infotexte.csv` angepasst.
+- Geprüft auf dem Testserver 8845 bei sichtbarem Browserbereich (1400 × 900 und 375 × 812): Punktpositionen über die Zeit gemessen, alle Übergänge laufen gleichmäßig; Münzregen und aufsteigende graue Säule im Bild geprüft; vor und zurück über alle Folien; keine Konsolenfehler, kein waagrechter Überlauf.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (185) – Bürgerinnen?: Stationen nach Vermögen und „Wer fehlt noch?“
+
+- `buergerinnen.js`: Statt eines Umschaltknopfs eine Knopfgruppe mit sprechenden Namen (Steiner Tor · Nach Geschlecht ordnen · Nach Vermögen ordnen · Wer fehlt noch?); die gewählte Station ist gefüllt hervorgehoben. Die Punkte morphen zwischen allen Stationen.
+- „Nach Vermögen ordnen“: drei Säulen der Bürgerschaft nach Schicht (links Unterschicht 50 %, Mitte Mittelschicht 40 %, rechts Oberschicht 10 %), gemeinsame Punktgröße; unter der Grundlinie Gesamtvermögen, Anteil am Vermögen, Mittelwert und Spanne, darunter das Gesamtvermögen jeder Schicht als Goldmünzen (1 Münze = 1 000 fl, die letzte angebrochene flächengleich kleiner). Mit den Mittelwerten: Unterschicht 66 400 fl (1,5 %), Mittelschicht 1 327 500 fl (30 %), Oberschicht 3 047 500 fl (69 %). In diesen Stationen steht ein Punkt für einen Anteil der Bürgerschaft: kein Klick, Tooltip nennt die Schicht.
+- „Wer fehlt noch?“: links gleitet eine graue Säule aus hohlen Punkten herein (Einwohner ohne Bürgerrecht, „mindestens so viele“), ohne Münzen, mit leerem gestricheltem Feld.
+- Texte, Knöpfe, Unterzeilen und Münzwert in `data/buergerinnen_stationen.csv`, Anteile und Gulden-Spannen in `data/buergerinnen_schichten.csv` (neu, `docs/SCHEMA.md` 13.8); Platzhalter wie `{anteil:oberschicht}` rechnet die Ansicht aus. Die bisherige Erklärung zum Geschlecht steht jetzt in der Stationsdatei (Absatz zu den fehlenden Männern in die neue Station verschoben).
+- Bühne wächst je Station auf die nötige Höhe; Text ab 820 px links neben den Säulen, darunter auf schmalen Bildschirmen; schmale Säulen mit umbrochenen Namen und kürzeren Zeilen.
+- `infotexte.csv` (Bürgerinnen?): Absatz zu den Stationen ergänzt.
+- Geprüft auf dem Testserver 8845 (1400 × 1000 und 375 × 812): alle Stationen hin und zurück, 4 444 Münzen, 2 655 graue Punkte, Sidebar nur in Tor und Geschlecht; keine Konsolenfehler, kein waagrechter Überlauf.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (184) – Bürgerinnen?: Zurück in der Sidebar, Link zur Personenliste, Erklärung zwischen den Spalten
 
 - Zurück-Knopf in der Sidebar ohne Wirkung: Die kombinierte Liste der Personenliste merkt sich ihren Zustand selbst und braucht einen eigenen Zurück-Listener, den nur `personenliste.js` gesetzt hatte. `zurueckZurKombiniertenListe()` ist jetzt exportiert, `buergerinnen.js` verdrahtet ihn ebenfalls.
