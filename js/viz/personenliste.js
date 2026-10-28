@@ -211,13 +211,25 @@ let instanz = null; // { container, records, options, sortierung, suchbegriff, a
 // `instanz` selbst (siehe Dateikopf-Kommentar zum zweiten, eigenen
 // `zurueckBtn`-Listener), in destroy() zurückgesetzt.
 let sidebarListenZustand = null;
+// 2026-10-28: Ziel des Knopfs „In der Personenliste zeigen“ (nur wenn die Sidebar aus einer anderen Ansicht
+// geöffnet wird, z. B. Bürgerinnen?); null = kein Knopf
+let personenLinkZiel = null;
+
+function fuegePersonenLinkEin(koerper) {
+  if (!personenLinkZiel) return;
+  const link = document.createElement('a');
+  link.className = 'personen-link-knopf';
+  link.href = personenLinkZiel;
+  link.textContent = 'In der Personenliste zeigen';
+  koerper.appendChild(link);
+}
 
 // Löst `nennung_in_urkunden` (Signatur(en), ggf. Liste bei mehreren) über
 // die übergebene Signatur->Record-Map auf - nicht auflösbare Signaturen
 // werden stillschweigend übersprungen (dieselbe Datenehrlichkeit wie
 // verbindungskarte.js/bipartiteFlowMap.js' "nicht auflösbare Records werden
 // verworfen", hier aber pro Signatur statt pro ganzem Record).
-function ermittleUrkundenFuerPerson(record, urkundenNachSignatur) {
+export function ermittleUrkundenFuerPerson(record, urkundenNachSignatur) { // seit 2026-10-28 auch von buergerinnen.js genutzt
   const signaturen = Array.isArray(record.nennung_in_urkunden)
     ? record.nennung_in_urkunden
     : (record.nennung_in_urkunden ? [record.nennung_in_urkunden] : []);
@@ -226,7 +238,7 @@ function ermittleUrkundenFuerPerson(record, urkundenNachSignatur) {
 
 // Löst `nennung_in_buergerbuch` (ID(s) wie "BB-2454", ggf. Liste) über die
 // übergebene ID->Record-Map auf.
-function ermittleBuergerbuchFuerPerson(record, buergerbuchNachId) {
+export function ermittleBuergerbuchFuerPerson(record, buergerbuchNachId) {
   const ids = Array.isArray(record.nennung_in_buergerbuch)
     ? record.nennung_in_buergerbuch
     : (record.nennung_in_buergerbuch ? [record.nennung_in_buergerbuch] : []);
@@ -238,7 +250,7 @@ function ermittleBuergerbuchFuerPerson(record, buergerbuchNachId) {
 // derselben Person, z.B. `bartholomaeus_eggartner` -> "VI-0024|VI-0028",
 // siehe PROJEKTLOG) über die übergebene ID->Record-Map auf - analog zu den
 // beiden Funktionen oben.
-function ermittleInventareFuerPerson(record, inventareNachId) {
+export function ermittleInventareFuerPerson(record, inventareNachId) {
   const ids = Array.isArray(record.nennung_in_verlassenschaften)
     ? record.nennung_in_verlassenschaften
     : (record.nennung_in_verlassenschaften ? [record.nennung_in_verlassenschaften] : []);
@@ -396,6 +408,7 @@ function zeigeDetailUrkunde(sidebarInstanz, record, zeigeZurueck) {
   const { sidebar, titel, koerper, zurueckBtn } = sidebarInstanz;
   titel.textContent = record.signatur || '(ohne Signatur)';
   koerper.innerHTML = '';
+  fuegePersonenLinkEin(koerper);
   koerper.appendChild(baueUrkundenDetailInhalt(record));
   zurueckBtn.hidden = !zeigeZurueck;
   sidebar.classList.add('offen');
@@ -409,6 +422,7 @@ function zeigeDetailBuergerbuch(sidebarInstanz, record, zeigeZurueck) {
   const { sidebar, titel, koerper, zurueckBtn } = sidebarInstanz;
   titel.textContent = `${record.Name || record.id}${record.Name ? ` (${record.id})` : ''}`;
   koerper.innerHTML = '';
+  fuegePersonenLinkEin(koerper);
   koerper.appendChild(baueBuergerbuchDetailInhalt(record));
   zurueckBtn.hidden = !zeigeZurueck;
   sidebar.classList.add('offen');
@@ -423,6 +437,7 @@ function zeigeDetailInventar(sidebarInstanz, record, zeigeZurueck) {
   const { sidebar, titel, koerper, zurueckBtn } = sidebarInstanz;
   titel.textContent = `${record.Name || record.id}${record.Name ? ` (${record.id})` : ''}`;
   koerper.innerHTML = '';
+  fuegePersonenLinkEin(koerper);
   koerper.appendChild(baueInventarDetailInhalt(record));
   zurueckBtn.hidden = !zeigeZurueck;
   sidebar.classList.add('offen');
@@ -449,6 +464,7 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
   const anzahl = document.createElement('p');
   anzahl.className = 'bestand-sidebar-urkunden-anzahl';
   anzahl.textContent = `${gesamt} Eintrag/Einträge`;
+  fuegePersonenLinkEin(koerper);
   koerper.appendChild(anzahl);
 
   if (urkundenRecords.length > 0) {
@@ -488,7 +504,7 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
 // `sidebarListenZustand` erneut auf. No-op, falls die Detailansicht ohne
 // vorherige Liste erreicht wurde (genau-1-Treffer-Fall) oder die Sidebar
 // zwischenzeitlich geschlossen/zurückgesetzt wurde.
-function zurueckZurKombiniertenListe(sidebarInstanz) {
+export function zurueckZurKombiniertenListe(sidebarInstanz) { // auch buergerinnen.js (eigene Sidebar, eigener Zurück-Listener)
   if (!sidebarListenZustand) return;
   const { personName, urkundenRecords, buergerbuchRecords, inventarRecords } = sidebarListenZustand;
   zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords);
@@ -499,8 +515,10 @@ function zurueckZurKombiniertenListe(sidebarInstanz) {
 // (Auftrag, wörtlich) - unabhängig davon, aus welcher der drei Quellen der
 // eine Treffer stammt (Verlassenschaftsinventare seit Teil 2h Punkt 4b als
 // dritte Quelle ergänzt).
-function zeigePersonenNennungen(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords) {
+// `personenLink` (optional): Href für den Knopf „In der Personenliste zeigen“ über den Einträgen.
+export function zeigePersonenNennungen(sidebarInstanz, personName, urkundenRecords, buergerbuchRecords, inventarRecords, { personenLink = null } = {}) { // auch buergerinnen.js
   sidebarListenZustand = null;
+  personenLinkZiel = personenLink;
   const gesamt = urkundenRecords.length + buergerbuchRecords.length + inventarRecords.length;
   if (gesamt === 0) return; // keine auflösbare Nennung - nichts zum Anzeigen
   if (gesamt === 1) {
@@ -941,6 +959,7 @@ export function destroy() {
   instanz.container.innerHTML = '';
   instanz = null;
   sidebarListenZustand = null;
+  personenLinkZiel = null;
 }
 
 // AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: schmale, von js/utils/

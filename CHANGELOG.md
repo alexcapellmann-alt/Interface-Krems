@@ -7,6 +7,67 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (184) – Bürgerinnen?: Zurück in der Sidebar, Link zur Personenliste, Erklärung zwischen den Spalten
+
+- Zurück-Knopf in der Sidebar ohne Wirkung: Die kombinierte Liste der Personenliste merkt sich ihren Zustand selbst und braucht einen eigenen Zurück-Listener, den nur `personenliste.js` gesetzt hatte. `zurueckZurKombiniertenListe()` ist jetzt exportiert, `buergerinnen.js` verdrahtet ihn ebenfalls.
+- Knopf „In der Personenliste zeigen“: `zeigePersonenNennungen()` nimmt optional `{ personenLink }` und setzt den Knopf über Liste und Einzelansicht (auch nach Zurück). Bürgerinnen? übergibt ihn für Personen mit Eintrag in der Personenliste; in der Personenliste selbst erscheint er nicht. Stil `.personen-link-knopf` in `components.css`.
+- Erklärung nach dem Ordnen (`ERKLAERUNG`, sechs kurze Absätze): was das Bürgerbuch verzeichnet, warum das Bürgerrecht am männlichen Haushaltsvorstand hing, Witwen und Werkstattübergabe (Beispiel Paull Zimerhäckhl, BB-1664, als Knopf, der seinen Punkt markiert und die Sidebar öffnet), Bürgerrecht von Frauen erst im 18. Jahrhundert mit männlichem Vertreter beim Eid, fehlende Unterschichten, Frauen in Inventaren und Testamenten mit Link zur Führung „Frauen im Archiv“. Ersetzt den bisherigen Schlusssatz. Ab 820 px Bühnenbreite steht der Text zwischen den Spalten (die Bühne wächst dafür bei Bedarf), darunter unter den Spalten.
+- ResizeObserver reagiert nur noch auf Breitenänderungen, damit die Höhenanpassung den Übergang nicht abbricht.
+- Geprüft auf dem Testserver 8845 (1400 × 1000 und 375 × 812): Text sichtbar und ohne Überlauf, Zurück und Personenlisten-Link funktionieren; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (183) – Bürgerinnen?: Steiner Tor geglättet
+
+- `buergerinnen.js` (`torPunkte()`): Statt nur eines Gitters liegt jetzt zuerst eine Punktreihe entlang des Umrisses (Dachschwünge, Helm, Zwiebel, Torbogen, Rundbogenfenster), leicht nach innen gerückt; das versetzte Gitter füllt das Innere mit Abstand zu dieser Reihe. Überzählige Punkte fallen nur im Inneren weg, die Randreihe bleibt vollständig. Fugen zwischen den Teilflächen (Turm/Rundturm) erzeugen keine Randpunkte.
+- Rechenzeit: Die Form wird einmal als Maske gezeichnet (Abfrage per Bilddaten statt Pfadtest), die Umrisse einmal alle 5 Einheiten abgetastet. Erster Aufbau rund 0,2 s statt zunächst 4 s, danach zwischengespeichert.
+- Geprüft auf dem Testserver 8845: Umriss sichtbar glatter, Wechsel zu den Spalten und zurück unverändert; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (182) – Bürgerinnen?: Steiner Tor nach der Vorlage des Autors
+
+- `buergerinnen.js`: Umriss neu nach einer Umrisszeichnung des Autors nachgezeichnet (Koordinaten in deren Bildpunkten, `TOR` mit Ursprung `x0`/`y0`): Torturm mit flachem Torbogen, achteckiger Aufsatz mit Rundbogenfenster, Glockenhelm, Laterne, Zwiebel, Kugel und Spitze; breite Rundtürme mit hohen, leicht geschwungenen Kegeldächern, links außen die Dachgaube. Die kleinen Fenster der Vorlage sind weggelassen, weil sie bei 2 655 Punkten nur als Kerben im Umriss erschienen.
+- Geprüft auf dem Testserver 8845 (1400 × 1000); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (181) – Bürgerinnen?: Punkte bilden das Steiner Tor
+
+- `buergerinnen.js`: Im Ausgangszustand ordnen sich die 2 655 Punkte schemenhaft zum Steiner Tor (Mittelturm mit Barockhelm, Laterne und Spitze, Torbogen, Uhr und Fenster ausgespart, zwei Rundtürme mit Kegeldächern) statt zur Sonnenblumen-Spirale. Umriss als Pfade in einem 100 × 140-Feld (`TOR_FLAECHEN`, `TOR_AUSSPARUNGEN`), Punkte auf einem versetzten Gitter innerhalb des Umrisses, Abstand per Suche so, dass alle Personen hineinpassen. Der Wechsel zu den Spalten „Männer“/„Frauen“ und zurück fließt wie bisher.
+- `infotexte.csv` (Bürgerinnen?): Steiner Tor und Klick auf einen Punkt (Seitenleiste, Eintrag 180) ergänzt.
+- Geprüft auf dem Testserver 8845: Tor gut erkennbar, Hin- und Rückweg flüssig; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (180) – Bürgerinnen?: Sidebar zu jeder Person
+
+- `buergerinnen.js`: Klick auf einen Punkt öffnet die Sidebar mit allen Quelleneinträgen der Person, dieselbe Darstellung wie in der Personenliste (Bürgerbuch als Neubürger oder Bürge, dazu Urkunden und Inventare aus der Personenliste; ein Eintrag direkt, mehrere als Liste). Der gewählte Punkt bekommt einen gelben Ring. Klick auf eine freie Stelle, auf „Nach Geschlecht ordnen“/„Wieder mischen“ oder auf × schließt sie. Durchsichtiger 3-px-Rand um jeden Punkt als größere Klickfläche (die Punkte sind nur rund 6 px groß).
+- `personenliste.js`: `zeigePersonenNennungen()` und die drei `ermittle…FuerPerson()` exportiert, sonst unverändert.
+- Geprüft auf dem Testserver 8845: alle 2 655 Punkte öffnen eine Sidebar mit Inhalt; echter Mausklick auf Punkt, freie Fläche und Knopf verhalten sich wie gewünscht; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (179) – Bestand-Ansichten umbenannt: Baum, Sonne, Strahl
+
+- Wunsch des Autors: sichtbare Namen Treemap → „Baum“, Sunburst → „Sonne“, Gantt-Diagramm → „Strahl“ (vorher in der Ansichten-Leiste „Laufzeit“). Ids, Routen und Dateinamen (`treemap`, `sunburst`, `ganttDiagramm`) bleiben.
+- `ansichten.csv` (Namen und Einleitungstext des Bestands), `infotexte.csv` (Überschriften und erste Sätze der drei Erklärungen), `startseite.csv` (Kachel „Unsere Bestände visualisiert“), `archivalienRegistry.js` (Labels), `app.js` (`DARSTELLUNG_BESCHRIFTUNG`), `treemap.js`/`sunburst.js`/`ganttDiagramm.js` (Bildschirmleser-Namen der Grafiken). Das Wort „Laufzeit“ als Zeitspanne eines Bestands bleibt in den Texten.
+- Geprüft auf dem Testserver 8845: Bestand-Galerie und Ansichten-Leiste zeigen nur noch die neuen Namen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (178) – Wortwolke kräftiger, Sidebar im Urkundennetzwerk, Chord und Streamgraph
 
 - `wortwolke.js`: Wortfarben gesättigter (`WORT_SAETTIGUNG` 1,45, danach wie bisher auf Lesbarkeit abgedunkelt), Deckkraft 0,8–1 statt 0,5–1.

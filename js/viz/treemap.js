@@ -664,7 +664,7 @@ function zeichneTreemap() {
     .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', inKategorieAnsicht
       ? `Bestände der Kategorie ${aktuelleKategorieDaten.name}`
-      : 'Treemap des Gesamtbestands, gruppiert nach Kategorie');
+      : 'Baum des Gesamtbestands, gruppiert nach Kategorie');
   svg.append('desc').text(
     'Jede Kachel entspricht einem Bestand, Fläche nach Umfang in Laufmetern ' +
     '(Quadratwurzel-skaliert für Lesbarkeit). Farbton zeigt die Kategorie, ' +

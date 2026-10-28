@@ -802,7 +802,7 @@ function zeichneKategorieAnsicht({ namensspalte, zeitbereich, xSkalaBasis, achse
   const svg = d3.select(zeitbereich).append('svg')
     .attr('width', zeitbereichBreite).attr('height', Math.max(hoehe, 1))
     .attr('role', 'group')
-    .attr('aria-label', `Gantt-Diagramm nach Kategorien: ${kategorieZeilen.length} Kategorien`);
+    .attr('aria-label', `Strahl nach Kategorien: ${kategorieZeilen.length} Kategorien`);
   svg.append('desc').text('Eine Zeile je Kategorie. Das Band zeigt, aus welcher Zeit die Bestände der Kategorie '
     + 'stammen: je dicker, desto mehr Laufmeter aus diesen Jahren. Die dünne Linie reicht vom frühesten bis zum spätesten Jahr.');
   zeichneZebraStreifen(svg, kategorieZeilen.length, zeitbereichBreite, KATEGORIE_ZEILE);
@@ -1085,7 +1085,7 @@ function zeichneGantt() {
   const svg = d3.select(zeitbereich).append('svg')
     .attr('width', zeitbereichBreite).attr('height', Math.max(gesamtHoehe, 1))
     .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
-    .attr('aria-label', `Gantt-Diagramm: ${mitZeitraum.length} Bestände nach Zeitraum, ${ohneZeitraum.length} ohne Zeitangabe`);
+    .attr('aria-label', `Strahl: ${mitZeitraum.length} Bestände nach Zeitraum, ${ohneZeitraum.length} ohne Zeitangabe`);
 
   svg.append('desc').text(
     'Ein horizontaler Balken pro Bestand, Position und Breite nach überliefertem ' +

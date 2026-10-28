@@ -134,17 +134,17 @@
 //   dortiger Kommentar ("Rückkehr zur 3-Ebenen-Ansicht") zeigen aber drei
 //   Ringe (Kategorie/Unterkategorie/Bestand). Korrigiert, siehe unten.
 export const BESTAND_ANSICHTEN = [
-  { id: 'treemap', label: 'Treemap', modulPfad: '../viz/treemap.js',
+  { id: 'treemap', label: 'Baum', modulPfad: '../viz/treemap.js',
     beschreibung: 'Zeigt Bestände als verschachtelte Flächen nach Kategorie, Größe = Umfang in Laufmetern.' },
   // KORRIGIERT (siehe Dateikopf-Kommentar): sunburst.js zeigt drei Ringe
   // (Kategorie/Unterkategorie/Bestand), nicht zwei.
-  { id: 'sunburst', label: 'Sunburst', modulPfad: '../viz/sunburst.js',
+  { id: 'sunburst', label: 'Sonne', modulPfad: '../viz/sunburst.js',
     beschreibung: 'Dieselben Bestände radial angeordnet: Kategorie innen, Unterkategorie in der Mitte, Bestand außen.' },
   { id: 'icicle', label: 'Icicle', modulPfad: '../viz/icicle.js',
     beschreibung: 'Bestände als gestapelte Ebenen: Kategorie, Unterkategorie, Bestand.' },
   { id: 'circlePacking', label: 'Circle Packing', modulPfad: '../viz/circlePacking.js',
     beschreibung: 'Bestände als ineinander verschachtelte Kreise je Kategorie.' },
-  { id: 'ganttDiagramm', label: 'Gantt-Diagramm', modulPfad: '../viz/ganttDiagramm.js',
+  { id: 'ganttDiagramm', label: 'Strahl', modulPfad: '../viz/ganttDiagramm.js',
     beschreibung: 'Entstehungs-/Laufzeitraum jedes Bestands als horizontaler Balken auf der Zeitachse.' }
 ];
 

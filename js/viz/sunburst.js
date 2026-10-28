@@ -656,7 +656,7 @@ function zeichneSunburst() {
     .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
     .attr('aria-label', inKategorieAnsicht
       ? `Bestände der Kategorie ${aktuelleKategorieDaten.name}, mit Unterkategorie- und Bestand-Ring`
-      : 'Sunburst des Gesamtbestands, mit Kategorie-, Unterkategorie- und Bestand-Ring');
+      : 'Sonne des Gesamtbestands, mit Kategorie-, Unterkategorie- und Bestand-Ring');
 
   svg.append('desc').text(inKategorieAnsicht
     ? 'Radiale Darstellung, Kategorie-Ansicht: Zentrum zeigt den Kategorienamen ' +
