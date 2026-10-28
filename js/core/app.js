@@ -143,6 +143,7 @@ import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { zeigeBestandVorschau } from '../utils/bestandVorschau.js';
 import { erfasseFormen, spieleUebergang } from '../utils/bestandUebergang.js';
+import { merkeAusschnitt } from '../utils/kartenAusschnitt.js';
 import { aktiviereSidebarUmschalter } from '../utils/sidebarUmschalter.js';
 import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
 import { erzeugeAnsichtenLeiste } from './ansichtenLeiste.js';
@@ -771,11 +772,11 @@ function stelleVizFlyoutSicher(kontext) {
       // 2026-10-28: Vorschlag unter der Maus bzw. Pfeiltasten-Auswahl vorab hervorheben
       onVorschau: (record) => zeigeBestandVorschau(kontext.vizContainer, record ? String(record.kuerzel ?? '').trim() : null)
     });
-    // 2026-10-28: Knopfgruppe „Ansichten“ (Bestand-Bühne, siehe zeigeBestandDarstellung())
+  }
+  // 2026-10-28: Knopfgruppe „Ansichten“ im Bestand und bei den Karten der Orte (siehe zeigeAnsichtGruppe())
+  if (ansichtGruppe(kontext)) {
     kontext.ansichtWechselLeiste = document.createElement('div');
     kontext.ansichtWechselLeiste.className = 'ansicht-wechsel-leiste';
-    kontext.ansichtWechselLeiste.setAttribute('role', 'group');
-    kontext.ansichtWechselLeiste.setAttribute('aria-label', 'Darstellung der Bestände');
     unsicherheitsContainer.appendChild(kontext.ansichtWechselLeiste);
   }
   // Siehe kontext.eigenerFlyoutNoetig-Kommentar in erzeugeGalerieFlyoutKontext()
@@ -788,17 +789,36 @@ function stelleVizFlyoutSicher(kontext) {
   kontext.flyout = null;
 }
 
-// Bestand-Bühne (Wunsch des Autors, 2026-10-28): eine Knopfgruppe „Ansichten“ (Treemap | Sunburst | Laufzeit)
-// statt einzelner Knöpfe „Ansicht zu … wechseln“. Ein Wechsel läuft als fließender Übergang
-// (js/utils/bestandUebergang.js, in wechsleZuAnsicht()); Einzelbestände | Kategorien wählt das
-// Gantt-Diagramm in seiner eigenen Werkzeugleiste.
+// Knopfgruppe „Ansichten“ (Wunsch des Autors, 2026-10-28) statt einzelner Knöpfe „Ansicht zu … wechseln“:
+// - Bestand („Bestand-Bühne“): Treemap | Sunburst | Laufzeit, Wechsel als fließender Übergang
+//   (js/utils/bestandUebergang.js, in wechsleZuAnsicht()); Einzelbestände | Kategorien wählt das
+//   Gantt-Diagramm in seiner eigenen Werkzeugleiste.
+// - Orte: Karte | Verbindungskarte | Bipartite Flow Map, der Kartenausschnitt bleibt beim Wechsel stehen
+//   (js/utils/kartenAusschnitt.js). Die Ortsliste gehört nicht dazu (keine Karte).
+// `ansichten: null` = alle angebotenen Ansichten des Bereichs.
+const ANSICHT_GRUPPEN = {
+  bestand: { ansichten: null, uebergang: 'formen' },
+  orte: { ansichten: ['karte', 'verbindungskarte', 'bipartiteFlowMap'], uebergang: 'karte' }
+};
 const DARSTELLUNG_BESCHRIFTUNG = { ganttDiagramm: 'Laufzeit' };
 
-function zeigeBestandDarstellung(kontext) {
+function ansichtGruppe(kontext) {
+  return ANSICHT_GRUPPEN[kontext.tab === 'bestand' ? 'bestand' : kontext.typ] || null;
+}
+
+// Ids der Gruppe, zu der die gerade gezeigte Ansicht gehört (leer, wenn sie zu keiner gehört)
+function gruppenAnsichten(kontext, ansichtId = kontext.ansichtId) {
+  const gruppe = ansichtGruppe(kontext);
+  if (!gruppe) return [];
+  const angeboten = kontext.bereich.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id) && (!gruppe.ansichten || gruppe.ansichten.includes(a.id)));
+  return angeboten.some((a) => a.id === ansichtId) ? angeboten : [];
+}
+
+function zeigeAnsichtGruppe(kontext) {
   const leiste = kontext.ansichtWechselLeiste;
   if (!leiste) return;
   leiste.innerHTML = '';
-  const angeboten = kontext.bereich.ansichten.filter((a) => !istAnsichtAusgeblendet(a.id));
+  const angeboten = gruppenAnsichten(kontext);
   if (angeboten.length < 2) return;
   const gruppe = document.createElement('div');
   gruppe.className = 'darstellung-gruppe';
@@ -916,8 +936,12 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     const mod = await import(eintrag.modulPfad);
     if (meineGeneration !== generation) return;
 
-    // Bestand-Bühne (2026-10-28): Umrisse der bisherigen Bestand-Ansicht festhalten, bevor sie abgebaut wird
-    const formenVorher = kontext.tab === 'bestand' && kontext.aktuellesVizModul ? erfasseFormen(kontext.vizContainer) : null;
+    // Wechsel innerhalb einer Gruppe „Ansichten“ (2026-10-28): im Bestand die Umrisse festhalten, bevor die
+    // bisherige Ansicht abgebaut wird; bei den Karten den Ausschnitt für die neue Karte vormerken
+    const gleicheGruppe = kontext.aktuellesVizModul && gruppenAnsichten(kontext).some((a) => a.id === eintrag.id);
+    const uebergang = gleicheGruppe ? ansichtGruppe(kontext).uebergang : null;
+    const formenVorher = uebergang === 'formen' ? erfasseFormen(kontext.vizContainer) : null;
+    if (uebergang === 'karte') merkeAusschnitt(kontext.vizContainer);
     if (kontext.aktuellesVizModul) {
       try { kontext.aktuellesVizModul.destroy(); } finally { kontext.aktuellesVizModul = null; }
     }
@@ -938,8 +962,13 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     aktualisiereKleinerBildschirmHinweis(kontext.kleinerBildschirmHinweis, eintrag.id);
     kontext.flyout?.aktualisiere({ tabs: baueTabListe(kontext), aktiverId: kontext.ansichtId });
     zeigeAnsichtenLeiste(kontext);
-    zeigeBestandDarstellung(kontext);
+    zeigeAnsichtGruppe(kontext);
     if (formenVorher) spieleUebergang(formenVorher, kontext.vizContainer);
+    if (uebergang === 'karte') { // die neue Zeichnung blendet über dem stehenden Kartenausschnitt ein
+      kontext.vizContainer.classList.remove('karten-einblenden');
+      void kontext.vizContainer.offsetWidth;
+      kontext.vizContainer.classList.add('karten-einblenden');
+    }
   } finally {
     kontext.wirdGewechselt = false;
   }

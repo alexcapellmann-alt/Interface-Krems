@@ -238,7 +238,8 @@ import {
   baueUrkundenTooltipText,
   zeichneUnbekanntBereich
 } from '../utils/urkundenZeit.js';
-import { baueKategorieFarbSkala, OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
+import { OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
+import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
@@ -728,7 +729,8 @@ export function render(container, data, options = {}) {
     sidebar,
     records: data,
     kategorienNamen,
-    kategorieFarbSkala: baueKategorieFarbSkala(kategorienNamen),
+    // seit 2026-10-28 dieselben Kategoriefarben wie Zeitachse, Sankey und Regesten-Kachelraster (gemeinsame Palette)
+    kategorieFarbSkala: farbeFuerUrkundenKategorie,
     options: { showUncertainty: true, width: null, height: null, ...options },
     letzteBreite: null,
     zoomTransform: null,

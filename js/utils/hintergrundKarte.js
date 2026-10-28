@@ -1,7 +1,7 @@
 // js/utils/hintergrundKarte.js
 // Zurückhaltender Stadtplan von Krems und Stein als Seitenhintergrund (Wunsch des Autors, 2026-10-27) auf der
-// Startseite und den Übersichtsseiten: Bestand, Erkundung (Startseite und die Seiten der Bereiche Urkunden, Personen, Orte),
-// Literatur und Über. Nicht in den einzelnen Visualisierungen, wo er mit den Diagrammen konkurrieren würde.
+// Startseite und den Übersichtsseiten, seit 2026-10-28 (Wunsch des Autors) auf allen Seiten, auch in den
+// einzelnen Visualisierungen. Ausnahme: die Zeitleiste der Führungen zeichnet denselben Stadtplan selbst.
 //
 // Datengrundlage wie die Zeitleiste der Führungen: vendor/karten/krems.json (OpenStreetMap, ODbL,
 // erzeugt mit Interface-Krems-Testserver\karte_krems.py). Die Pfade werden EINMAL zu einem SVG
@@ -71,13 +71,9 @@ function ladeKarte() {
 
 // Welche Seiten den Hintergrund bekommen (route aus router.js: { tab, segmente })
 export function seiteMitHintergrundkarte(route) {
-  const [a, b] = route.segmente || [];
-  if (!route.tab) return true; // Startseite (seit 2026-10-27)
-  if (route.tab === 'bestand') return !a;
-  if (route.tab === 'visualisierungen') return !b; // Startseite „Erkundung“ und Bereichsseiten
-  // Führungen (seit 2026-10-27): Übersicht und Stationen; nicht die Zeitleiste, die ihren eigenen Stadtplan zeichnet
-  if (route.tab === 'fuehrungen') return a !== 'zeitleiste';
-  return route.tab === 'literatur' || route.tab === 'ueber';
+  const [a] = route.segmente || [];
+  // nicht die Zeitleiste der Führungen, die ihren eigenen Stadtplan zeichnet
+  return !(route.tab === 'fuehrungen' && a === 'zeitleiste');
 }
 
 export function aktualisiereHintergrundkarte(route) {
