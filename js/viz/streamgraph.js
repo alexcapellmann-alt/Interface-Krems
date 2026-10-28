@@ -86,6 +86,39 @@ function baueSegmentTooltip(sektor, bin, zelle) {
   return zeilen.join('\n');
 }
 
+// Tooltips über Fläche und Legende (Wunsch des Autors, 2026-10-28)
+const zahl = (n) => n.toLocaleString('de-AT');
+const aufnahmen = (n) => `${zahl(n)} Bürgeraufnahme${n === 1 ? '' : 'n'}`;
+
+// Kennzahlen je Sektor über alle Jahre: Summe, unsichere, erstes und letztes Jahr mit Aufnahme
+function baueSektorSummen(sektoren, bins, matrix) {
+  const summen = new Map();
+  sektoren.forEach((sektor) => {
+    let anzahl = 0;
+    let unsicher = 0;
+    let erstes = null;
+    let letztes = null;
+    bins.forEach((bin, i) => {
+      const zelle = matrix[i][sektor];
+      if (!zelle.anzahl) return;
+      anzahl += zelle.anzahl;
+      unsicher += zelle.unsicherAnzahl;
+      if (erstes === null) erstes = bin.von;
+      letztes = bin.von;
+    });
+    summen.set(sektor, { anzahl, unsicher, erstes, letztes });
+  });
+  return summen;
+}
+
+function baueSektorTooltip(sektor, summe, gesamt) {
+  const anteil = gesamt ? Math.round((summe.anzahl / gesamt) * 1000) / 10 : 0;
+  const zeilen = [sektor, `${aufnahmen(summe.anzahl)} (${anteil.toLocaleString('de-AT')} % aller)`];
+  if (summe.erstes !== null) zeilen.push(summe.erstes === summe.letztes ? `nur ${summe.erstes}` : `${summe.erstes}–${summe.letztes}`);
+  if (summe.unsicher > 0) zeilen.push(`davon ${zahl(summe.unsicher)} mit unsicherer Angabe`);
+  return zeilen.join('\n');
+}
+
 // Dieselbe Drei-Zustände-Logik wie bumpChart.js' aktualisiereHervorhebung()
 // (siehe Dateikopf-Kommentar), hier auf Flächen statt Linien angewendet.
 function aktualisiereHervorhebung() {
@@ -99,7 +132,7 @@ function aktualisiereHervorhebung() {
     .attr('stroke-width', (d) => (d.key === aktiv ? 1.5 : 0));
 }
 
-function baueKopfzeile(container, sektoren, farbeFuerSektor) {
+function baueKopfzeile(container, sektoren, farbeFuerSektor, tooltipFuer) {
   const kopfzeile = document.createElement('div');
   kopfzeile.className = 'streamgraph-kopfzeile';
 
@@ -118,6 +151,14 @@ function baueKopfzeile(container, sektoren, farbeFuerSektor) {
     punkt.className = 'streamgraph-legende-punkt';
     punkt.style.background = farbeFuerSektor(sektor);
     eintrag.append(punkt, document.createTextNode(sektor));
+    // seit 2026-10-28: Tooltip mit Kennzahlen, die Fläche im Graph wird dabei hervorgehoben
+    eintrag.tabIndex = 0;
+    const zeige = () => { zeigeTooltip(tooltipFuer(sektor), eintrag, container); instanz.hoverSektor = sektor; aktualisiereHervorhebung(); };
+    const verstecke = () => { versteckeTooltip(); instanz.hoverSektor = null; aktualisiereHervorhebung(); };
+    eintrag.addEventListener('mouseenter', zeige);
+    eintrag.addEventListener('focus', zeige);
+    eintrag.addEventListener('mouseleave', verstecke);
+    eintrag.addEventListener('blur', verstecke);
     legende.appendChild(eintrag);
   });
   kopfzeile.appendChild(legende);
@@ -152,7 +193,10 @@ function zeichneStreamgraph() {
   const bins = mitJahr.length > 0 ? berechneJahresBins(mitJahr, BIN_GROESSE_JAHRE) : [];
   const matrix = gruppiereProBinUndSektor(mitJahr, sektoren, bins);
 
-  const kopfzeile = baueKopfzeile(plotBereich, sektoren, farbeFuerSektor);
+  const sektorSummen = baueSektorSummen(sektoren, bins, matrix);
+  const gesamtAufnahmen = [...sektorSummen.values()].reduce((s, x) => s + x.anzahl, 0);
+  const sektorTooltip = (sektor) => baueSektorTooltip(sektor, sektorSummen.get(sektor), gesamtAufnahmen);
+  const kopfzeile = baueKopfzeile(plotBereich, sektoren, farbeFuerSektor, sektorTooltip);
 
   // Höhen-Budget von `instanz.container` gemessen, nicht von `plotBereich`
   // (derselbe bereits etablierte Fix wie in trellis.js/vermoegensschichtung.js
@@ -211,9 +255,29 @@ function zeichneStreamgraph() {
     aktualisiereHervorhebung();
   }
 
+  // Tooltip über der Fläche (2026-10-28): ein unsichtbarer Anker folgt dem Mauszeiger, damit der Tooltip dort
+  // erscheint (die Fläche selbst reicht über die ganze Breite); er nennt das Jahr unter dem Zeiger und die Summe
+  const anker = svg.append('circle').attr('r', 1).attr('fill', 'none').attr('pointer-events', 'none').node();
+  function flaechenTooltip(event, d) {
+    const [mx, my] = d3.pointer(event, svg.node());
+    anker.setAttribute('cx', mx);
+    anker.setAttribute('cy', my);
+    const jahr = Math.round(xSkala.invert(mx));
+    const binIndex = d3.minIndex(bins, (b) => Math.abs(b.von - jahr));
+    const zelle = binIndex >= 0 ? matrix[binIndex][d.key] : null;
+    const zeilen = [sektorTooltip(d.key)];
+    if (zelle) {
+      zeilen.push('', `${bins[binIndex].von}: ${aufnahmen(zelle.anzahl)}`);
+      if (zelle.unsicherAnzahl > 0) zeilen.push(`davon ${zahl(zelle.unsicherAnzahl)} mit unsicherer Angabe`);
+    }
+    zeigeTooltip(zeilen.join('\n'), anker, container);
+  }
   flaechenAuswahl
-    .on('mouseenter', (event, d) => { instanz.hoverSektor = d.key; aktualisiereHervorhebung(); })
-    .on('mouseleave', () => { instanz.hoverSektor = null; aktualisiereHervorhebung(); })
+    .on('mouseenter', (event, d) => { instanz.hoverSektor = d.key; aktualisiereHervorhebung(); flaechenTooltip(event, d); })
+    .on('mousemove', (event, d) => flaechenTooltip(event, d))
+    .on('focus', function (event, d) { zeigeTooltip(sektorTooltip(d.key), this, container); })
+    .on('blur', () => versteckeTooltip())
+    .on('mouseleave', () => { instanz.hoverSektor = null; aktualisiereHervorhebung(); versteckeTooltip(); })
     .on('click', (event, d) => { event.stopPropagation(); schalteHervorhebung(d.key); })
     .on('keydown', (event, d) => {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); schalteHervorhebung(d.key); }
@@ -274,7 +338,8 @@ function fuegeStyleEin(container) {
     .streamgraph-kopfzeile { margin-bottom: var(--space-2); }
     .streamgraph-titel { margin: 0 0 var(--space-2) 0; font-size: var(--fs-h3); }
     .streamgraph-legende { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); font-size: var(--fs-sm); }
-    .streamgraph-legende-eintrag { display: inline-flex; align-items: center; gap: 4px; }
+    .streamgraph-legende-eintrag { display: inline-flex; align-items: center; gap: 4px; cursor: default; border-radius: 3px; padding: 0 2px; }
+    .streamgraph-legende-eintrag:hover, .streamgraph-legende-eintrag:focus-visible { background: rgba(44, 74, 110, .08); outline: none; }
     .streamgraph-legende-punkt { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     .streamgraph-flaeche { cursor: pointer; transition: fill-opacity .15s ease; }
     .streamgraph-flaeche:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }

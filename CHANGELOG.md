@@ -7,6 +7,28 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (164) – Ansichten umbenannt
+
+- Neue Namen (`ansichten.csv` und als Vorgabe in `archivalienRegistry.js`): Habsburg-Zeitleistenbaum → **Stammbaum**, Chord-Diagramm → **Soziale Gruppen**, Personennetzwerk (Urkunden) → **Urkundennetzwerk**, Regesten-Kachelraster → **Regesten**, Sankey → **Kategoriefluss**, Bipartite Flow Map → **Karte Soziale Gruppen**. Die internen Kennungen (z. B. `#visualisierungen/urkunden/sankey`) bleiben, Links und Führungen funktionieren unverändert.
+- Mitgezogen: Beschriftungen der Info-Knöpfe und Anfang des Kategoriefluss-Infotexts (`infotexte.csv`), Bezeichnungen für Bildschirmleser in Soziale Gruppen, Regesten und Kategoriefluss, Anmerkung zu `dynastie_gruppenname` in `archiv.csv`.
+- Vertiefungslinks der Führungen mit passendem Artikel (`DATIV_EINLEITUNG` in `datensatzAufruf.js`): „In den Regesten der Urkunden erkunden“, „Im Stammbaum der Personen erkunden“ statt „In der …“.
+- Geprüft auf dem Testserver 8845: Galerien, Ansichten-Leisten, Knopfgruppe der Orte, Info-Knopf, Vertiefungslinks; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (163) – Personenliste filtert Unsicherheiten, Streamgraph mit Tooltips
+
+- Personenliste: „σ Unsicherheiten anzeigen“ zeigt wie die Ortsliste nur noch die Personen mit Unsicherheitsmarkierung (357: 353 mit mehreren Schreibweisen, 4 mit eigener Anmerkung); Hinweiszeile „… (nur Personen mit unsicheren Angaben)“. Die Suche wirkt innerhalb dieser Auswahl.
+- Streamgraph „Wirtschaftssektoren über die Zeit“: Tooltip beim Zeigen auf eine Fläche - Sektor, Bürgeraufnahmen insgesamt mit Anteil und Zeitspanne, dazu das Jahr unter dem Mauszeiger mit seiner Zahl (der Tooltip folgt dem Zeiger über einen unsichtbaren Anker). Tooltip auch beim Zeigen auf einen Sektor in der Legende (Kennzahlen), die Fläche wird dabei hervorgehoben; Legende per Tastatur erreichbar.
+- Infotexte (`infotexte.csv`) ergänzt: Personenliste (Filter bei „σ Unsicherheiten anzeigen“), Streamgraph (Tooltips über Fläche und Legende).
+- Geprüft auf dem Testserver 8845; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (162) – Karte: Abspielen füllt die Karte nach und nach; Führungs-Themenfelder in der Palette
 
 - Karte, Abspielen: der linke Regler bleibt am Anfang der Spanne (1100), nur der rechte rückt Jahrzehnt für Jahrzehnt vor - es werden nach und nach immer mehr Orte sichtbar (z. B. 3, 9, 14, 32, 141 …). Angehalten geht es beim nächsten Klick von dort weiter, am Ende beginnt es von vorn. Das wandernde 50-Jahre-Fenster aus Eintrag 161 entfällt; Infotext angepasst.

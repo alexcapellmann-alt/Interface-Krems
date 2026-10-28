@@ -76,6 +76,14 @@ export const TYP_ANZEIGE = {
 // Wortlisten nicht zuverlaessig automatisierbar.
 const GENITIV_ARTIKEL = { urkunden: 'der', buergerbuch: 'des', verlassenschaften: 'der', personen: 'der', orte: 'der', bestand: 'des' };
 
+// Seit 2026-10-28 (Umbenennung der Ansichten, z. B. „Regesten“, „Stammbaum“): Präposition mit Artikel je
+// Ansicht für „… erkunden“; ohne Eintrag „In der“ (passt zu Treemap, Zeitachse, Personenliste usw.)
+const DATIV_EINLEITUNG = {
+  regestenKachelraster: 'In den', familienbaum: 'Im', ganttDiagramm: 'Im', sankey: 'Im', urkundenNetzwerk: 'Im',
+  dotPlot: 'Im', bubbleChart: 'Im', bumpChart: 'Im', streamgraph: 'In der Ansicht', chordDiagramm: 'In der Ansicht',
+  sunburst: 'Im', personennetzwerk: 'Im', marimekko: 'Im', marimekkoVerlassenschaften: 'Im', trellis: 'Im'
+};
+
 function genitiv(label, schluessel) {
   const artikel = GENITIV_ARTIKEL[schluessel] || 'der';
   const nomen = artikel === 'des' && !label.endsWith('s') ? `${label}s` : label;
@@ -131,7 +139,7 @@ export function ermittleVertiefungsLink(rohPfad) {
   const ziel = ermittleAnsicht(segmente);
   if (!ziel) return { href: null, beschriftung: null, fehler: `Vertiefungslink „${rohPfad}" verweist auf keine vorhandene Ansicht.` };
   const beschriftung = ziel.bereichLabel
-    ? `In der ${ziel.label} ${genitiv(ziel.bereichLabel, ziel.bereichSchluessel)} erkunden`
+    ? `${DATIV_EINLEITUNG[ziel.segmente.at(-1)] || 'In der'} ${ziel.label} ${genitiv(ziel.bereichLabel, ziel.bereichSchluessel)} erkunden`
     : `${ziel.label} erkunden`;
   return { href: `#${ziel.segmente.join('/')}`, beschriftung, fehler: null };
 }

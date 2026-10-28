@@ -7,7 +7,7 @@ bestand;icicle;Icicle;Bestände als gestapelte Ebenen: Kategorie, Unterkategorie
 bestand;circlePacking;Circle Packing;Bestände als ineinander verschachtelte Kreise je Kategorie.;4;nein;
 bestand;ganttDiagramm;Gantt-Diagramm;Entstehungs-/Laufzeitraum jedes Bestands als horizontaler Balken auf der Zeitachse.;5;ja;
 urkunden;;Urkunden;;1;ja;
-urkunden;regestenKachelraster;Regesten-Kachelraster;Durchsuchbare Kurzfassungen (Regesten) aller {n_urkunden_punkt} Urkunden mit Foto, Kategorie und Volltextsuche.;1;ja;
+urkunden;regestenKachelraster;Regesten;Durchsuchbare Kurzfassungen (Regesten) aller {n_urkunden_punkt} Urkunden mit Foto, Kategorie und Volltextsuche.;1;ja;
 urkunden;zeitachse;Zeitachse;Jede Urkunde als Punkt auf der Zeitachse, eingefärbt nach Kategorie.;2;ja;
 urkunden;kalenderHeatmap;Kalender-Heatmap;Zeigt, an welchen Kalendertagen bzw. Jahrzehnten die meisten Urkunden ausgestellt wurden.;3;nein;
 urkunden;dotPlot;Dot Plot;Verteilung der Urkunden nach Kategorie über die Zeit, jede Urkunde ein Punkt.;4;ja;
@@ -18,7 +18,7 @@ urkunden;marimekko;Marimekko;Mosaik je Jahrhundert: Spaltenbreite zeigt die Urku
 urkunden;alluvial;Alluviales Diagramm;Fluss zwischen Jahrhundert und Kategorie - zeigt Verschiebungen der Kategorienzusammensetzung über die Zeit.;9;nein;
 urkunden;adjazenzmatrix;Adjazenzmatrix;Matrix der am häufigsten gemeinsam in Urkunden genannten Personen.;10;nein;40
 urkunden;arcDiagramm;Arc-Diagramm;Personen entlang einer Achse, Bögen verbinden die am häufigsten gemeinsam Genannten.;11;nein;40
-urkunden;sankey;Sankey;Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.;12;ja;
+urkunden;sankey;Kategoriefluss;Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.;12;ja;
 urkunden;wortwolke;Wortwolke;Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.;13;ja;
 urkunden;bilderwand;Bilderwand;Jede der {n_urkunden_punkt} Urkunden als Bild in Jahrzehnt-Säulen. Orte, Kategorien und Personen filtern, passende Urkunden rücken nach oben.;14;ja;
 buergerbuch;;Bürgerbuch;;2;nein;
@@ -34,11 +34,11 @@ verlassenschaften;marimekkoVerlassenschaften;Marimekko;Zeigt je Vermögensgruppe
 personen;;Personen;;4;ja;
 personen;personenliste;Personenliste;Durchsuchbare, sortierbare Liste aller erfassten Personen mit Nennungshäufigkeit und Zeitspanne.;1;ja;
 personen;bubbleChart;Bubble Chart;Ein Kreis pro Person, Fläche = Gesamt-Nennungshäufigkeit über Urkunden und Bürgerbuch (Circle-Packing, Farbe ohne inhaltliche Bedeutung).;2;nein;
-personen;familienbaum;Habsburg-Zeitleistenbaum;Zeitleisten-Stammbaum des Hauses Habsburg von Rudolf I. bis Joseph II., mit Herrschaftszeiten von Kaisern und Königen.;3;ja;
-personen;urkundenNetzwerk;Personennetzwerk (Urkunden);Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.;5;ja;100
-personen;chordDiagramm;Chord-Diagramm;Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.;4;ja;
+personen;familienbaum;Stammbaum;Zeitleisten-Stammbaum des Hauses Habsburg von Rudolf I. bis Joseph II., mit Herrschaftszeiten von Kaisern und Königen.;3;ja;
+personen;urkundenNetzwerk;Urkundennetzwerk;Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.;5;ja;100
+personen;chordDiagramm;Soziale Gruppen;Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.;4;ja;
 orte;;Orte;;5;ja;
 orte;ortsliste;Ortsliste;Durchsuchbare, sortierbare Liste aller Orte mit der Zahl ihrer Nennungen in Urkunden und Verlassenschaftsinventaren.;1;ja;
 orte;karte;Karte;Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.;2;ja;
 orte;verbindungskarte;Verbindungskarte;Zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden: ein Ort zeigt seine Verbindungen als feine Bögen.;3;ja;
-orte;bipartiteFlowMap;Bipartite Flow Map;Zeigt, welche Orte mit welchen sozialen Gruppen (Dynastie/Adel/Klerus/Bürgertum) in Verbindung stehen.;4;ja;
+orte;bipartiteFlowMap;Karte Soziale Gruppen;Zeigt, welche Orte mit welchen sozialen Gruppen (Dynastie/Adel/Klerus/Bürgertum) in Verbindung stehen.;4;ja;
