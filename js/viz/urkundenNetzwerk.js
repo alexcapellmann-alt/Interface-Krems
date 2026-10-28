@@ -25,7 +25,10 @@
 // - Fokus-Modus: Klick/Eingabe/Leertaste zeigt eine Person, ihre gezeigten Partner
 //   und die Kanten zu ihr; alles andere tritt auf FOKUS_DECKKRAFT zurück. Zurück per
 //   Hintergrund, Zweitklick oder Esc. Nur im Fokus-Modus erscheint darunter ein
-//   kompakter Detailbereich (Partner mit Zahlen, Urkunden, Link zur Personenliste).
+//   kompakter Detailbereich (Partner mit Zahlen, Link zur Personenliste).
+// - Seit 2026-10-28 (Wunsch des Autors) öffnet die Auswahl zusätzlich die Sidebar mit allen Urkunden der Person
+//   (wie die Sehnen im Chord-Diagramm); die Urkundenliste im Detailbereich entfällt dafür. Die Sidebar schließt
+//   mit der Auswahl (Hintergrund, Zweitklick, Esc) und über ihr ×.
 //
 // Zugänglichkeit: SVG als Gruppe (kein role="img" um bedienbare Knoten); jeder
 // Knoten ist ein Knopf mit Namen (Person, Nennungen, Partner), per Tab in
@@ -38,6 +41,7 @@ import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueKoNennungsNetzwerk, ermittlePersonenDerUrkunde, waehlePersonenNachNennungen } from '../utils/urkundenPersonen.js';
 import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
 import { alsText } from '../utils/textwert.js';
+import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 
 const STANDARD_OBERGRENZE = 100;
 // Höchstzahl im Netz. Gemessen (PROJEKTLOG Eintrag 65): 222 Personen bedienbar
@@ -151,6 +155,7 @@ function waehle(id) {
   instanz.auswahl = instanz.auswahl === id ? null : id;
   wendeAuswahlAn();
   zeigeDetail();
+  zeigePersonenSidebar();
   // Gewählte Person in den Ausschnitt holen (z. B. Auswahl aus der Partnerliste auf dem Phone).
   if (instanz.auswahl) zeigeKnotenImAusschnitt(instanz.punktNachId.get(id));
 }
@@ -160,6 +165,20 @@ function hebeAuswahlAuf() {
   instanz.auswahl = null;
   wendeAuswahlAn();
   zeigeDetail();
+  zeigePersonenSidebar();
+}
+
+// Sidebar folgt der Auswahl: alle Urkunden der gewählten Person, ohne Auswahl geschlossen.
+function zeigePersonenSidebar({ fokus = true } = {}) {
+  const { sidebar, auswahl, netz } = instanz;
+  if (!sidebar) return;
+  if (!auswahl) {
+    schliesseSidebar(sidebar, instanz.wurzel.querySelector('.unetz-knoten'));
+    return;
+  }
+  const aktiv = document.activeElement;
+  zeigeUrkundenSidebar(sidebar, netz.nachId.get(auswahl).name, netz.urkundenJePerson.get(auswahl) || []);
+  if (!fokus && aktiv && aktiv !== document.body) aktiv.focus({ preventScroll: true });
 }
 
 function knotenName(d) {
@@ -210,7 +229,6 @@ function zeigeDetail() {
   if (!auswahl) return;
   const person = netz.nachId.get(auswahl);
   const partner = netz.partner.get(auswahl);
-  const urkunden = netz.urkundenJePerson.get(auswahl) || [];
   const titel = document.createElement('h2');
   titel.className = 'unetz-detail-titel';
   titel.textContent = person.name;
@@ -248,14 +266,6 @@ function zeigeDetail() {
     b.setAttribute('aria-label', `${x.person.name}, ${mitZahl(x.paar.anzahl, 'gemeinsame Urkunde', 'gemeinsame Urkunden')}, im Netz zeigen`);
     b.addEventListener('click', () => { waehle(x.person.id); fokussiereKnoten(x.person.id); });
     return b;
-  });
-  liste(`Urkunden (${urkunden.length})`, urkunden, (u) => {
-    const sig = alsText(u.signatur);
-    const ziel = baueDatensatzLink('urkunde', sig);
-    const a = document.createElement(ziel ? 'a' : 'span');
-    if (ziel) a.href = ziel;
-    a.textContent = [sig, alsText(u.datum)].filter(Boolean).join(' – ');
-    return a;
   });
 }
 
@@ -406,6 +416,7 @@ function zeichne() {
   container.innerHTML = '';
   instanz.kreisAuswahl = null;
   fuegeStyleEin(container);
+  fuegeSidebarStyleEin(container);
   const wurzel = document.createElement('div');
   wurzel.className = 'unetz-wurzel';
   wurzel.addEventListener('keydown', (e) => { if (e.key === 'Escape' && instanz?.auswahl) { e.preventDefault(); hebeAuswahlAuf(); } });
@@ -423,8 +434,14 @@ function zeichne() {
   instanz.detail.setAttribute('aria-label', 'Ausgewählte Person');
   wurzel.appendChild(instanz.detail);
   if (instanz.auswahl && !instanz.sichtbar.ids.has(instanz.auswahl)) instanz.auswahl = null;
+  instanz.sidebar = baueSidebarGeruest(container);
+  instanz.sidebar.schliessenBtn.addEventListener('click', hebeAuswahlAuf);
+  // Esc in der Sidebar hebt die Auswahl ebenso auf wie im Netz
+  instanz.sidebar.sidebar.addEventListener('keydown', (e) => { if (e.key === 'Escape' && instanz?.auswahl) { e.preventDefault(); hebeAuswahlAuf(); } });
   zeichneNetz(ziel);
   zeigeDetail();
+  // Neuaufbau (z. B. Unsicherheiten-Knopf): Sidebar der bestehenden Auswahl wieder öffnen, Fokus bleibt
+  if (instanz.auswahl) zeigePersonenSidebar({ fokus: false });
   baueInfo(leiste);
 }
 

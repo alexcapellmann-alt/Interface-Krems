@@ -275,8 +275,9 @@ function zeichneStreamgraph() {
   flaechenAuswahl
     .on('mouseenter', (event, d) => { instanz.hoverSektor = d.key; aktualisiereHervorhebung(); flaechenTooltip(event, d); })
     .on('mousemove', (event, d) => flaechenTooltip(event, d))
-    .on('focus', function (event, d) { zeigeTooltip(sektorTooltip(d.key), this, container); })
-    .on('blur', () => versteckeTooltip())
+    // 2026-10-28: Fokus wie Hover (Kontur der Fläche) statt rechteckigem Fokusrahmen (Wunsch des Autors)
+    .on('focus', function (event, d) { instanz.hoverSektor = d.key; aktualisiereHervorhebung(); zeigeTooltip(sektorTooltip(d.key), this, container); })
+    .on('blur', () => { instanz.hoverSektor = null; aktualisiereHervorhebung(); versteckeTooltip(); })
     .on('mouseleave', () => { instanz.hoverSektor = null; aktualisiereHervorhebung(); versteckeTooltip(); })
     .on('click', (event, d) => { event.stopPropagation(); schalteHervorhebung(d.key); })
     .on('keydown', (event, d) => {
@@ -342,7 +343,7 @@ function fuegeStyleEin(container) {
     .streamgraph-legende-eintrag:hover, .streamgraph-legende-eintrag:focus-visible { background: rgba(44, 74, 110, .08); outline: none; }
     .streamgraph-legende-punkt { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     .streamgraph-flaeche { cursor: pointer; transition: fill-opacity .15s ease; }
-    .streamgraph-flaeche:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+    .streamgraph-flaeche:focus, .streamgraph-flaeche:focus-visible { outline: none; } /* Fokus zeigt die Kontur, siehe aktualisiereHervorhebung() */
     .streamgraph-achse { font-size: 12px; }
   `;
   container.appendChild(style);

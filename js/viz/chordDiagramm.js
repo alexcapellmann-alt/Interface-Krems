@@ -572,10 +572,16 @@ export function render(container, data, options = {}) {
     instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
   });
   instanz.sidebar = baueSidebarGeruest(container);
-  instanz.sidebar.schliessenBtn.addEventListener('click', () => {
+  const schliesseSehnenSidebar = () => {
     schliesseSidebar(instanz.sidebar, chartContainer);
     instanz.ausgewaehlteSehne = null;
     aktualisiereHighlight();
+  };
+  instanz.sidebar.schliessenBtn.addEventListener('click', schliesseSehnenSidebar);
+  // Wunsch des Autors (2026-10-28): Klick auf eine leere Stelle schließt die offene Sidebar. Sehnen und Segmente
+  // stoppen ihren Klick (stopPropagation), er kommt hier also nur von der freien Fläche an.
+  chartContainer.addEventListener('click', () => {
+    if (instanz?.sidebar.sidebar.classList.contains('offen')) schliesseSehnenSidebar();
   });
 
   zeichneChordDiagramm();
