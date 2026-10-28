@@ -75,6 +75,7 @@ export const ANSICHT_ANFORDERUNGEN = {
   bumpChart: nurBuergerbuch(['Datum']),
   personennetzwerk: nurBuergerbuch(['Name', 'buergen_id']),
   streamgraph: nurBuergerbuch(),
+  buergerinnen: { dateien: { [BUERGERBUCH]: ['personen_id'] }, neben: { [PERSONENLISTE]: [] }, ausblenden: BUERGERBUCH }, // 2026-10-28
   // Verlassenschaften
   parallelKoordinaten: {
     dateien: { [INVENTARE]: VERMOEGENSPROFIL },
