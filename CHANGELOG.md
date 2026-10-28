@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (157) – Sankey: Rehberg und Dürnstein unter „Andere Orte“
+
+- Schwelle für einzeln gezeigte Orte im Sankey von 15 auf 17 Verbindungen (`ORT_BUENDELUNG_SCHWELLE`): Rehberg bei Krems (16) und Dürnstein (15) fallen unter „Andere Orte“, einzeln bleiben die 11 Orte ab 18 (Wien bis Graz). „Andere Orte“ wächst von 388 auf 405 (Urkunden, die schon über einen anderen Ort dort gezählt waren, zählen je Kategorie nur einmal).
+- Geprüft auf dem Testserver 8845.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (156) – Urkunden-Kategorien in der gemeinsamen Palette
 
 - Die Kategorien der Urkunden haben jetzt die Palette der Bestand-Ansichten („Vier Familien“): nach Häufigkeit (Zahl der Urkunden mit dieser Kategorie) der Reihe nach, die Familien abwechselnd - Vermögen und Finanzen Tintenblau, Rechtswesen Petrol, Politik Braun, Verwaltung Bordeaux, Wirtschaft Graublau, Religion helles Petrol, Bevölkerung Gold usw.; die fünf seltensten (1-5 Urkunden) in aufgehellten Tönen. Vorher die feste Tabelle `CAT_COLORS` bzw. ein Farbkreis.
