@@ -7,11 +7,32 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (176) – Laufzeit: keine roten Strichrahmen mehr für unsichere Bestände
+
+- `ganttDiagramm.js`: rote gestrichelte Kennzeichnung entfernt an Balken (jetzt weißer Rand wie alle), an den Platzhaltern „ohne Zeitangabe“ (gestrichelt in Kategoriefarbe wie alle übrigen) und an den Kategorie-Bändern. Warnsymbol und Tooltip-Zeile („… davon mit unsicheren Angaben“) bleiben; `desc`-Text angepasst.
+- Geprüft auf dem Testserver 8845: mit „Unsicherheiten anzeigen“ 21 Zeilen, kein rotes Element in Einzelbeständen und Kategorien; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (175) – Bestand: Unsicherheiten-Übergang ohne Sprünge, keine roten Strichrahmen in Treemap und Sunburst
+
+- Rückmeldung des Autors: „ausblenden“ in Treemap und Sunburst weiterhin nicht flüssig. Ursachen an Anfang und Ende des Übergangs: am Anfang verschwand die bisherige Grafik (Beschriftungen, Schraffur, Rahmen) schlagartig hinter den schlichten Formen; am Ende wurde die Formen-Überlagerung sofort entfernt, während die neue Grafik erst über 0,3 s einblendet (`.viz-inhalt svg { transition: opacity .3s }`) - dazwischen schien kurz der Hintergrund durch.
+- `bestandUebergang.js`: `erfasseFormen(container, { bild: true })` hält zusätzlich eine Kopie der bisherigen Grafik fest, die zu Beginn 250 ms über den wandernden Formen ausblendet (`.bestand-uebergang-bild`, `components.css`); am Ende blendet die neue Grafik zuerst unter den Formen ganz ein, danach blenden die Formen aus (250 ms). Reste eines noch laufenden Übergangs werden beim nächsten sofort entfernt. `app.js` nutzt `bild` beim Unsicherheiten-Knopf in Treemap und Sunburst (nicht im Gantt, dessen Liste scrollt).
+- `treemap.js`, `sunburst.js`: kein roter Strichrahmen mehr für unsichere Bestände; Warnsymbol und Schraffur bleiben. Beschreibungstexte (`desc`) angepasst. Gantt unverändert.
+- Geprüft auf dem Testserver 8845 (Bildfolgen während des Übergangs, beide Richtungen, Treemap und Sunburst): keine Sprünge, danach keine Überlagerungsreste, keine roten Rahmen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (174) – Bestand: Morph-Übergang beim Unsicherheiten-Filter
 
 - `app.js` (Bestand-Werkzeugleiste): der Knopf „σ Unsicherheiten anzeigen/ausblenden“ hält die Formen vor dem Neuzeichnen fest und spielt danach denselben Übergang wie beim Ansichtswechsel (`bestandUebergang.js`): verbleibende Bestände gleiten an ihren neuen Platz, die übrigen ziehen sich in ihre Kategorie zurück bzw. kommen aus ihr.
 - `bestandUebergang.js`: Formen ohne Gegenstück und ohne Kategorie auf der anderen Seite blenden jetzt an ihrem Platz aus bzw. ein, statt ohne Übergang zu verschwinden oder erst am Ende aufzutauchen (gilt auch für den Ansichtswechsel).
 - Geprüft auf dem Testserver 8845: Treemap, Sunburst, Laufzeit, jeweils ein- und ausschalten; Überlagerung danach entfernt; keine Konsolenfehler.
+- Nachbesserung (Rückmeldung des Autors: „ausblenden“ nicht flüssig): Ursache waren nicht die roten Ränder, sondern (1) die Kategorie-Rahmen der Treemap (`fill: none`), die der Übergang als deckende Flächen in Kategoriefarbe zeichnete und die die Kacheln verdeckten, und (2) die rund 300 wiederkehrenden Bestände, die halbdurchsichtig übereinander auf ihrer Kategorie starteten und sich zu einer deckenden Fläche summierten. Jetzt bleiben Rahmen im Übergang Rahmen (Füllung wird zwischen Rahmen und Fläche überblendet, Rahmen liegen unter den Flächen); aus der Kategorie kommende Formen blenden erst in der zweiten Hälfte des Wegs ein, in sie hineinwandernde sind zur Hälfte ausgeblendet. Ansichtswechsel Treemap/Sunburst/Laufzeit erneut geprüft.
 
 Kein Commit durch Claude Code.
 

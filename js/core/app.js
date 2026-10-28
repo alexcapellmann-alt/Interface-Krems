@@ -763,7 +763,8 @@ function stelleVizFlyoutSicher(kontext) {
   kontext.unsicherheitsButton = erzeugeUnsicherheitsButton(unsicherheitsContainer, {
     onToggle: (aktiv) => {
       // 2026-10-28: in den Bestand-Ansichten filtert der Knopf; die Formen gleiten dabei an ihren neuen Platz
-      const formenVorher = kontext.tab === 'bestand' ? erfasseFormen(kontext.vizContainer) : null;
+      const formenVorher = kontext.tab === 'bestand'
+        ? erfasseFormen(kontext.vizContainer, { bild: kontext.ansichtId !== 'ganttDiagramm' }) : null;
       kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv });
       if (formenVorher) spieleUebergang(formenVorher, kontext.vizContainer);
     }

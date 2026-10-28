@@ -139,7 +139,7 @@ function istUnsicherenKnoten(d, zeigeUnsicherheit) {
 // dadurch blasser als die Treemap mit derselben Palette).
 function randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie, blatt = false }) {
   if (istAusgewaehlt) return { stroke: AUSWAHL_FARBE, breite: 2, dasharray: null };
-  if (istUnsicher) return { stroke: '#c0392b', breite: 2, dasharray: '4,3' };
+  // 2026-10-28: kein roter Strichrahmen mehr für unsichere Bestände (der Filter zeigt ohnehin nur sie)
   return { stroke: '#ffffff', breite: blatt ? 0.35 : 1, dasharray: ohneKategorie ? '4,3' : null };
 }
 
@@ -663,8 +663,8 @@ function zeichneSunburst() {
       '(Klick kehrt zur Übersicht zurück), innerer Ring die Unterkategorien ' +
       'dieser Kategorie, äußerer Ring deren einzelne Bestände. Winkel nach ' +
       'Umfang in Laufmetern (Quadratwurzel-skaliert). Klick auf einen Bestand ' +
-      'öffnet Details in der Seitenleiste. Gestrichelter roter Rand, ' +
-      'Warnsymbol und Schraffur kennzeichnen unsichere Angaben.'
+      'öffnet Details in der Seitenleiste. Warnsymbol und Schraffur ' +
+      'kennzeichnen unsichere Angaben.'
     : 'Radiale Darstellung: innerster Ring ein Segment pro Kategorie, ' +
       'mittlerer Ring die Unterkategorien, äußerster Ring die einzelnen ' +
       'Bestände - alle drei Ringe gleichzeitig sichtbar. Winkel nach Umfang ' +
