@@ -18,7 +18,7 @@ akzentfarbe;#2c4a6e;Hauptfarbe der Oberfläche (derzeit in css/base.css). Kontra
 karte_zentrum_lat;48.42;Startmittelpunkt der Karten (Breitengrad, Dezimalpunkt)
 karte_zentrum_lon;15.6;Startmittelpunkt der Karten (Längengrad, Dezimalpunkt)
 karte_zoom;7;Startzoomstufe der Karten
-footer_text;Interface des Stadtarchivs Krems. Prototyp im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).;Fußzeile unter allen Seiten; derzeit ausgeblendet (seit 2026-10-27)
+footer_text;Interface des Stadtarchivs Krems. Prototyp im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).;Fußzeile unter allen Seiten, derzeit ausgeblendet (seit 2026-10-27)
 dynastie_familien;habsburg|spanische_habsburger|habsburg_tirol|habsburg_lothringen;Werte der Spalte familie in familien.csv, die zur Herrscherfamilie gehören (mehrere mit senkrechtem Strich). Nur wenn mindestens eine Person dazu gehört, wird der Zeitleisten-Stammbaum angeboten. Reihenfolge = Farbabstufung der Zweige.
 dynastie_name;Habsburg;Name der Herrscherfamilie in den Texten des Zeitleisten-Stammbaums (z. B. „des Hauses Habsburg“)
 dynastie_gruppenname;Dynastie (Habsburger);Name der Gruppe Dynastie in den Ansichten Soziale Gruppen und Karte Soziale Gruppen. Leer: „Dynastie“
