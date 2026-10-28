@@ -156,7 +156,7 @@ export const ARCHIVALIENTYPEN = [
     primaeransicht: 'regestenKachelraster',
     hatGalerie: true,
     ansichten: [
-      { id: 'regestenKachelraster', label: 'Regesten-Kachelraster', modulPfad: '../viz/regestenKachelraster.js',
+      { id: 'regestenKachelraster', label: 'Regesten', modulPfad: '../viz/regestenKachelraster.js',
         // AUFTRAG C1, Punkt 1/2: neutrale Vorgabe - die archivspezifische
         // Fassung (mit berechneter Urkundenzahl) steht in data/ansichten.csv.
         beschreibung: 'Durchsuchbare Kurzfassungen (Regesten) aller Urkunden mit Foto, Kategorie und Volltextsuche.' },
@@ -201,7 +201,7 @@ export const ARCHIVALIENTYPEN = [
       // Personen, keine unspezifischen "Elemente".
       { id: 'arcDiagramm', label: 'Arc-Diagramm', modulPfad: '../viz/arcDiagramm.js',
         beschreibung: 'Personen entlang einer Achse, Bögen verbinden die am häufigsten gemeinsam Genannten.' },
-      { id: 'sankey', label: 'Sankey', modulPfad: '../viz/sankey.js',
+      { id: 'sankey', label: 'Kategoriefluss', modulPfad: '../viz/sankey.js',
         beschreibung: 'Zeigt den Zusammenhang zwischen Urkundenkategorien und genannten Orten.' },
       { id: 'wortwolke', label: 'Wortwolke', modulPfad: '../viz/wortwolke.js',
         beschreibung: 'Häufigste Begriffe aus den Regesten-Texten, je größer desto häufiger.' },
@@ -372,7 +372,7 @@ export const ARCHIVALIENTYPEN = [
       // Label umbenannt, siehe Kommentar oben (Punkt 1).
       // AUFTRAG C1, Punkt 2/3: neutrale Vorgabe - Name und Beschreibung des
       // Archivs (Krems: Habsburg) stehen in data/ansichten.csv.
-      { id: 'familienbaum', label: 'Zeitleisten-Stammbaum', modulPfad: '../viz/familienbaum.js', datenSchluessel: 'familien',
+      { id: 'familienbaum', label: 'Stammbaum', modulPfad: '../viz/familienbaum.js', datenSchluessel: 'familien',
         beschreibung: 'Zeitleisten-Stammbaum einer Herrscherfamilie, mit Herrschaftszeiten von Kaisern und Königen.' },
       // AUFTRAG "Chord-Diagramm – soziale Gruppen (Dynastie/Adel/Klerus/
       // Bürger), Umzug nach Personen": vierter Eintrag, von
@@ -387,9 +387,9 @@ export const ARCHIVALIENTYPEN = [
       // datenSchluessel ... records unverändert durchgereicht").
       // AUFTRAG G1: Personennetzwerk der Urkunden (Knoten = Person, Kante = gemeinsame
       // Urkunde); bekommt das ganze Personen-Datenobjekt (urkunden + personenliste).
-      { id: 'urkundenNetzwerk', label: 'Personennetzwerk (Urkunden)', modulPfad: '../viz/urkundenNetzwerk.js',
+      { id: 'urkundenNetzwerk', label: 'Urkundennetzwerk', modulPfad: '../viz/urkundenNetzwerk.js',
         beschreibung: 'Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.' },
-      { id: 'chordDiagramm', label: 'Chord-Diagramm', modulPfad: '../viz/chordDiagramm.js',
+      { id: 'chordDiagramm', label: 'Soziale Gruppen', modulPfad: '../viz/chordDiagramm.js',
         beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' }
     ]
   },
@@ -438,7 +438,7 @@ export const ARCHIVALIENTYPEN = [
         beschreibung: 'Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.' },
       { id: 'verbindungskarte', label: 'Verbindungskarte', modulPfad: '../viz/verbindungskarte.js', datenSchluessel: 'urkunden',
         beschreibung: 'Zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden.' },
-      { id: 'bipartiteFlowMap', label: 'Bipartite Flow Map', modulPfad: '../viz/bipartiteFlowMap.js',
+      { id: 'bipartiteFlowMap', label: 'Karte Soziale Gruppen', modulPfad: '../viz/bipartiteFlowMap.js',
         beschreibung: 'Zeigt, welche Orte mit welchen sozialen Gruppen (Dynastie/Adel/Klerus/Bürgertum) in Verbindung stehen.' }
     ]
   }

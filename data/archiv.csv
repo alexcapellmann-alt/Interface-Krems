@@ -21,7 +21,7 @@ karte_zoom;7;Startzoomstufe der Karten
 footer_text;Interface des Stadtarchivs Krems. Prototyp im Rahmen einer Masterarbeit (Historische Hilfswissenschaften und Archivwissenschaft, Universität Wien).;Fußzeile unter allen Seiten; derzeit ausgeblendet (seit 2026-10-27)
 dynastie_familien;habsburg|spanische_habsburger|habsburg_tirol|habsburg_lothringen;Werte der Spalte familie in familien.csv, die zur Herrscherfamilie gehören (mehrere mit senkrechtem Strich). Nur wenn mindestens eine Person dazu gehört, wird der Zeitleisten-Stammbaum angeboten. Reihenfolge = Farbabstufung der Zweige.
 dynastie_name;Habsburg;Name der Herrscherfamilie in den Texten des Zeitleisten-Stammbaums (z. B. „des Hauses Habsburg“)
-dynastie_gruppenname;Dynastie (Habsburger);Name der Gruppe Dynastie in Chord-Diagramm und Bipartite Flow Map. Leer: „Dynastie“
+dynastie_gruppenname;Dynastie (Habsburger);Name der Gruppe Dynastie in den Ansichten Soziale Gruppen und Karte Soziale Gruppen. Leer: „Dynastie“
 regest_quellenvermerk;Source Regest|Quelle Regest;Vermerk, ab dem ein Regest-Text in der Wortwolke nicht mehr gezählt wird (Quellenangabe), jeweils gefolgt von einem Doppelpunkt. Mehrere Schreibweisen mit senkrechtem Strich. Leer: ganzes Regest zählt
 beteiligung_aktiv;ja;Vorschlagsformular „Änderung vorschlagen“ in den Sidebars von Urkunden, Personen und Orten: ja oder nein. Leer: aus
 beteiligung_endpunkt;https://forminit.com/f/u6sxymvk3fz;Zieladresse des Formulardienstes (Forminit, Formular-ID am Ende). Ohne https-Adresse bleibt das Formular aus

@@ -728,7 +728,7 @@ function zeichneKachelraster() {
   const raster = document.createElement('div');
   raster.className = 'regk-raster';
   raster.setAttribute('role', 'list');
-  raster.setAttribute('aria-label', 'Regesten-Kachelraster aller Urkunden');
+  raster.setAttribute('aria-label', 'Regesten aller Urkunden');
 
   let zielKarteElement = null;
   seiteRecords.forEach((record) => {

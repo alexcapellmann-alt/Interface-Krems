@@ -806,9 +806,12 @@ function zeichneTabelle() {
   // "adam_eissler" mit an. filtereRecords() selbst bleibt fuer die normale,
   // getippte Suche unveraendert; das Sucheingabefeld setzt exaktId beim
   // naechsten Tippen selbst wieder zurueck (siehe zeichnePersonenliste()).
-  const gefiltert = instanz.exaktId
+  const gesucht = instanz.exaktId
     ? records.filter((r) => r.personen_id === instanz.exaktId)
     : filtereRecords(records, suchbegriff);
+  // Seit 2026-10-28 (Wunsch des Autors, wie in der Ortsliste): mit „σ Unsicherheiten anzeigen“ nur die Personen
+  // mit Unsicherheitsmarkierung (eigene Anmerkung oder mehrere Schreibweisen, siehe unsicherheitsText())
+  const gefiltert = zeigeUnsicherheit && !instanz.exaktId ? gesucht.filter((r) => unsicherheitsText(r)) : gesucht;
   const sortiert = sortiereRecords(gefiltert, sortierung);
 
   const gesamtSeiten = Math.max(1, Math.ceil(sortiert.length / SEITENGROESSE));
@@ -830,7 +833,9 @@ function zeichneTabelle() {
   container.appendChild(bauePaginierung(instanz.aktuelleSeite, gesamtSeiten, seitenRecords.length, sortiert.length, 'unten'));
 
   const hinweis = instanz.hinweisElement;
-  hinweis.textContent = `${sortiert.length} von ${records.length} Personen angezeigt.`;
+  hinweis.textContent = zeigeUnsicherheit && !instanz.exaktId
+    ? `${sortiert.length} von ${records.length} Personen angezeigt (nur Personen mit unsicheren Angaben).`
+    : `${sortiert.length} von ${records.length} Personen angezeigt.`;
 }
 
 function zeichnePersonenliste() {

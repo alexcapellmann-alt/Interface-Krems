@@ -810,7 +810,7 @@ function zeichneSankey() {
     .attr('width', breite).attr('height', hoehePlot)
     .attr('viewBox', `0 0 ${breite} ${hoehePlot}`)
     .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
-    .attr('aria-label', 'Sankey-Diagramm: Urkunden-Kategorien und die darin genannten Orte');
+    .attr('aria-label', 'Kategoriefluss: Urkunden-Kategorien und die darin genannten Orte');
 
   svg.append('desc').text(
     `Links die Urkunden-Kategorien (mind. ${KATEGORIE_BUENDELUNG_SCHWELLE} Urkunden, sonst unter ` +

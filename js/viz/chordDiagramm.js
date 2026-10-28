@@ -385,7 +385,7 @@ function zeichneChordDiagramm() {
     .attr('width', breite).attr('height', hoehe)
     .attr('viewBox', `${-breite / 2} ${-hoehe / 2} ${breite} ${hoehe}`)
     .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
-    .attr('aria-label', 'Chord-Diagramm: Ko-Nennungen zwischen den sozialen Gruppen Dynastie, Adel, Klerus und Bürgertum');
+    .attr('aria-label', 'Soziale Gruppen: Ko-Nennungen zwischen Dynastie, Adel, Klerus und Bürgertum in den Urkunden');
 
   svg.append('desc').text(
     'Vier Segmente (Dynastie, Adel, Klerus, Bürgertum), Sehnen zeigen die Anzahl Urkunden, die ' +
