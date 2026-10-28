@@ -58,6 +58,16 @@ export function garantiereKontrast(hex) {
   return farbe.formatHex();
 }
 
+// Kategoriefarbe als Schriftfarbe auf hellem Grund (2026-10-28, Legende des Gantt-Diagramms): dunkelt die
+// Farbe so weit ab, bis sie auf dem Papierton der Seite mindestens 4,5:1 Kontrast hat; der Farbton bleibt.
+export function lesbareTextfarbe(hex, hintergrund = '#f7f5f0') {
+  const farbe = d3.hsl(hex);
+  for (let versuch = 0; versuch < 30 && wcagKontrast(farbe.formatHex(), hintergrund) < 4.5; versuch += 1) {
+    farbe.l = Math.max(0, farbe.l - 0.03);
+  }
+  return farbe.formatHex();
+}
+
 // Kategoriale Farbskala: Farbton gleichmäßig über den vollen Farbkreis verteilt
 // (nicht auf Rot/Grün beschränkt) UND Helligkeit zwischen zwei Stufen wechselnd -
 // letzteres sorgt dafür, dass benachbarte Kategorien sich auch bei

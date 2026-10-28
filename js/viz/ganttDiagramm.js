@@ -38,8 +38,8 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ACHSEN_SCHRIFTGROESSE, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
-import { baueBestandsHierarchie, baueTooltipText, kategorieVonKnoten, OHNE_KATEGORIE } from '../utils/bestandsHierarchie.js';
-import { baueBestandFarbSkala, OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
+import { baueBestandsHierarchie, baueTooltipText, kategorieVonKnoten, OHNE_KATEGORIE, parseUmfangLfm } from '../utils/bestandsHierarchie.js';
+import { baueBestandFarbSkala, OHNE_KATEGORIE_FARBE, lesbareTextfarbe } from '../utils/kategorieFarben.js';
 import {
   baueSidebarGeruest,
   oeffneSidebar as oeffneSidebarModul,
@@ -89,6 +89,20 @@ const MINDESTBALKENBREITE_PX = 24;
 // die kürzesten, auf MINDESTBALKENBREITE_PX geklemmten Zeiträume im Kontext
 // benachbarter Jahre klar auseinanderzuziehen.
 const ZOOM_SCALE_EXTENT = [1, 20];
+
+// Kategorie-Ansicht (Wunsch des Autors, 2026-10-28): eine Zeile je Kategorie mit einem Dichteband über
+// der Zeitachse - Dicke = Laufmeter der Kategorie, die aus diesem Jahr stammen. Die Laufmeter eines
+// Bestands werden gleichmäßig auf seine Laufzeit verteilt (10 lfm über 400 Jahre zählen je Jahr weniger
+// als 10 lfm aus einem Jahrzehnt). Bestände ohne Laufmeterangabe gehen nicht in die Dichte ein, werden
+// aber gezählt. Seit 2026-10-28 (Wunsch des Autors) ein gemeinsamer Maßstab für alle Zeilen, mit der
+// Quadratwurzel gestaucht, damit kleine Kategorien nicht zu Haarlinien werden - das Band zeigt so Zeit UND
+// Menge. Vorher war jede Zeile auf ihr eigenes Maximum bezogen; eine Kategorie mit einem einzigen Bestand
+// (Religion, 0,1 lfm) erschien dadurch als voller Block.
+const KATEGORIE_ZEILE = 46;
+const KATEGORIE_RAND = 6;        // Abstand des Bandes zum Zeilenrand
+const UEBERGANG_MS = 650;        // Dauer des animierten Wechsels Einzelbestände <-> Kategorien
+const MODUS_BESTAENDE = 'bestaende';
+const MODUS_KATEGORIEN = 'kategorien';
 
 let instanz = null; // { container, wurzel, sidebar, mitZeitraum, ohneZeitraum, kategorienNamen, kategorieFarbSkala, options, letzteBreite, zoomTransform, ausgewaehlterSchluessel, gruppeNachSchluessel, infoButton }
 
@@ -260,8 +274,7 @@ function fuegeStyleEin(container) {
     .gantt-werkzeugleiste { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
       gap: var(--space-3); margin: 0 0 var(--space-3) 0; flex: 0 0 auto; }
     .gantt-legende { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); align-items: center; }
-    .gantt-legende-eintrag { display: flex; align-items: center; gap: var(--space-1); font-size: var(--fs-sm); color: var(--text); }
-    .gantt-legende-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); flex: 0 0 auto; }
+    .gantt-legende-eintrag { font-size: var(--fs-sm); font-weight: 600; }
     /* Per CSS statt .attr() gesetzt - siehe Kommentar bei achseGruppe in
        zeichneGantt() dazu, warum ein .attr('font-size', ...) hier von
        d3.axisTop() selbst bei jedem Aufbau/Zoom-Schritt überschrieben würde. */
@@ -274,6 +287,18 @@ function fuegeStyleEin(container) {
        (ohne margin-left:auto) fälschlich an den LINKEN statt rechten Rand
        setzen (live reproduziert, siehe PROJEKTLOG). margin-left:auto bleibt
        unabhängig von Zeilenumbrüchen korrekt rechtsbündig. */
+    .gantt-modus-schalter { display: inline-flex; border: 1px solid var(--accent); border-radius: var(--radius); overflow: hidden; flex: 0 0 auto; }
+    .gantt-modus-schalter button { font: inherit; font-size: var(--fs-sm); min-height: 36px; padding: 0 var(--space-3); border: 0;
+      background: var(--surface); color: var(--accent); cursor: pointer; }
+    .gantt-modus-schalter button + button { border-left: 1px solid var(--accent); }
+    .gantt-modus-schalter button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+    .gantt-modus-schalter button:focus-visible { outline: 3px solid #e0b429; outline-offset: -3px; }
+    .gantt-namensspalte-zeile.gantt-kategorie-name { height: ${KATEGORIE_ZEILE}px; flex-direction: column; align-items: flex-start;
+      justify-content: center; gap: 0; font-size: var(--fs-sm); }
+    .gantt-namensspalte-zeile.gantt-kategorie-name .gantt-namensspalte-name { flex: 0 0 auto; width: 100%; font-weight: 600; }
+    .gantt-kategorie-meta { font-size: 11px; color: var(--text-muted); }
+    .gantt-kategorie-zeile.gantt-ausgewaehlt .gantt-kategorie-band { stroke: #e0b429; stroke-width: 2.5px; stroke-dasharray: none; }
+    .gantt-kategorie-zeile:hover .gantt-kategorie-band { filter: brightness(1.15); }
     .gantt-werkzeugleiste-rechts { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto;
       margin-left: auto; }
     .gantt-kopfzeile { display: flex; position: sticky; top: 0; z-index: 3; background: var(--surface);
@@ -500,41 +525,29 @@ function zeichneOhneZeitraumMarker(gruppe, ohneZeitraum, startIndex, kategorieFa
   return zeilen;
 }
 
-function zeichneZebraStreifen(svg, anzahlZeilen, breite) {
+function zeichneZebraStreifen(svg, anzahlZeilen, breite, zeilenHoehe = ZEILE_GESAMT) {
   svg.append('g').attr('aria-hidden', 'true')
     .selectAll('rect')
     .data(d3.range(anzahlZeilen))
     .join('rect')
-    .attr('x', 0).attr('y', (i) => i * ZEILE_GESAMT)
-    .attr('width', breite).attr('height', ZEILE_GESAMT)
+    .attr('x', 0).attr('y', (i) => i * zeilenHoehe)
+    .attr('width', breite).attr('height', zeilenHoehe)
     .attr('fill', (i) => (i % 2 === 0 ? 'transparent' : '#f7f6f2'));
 }
 
+// Seit 2026-10-28 (Wunsch des Autors): Kategorienamen in ihrer Farbe statt farbiger Kästchen davor - für die
+// Lesbarkeit so weit abgedunkelt, dass sie auf hellem Grund mindestens 4,5:1 Kontrast haben
 function baueLegende(legendeContainer, kategorienNamen, kategorieFarbSkala, hatOhneKategorie) {
   legendeContainer.innerHTML = '';
-  kategorienNamen.forEach((name) => {
+  const eintraege = kategorienNamen.map((name) => [name, kategorieFarbSkala(name)]);
+  if (hatOhneKategorie) eintraege.push([OHNE_KATEGORIE, OHNE_KATEGORIE_FARBE]);
+  eintraege.forEach(([name, farbe]) => {
     const eintrag = document.createElement('span');
     eintrag.className = 'gantt-legende-eintrag';
-    const swatch = document.createElement('span');
-    swatch.className = 'gantt-legende-swatch';
-    swatch.style.background = kategorieFarbSkala(name);
-    const label = document.createElement('span');
-    label.textContent = name;
-    eintrag.append(swatch, label);
+    eintrag.textContent = name;
+    eintrag.style.color = lesbareTextfarbe(farbe);
     legendeContainer.appendChild(eintrag);
   });
-  if (hatOhneKategorie) {
-    const eintrag = document.createElement('span');
-    eintrag.className = 'gantt-legende-eintrag';
-    const swatch = document.createElement('span');
-    swatch.className = 'gantt-legende-swatch';
-    swatch.style.background = OHNE_KATEGORIE_FARBE;
-    swatch.style.backgroundImage = 'repeating-linear-gradient(45deg, rgba(255,255,255,.6) 0 2px, transparent 2px 4px)';
-    const label = document.createElement('span');
-    label.textContent = OHNE_KATEGORIE;
-    eintrag.append(swatch, label);
-    legendeContainer.appendChild(eintrag);
-  }
 }
 
 // Baut die Namensspalte und gibt eine Map Schlüssel->Zeilen-Element zurück -
@@ -560,6 +573,7 @@ function baueNamensspalte(namensspalte, alleZeilen, container) {
     const name = document.createElement('span');
     name.className = 'gantt-namensspalte-name';
     name.textContent = blatt.data.name;
+    name.style.color = lesbareTextfarbe(farbeFuerBlatt(blatt, instanz.kategorieFarbSkala)); // 2026-10-28: in der Farbe der Kategorie
     zeile.appendChild(name);
     if (!Number.isFinite(blatt.von)) {
       const badge = document.createElement('span');
@@ -601,7 +615,9 @@ function baueNamensspalte(namensspalte, alleZeilen, container) {
 // funktionsfähig": ohne diese Einschränkung würde JEDES Mausrad-Ereignis über
 // der Zeitachse zoomen statt die Seite vertikal zu scrollen, sobald die Maus
 // über dem Diagramm steht.
-function wireZoom({ svgAuswahl, xSkalaBasis, achseGruppe, balkenAuswahl, textAuswahl, breite, hoehe }) {
+// `aktualisiere(xSkala)` (seit 2026-10-28): setzt alle zeitabhängigen Positionen - Balken in der
+// Einzelbestand-Ansicht, Dichtebänder in der Kategorie-Ansicht.
+function wireZoom({ svgAuswahl, xSkalaBasis, achseGruppe, aktualisiere, breite, hoehe }) {
   // extent()/translateExtent() bewusst auf die TATSÄCHLICHE Pixel-Fläche der
   // Zeitbereich-SVG gesetzt (nicht nur eine schmale x-Leiste) - d3.zoom()
   // nutzt dieses Rechteck intern für seine Zeiger-/Constraint-Berechnung
@@ -622,7 +638,7 @@ function wireZoom({ svgAuswahl, xSkalaBasis, achseGruppe, balkenAuswahl, textAus
       instanz.zoomTransform = event.transform;
       const neueXSkala = event.transform.rescaleX(xSkalaBasis);
       zeichneAchse(achseGruppe, neueXSkala);
-      aktualisierePositionen(balkenAuswahl, textAuswahl, neueXSkala);
+      aktualisiere(neueXSkala);
     });
 
   svgAuswahl.call(zoomVerhalten);
@@ -630,6 +646,310 @@ function wireZoom({ svgAuswahl, xSkalaBasis, achseGruppe, balkenAuswahl, textAus
     svgAuswahl.call(zoomVerhalten.transform, instanz.zoomTransform);
   }
   return zoomVerhalten;
+}
+
+// --- Kategorie-Ansicht (2026-10-28) ------------------------------------------------------------------
+
+// Eine Zeile je Kategorie; `knoten` ist der d3-Hierarchieknoten der Kategorie (enthält alle Blätter, so
+// funktioniert auch die Vorschau-Hervorhebung der Bestand-Suche, js/utils/bestandVorschau.js).
+// Reihenfolge nach dem zeitlichen Schwerpunkt (nach Laufmetern gewichtete Laufzeitmitte).
+function baueKategorieZeilen(mitZeitraum, ohneZeitraum) {
+  const nachKnoten = new Map();
+  const zeileFuer = (blatt) => {
+    const knoten = blatt.ancestors().find((a) => a.depth === 1) || blatt;
+    if (!nachKnoten.has(knoten)) nachKnoten.set(knoten, { knoten, name: kategorieVonKnoten(blatt), blaetter: [], ohneZeitraum: 0 });
+    return nachKnoten.get(knoten);
+  };
+  mitZeitraum.forEach((b) => zeileFuer(b).blaetter.push(b));
+  ohneZeitraum.forEach((b) => { zeileFuer(b).ohneZeitraum += 1; });
+  const zeilen = [...nachKnoten.values()].filter((z) => z.blaetter.length > 0).map((z) => {
+    const jeJahr = new Map();
+    let lfm = 0;
+    let gewicht = 0;
+    let schwerpunkt = 0;
+    z.blaetter.forEach((b) => {
+      const umfang = parseUmfangLfm(b.data.record.umfang_lfm);
+      lfm += umfang;
+      const jahre = b.bis - b.von + 1;
+      for (let j = b.von; j <= b.bis; j += 1) jeJahr.set(j, (jeJahr.get(j) || 0) + umfang / jahre);
+      const g = umfang || 0.0001; // ohne Laufmeter: nur für die Reihenfolge, nicht für die Dichte
+      gewicht += g;
+      schwerpunkt += (g * (b.von + b.bis)) / 2;
+    });
+    const von = d3.min(z.blaetter, (b) => b.von);
+    const bis = d3.max(z.blaetter, (b) => b.bis);
+    const dichte = [[von - 1, 0]];
+    for (let j = von; j <= bis; j += 1) dichte.push([j, jeJahr.get(j) || 0]);
+    dichte.push([bis + 1, 0]);
+    const ohneLfm = z.blaetter.filter((b) => !parseUmfangLfm(b.data.record.umfang_lfm)).length;
+    return { ...z, von, bis, lfm, ohneLfm, dichte, max: d3.max(dichte, (d) => d[1]) || 0, schwerpunkt: schwerpunkt / gewicht };
+  });
+  return zeilen.sort((a, b) => a.schwerpunkt - b.schwerpunkt);
+}
+
+const anzahlBestaende = (n) => `${n} ${n === 1 ? 'Bestand' : 'Bestände'}`;
+const lfmText = (wert) => `${wert.toLocaleString('de-AT', { maximumFractionDigits: 1 })} lfm`;
+
+function kategorieFarbe(zeile, kategorieFarbSkala) {
+  return zeile.name === OHNE_KATEGORIE ? OHNE_KATEGORIE_FARBE : kategorieFarbSkala(zeile.name);
+}
+
+function baueKategorieTooltipText(zeile, zeigeUnsicherheit) {
+  const zeilen = [
+    zeile.name,
+    `${anzahlBestaende(zeile.blaetter.length)} mit Zeitraum${zeile.ohneZeitraum ? `, ${zeile.ohneZeitraum} ohne` : ''}`,
+    `Umfang: ${lfmText(zeile.lfm)}${zeile.ohneLfm ? ` (${zeile.ohneLfm} ohne Angabe)` : ''}`,
+    `Zeitraum: ${zeile.von}–${zeile.bis}, Schwerpunkt um ${Math.round(zeile.schwerpunkt)}`
+  ];
+  const unsicher = zeile.blaetter.filter((b) => b.data.record.daten_unsicher).length;
+  if (zeigeUnsicherheit && unsicher) zeilen.push(`${WARN_SYMBOL} ${unsicher} davon mit unsicheren Angaben`);
+  return zeilen.join('\n');
+}
+
+// Sidebar einer Kategorie: ihre Bestände nach Beginn, Klick öffnet den Bestand (Zurück führt zur Liste)
+function zeigeKategorieListe(zeile) {
+  const { sidebar, titel, koerper, zurueckBtn } = instanz.sidebar;
+  instanz.ausgewaehlteKategorie = zeile.name;
+  instanz.sidebar._kategorieListe = null;
+  aktualisiereKategorieMarkierung();
+  titel.textContent = zeile.name;
+  koerper.innerHTML = '';
+  const anzahl = document.createElement('p');
+  anzahl.className = 'bestand-sidebar-urkunden-anzahl';
+  anzahl.textContent = `${anzahlBestaende(zeile.blaetter.length)}, ${lfmText(zeile.lfm)}, ${zeile.von}–${zeile.bis}`;
+  const liste = document.createElement('ul');
+  liste.className = 'bestand-sidebar-urkunden-liste';
+  [...zeile.blaetter].sort((a, b) => a.von - b.von).forEach((blatt) => {
+    const li = document.createElement('li');
+    li.className = 'bestand-sidebar-urkunden-eintrag';
+    li.tabIndex = 0;
+    li.setAttribute('role', 'button');
+    const kopf = document.createElement('span');
+    kopf.className = 'bestand-sidebar-urkunden-signatur';
+    kopf.textContent = blatt.data.name;
+    const info = document.createElement('p');
+    info.className = 'bestand-sidebar-urkunden-regest';
+    const umfang = parseUmfangLfm(blatt.data.record.umfang_lfm);
+    info.textContent = `${blatt.von}–${blatt.bis}${umfang ? ` · ${lfmText(umfang)}` : ''}`;
+    li.append(kopf, info);
+    const oeffnen = () => {
+      oeffneSidebarModul(instanz.sidebar, blatt.data.record, { kategorieName: zeile.name, kategorieFarbe: farbeFuerBlatt(blatt, instanz.kategorieFarbSkala) });
+      instanz.sidebar._kategorieListe = zeile;
+      zurueckBtn.hidden = false;
+    };
+    li.addEventListener('click', oeffnen);
+    li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); oeffnen(); } });
+    liste.appendChild(li);
+  });
+  koerper.append(anzahl, liste);
+  zurueckBtn.hidden = true;
+  sidebar.classList.add('offen');
+  sidebar.setAttribute('aria-hidden', 'false');
+  sidebar.inert = false;
+  titel.focus();
+}
+
+// Klick auf dieselbe Kategorie bei offener Sidebar schließt sie wieder (wie bei den Einzelbeständen)
+function waehleKategorie(zeile) {
+  if (instanz.ausgewaehlteKategorie === zeile.name && instanz.sidebar.sidebar.classList.contains('offen')) {
+    instanz.ausgewaehlteKategorie = null;
+    instanz.sidebar._kategorieListe = null;
+    aktualisiereKategorieMarkierung();
+    schliesseSidebarModul(instanz.sidebar, instanz.kategorieElemente?.get(zeile.name)?.zeile);
+    return;
+  }
+  zeigeKategorieListe(zeile);
+}
+
+function aktualisiereKategorieMarkierung() {
+  instanz.kategorieElemente?.forEach(({ zeile, gruppe }, name) => {
+    const an = name === instanz.ausgewaehlteKategorie;
+    zeile.classList.toggle('gantt-ausgewaehlt', an);
+    gruppe?.classList.toggle('gantt-ausgewaehlt', an);
+  });
+}
+
+// Zeichnet Namensspalte und Dichtebänder; gibt die Auswahl der Band-Gruppen zurück (für die Animation)
+function zeichneKategorieAnsicht({ namensspalte, zeitbereich, xSkalaBasis, achseGruppe, zeitbereichBreite, zoomButtons }) {
+  const { container, kategorieZeilen, kategorieFarbSkala, options } = instanz;
+  const zeigeUnsicherheit = options.showUncertainty;
+  const hoehe = kategorieZeilen.length * KATEGORIE_ZEILE;
+  instanz.kategorieElemente = new Map();
+
+  namensspalte.innerHTML = '';
+  kategorieZeilen.forEach((zeile) => {
+    const div = document.createElement('div');
+    div.className = 'gantt-namensspalte-zeile gantt-kategorie-name';
+    div.tabIndex = 0;
+    div.setAttribute('role', 'button');
+    div.setAttribute('aria-label', `${zeile.name}, ${anzahlBestaende(zeile.blaetter.length)}, ${zeile.von}–${zeile.bis}, Bestände anzeigen`);
+    const name = document.createElement('span');
+    name.className = 'gantt-namensspalte-name';
+    name.textContent = zeile.name;
+    name.style.color = lesbareTextfarbe(kategorieFarbe(zeile, kategorieFarbSkala)); // 2026-10-28: Name in der Kategoriefarbe
+    const meta = document.createElement('span');
+    meta.className = 'gantt-kategorie-meta';
+    meta.textContent = `${anzahlBestaende(zeile.blaetter.length)} · ${lfmText(zeile.lfm)}`;
+    div.append(name, meta);
+    div.addEventListener('click', () => waehleKategorie(zeile));
+    div.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); waehleKategorie(zeile); } });
+    div.addEventListener('mouseenter', () => zeigeTooltip(baueKategorieTooltipText(zeile, zeigeUnsicherheit), div, container));
+    div.addEventListener('mouseleave', () => versteckeTooltip());
+    namensspalte.appendChild(div);
+    instanz.kategorieElemente.set(zeile.name, { zeile: div, gruppe: null });
+  });
+
+  const svg = d3.select(zeitbereich).append('svg')
+    .attr('width', zeitbereichBreite).attr('height', Math.max(hoehe, 1))
+    .attr('role', 'group')
+    .attr('aria-label', `Gantt-Diagramm nach Kategorien: ${kategorieZeilen.length} Kategorien`);
+  svg.append('desc').text('Eine Zeile je Kategorie. Das Band zeigt, aus welcher Zeit die Bestände der Kategorie '
+    + 'stammen: je dicker, desto mehr Laufmeter aus diesen Jahren. Die dünne Linie reicht vom frühesten bis zum spätesten Jahr.');
+  zeichneZebraStreifen(svg, kategorieZeilen.length, zeitbereichBreite, KATEGORIE_ZEILE);
+
+  const mitte = KATEGORIE_ZEILE / 2;
+  const halb = mitte - KATEGORIE_RAND;
+  const gesamtMax = d3.max(kategorieZeilen, (z) => z.max) || 1;
+  const dicke = (wert) => Math.sqrt(wert / gesamtMax) * halb; // gemeinsamer Maßstab, Quadratwurzel
+  const gruppen = svg.append('g').selectAll('g.gantt-kategorie-zeile')
+    .data(kategorieZeilen.map((z) => z.knoten))
+    .join('g')
+    .attr('class', 'gantt-kategorie-zeile')
+    .attr('transform', (d, i) => `translate(0,${i * KATEGORIE_ZEILE})`)
+    .style('cursor', 'pointer');
+  // unsichtbare Trefferfläche über die ganze Zeile, damit auch dünne Bandstellen klickbar sind
+  gruppen.append('rect').attr('width', zeitbereichBreite).attr('height', KATEGORIE_ZEILE).attr('fill', 'transparent');
+  const formen = gruppen.append('g').attr('class', 'gantt-kategorie-form').attr('pointer-events', 'none');
+  const linien = formen.append('line')
+    .attr('y1', mitte).attr('y2', mitte)
+    .attr('stroke', (d, i) => kategorieFarbe(kategorieZeilen[i], kategorieFarbSkala))
+    .attr('stroke-width', 1.5).attr('stroke-opacity', 0.55);
+  const baender = formen.append('path')
+    .attr('class', 'gantt-kategorie-band')
+    .attr('fill', (d, i) => kategorieFarbe(kategorieZeilen[i], kategorieFarbSkala))
+    .attr('stroke', (d, i) => (zeigeUnsicherheit && kategorieZeilen[i].blaetter.some((b) => b.data.record.daten_unsicher) ? '#c0392b' : 'none'))
+    .attr('stroke-dasharray', '4,3');
+  gruppen.each(function verdrahte(d, i) {
+    const zeile = kategorieZeilen[i];
+    const eintrag = instanz.kategorieElemente.get(zeile.name);
+    eintrag.gruppe = this;
+    d3.select(this)
+      .on('click', () => waehleKategorie(zeile))
+      .on('mouseenter', (event) => {
+        zeigeTooltip(baueKategorieTooltipText(zeile, zeigeUnsicherheit), event.currentTarget, container);
+        eintrag.zeile.classList.add('gantt-hervorgehoben');
+      })
+      .on('mouseleave', () => {
+        versteckeTooltip();
+        eintrag.zeile.classList.remove('gantt-hervorgehoben');
+      });
+  });
+
+  const aktualisiere = (x) => {
+    linien.attr('x1', (d, i) => x(kategorieZeilen[i].von)).attr('x2', (d, i) => x(kategorieZeilen[i].bis + 1));
+    baender.attr('d', (d, i) => {
+      const zeile = kategorieZeilen[i];
+      if (!zeile.max) return null;
+      return d3.area()
+        .x((p) => x(p[0]))
+        .y0((p) => mitte - dicke(p[1]))
+        .y1((p) => mitte + dicke(p[1]))
+        .curve(d3.curveBasis)(zeile.dichte);
+    });
+  };
+  aktualisiere(instanz.zoomTransform ? instanz.zoomTransform.rescaleX(xSkalaBasis) : xSkalaBasis);
+  aktualisiereKategorieMarkierung();
+
+  const zoomVerhalten = wireZoom({ svgAuswahl: svg, xSkalaBasis, achseGruppe, aktualisiere, breite: zeitbereichBreite, hoehe: Math.max(hoehe, 1) });
+  zoomButtons.rein.addEventListener('click', () => svg.call(zoomVerhalten.scaleBy, 1.5));
+  zoomButtons.raus.addEventListener('click', () => svg.call(zoomVerhalten.scaleBy, 1 / 1.5));
+  zoomButtons.reset.addEventListener('click', () => svg.call(zoomVerhalten.transform, d3.zoomIdentity));
+  return formen;
+}
+
+// --- Animierter Wechsel Einzelbestände <-> Kategorien ------------------------------------------------
+// d3-Übergänge laufen über requestAnimationFrame, das in Hintergrund-Tabs ruht. Jeder Schritt endet
+// deshalb zusätzlich nach fester Zeit (setTimeout) im Endzustand - die Ansicht bleibt nie halb animiert.
+
+const ohneAnimation = () => document.hidden || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+function nachUebergang(auswahl, dauer, endzustand) {
+  return new Promise((fertig) => {
+    setTimeout(() => {
+      auswahl.interrupt();
+      endzustand(auswahl);
+      fertig();
+    }, dauer + 80);
+  });
+}
+
+async function wechsleModus(neuerModus) {
+  if (!instanz || instanz.modus === neuerModus || instanz.wechseltModus) return;
+  const zeilenIndex = new Map(instanz.kategorieZeilen.map((z, i) => [z.name, i]));
+  const yKategorie = (blatt) => (zeilenIndex.get(kategorieVonKnoten(blatt)) ?? 0) * KATEGORIE_ZEILE + KATEGORIE_ZEILE / 2 - ZEILENHOEHE / 2;
+  const mitte = KATEGORIE_ZEILE / 2;
+  const flach = (sel) => sel.attr('transform', `translate(0,${mitte * 0.9}) scale(1,0.1)`).style('opacity', 0.3);
+  const voll = (sel) => sel.attr('transform', 'translate(0,0) scale(1,1)').style('opacity', 1);
+  instanz.ausgewaehlterSchluessel = null;
+  instanz.ausgewaehlteKategorie = null;
+  instanz.sidebar._kategorieListe = null;
+  if (instanz.sidebar.sidebar.classList.contains('offen')) schliesseSidebarModul(instanz.sidebar);
+  if (ohneAnimation()) { instanz.modus = neuerModus; zeichneGantt(); return; }
+  instanz.wechseltModus = true;
+  const nebenElemente = () => d3.select(instanz.wurzel).selectAll('.gantt-namensspalte-zeile, g.gantt-ohne-zeitraum-marker');
+  try {
+    if (neuerModus === MODUS_KATEGORIEN) {
+      // 1. Balken gleiten in die Zeile ihrer Kategorie und verblassen, die Namen treten zurück
+      const balken = d3.select(instanz.wurzel).selectAll('g.gantt-balken-zeile');
+      const ziel = (sel) => sel.attr('transform', (d) => `translate(0,${yKategorie(d)})`).style('opacity', 0.15);
+      balken.transition().duration(UEBERGANG_MS).ease(d3.easeCubicInOut).call(ziel);
+      nebenElemente().transition().duration(UEBERGANG_MS / 2).style('opacity', 0);
+      await nachUebergang(balken, UEBERGANG_MS, ziel);
+      // 2. Kategorie-Ansicht zeichnen, die Bänder wachsen aus ihrer Mittellinie
+      instanz.modus = neuerModus;
+      const formen = zeichneGantt();
+      flach(formen);
+      formen.transition().duration(UEBERGANG_MS * 0.6).ease(d3.easeCubicOut).call(voll);
+      await nachUebergang(formen, UEBERGANG_MS * 0.6, voll);
+    } else {
+      // 1. Bänder ziehen sich auf ihre Mittellinie zusammen
+      const formen = d3.select(instanz.wurzel).selectAll('g.gantt-kategorie-form');
+      formen.transition().duration(UEBERGANG_MS * 0.5).ease(d3.easeCubicIn).call(flach);
+      await nachUebergang(formen, UEBERGANG_MS * 0.5, flach);
+      // 2. Einzelbestände zeichnen; jeder Balken startet in der Zeile seiner Kategorie und fächert auf
+      instanz.modus = neuerModus;
+      zeichneGantt();
+      const balken = d3.select(instanz.wurzel).selectAll('g.gantt-balken-zeile');
+      const endTransform = new Map();
+      balken.each(function merke() { endTransform.set(this, this.getAttribute('transform')); });
+      const auf = (sel) => sel.attr('transform', function ende() { return endTransform.get(this); }).style('opacity', 1);
+      balken.attr('transform', (d) => `translate(0,${yKategorie(d)})`).style('opacity', 0.15);
+      balken.transition().duration(UEBERGANG_MS).delay((d, i) => Math.min(i * 0.8, 200)).ease(d3.easeCubicInOut).call(auf);
+      nebenElemente().style('opacity', 0).transition().delay(UEBERGANG_MS / 2).duration(UEBERGANG_MS / 2).style('opacity', 1);
+      await nachUebergang(balken, UEBERGANG_MS + 200, auf);
+      nebenElemente().interrupt().style('opacity', null);
+    }
+  } finally {
+    if (instanz) instanz.wechseltModus = false;
+  }
+}
+
+
+// Schalter „Einzelbestände | Kategorien“ in der Werkzeugleiste (seit 2026-10-28 wieder hier, Wunsch des Autors)
+function baueModusSchalter(ziel) {
+  const gruppe = document.createElement('div');
+  gruppe.className = 'gantt-modus-schalter';
+  gruppe.setAttribute('role', 'group');
+  gruppe.setAttribute('aria-label', 'Darstellung');
+  [[MODUS_BESTAENDE, 'Einzelbestände'], [MODUS_KATEGORIEN, 'Kategorien']].forEach(([modus, text]) => {
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.textContent = text;
+    knopf.setAttribute('aria-pressed', String(instanz.modus === modus));
+    knopf.addEventListener('click', () => wechsleModus(modus));
+    gruppe.appendChild(knopf);
+  });
+  ziel.prepend(gruppe);
 }
 
 function zeichneGantt() {
@@ -683,6 +1003,8 @@ function zeichneGantt() {
   const werkzeugleisteRechts = document.createElement('div');
   werkzeugleisteRechts.className = 'gantt-werkzeugleiste-rechts';
   const zoomButtons = erzeugeZoomSteuerung(werkzeugleisteRechts);
+  baueModusSchalter(werkzeugleiste);
+  const kategorieModus = instanz.modus === MODUS_KATEGORIEN;
   const btnRaus = zoomButtons.raus;
   const btnReset = zoomButtons.reset;
   const btnRein = zoomButtons.rein;
@@ -696,7 +1018,7 @@ function zeichneGantt() {
   kopfzeile.className = 'gantt-kopfzeile';
   const kopfPlatzhalter = document.createElement('div');
   kopfPlatzhalter.className = 'gantt-kopf-namensplatzhalter';
-  kopfPlatzhalter.textContent = 'Bestand';
+  kopfPlatzhalter.textContent = kategorieModus ? 'Kategorie' : 'Bestand';
   const kopfAchseBereich = document.createElement('div');
   kopfAchseBereich.className = 'gantt-kopf-achse-bereich';
   kopfzeile.append(kopfPlatzhalter, kopfAchseBereich);
@@ -712,10 +1034,9 @@ function zeichneGantt() {
   wurzel.append(werkzeugleiste, kopfzeile, koerper);
 
   const hatOhneKategorie = [...mitZeitraum, ...ohneZeitraum].some((b) => kategorieVonKnoten(b) === OHNE_KATEGORIE);
-  baueLegende(legende, kategorienNamen, kategorieFarbSkala, hatOhneKategorie);
+  if (!kategorieModus) baueLegende(legende, kategorienNamen, kategorieFarbSkala, hatOhneKategorie);
 
   const alleZeilen = [...mitZeitraum, ...ohneZeitraum];
-  const zeileNachSchluessel = baueNamensspalte(namensspalte, alleZeilen, container);
 
   const zeitbereichBreite = Math.max(breite - NAMENSSPALTE_BREITE, 200);
   const gesamtHoehe = alleZeilen.length * ZEILE_GESAMT;
@@ -752,7 +1073,15 @@ function zeichneGantt() {
   // Problem etablierte Muster (.zeitachse-x-achse), hier unter
   // .gantt-x-achse für Gantt übernommen.
   const achseGruppe = achseSvg.append('g').attr('class', 'gantt-x-achse').attr('transform', `translate(0,${ACHSE_HOEHE})`);
-  zeichneAchse(achseGruppe, xSkalaBasis);
+  zeichneAchse(achseGruppe, instanz.zoomTransform ? instanz.zoomTransform.rescaleX(xSkalaBasis) : xSkalaBasis);
+
+  if (kategorieModus) {
+    instanz.gruppeNachSchluessel = new Map();
+    instanz.zeileNachSchluessel = null;
+    return zeichneKategorieAnsicht({ namensspalte, zeitbereich, xSkalaBasis, achseGruppe, zeitbereichBreite, zoomButtons });
+  }
+  instanz.kategorieElemente = null;
+  const zeileNachSchluessel = baueNamensspalte(namensspalte, alleZeilen, container);
 
   const svg = d3.select(zeitbereich).append('svg')
     .attr('width', zeitbereichBreite).attr('height', Math.max(gesamtHoehe, 1))
@@ -792,8 +1121,7 @@ function zeichneGantt() {
     svgAuswahl: svg,
     xSkalaBasis,
     achseGruppe,
-    balkenAuswahl: balken,
-    textAuswahl: texte,
+    aktualisiere: (x) => aktualisierePositionen(balken, texte, x),
     breite: zeitbereichBreite,
     hoehe: Math.max(gesamtHoehe, 1)
   });
@@ -807,6 +1135,7 @@ function zeichneGantt() {
   btnRein.addEventListener('click', () => svg.call(zoomVerhalten.scaleBy, 1.5));
   btnRaus.addEventListener('click', () => svg.call(zoomVerhalten.scaleBy, 1 / 1.5));
   btnReset.addEventListener('click', () => svg.call(zoomVerhalten.transform, d3.zoomIdentity));
+  return null;
 }
 
 export function render(container, data, options = {}) {
@@ -859,12 +1188,24 @@ export function render(container, data, options = {}) {
     letzteBreite: null,
     zoomTransform: null,
     ausgewaehlterSchluessel: null,
-    gruppeNachSchluessel: new Map()
+    gruppeNachSchluessel: new Map(),
+    modus: MODUS_BESTAENDE, // 2026-10-28: Einzelbestände oder Kategorien
+    kategorieZeilen: baueKategorieZeilen(mitZeitraum, ohneZeitraum),
+    ausgewaehlteKategorie: null,
+    kategorieElemente: null,
+    wechseltModus: false
   };
+  // Zurück aus einem Bestand in die Liste seiner Kategorie (Kategorie-Ansicht)
+  sidebar.zurueckBtn.addEventListener('click', () => {
+    if (instanz?.sidebar._kategorieListe) zeigeKategorieListe(instanz.sidebar._kategorieListe);
+  });
   sidebar.schliessenBtn.addEventListener('click', () => {
     const zielElement = instanz.gruppeNachSchluessel.get(instanz.ausgewaehlterSchluessel);
     instanz.ausgewaehlterSchluessel = null;
+    instanz.ausgewaehlteKategorie = null;
+    instanz.sidebar._kategorieListe = null;
     aktualisiereAuswahlMarkierung();
+    aktualisiereKategorieMarkierung();
     schliesseSidebarModul(instanz.sidebar, zielElement);
   });
   zeichneGantt();
@@ -889,6 +1230,7 @@ export function oeffneDatensatz(kuerzel) {
   if (!instanz) return false;
   const blatt = [...instanz.mitZeitraum, ...instanz.ohneZeitraum].find((b) => b.data?.record?.kuerzel === kuerzel);
   if (!blatt) return false;
+  if (instanz.modus !== MODUS_BESTAENDE) { instanz.modus = MODUS_BESTAENDE; zeichneGantt(); } // Suche zeigt den einzelnen Bestand
   if (instanz.ausgewaehlterSchluessel !== schluesselFuerBlatt(blatt)) waehleBestand(blatt);
   instanz.gruppeNachSchluessel.get(schluesselFuerBlatt(blatt))?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   return true;
