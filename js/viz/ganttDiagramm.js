@@ -219,6 +219,10 @@ function aktualisiereAuswahlMarkierung() {
   instanz.gruppeNachSchluessel.forEach((element, schluessel) => {
     element.classList.toggle('gantt-ausgewaehlt', schluessel === instanz.ausgewaehlterSchluessel);
   });
+  // Seit 2026-10-28 auch die Zeile der Namensspalte (Wunsch des Autors: bei offener Sidebar hervorgehoben)
+  instanz.zeileNachSchluessel?.forEach((element, schluessel) => {
+    element.classList.toggle('gantt-ausgewaehlt', schluessel === instanz.ausgewaehlterSchluessel);
+  });
 }
 
 // Punkt 1 (Sidebar bei Balken-Klick), dasselbe bereits dreimal erprobte
@@ -301,6 +305,8 @@ function fuegeStyleEin(container) {
     .gantt-namensspalte-zeile { display: flex; align-items: center; gap: var(--space-1); height: ${ZEILE_GESAMT}px;
       padding: 0 var(--space-2); font-size: ${MIN_SCHRIFTGROESSE}px; box-sizing: border-box; }
     .gantt-namensspalte-zeile:nth-child(even) { background: #f7f6f2; }
+    .gantt-namensspalte-zeile { cursor: pointer; }
+    .gantt-namensspalte-zeile:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
     .gantt-namensspalte-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .gantt-namensspalte-badge { flex: 0 0 auto; font-size: 9px; color: var(--text-muted); border: 1px solid var(--border);
       border-radius: 3px; padding: 0 3px; white-space: nowrap; }
@@ -341,10 +347,11 @@ function fuegeStyleEin(container) {
        Auswahl soll nicht von einem flüchtigen Hover überdeckt werden. */
     .gantt-balken-zeile.gantt-ausgewaehlt rect.gantt-balken,
     .gantt-ohne-zeitraum-marker.gantt-ausgewaehlt rect.gantt-ohne-zeitraum-sichtbar {
-      stroke: var(--accent); stroke-width: 3px; stroke-dasharray: none;
-      filter: none;
+      stroke: #e0b429; stroke-width: 3px; stroke-dasharray: none;
+      filter: drop-shadow(0 0 2px rgba(224, 180, 41, .8));
     }
-    .gantt-namensspalte-zeile.gantt-ausgewaehlt { background: #dbe6f0; box-shadow: inset 3px 0 0 var(--accent); }
+    /* 2026-10-28: Gold der Startseite statt --accent - das Blau verschwand auf den nun blauen Kategorien */
+    .gantt-namensspalte-zeile.gantt-ausgewaehlt { background: #f6ecd0; box-shadow: inset 4px 0 0 #c99a3a; font-weight: 600; }
   `;
   container.appendChild(style);
 }
@@ -562,6 +569,15 @@ function baueNamensspalte(namensspalte, alleZeilen, container) {
     }
     zeile.addEventListener('mouseenter', () => zeigeTooltip(baueGanttTooltipText(blatt), zeile, container));
     zeile.addEventListener('mouseleave', () => versteckeTooltip());
+    // Seit 2026-10-28 (Wunsch des Autors): auch ein Klick auf den Namen öffnet bzw. schließt die Sidebar,
+    // wie der Klick auf den Balken
+    zeile.tabIndex = 0;
+    zeile.setAttribute('role', 'button');
+    zeile.setAttribute('aria-label', `${blatt.data.name}, Details anzeigen`);
+    zeile.addEventListener('click', () => waehleBestand(blatt));
+    zeile.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); waehleBestand(blatt); }
+    });
     fragment.appendChild(zeile);
     zeileNachSchluessel.set(schluesselFuerBlatt(blatt), zeile);
   });
@@ -763,6 +779,7 @@ function zeichneGantt() {
 
   const gruppenAuswahlen = [balkenZeilen, ohneZeitraumZeilen];
   instanz.gruppeNachSchluessel = baueGruppeNachSchluessel(gruppenAuswahlen);
+  instanz.zeileNachSchluessel = zeileNachSchluessel;
   wireHervorhebung(zeileNachSchluessel, instanz.gruppeNachSchluessel, gruppenAuswahlen);
   // Nach jedem Redraw (resize()/Unsicherheiten-Toggle entstehen die Balken-/
   // Marker-Knoten komplett neu) die Auswahl-Markierung auf die neuen Knoten

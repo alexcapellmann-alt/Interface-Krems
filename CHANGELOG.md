@@ -7,6 +7,20 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (144) – Sidebar-Umschalter, Gantt-Namensspalte, Ansicht-Wechsel im Bestand, Bilderwand-Ortskreise
+
+- Interface-weit: Ein zweiter Klick auf das Feld, das eine Sidebar geöffnet hat, klappt sie wieder ein (`js/utils/sidebarUmschalter.js`, in `app.js` aktiviert). Gilt für alle Sidebars aus `baueSidebarGeruest()`; geschlossen wird über deren eigenen „×“-Knopf, damit jedes Modul seine Auswahl selbst zurücksetzt. „Dasselbe Feld“ = dasselbe Element oder derselbe d3-Datensatz (z. B. Fläche und Beschriftung einer Kachel). Die Bilderwand (Zeichenfläche) regelt das selbst.
+- Gantt-Diagramm: Klick auf einen Bestandstitel in der Namensspalte öffnet bzw. schließt die Sidebar wie der Balken (auch per Tastatur). Bei offener Sidebar sind Zeile und Balken hervorgehoben, jetzt in Gold statt Akzentblau (auf den blauen Kategorien sonst kaum sichtbar).
+- Icicle und Circle Packing ausgeblendet (`ansichten.csv`, `anbieten` = `nein`); Einleitungstext der Bestand-Seite angepasst.
+- Sunburst: dünnere Trennlinien und kleinere Lücken zwischen einzelnen Beständen. Der äußere Ring (über 300 schmale Segmente) wirkte durch die weißen 1-px-Ränder blasser als die Treemap, obwohl beide dieselbe Palette nutzen.
+- Treemap, Sunburst, Gantt: Knöpfe „Ansicht zu … wechseln“ für die beiden anderen Ansichten, neben dem Suchfeld (`zeigeAnsichtWechselKnoepfe()` in `app.js`; zeigt immer die übrigen angebotenen Bestand-Ansichten).
+- Bilderwand: Ortskreise der Karte in dunklerem Gold (`FARBE.kreis` #b8964f statt #f2d48a, Hof schwächer); Beschriftungen und Bögen unverändert.
+- Geprüft auf dem Testserver 8845: Umschalter in Treemap, Sunburst, Gantt (Name und Balken), Personenliste, Ortsliste, Chord-Diagramm, Zeitachse, Karte und Bilderwand; Wechsel-Knöpfe in allen drei Ansichten; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (143) – Neue Farbpalette der Bestand-Visualisierungen („Vier Familien“)
 
 - Treemap, Sunburst, Icicle, Circle Packing und Gantt-Diagramm färben die Kategorien nicht mehr gleichmäßig über den Farbkreis (kräftig, Violett/Pink/Grün), sondern mit den vier Farbverläufen der Startseite: Tintenblau, Petrol, Braun-Gold, Bordeaux, je mit Varianten (`baueBestandFarbSkala()` in `js/utils/kategorieFarben.js`).

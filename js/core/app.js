@@ -142,6 +142,7 @@ import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { zeigeBestandVorschau } from '../utils/bestandVorschau.js';
+import { aktiviereSidebarUmschalter } from '../utils/sidebarUmschalter.js';
 import { aktualisiereHintergrundkarte } from '../utils/hintergrundKarte.js';
 import { erzeugeAnsichtenLeiste } from './ansichtenLeiste.js';
 import { erzeugeUnterleistenSchalter } from '../utils/unterleistenSchalter.js';
@@ -767,6 +768,12 @@ function stelleVizFlyoutSicher(kontext) {
       // 2026-10-28: Vorschlag unter der Maus bzw. Pfeiltasten-Auswahl vorab hervorheben
       onVorschau: (record) => zeigeBestandVorschau(kontext.vizContainer, record ? String(record.kuerzel ?? '').trim() : null)
     });
+    // 2026-10-28: Knöpfe „Ansicht zu … wechseln“ für die übrigen angebotenen Bestand-Ansichten
+    kontext.ansichtWechselLeiste = document.createElement('div');
+    kontext.ansichtWechselLeiste.className = 'ansicht-wechsel-leiste';
+    kontext.ansichtWechselLeiste.setAttribute('role', 'group');
+    kontext.ansichtWechselLeiste.setAttribute('aria-label', 'Ansicht wechseln');
+    unsicherheitsContainer.appendChild(kontext.ansichtWechselLeiste);
   }
   // Siehe kontext.eigenerFlyoutNoetig-Kommentar in erzeugeGalerieFlyoutKontext()
   // oben: für Bestand bewusst ausgelassen (permanenter Icon-Flyout aus Punkt 2
@@ -776,6 +783,24 @@ function stelleVizFlyoutSicher(kontext) {
   // Flyouts der übrigen Bereiche (bereichsLeiste.js, verankereVizFlyout) bleiben. Vorher hier:
   // kontext.flyout = verankereFlyout(kontext.ausloeser, { tabs, aktiverId, onAktivieren }).
   kontext.flyout = null;
+}
+
+// Knöpfe „Ansicht zu … wechseln“ (Wunsch des Autors, 2026-10-28): je ein Knopf für jede andere angebotene
+// Ansicht des Bereichs (derzeit nur im Bestand, siehe stelleVizFlyoutSicher()).
+function zeigeAnsichtWechselKnoepfe(kontext) {
+  const leiste = kontext.ansichtWechselLeiste;
+  if (!leiste) return;
+  leiste.innerHTML = '';
+  kontext.bereich.ansichten
+    .filter((a) => a.id !== kontext.ansichtId && !istAnsichtAusgeblendet(a.id))
+    .forEach((a) => {
+      const knopf = document.createElement('button');
+      knopf.type = 'button';
+      knopf.className = 'ansicht-wechsel-knopf';
+      knopf.textContent = `Ansicht zu ${a.label} wechseln`;
+      knopf.addEventListener('click', () => navigiereZu(kontext.routeSegmente(a.id)));
+      leiste.appendChild(knopf);
+    });
 }
 
 // Dritte Navigationsebene (Wunsch des Autors, 2026-10-27): alle Ansichten des Bereichs, die aktuelle
@@ -820,6 +845,8 @@ function raeumeVizAnsichtAuf(kontext) {
   kontext.unsicherheitsButton?.destroy();
   kontext.bestandSuche?.destroy();
   kontext.bestandSuche = null;
+  kontext.ansichtWechselLeiste?.remove();
+  kontext.ansichtWechselLeiste = null;
   kontext.kleinerBildschirmHinweis?.remove();
   kontext.hinweisBalkenBereich?.remove(); // AUFTRAG B2
   kontext.hinweisBalkenBereich = null;
@@ -891,6 +918,7 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     aktualisiereKleinerBildschirmHinweis(kontext.kleinerBildschirmHinweis, eintrag.id);
     kontext.flyout?.aktualisiere({ tabs: baueTabListe(kontext), aktiverId: kontext.ansichtId });
     zeigeAnsichtenLeiste(kontext);
+    zeigeAnsichtWechselKnoepfe(kontext);
   } finally {
     kontext.wirdGewechselt = false;
   }
@@ -1321,6 +1349,7 @@ function setzeBestandFlyout(an) {
 }
 verankereHauptnavFlyouts();
 erzeugeUnterleistenSchalter(); // Reiter zum Ein-/Ausklappen der Unterleisten (2026-10-27)
+aktiviereSidebarUmschalter(); // zweiter Klick auf den Auslöser schließt die Sidebar (2026-10-28)
 
 // AUFTRAG "Archivspezifische Texte...", Punkt 2.1/2.3/2.4: überträgt die
 // geladenen archiv.csv-Werte in die statischen index.html-Elemente
