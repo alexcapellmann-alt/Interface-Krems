@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (145) – Galerien von Urkunden, Personen und Orte bildschirmfüllend und farbig
+
+- Die Übersichtsseiten der Bereiche Urkunden, Personen und Orte zeigen ihre Ansichten als große Kacheln, die wie die Themen der Führungen die ganze Fläche ausfüllen: Urkunden 3 × 2, Orte 2 × 2, Personen 3 + 2 (kürzere Zeile mittig). Allgemein bis 3 Kacheln eine Zeile, bis 8 zwei, darüber drei (`vollflaechig` in `erzeugeVisualisierungsGalerie()`).
+- Kachelfarben aus der Palette der Bestand-Ansichten (`BESTAND_PALETTE` in `kategorieFarben.js`, jetzt exportiert), Textfarbe nach Kontrast; größeres Symbol, Name in der Überschriftenschrift.
+- Auf schmalen Bildschirmen (unter 700 px) stehen die Kacheln untereinander.
+- Die Bestand-Seite (mit Einleitung) bleibt unverändert.
+- Geprüft auf dem Testserver 8845 (1600 × 900 ohne Schiebebalken, Mobilansicht 375 px).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (144) – Sidebar-Umschalter, Gantt-Namensspalte, Ansicht-Wechsel im Bestand, Bilderwand-Ortskreise
 
 - Interface-weit: Ein zweiter Klick auf das Feld, das eine Sidebar geöffnet hat, klappt sie wieder ein (`js/utils/sidebarUmschalter.js`, in `app.js` aktiviert). Gilt für alle Sidebars aus `baueSidebarGeruest()`; geschlossen wird über deren eigenen „×“-Knopf, damit jedes Modul seine Auswahl selbst zurücksetzt. „Dasselbe Feld“ = dasselbe Element oder derselbe d3-Datensatz (z. B. Fläche und Beschriftung einer Kachel). Die Bilderwand (Zeichenfläche) regelt das selbst.

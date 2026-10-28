@@ -27,6 +27,7 @@
 // (bereichsLeiste.js).
 
 import { erzeugeVizIcon } from '../utils/vizIcons.js';
+import { BESTAND_PALETTE, passendeTextfarbe } from '../utils/kategorieFarben.js';
 
 function fuegeStyleEin(container) {
   const style = document.createElement('style');
@@ -44,6 +45,28 @@ function fuegeStyleEin(container) {
     .visualisierungs-galerie-icon svg { width: 64px; height: 44px; }
     .visualisierungs-galerie-name { font-weight: 600; }
     .visualisierungs-galerie-beschreibung { font-size: var(--fs-sm); color: var(--text-muted); margin: 0; }
+    /* Bildschirmfüllende Variante (Wunsch des Autors, 2026-10-28; Urkunden, Personen, Orte): Kacheln teilen
+       sich die ganze Fläche wie die Themen der Führungen, gefärbt mit der Palette der Bestand-Ansichten.
+       Raster aus doppelt so vielen Spalten wie Kacheln je Zeile, jede Kachel belegt zwei - so lässt sich
+       eine kürzere letzte Zeile mittig setzen (5 Kacheln: 3 + 2). */
+    .galerie-bereich.galerie-vollflaechig { display: flex; flex-direction: column; min-height: 0; }
+    .galerie-vollflaechig .visualisierungs-galerie { flex: 1 1 auto; min-height: 0; gap: var(--space-4);
+      grid-template-columns: repeat(var(--galerie-spalten), minmax(0, 1fr)); grid-template-rows: repeat(var(--galerie-zeilen), minmax(0, 1fr)); }
+    .galerie-vollflaechig .visualisierungs-galerie > li { grid-column: span 2; display: flex; min-height: 0; }
+    .galerie-vollflaechig .visualisierungs-galerie button { height: 100%; justify-content: flex-end; gap: var(--space-3);
+      padding: var(--space-5); border: 0; border-radius: calc(var(--radius) * 1.5); background: var(--kachel-farbe);
+      color: var(--kachel-text); box-shadow: var(--shadow); transition: filter .15s ease, transform .15s ease; }
+    .galerie-vollflaechig .visualisierungs-galerie button:hover { background: var(--kachel-farbe); border-color: transparent;
+      filter: brightness(1.12); transform: translateY(-2px); }
+    .galerie-vollflaechig .visualisierungs-galerie button:focus-visible { outline: 3px solid #e0b429; outline-offset: 3px; }
+    .galerie-vollflaechig .visualisierungs-galerie-icon { color: inherit; opacity: .85; margin-bottom: auto; }
+    .galerie-vollflaechig .visualisierungs-galerie-icon svg { width: 96px; height: 66px; }
+    .galerie-vollflaechig .visualisierungs-galerie-name { font-family: var(--font-heading); font-size: var(--fs-xl); font-weight: 600; }
+    .galerie-vollflaechig .visualisierungs-galerie-beschreibung { color: inherit; opacity: .9; font-size: var(--fs-md); max-width: 46ch; }
+    @media (max-width: 700px) {
+      .galerie-vollflaechig .visualisierungs-galerie { grid-template-columns: 1fr; grid-template-rows: none; }
+      .galerie-vollflaechig .visualisierungs-galerie > li { grid-column: auto !important; min-height: 160px; }
+    }
   `;
   container.appendChild(style);
 }
@@ -51,7 +74,8 @@ function fuegeStyleEin(container) {
 // options.archivalientyp: der vollständige Registry-Eintrag (liefert Label +
 // `ansichten`, jede mit `id`/`label`/`beschreibung`).
 // options.onAuswahl(ansichtEintrag): bei Klick auf eine Kachel aufgerufen.
-export function erzeugeVisualisierungsGalerie(container, { archivalientyp, onAuswahl } = {}) {
+// options.vollflaechig (2026-10-28): Kacheln füllen die ganze Fläche, farbig (siehe Style oben).
+export function erzeugeVisualisierungsGalerie(container, { archivalientyp, onAuswahl, vollflaechig = false } = {}) {
   container.innerHTML = '';
   fuegeStyleEin(container);
 
@@ -64,11 +88,29 @@ export function erzeugeVisualisierungsGalerie(container, { archivalientyp, onAus
   liste.className = 'visualisierungs-galerie';
   liste.setAttribute('role', 'list');
   liste.setAttribute('aria-label', `Visualisierungen: ${archivalientyp.label}`);
+  const anzahl = archivalientyp.ansichten.length;
+  // Zeilen und Kacheln je Zeile so, dass das Raster möglichst ausgewogen ist: bis 3 Kacheln eine Zeile,
+  // bis 8 zwei Zeilen, darüber drei
+  const zeilen = anzahl <= 3 ? 1 : (anzahl <= 8 ? 2 : 3);
+  const proZeile = Math.ceil(anzahl / zeilen);
+  container.classList.toggle('galerie-vollflaechig', vollflaechig);
+  if (vollflaechig) {
+    liste.style.setProperty('--galerie-spalten', String(proZeile * 2));
+    liste.style.setProperty('--galerie-zeilen', String(zeilen));
+  }
 
-  archivalientyp.ansichten.forEach((ansicht) => {
+  archivalientyp.ansichten.forEach((ansicht, index) => {
     const eintrag = document.createElement('li');
     const kachel = document.createElement('button');
     kachel.type = 'button';
+    if (vollflaechig) {
+      const farbe = BESTAND_PALETTE[index % BESTAND_PALETTE.length];
+      kachel.style.setProperty('--kachel-farbe', farbe);
+      kachel.style.setProperty('--kachel-text', passendeTextfarbe(farbe));
+      // kürzere letzte Zeile mittig: deren erste Kachel um die fehlenden Kacheln einrücken
+      const rest = anzahl - (zeilen - 1) * proZeile;
+      if (index === (zeilen - 1) * proZeile && rest < proZeile) eintrag.style.gridColumn = `${proZeile - rest + 1} / span 2`;
+    }
 
     const iconWrapper = document.createElement('span');
     iconWrapper.className = 'visualisierungs-galerie-icon';
