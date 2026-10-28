@@ -806,7 +806,7 @@ const ANSICHT_GRUPPEN = {
   bestand: { ansichten: null, uebergang: 'formen' },
   orte: { ansichten: ['karte', 'verbindungskarte', 'bipartiteFlowMap'], uebergang: 'karte' }
 };
-const DARSTELLUNG_BESCHRIFTUNG = { ganttDiagramm: 'Laufzeit' };
+const DARSTELLUNG_BESCHRIFTUNG = { ganttDiagramm: 'Strahl' }; // seit 2026-10-28 überall „Strahl“ (vorher „Laufzeit“)
 
 function ansichtGruppe(kontext) {
   return ANSICHT_GRUPPEN[kontext.tab === 'bestand' ? 'bestand' : kontext.typ] || null;
