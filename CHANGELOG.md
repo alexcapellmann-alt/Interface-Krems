@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (171) – Führungen: keine „Entwurf“-Markierung mehr, Stationswechsel als Schiebeeffekt
+
+- „Entwurf“-Plakette entfernt aus Führungsliste (`fuehrungenGalerie.js`), Stationskopf (`fuehrungStation.js`), Abschlussbildschirm (`fuehrungAbschluss.js`) und dem Bildschirmleser-Text der Zeitleiste (`fuehrungenZeitleiste.js`); zugehörige CSS-Regeln und Farbvariablen in `components.css` entfernt. Die Spalte `status` in `data/fuehrungen.csv` bleibt unverändert.
+- `fuehrungStation.js`: Stationswechsel (Pfeile ▲/▼ und Tastatur) gleitet senkrecht - vorwärts nach oben hinaus, die neue Station von unten herein; rückwärts umgekehrt (450 ms). Die alte Station liegt währenddessen als Kopie über dem Hauptbereich (`.fuehrung-station-alt`, `.schiebt` in `components.css`); schnelles Weiterklicken schließt die laufende Animation sofort ab; bei „Bewegung reduzieren“ kein Effekt; Rückfallebene per setTimeout.
+- Geprüft auf dem Testserver 8845: Wechsel vor/zurück, schnelle Tastenfolge (keine Reste), Fokus auf dem neuen Stationstitel, kein „Entwurf“ in Liste und Station; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (170) – Neue Ansicht „Bürgerinnen?“ (Personen) und Station in der Führung „Frauen im Archiv“
 
 - Neu `js/viz/buergerinnen.js`: ein Punkt je Person im Bürgerbuch (Neubürger und Bürgen, je Kennung einmal gezählt: 2 655), als Punktwolke. „Nach Geschlecht ordnen“ lässt die Punkte animiert in zwei Spalten fließen: „Männer · 2 655“ und „Frauen · 0“ (leerer gestrichelter Rahmen, „keine Einträge“); „Wieder mischen“ kehrt zurück. Danach erscheint ein Schlusssatz mit Link zur Führung „Frauen im Archiv“. Tooltip: Name und Rolle (Neubürger mit Jahr / Bürge). Optionale Spalte `geschlecht` wird ausgewertet, falls sie künftig ergänzt wird.

@@ -121,13 +121,6 @@ function baueKopf(fuehrung, station, aktuelleNr) {
   zurueck.textContent = '← Alle Führungen';
   kopf.appendChild(zurueck);
 
-  if (fuehrung.status === 'entwurf') {
-    const badge = document.createElement('span');
-    badge.className = 'fuehrung-kachel-entwurf';
-    badge.textContent = 'Entwurf';
-    kopf.appendChild(badge);
-  }
-
   const fuehrungstitel = document.createElement('span');
   fuehrungstitel.className = 'fuehrung-station-fuehrungstitel';
   fuehrungstitel.textContent = fuehrung.fuehrung_titel;
@@ -305,8 +298,53 @@ export function render(container, fuehrung, initialeNr) {
 
   function geheZu(neueNr, { ersetzeVerlauf }) {
     if (ersetzeVerlauf) history.replaceState(null, '', baueHash(['fuehrungen', fuehrung.fuehrung_id, String(neueNr)]));
+    const richtung = Math.sign(neueNr - aktuelleNr);
     aktuelleNr = neueNr;
-    zeichne();
+    zeichne(richtung);
+  }
+
+  // Wunsch des Autors (2026-10-28): Stationswechsel als Schiebeeffekt - vorwärts
+  // gleitet die alte Station nach oben hinaus und die neue von unten herein,
+  // rückwärts umgekehrt. Die alte Station wandert dafür in eine absolut
+  // positionierte Kopie von `haupt` (gleiches Flex-Layout), die nach der
+  // Animation entfernt wird.
+  const SCHIEBE_DAUER = 450;
+  let laufenderWechsel = null;
+
+  function schiebe(richtung) {
+    laufenderWechsel?.();
+    const alt = document.createElement('div');
+    alt.className = 'fuehrung-station-haupt fuehrung-station-alt';
+    alt.setAttribute('aria-hidden', 'true');
+    alt.inert = true;
+    alt.append(...haupt.childNodes);
+    haupt.appendChild(alt);
+    haupt.classList.add('schiebt');
+    return () => {
+      const hoehe = haupt.clientHeight;
+      const neu = [...haupt.children].filter((el) => el !== alt);
+      const ablauf = { duration: SCHIEBE_DAUER, easing: 'cubic-bezier(.65, 0, .35, 1)' };
+      const animationen = [
+        alt.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${-richtung * hoehe}px)`, opacity: 0 }], ablauf),
+        ...neu.map((el) => el.animate([{ transform: `translateY(${richtung * hoehe}px)` }, { transform: 'translateY(0)' }], ablauf))
+      ];
+      let fertig = false;
+      const abschliessen = () => {
+        if (fertig) return;
+        fertig = true;
+        animationen.forEach((a) => a.cancel());
+        alt.remove();
+        haupt.classList.remove('schiebt');
+        haupt.scrollTop = 0;
+        // mobil scrollt die Seite selbst: neuen Stationstitel ins Bild holen
+        if (window.innerWidth <= MOBIL_UMBRUCH_PX) haupt.querySelector('.fuehrung-station-titel')?.scrollIntoView({ block: 'nearest' });
+        if (laufenderWechsel === abschliessen) laufenderWechsel = null;
+      };
+      laufenderWechsel = abschliessen;
+      animationen[0].finished.then(abschliessen, abschliessen);
+      // Rückfallebene: in verborgenen Tabs pausieren Animationen
+      setTimeout(abschliessen, SCHIEBE_DAUER + 150);
+    };
   }
 
   // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: NUR ein Klick auf einen Belegs-
@@ -331,18 +369,27 @@ export function render(container, fuehrung, initialeNr) {
   }
   haupt.addEventListener('click', merkeVerlassenBeiLinkKlick);
 
-  function zeichne() {
-    haupt.innerHTML = '';
+  function zeichne(richtung = 0) {
+    const mitSchieben = richtung !== 0 && haupt.childElementCount > 0
+      && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const starteSchieben = mitSchieben ? schiebe(richtung) : null;
+    if (!mitSchieben) {
+      laufenderWechsel?.();
+      haupt.innerHTML = '';
+    }
     wurzel.querySelector('.fuehrung-nav')?.remove();
     const station = fuehrung.stationen.find((s) => s.station_nr === aktuelleNr);
-    haupt.appendChild(baueKopf(fuehrung, station, aktuelleNr));
-    haupt.appendChild(baueInhaltsBereich(station));
+    const alt = haupt.querySelector('.fuehrung-station-alt');
+    haupt.insertBefore(baueKopf(fuehrung, station, aktuelleNr), alt);
+    haupt.insertBefore(baueInhaltsBereich(station), alt);
     wurzel.appendChild(baueNavigation(fuehrung, aktuelleNr, geheZu));
-    haupt.querySelector('.fuehrung-station-titel')?.focus();
+    // preventScroll: `haupt` ist während des Schiebens überlaufend
+    haupt.querySelector('.fuehrung-station-titel')?.focus({ preventScroll: mitSchieben });
     // Kopfzeile kann je Station leicht unterschiedlich hoch sein (z.B. durch
     // Zeilenumbruch bei längeren Titeln) - bei jedem Stationswechsel neu
     // vermessen, nicht nur einmalig beim ersten Aufbau.
     passeGroesseAn(wurzel);
+    starteSchieben?.();
   }
 
   function tastaturHandler(event) {

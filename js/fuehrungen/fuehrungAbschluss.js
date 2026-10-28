@@ -38,12 +38,6 @@ function baueKopf(fuehrung) {
   zurueck.className = 'fuehrung-station-zurueck';
   zurueck.textContent = '← Alle Führungen';
   kopf.appendChild(zurueck);
-  if (fuehrung.status === 'entwurf') {
-    const badge = document.createElement('span');
-    badge.className = 'fuehrung-kachel-entwurf';
-    badge.textContent = 'Entwurf';
-    kopf.appendChild(badge);
-  }
   const fuehrungstitel = document.createElement('span');
   fuehrungstitel.className = 'fuehrung-station-fuehrungstitel';
   fuehrungstitel.textContent = fuehrung.fuehrung_titel;
