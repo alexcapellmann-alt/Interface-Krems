@@ -6,6 +6,11 @@
 //
 // Kartengrundlage über js/utils/statischeKarte.js.
 //
+// SEIT 2026-10-28 (Wunsch des Autors): Darstellung nach dem Prinzip der Karte hinter der Bilderwand - in Ruhe
+// nur die Orte, Verbindungen erst als Bögen des Ortes unter dem Mauszeiger bzw. des angeklickten Ortes,
+// gedämpfte Kartenkacheln. Der Regler „Verbindungsstärke“ und die stets sichtbaren geraden Linien (beide in
+// den Aufträgen unten beschrieben) sind entfallen; siehe Kommentar in zeichneVerbindungskarte().
+//
 // KORREKTUR (Auftrag "SVG-Overlay z-index setzen", siehe CHANGELOG): das
 // SVG-Overlay wird jetzt über js/utils/statischeKarte.js' neue
 // erzeugeUeberlagerungsSvg() gebaut statt selbst per `d3.select(mapDiv)
@@ -112,7 +117,7 @@ import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkund
 
 // AUFTRAG "Info-Button für die 6 bleibenden Module": Text wörtlich übernommen.
 
-const LINIEN_FARBE = '#1a4d8f';
+const LINIEN_FARBE = '#2c4a6e'; // Tintenblau der Seite (seit 2026-10-28, vorher #1a4d8f)
 
 let instanz = null; // { container, records, options, karte } – eine aktive Verbindungskarte pro Modul-Ladung
 
@@ -188,10 +193,20 @@ function fuegeStyleEin(container) {
   style.textContent = `
     .verbindungskarte-werkzeugleiste { display: flex; justify-content: space-between; align-items: center;
       flex-wrap: wrap; gap: var(--space-3); margin-bottom: 6px; position: relative; z-index: 900; }
-    .verbindungskarte-regler-gruppe { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-    .verbindungskarte-regler-label { font-size: var(--fs-sm); color: var(--text-muted); }
-    .verbindungskarte-regler-input { width: 160px; }
-    .orts-knoten { cursor: pointer; }
+    .verbindungskarte-werkzeugleiste { justify-content: flex-end; }
+    /* Gedämpfte Kartenkacheln (2026-10-28): Graustufen mit leichtem Papierton, damit die feinen Bögen lesbar bleiben */
+    .verbindungskarte-viz-container .leaflet-container { background: #f7f5f0; }
+    .verbindungskarte-viz-container .leaflet-tile-pane { filter: grayscale(1) sepia(.18) contrast(.82) brightness(1.08); opacity: .6; }
+    .orts-knoten { cursor: pointer; fill: #6b6358; fill-opacity: .55; stroke: #f7f5f0; stroke-width: .8;
+      transition: fill-opacity .15s, fill .15s; }
+    .orts-knoten.tritt-zurueck { fill-opacity: .15; }
+    .orts-knoten.ist-verbunden { fill: ${LINIEN_FARBE}; fill-opacity: .6; }
+    .orts-knoten.ist-aktiv { fill: ${LINIEN_FARBE}; fill-opacity: 1; stroke: #ffffff; stroke-width: 2;
+      filter: drop-shadow(0 0 5px rgba(44, 74, 110, .55)); }
+    .orts-knoten:focus { outline: none; }
+    .orts-knoten:focus-visible { stroke: #e0b429; stroke-width: 3; }
+    .verbindungskarte-boegen path.verbindung { fill: none; stroke: ${LINIEN_FARBE}; stroke-linecap: round; pointer-events: stroke; }
+    .verbindungskarte-name { font: 600 13px var(--font-ui); fill: #1a1a1a; paint-order: stroke; stroke: #f7f5f0; stroke-width: 3.5px; }
     /* Punkt 2 (siehe Dateikopf-Kommentar): dieselbe :has()-Ausblendung wie
        karte.js (Kleinauftrag "Klick auf Ort-Marker öffnet Sidebar") - jetzt
        auch hier nötig, seit Leaflets eigene Steuerelemente aktiv sind. */
@@ -245,132 +260,131 @@ async function zeichneVerbindungskarte() {
     ariaLabel: 'Verbindungskarte: gemeinsam genannte Orte in Urkunden'
   });
 
+  // Seit 2026-10-28 (Wunsch des Autors) nach dem Prinzip der Karte hinter der Bilderwand: in Ruhe nur die Orte
+  // (Kreisgröße = Zahl der Urkunden, zurückhaltend), keine Linien. Zeigt man auf einen Ort (oder fokussiert
+  // ihn per Tastatur), tritt er hervor - mit Hof und Namen -, nur SEINE Verbindungen erscheinen als dünne,
+  // leicht gebogene Bögen (Deckkraft nach Zahl gemeinsamer Urkunden), die verbundenen Orte leuchten dezent
+  // mit, alle übrigen treten zurück. Klick hält die Hervorhebung fest und öffnet die Sidebar mit den Urkunden
+  // des Ortes; ein zweiter Klick oder ein Klick auf die freie Karte löst sie. Der frühere Regler
+  // „Verbindungsstärke“ entfällt (es ist ohnehin nur ein Ort mit seinen Verbindungen sichtbar).
+  const verbindungenJeOrt = new Map();
+  paare.forEach((p) => {
+    [[p.a, p.b], [p.b, p.a]].forEach(([von, nach]) => {
+      if (!verbindungenJeOrt.has(von)) verbindungenJeOrt.set(von, []);
+      verbindungenJeOrt.get(von).push({ ort: nach, paar: p });
+    });
+  });
   const maxAnzahl = d3.max(paare, (p) => p.anzahl) || 1;
-  const dickeSkala = d3.scaleSqrt().domain([1, maxAnzahl]).range([1.5, 8]);
+  const maxUrkunden = d3.max(beteiligteOrte, (o) => (ortRecordsMap.get(o.name) || []).length) || 1;
+  const radius = (o) => 2.5 + 7 * Math.sqrt((ortRecordsMap.get(o.name) || []).length / maxUrkunden);
+  const deckkraftBogen = (p) => 0.2 + 0.65 * Math.sqrt(p.anzahl / maxAnzahl);
+  const breiteBogen = (p) => 0.9 + 1.6 * Math.sqrt(p.anzahl / maxAnzahl);
 
-  // Punkt 1 (siehe Dateikopf-Kommentar): Stärke-Regler - Bereich deckt die
-  // tatsächliche Spannweite ab, links in der Werkzeugleiste (Info-Button
-  // bleibt rechts, siehe fuegeStyleEin()s space-between).
-  // KORREKTUR Punkt 2 (siehe Dateikopf-Kommentar): min/Startwert jetzt 2
-  // (Math.max() schützt vor einem ungültigen min>max-Bereich, falls
-  // maxAnzahl im Datensatz jemals unter 2 läge).
-  const reglerMin = 2;
-  const reglerMax = Math.max(maxAnzahl, reglerMin);
-  const reglerGruppe = document.createElement('div');
-  reglerGruppe.className = 'verbindungskarte-regler-gruppe';
-  const reglerLabel = document.createElement('span');
-  reglerLabel.className = 'verbindungskarte-regler-label';
-  // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 2: Beschriftung
-  // von "Mindeststärke:" auf "Verbindungsstärke" geändert (Auftrag wörtlich).
-  reglerLabel.textContent = 'Verbindungsstärke';
-  const reglerInput = document.createElement('input');
-  reglerInput.type = 'range';
-  reglerInput.className = 'verbindungskarte-regler-input';
-  reglerInput.min = String(reglerMin);
-  reglerInput.max = String(reglerMax);
-  reglerInput.step = '1';
-  reglerInput.value = String(reglerMin);
-  reglerInput.setAttribute('aria-label', 'Mindestanzahl gemeinsamer Urkunden je Verbindung');
-  reglerGruppe.append(reglerLabel, reglerInput);
-  werkzeugleiste.appendChild(reglerGruppe);
   infotextFuerModul('verbindungskarte').then((cfg) => {
     if (!instanz || !cfg || !werkzeugleiste.isConnected) return;
     instanz.infoButton = erzeugeInfoButton(werkzeugleiste, cfg);
   });
 
-  const linienGruppe = svgUeberlagerung.append('g').style('pointer-events', 'auto');
+  const boegenGruppe = svgUeberlagerung.append('g').attr('class', 'verbindungskarte-boegen');
+  const ortsGruppe = svgUeberlagerung.append('g').style('pointer-events', 'auto');
+  const namenGruppe = svgUeberlagerung.append('g').attr('class', 'verbindungskarte-namen').attr('pointer-events', 'none');
 
-  // Sichtbare, dünne Linie - reine Darstellung (Stärke-Kodierung, Punkt 0),
-  // KEINE eigenen Interaktions-Listener mehr (Punkt 3, siehe Dateikopf-
-  // Kommentar - die übernimmt jetzt die breitere Trefferfläche darunter).
-  const linien = linienGruppe
-    .selectAll('line.verbindung')
-    .data(paare)
-    .join('line')
-    .attr('class', 'verbindung')
-    .attr('pointer-events', 'none')
-    .attr('stroke', LINIEN_FARBE)
-    .attr('stroke-opacity', 0.5)
-    .attr('stroke-width', (p) => dickeSkala(p.anzahl))
-    .attr('stroke-dasharray', (p) => (zeigeUnsicherheit && p.unsicherAnzahl > 0 ? '4,3' : null));
-
-  // KORREKTUR Punkt 3 (siehe Dateikopf-Kommentar): unsichtbare, deutlich
-  // breitere Trefferfläche direkt über der sichtbaren Linie - trägt Tooltip/
-  // Tastatur-Fokus, die sichtbare Linienstärke bleibt davon unberührt.
-  const linienTrefferflaeche = linienGruppe
-    .selectAll('line.verbindung-trefferflaeche')
-    .data(paare)
-    .join('line')
-    .attr('class', 'verbindung-trefferflaeche')
-    .attr('tabindex', 0)
-    .attr('stroke', 'transparent')
-    .attr('stroke-width', 14);
-  linienTrefferflaeche
-    .on('mouseenter focus', function (event, p) { zeigeTooltip(baueVerbindungTooltip(p), this, mapDiv); })
-    .on('mouseleave blur', () => versteckeTooltip());
-
-  const ortsKnoten = svgUeberlagerung.append('g').style('pointer-events', 'auto')
+  const ortsKnoten = ortsGruppe
     .selectAll('circle.orts-knoten')
     .data(beteiligteOrte)
     .join('circle')
     .attr('class', 'orts-knoten')
     .attr('tabindex', 0)
-    .attr('r', 4)
-    .attr('fill', LINIEN_FARBE);
-  // Punkt 2 (siehe Dateikopf-Kommentar, Auftrag "Stärke-Regler + Node-Klick-
-  // Sidebar"): Klick/Enter/Leertaste öffnet die Urkunden-Sidebar für diesen
-  // Ort - dieselbe Klick-plus-Tastatur-Äquivalenz wie karte.js' Marker-Klick.
-  ortsKnoten.each(function (ort) {
+    .attr('role', 'button')
+    .attr('aria-label', (o) => `${o.name}: ${(ortRecordsMap.get(o.name) || []).length} Urkunden, gemeinsam genannt mit ${(verbindungenJeOrt.get(o.name) || []).length} Orten`)
+    .attr('r', radius);
+
+  let fokus = null; // Name des hervorgehobenen Ortes (Zeigen/Tastatur)
+  let fixiert = null; // per Klick festgehaltener Ort
+
+  const pos = (name) => positionVonKnoten(name, ortsVerzeichnis, karte);
+  // leicht gebogener Bogen, immer gleich herum gekrümmt (unabhängig von der Richtung, wie in der Bilderwand)
+  function bogenPfad(p) {
+    const [a, b] = [p.a, p.b].sort();
+    const pa = pos(a);
+    const pb = pos(b);
+    const mx = (pa.x + pb.x) / 2;
+    const my = (pa.y + pb.y) / 2;
+    const dx = pb.x - pa.x;
+    const dy = pb.y - pa.y;
+    return `M${pa.x},${pa.y}Q${mx - dy * 0.2},${my + dx * 0.2} ${pb.x},${pb.y}`;
+  }
+
+  function zeichneHervorhebung() {
+    const aktiv = fokus || fixiert;
+    const verbunden = new Map((verbindungenJeOrt.get(aktiv) || []).map((v) => [v.ort, v.paar]));
+    ortsKnoten
+      .classed('ist-aktiv', (o) => o.name === aktiv)
+      .classed('ist-verbunden', (o) => verbunden.has(o.name))
+      .classed('tritt-zurueck', (o) => Boolean(aktiv) && o.name !== aktiv && !verbunden.has(o.name));
+    if (aktiv) ortsKnoten.filter((o) => o.name === aktiv).raise();
+
+    const boegen = aktiv ? [...verbunden.values()] : [];
+    const pfade = boegenGruppe.selectAll('path.verbindung').data(boegen, (p) => `${p.a}|${p.b}`).join('path')
+      .attr('class', 'verbindung')
+      .attr('d', bogenPfad)
+      .attr('stroke-width', breiteBogen)
+      .attr('stroke-opacity', deckkraftBogen)
+      .attr('stroke-dasharray', (p) => (zeigeUnsicherheit && p.unsicherAnzahl > 0 ? '4,3' : null));
+    pfade.selectAll('title').remove();
+    pfade.append('title').text(baueVerbindungTooltip);
+
+    namenGruppe.selectAll('text').data(aktiv ? [aktiv] : []).join('text')
+      .attr('class', 'verbindungskarte-name')
+      .text((name) => name);
+    aktualisierePositionen();
+  }
+
+  function aktualisierePositionen() {
+    ortsKnoten
+      .attr('cx', (o) => projiziere(karte, o.lat, o.lon).x)
+      .attr('cy', (o) => projiziere(karte, o.lat, o.lon).y);
+    boegenGruppe.selectAll('path.verbindung').attr('d', bogenPfad);
+    namenGruppe.selectAll('text')
+      .attr('x', (name) => pos(name).x + radius({ name }) + 7)
+      .attr('y', (name) => pos(name).y + 4);
+  }
+
+  const zeigeOrtTooltip = (element, o) => {
+    const anzahlUrkunden = (ortRecordsMap.get(o.name) || []).length;
+    const anzahlOrte = (verbindungenJeOrt.get(o.name) || []).length;
+    zeigeTooltip(`${o.name}\n${anzahlUrkunden} Urkunde(n), gemeinsam genannt mit ${anzahlOrte} Ort(en)`, element, mapDiv);
+  };
+  ortsKnoten.each(function verdrahte(o) {
     const element = this;
-    const aktiviere = () => zeigeUrkundenSidebar(instanz.sidebar, ort.name, ortRecordsMap.get(ort.name) || []);
+    element.addEventListener('mouseenter', () => { fokus = o.name; zeigeOrtTooltip(element, o); zeichneHervorhebung(); });
+    element.addEventListener('focus', () => { fokus = o.name; zeigeOrtTooltip(element, o); zeichneHervorhebung(); });
+    element.addEventListener('mouseleave', () => { fokus = null; versteckeTooltip(); zeichneHervorhebung(); });
+    element.addEventListener('blur', () => { fokus = null; versteckeTooltip(); zeichneHervorhebung(); });
+    const aktiviere = (event) => {
+      event?.stopPropagation();
+      if (fixiert === o.name) {
+        fixiert = null;
+        schliesseSidebar(instanz.sidebar, mapDiv);
+      } else {
+        fixiert = o.name;
+        zeigeUrkundenSidebar(instanz.sidebar, o.name, ortRecordsMap.get(o.name) || []);
+      }
+      zeichneHervorhebung();
+    };
     element.addEventListener('click', aktiviere);
     element.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        aktiviere();
+        aktiviere(event);
       }
     });
   });
+  // Klick auf die freie Karte oder Schließen der Sidebar löst die festgehaltene Hervorhebung
+  karte.on('click', () => { if (fixiert) { fixiert = null; zeichneHervorhebung(); } });
+  instanz.sidebar.schliessenBtn.addEventListener('click', () => { fixiert = null; zeichneHervorhebung(); });
 
-  // KORREKTUR Punkt 1 (siehe Dateikopf-Kommentar): blendet Linien (beide
-  // Selektionen, sichtbar UND Trefferfläche) unterhalb der Mindeststärke aus
-  // - UND blendet jeden Orts-Knoten aus, der bei der aktuellen Schwelle an
-  // keiner sichtbaren Linie mehr beteiligt ist (verwaiste Orte).
-  // style('display') statt erneutem .join(), die Datenbindung bleibt
-  // unangetastet.
-  // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 2: der
-  // Status-Text ("X von Y Verbindungen") entfällt ersatzlos - die Gesamt-
-  // zahl Y zählte auch die technisch seit reglerMin=2 nie mehr erreichbaren
-  // Einzelverbindungen (Stärke 1) mit und war dadurch irreführend (Auftrag
-  // wörtlich).
-  function aktualisiereSichtbarkeit() {
-    const schwelle = Number(reglerInput.value);
-    const sichtbarePaare = paare.filter((p) => p.anzahl >= schwelle);
-    const sichtbareOrte = new Set(sichtbarePaare.flatMap((p) => [p.a, p.b]));
-    linien.style('display', (p) => (p.anzahl >= schwelle ? null : 'none'));
-    linienTrefferflaeche.style('display', (p) => (p.anzahl >= schwelle ? null : 'none'));
-    ortsKnoten.style('display', (o) => (sichtbareOrte.has(o.name) ? null : 'none'));
-  }
-  aktualisiereSichtbarkeit();
-  reglerInput.addEventListener('input', aktualisiereSichtbarkeit);
-
-  // Punkt 1 (Zoom/Pan, siehe Dateikopf-Kommentar): einmalig für den
-  // Erstaufbau UND bei jeder Kartenbewegung erneut aufgerufen (s.u.) - hält
-  // beide Linien-Selektionen und die Orts-Knoten mit der jeweils aktuellen
-  // Zoom-/Pan-Position synchron.
-  function aktualisierePositionen() {
-    [linien, linienTrefferflaeche].forEach((selektion) => {
-      selektion
-        .attr('x1', (p) => positionVonKnoten(p.a, ortsVerzeichnis, karte).x)
-        .attr('y1', (p) => positionVonKnoten(p.a, ortsVerzeichnis, karte).y)
-        .attr('x2', (p) => positionVonKnoten(p.b, ortsVerzeichnis, karte).x)
-        .attr('y2', (p) => positionVonKnoten(p.b, ortsVerzeichnis, karte).y);
-    });
-    ortsKnoten
-      .attr('cx', (o) => projiziere(karte, o.lat, o.lon).x)
-      .attr('cy', (o) => projiziere(karte, o.lat, o.lon).y);
-  }
-  aktualisierePositionen();
+  zeichneHervorhebung();
   karte.on('zoom move', aktualisierePositionen);
 }
 

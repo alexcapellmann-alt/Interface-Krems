@@ -7,6 +7,28 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (159) – Verbindungskarte nach dem Prinzip der Bilderwand-Karte
+
+- Die Verbindungskarte behält ihre Leaflet-Karte, zeichnet darüber aber nach dem Prinzip der Karte hinter der Bilderwand: in Ruhe nur die Orte (Kreisgröße = Zahl der Urkunden, zurückhaltendes Graubraun), keine Linien. Zeigen oder Tastaturfokus auf einen Ort: er tritt in Tintenblau mit Hof und Namen hervor, nur seine Verbindungen erscheinen als dünne, leicht gebogene Bögen (Deckkraft und Stärke nach Zahl gemeinsamer Urkunden), verbundene Orte leuchten dezent mit, alle übrigen treten zurück. Klick hält die Auswahl fest und öffnet die Sidebar mit den Urkunden des Ortes; zweiter Klick, Klick auf die freie Karte oder Schließen der Sidebar löst sie. Tooltip am Ort: Zahl der Urkunden und der verbundenen Orte; am Bogen: gemeinsame Nennungen.
+- Kartenkacheln gedämpft (Graustufen mit leichtem Papierton), damit die feinen Bögen lesbar bleiben.
+- Der Regler „Verbindungsstärke“ und die stets sichtbaren geraden Linien entfallen. Mit „σ Unsicherheiten anzeigen“ sind Bögen mit unsicherer Ortsangabe gestrichelt (wie bisher die Linien).
+- Infotext und Kachelbeschreibung (`infotexte.csv`, `ansichten.csv`) angepasst.
+- Geprüft auf dem Testserver 8845 (179 Orte; Krems: 29 Bögen, Stein: 20; Festhalten, Lösen, Sidebar); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (158) – Personenliste: mehrere Schreibweisen als unsicher markiert
+
+- Alle Personen mit mehreren Schreibweisen (353 von 4.168) gelten in der Personenliste als unsicher: mit „σ Unsicherheiten anzeigen“ erscheint das σ vor dem Namen, Tooltip: „Die Schreibweisen „Adam Seiffart“ und „Adam Seiffert“ werden als dieselbe Person gewertet (vermutete Personengleichheit).“ (Wortlaut nach den vorhandenen Anmerkungen; bei drei und mehr Schreibweisen „„A“, „B“ und „C““). Eine vorhandene `unsicherheit_anmerkung` steht danach.
+- Der Text wird in `personenliste.js` aus `schreibweisen` erzeugt (`unsicherheitsText()`), nicht in `personenliste.csv` geschrieben - er bleibt richtig, wenn Schreibweisen ergänzt oder getrennt werden. Infotext ergänzt.
+- Geprüft auf dem Testserver 8845 (zwei, drei Schreibweisen, Kombination mit vorhandener Anmerkung; Personen mit einer Schreibweise unmarkiert).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (157) – Sankey: Rehberg und Dürnstein unter „Andere Orte“
 
 - Schwelle für einzeln gezeigte Orte im Sankey von 15 auf 17 Verbindungen (`ORT_BUENDELUNG_SCHWELLE`): Rehberg bei Krems (16) und Dürnstein (15) fallen unter „Andere Orte“, einzeln bleiben die 11 Orte ab 18 (Wien bis Graz). „Andere Orte“ wächst von 388 auf 405 (Urkunden, die schon über einen anderen Ort dort gezählt waren, zählen je Kategorie nur einmal).

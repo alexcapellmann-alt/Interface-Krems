@@ -722,18 +722,42 @@ function wechsleSeite(neueSeite) {
 // Symbol-Wahl selbst, die Zeile brauchte vorher aber gar keine textuelle
 // Bezeichnung für einen reinen Rahmen, ein σ-Symbol dagegen schon) bleiben
 // bzw. werden entsprechend ergänzt.
+// Unsicherheit einer Person (Wunsch des Autors, 2026-10-28): neben der eigenen `unsicherheit_anmerkung`
+// gilt jede Person mit mehreren Schreibweisen als unsicher - die Zuordnung der Schreibweisen zu EINER Person
+// ist eine Annahme. Der Text wird aus `schreibweisen` erzeugt (nicht in personenliste.csv geschrieben),
+// damit er stimmt, wenn Schreibweisen später ergänzt oder getrennt werden; Wortlaut wie die vorhandenen
+// Anmerkungen („als dieselbe Person gewertet“).
+function schreibweisenListe(record) {
+  const roh = Array.isArray(record.schreibweisen) ? record.schreibweisen : String(record.schreibweisen || '').split('|');
+  return [...new Set(roh.map((n) => String(n).trim()).filter(Boolean))];
+}
+
+function unsicherheitsText(record) {
+  const teile = [];
+  const eigene = Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung.join(' | ') : String(record.unsicherheit_anmerkung || '').trim();
+  const namen = schreibweisenListe(record);
+  if (namen.length > 1) {
+    const zitiert = namen.map((n) => `„${n}“`);
+    const aufzaehlung = `${zitiert.slice(0, -1).join(', ')} und ${zitiert[zitiert.length - 1]}`;
+    teile.push(`Die Schreibweisen ${aufzaehlung} werden als dieselbe Person gewertet (vermutete Personengleichheit).`);
+  }
+  if (eigene) teile.push(eigene);
+  return teile.join(' ');
+}
+
 function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, inventareNachId, sidebarInstanz) {
   const zeile = koerper.insertRow();
   zeile.classList.add('pl-zeile-klickbar');
   zeile.setAttribute('tabindex', '0');
   zeile.setAttribute('role', 'button');
   const anzeigeName = SPALTEN.find((s) => s.schluessel === 'name').wertFn(record);
-  const istUnsicher = zeigeUnsicherheit && Boolean(record.unsicherheit_anmerkung);
+  const unsicherText = unsicherheitsText(record);
+  const istUnsicher = zeigeUnsicherheit && Boolean(unsicherText);
   zeile.setAttribute('aria-label', istUnsicher
     ? `${anzeigeName}, Angaben unsicher, Quelleneinträge anzeigen`
     : `${anzeigeName}, Quelleneinträge anzeigen`);
   if (istUnsicher) {
-    const anmerkung = Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung.join(' | ') : record.unsicherheit_anmerkung;
+    const anmerkung = unsicherText;
     zeile.addEventListener('mouseenter', () => zeigeTooltip(anmerkung, zeile, container));
     zeile.addEventListener('focus', () => zeigeTooltip(anmerkung, zeile, container));
     zeile.addEventListener('mouseleave', () => versteckeTooltip());
