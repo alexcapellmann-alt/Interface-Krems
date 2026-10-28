@@ -40,5 +40,5 @@ personen;chordDiagramm;Chord-Diagramm;Zeigt, wie oft Personen aus vier sozialen 
 orte;;Orte;;5;ja;
 orte;ortsliste;Ortsliste;Durchsuchbare, sortierbare Liste aller Orte mit der Zahl ihrer Nennungen in Urkunden und Verlassenschaftsinventaren.;1;ja;
 orte;karte;Karte;Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.;2;ja;
-orte;verbindungskarte;Verbindungskarte;Zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden.;3;ja;
+orte;verbindungskarte;Verbindungskarte;Zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden: ein Ort zeigt seine Verbindungen als feine Bögen.;3;ja;
 orte;bipartiteFlowMap;Bipartite Flow Map;Zeigt, welche Orte mit welchen sozialen Gruppen (Dynastie/Adel/Klerus/Bürgertum) in Verbindung stehen.;4;ja;
