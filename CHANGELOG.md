@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (166) – Infotexte überarbeitet (Autor), Semikolon-Fehler in zwei CSV-Zeilen behoben
+
+- Neue Infotexte vom Autor wörtlich übernommen (`infotexte.csv`, Spalte `text`): Karte Soziale Gruppen, Dot Plot, Gantt-Diagramm, Karte, Regesten, Streamgraph, Verbindungskarte, Wortwolke, Urkundennetzwerk. Nur Leerzeichen um das Absatzzeichen „|“ entfernt. Die Zeilen sind CSV-korrekt in Anführungszeichen gesetzt (die Texte enthalten Semikolon und gerade Anführungszeichen).
+- Behoben (Fehler aus Einträgen 152/163): die Infotexte von Personenliste und Ortsliste enthielten ein Semikolon mitten im Satz ohne Anführungszeichen - der Text brach dort ab, der Rest landete in der Spalte `anmerkung`. Beide Zeilen wieder zusammengesetzt und richtig gequotet.
+- `archiv.csv`: Anmerkung zu `footer_text` enthielt ebenso ein Semikolon (Eintrag vom 2026-10-27; der Wert selbst war nicht betroffen) - durch Komma ersetzt.
+- Gegenprobe: `infotexte.csv`, `ansichten.csv`, `archiv.csv`, `orte.csv`, `wortwolke_filter.csv` haben in jeder Zeile die richtige Spaltenzahl; alle elf betroffenen Infotexte erscheinen auf dem Testserver 8845 vollständig.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (165) – Bestand-Flyout nach dem Laden richtig, Urkundennetzwerk mit Mausrad-Zoom
 
 - Bestand-Flyout in der Hauptnavigation: zeigte direkt nach dem Laden noch Icicle und Circle Packing (Klick ergab einen Fehlerhinweis) - der Flyout entstand vor dem Laden von `ansichten.csv` aus einer Kopie der Ansichtsliste. Jetzt wird die Liste bei jedem Öffnen neu gelesen und ausgeblendete Ansichten weggelassen (`eintraege` als Funktion in `verankereIconFlyout()`, `visualisierungsTabs.js`). Gilt auch für geänderte Namen.
