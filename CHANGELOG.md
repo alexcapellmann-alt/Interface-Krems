@@ -7,6 +7,27 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (162) – Karte: Abspielen füllt die Karte nach und nach; Führungs-Themenfelder in der Palette
+
+- Karte, Abspielen: der linke Regler bleibt am Anfang der Spanne (1100), nur der rechte rückt Jahrzehnt für Jahrzehnt vor - es werden nach und nach immer mehr Orte sichtbar (z. B. 3, 9, 14, 32, 141 …). Angehalten geht es beim nächsten Klick von dort weiter, am Ende beginnt es von vorn. Das wandernde 50-Jahre-Fenster aus Eintrag 161 entfällt; Infotext angepasst.
+- Führungen, Themenfelder: statt des einheitlich dunklen Blaugraus je Feld eine Farbe der gemeinsamen Palette (Reihenfolge wie bei den übrigen Galerien), so weit abgedunkelt, dass die helle Schrift mindestens 4,5:1 Kontrast hat (`dunkelGenugFuerWeiss()` in `kategorieFarben.js`); das Themenbild scheint weiterhin leicht durch.
+- Geprüft auf dem Testserver 8845; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (161) – Karte: Abspielen des Zeitraums, Startansicht mit allen Orten um Krems
+
+- Neben dem Zeitraum-Regler eine Taste ▶ (Abspielen): ein Zeitfenster wandert Jahrzehnt für Jahrzehnt durch die ganze Spanne, mit demselben Effekt wie beim Ziehen des Reglers (alle 0,26 s ein Jahrzehnt, 1100-1849 in etwa 19 s). Ist die volle Spanne eingestellt, läuft ein 50-Jahre-Fenster, sonst behält das Fenster seine Breite. Während des Abspielens Pause-Symbol; erneuter Klick hält an, danach geht es von dort weiter; am Ende hält es selbst an, ein weiterer Klick beginnt von vorn. Ziehen am Regler oder „Alle“ hält ebenfalls an. Im Unsicherheiten-Modus deaktiviert wie der Regler.
+- Startansicht: Krems (Startpunkt aus `archiv.csv`) bleibt in der Mitte, die Zoomstufe wird so gewählt, dass alle Orte sichtbar sind (symmetrischer Rahmen um die Mitte; Zoom in Viertelstufen, `zoomSnap: 0.25`). Vorher schnitt die feste Zoomstufe 7 entfernte Orte wie Rom oder Aalst ab.
+- Infotext ergänzt.
+- Geprüft auf dem Testserver 8845: Krems exakt in der Kartenmitte, alle 235 Orte sichtbar; Abspielen, Pause, Weiter, Anhalten durch Regler, Ende; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (160) – Bipartite Flow Map gedämpft, Sidebar schließt bei Klick auf freie Kartenfläche
 
 - Bipartite Flow Map: dieselben gedämpften Kartenkacheln wie die Verbindungskarte (Graustufen mit leichtem Papierton). Die Regel steht jetzt für beide gemeinsam in `components.css` statt im Modul der Verbindungskarte.

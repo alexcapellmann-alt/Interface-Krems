@@ -20,6 +20,7 @@ import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
 import { ermittleBildUrls } from '../utils/bilder.js';
 import { ermittlePausierteFuehrung } from './fuehrungFortsetzen.js';
 import { baueAnsichtWahl } from './fuehrungenAnsichtWahl.js';
+import { BESTAND_PALETTE, dunkelGenugFuerWeiss } from '../utils/kategorieFarben.js';
 
 function ermittleKachelBild(fuehrung) {
   const ersterBeleg = fuehrung.stationen[0]?.belege[0];
@@ -83,12 +84,21 @@ function baueTitelEintrag(fuehrung, pausiert) {
   return li;
 }
 
+// Farbe des Themenfeldes (Wunsch des Autors, 2026-10-28): die gemeinsame Palette der Seite (BESTAND_PALETTE,
+// der Reihe nach wie die Kacheln von Urkunden, Personen, Orte und Bestand), so weit abgedunkelt, dass die helle
+// Schrift lesbar bleibt; leicht durchscheinend über dem Themenbild
+function feldFarbe(index) {
+  const c = d3.color(dunkelGenugFuerWeiss(BESTAND_PALETTE[index % BESTAND_PALETTE.length]));
+  return `rgba(${c.r}, ${c.g}, ${c.b}, .9)`;
+}
+
 function baueFeld(themenbereich, gruppe, index, pausiert) {
   const feld = document.createElement('section');
   feld.className = 'fuehrungen-feld';
   const bild = gruppe.map(ermittleKachelBild).find(Boolean);
   // Absolute URL: eine relative url() in einer CSS-Variable würde sonst gegen
   // css/components.css aufgelöst (→ css/fotos/…, 404).
+  feld.style.setProperty('--fuehrungen-feld-farbe', feldFarbe(index));
   if (bild) feld.style.setProperty('--fuehrungen-feld-bild', `url("${new URL(bild, document.baseURI).href}")`);
 
   const listenId = `fuehrungen-feld-liste-${index}`;

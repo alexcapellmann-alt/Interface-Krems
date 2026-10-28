@@ -242,13 +242,30 @@ const MARKER_FARBE = '#1a4d8f';
 // AUFTRAG C1, Punkt 5: kein fester Ersatzort mehr im Code - fehlt der
 // Startpunkt in archiv.csv, zeigt die Karte den Ausschnitt aller Orte aus
 // orte.csv, ohne Orte eine Weltübersicht.
+// Seit 2026-10-28 (Wunsch des Autors): der Startpunkt aus archiv.csv (Krems) bleibt die Mitte, die Zoomstufe
+// wird aber so gewählt, dass ALLE Orte der Daten sichtbar sind - über einen um die Mitte symmetrischen
+// Rahmen (die feste Zoomstufe aus archiv.csv schnitt entfernte Orte wie Rom oder Aalst ab).
 async function setzeStartansicht(karte, start) {
-  if (start) return;
   const orte = Array.from((await ladeOrtsVerzeichnis()).values());
-  if (orte.length > 0) karte.fitBounds(L.latLngBounds(orte.map((o) => [o.lat, o.lon])), { padding: [40, 40] });
-  else karte.setView([0, 0], 2);
+  if (orte.length === 0) {
+    if (!start) karte.setView([0, 0], 2);
+    return;
+  }
+  const alle = L.latLngBounds(orte.map((o) => [o.lat, o.lon]));
+  if (!start) { karte.fitBounds(alle, { padding: [40, 40] }); return; }
+  const [lat, lon] = start.zentrum;
+  const dLat = Math.max(Math.abs(alle.getNorth() - lat), Math.abs(lat - alle.getSouth()));
+  const dLon = Math.max(Math.abs(alle.getEast() - lon), Math.abs(lon - alle.getWest()));
+  const rahmen = L.latLngBounds([lat - dLat, lon - dLon], [lat + dLat, lon + dLon]);
+  karte.setView(start.zentrum, karte.getBoundsZoom(rahmen, false, L.point(60, 60)), { animate: false });
 }
 const JAHRZEHNT_SCHRITT = 10;
+// Abspielen (Wunsch des Autors, 2026-10-28): der linke Regler bleibt am Anfang der Spanne, der rechte rückt
+// Jahrzehnt für Jahrzehnt vor - die Karte füllt sich nach und nach mit Orten (derselbe Effekt wie beim Ziehen
+// des rechten Reglers). Angehalten geht es beim nächsten Klick von dort weiter, am Ende beginnt es von vorn.
+const ABSPIEL_TAKT_MS = 260;
+const SYMBOL_ABSPIELEN = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>';
+const SYMBOL_PAUSE = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z" fill="currentColor"/></svg>';
 const DEBOUNCE_MS = 80;
 const HERVORHEBUNG_DAUER_MS = 2500;
 
@@ -506,6 +523,8 @@ function fuegeStyleEin(container) {
     .karte-regler-btn:hover { border-color: var(--accent); }
     .karte-regler-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     .karte-regler-btn:disabled { cursor: not-allowed; }
+    .karte-abspielen { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; color: var(--accent); }
+    .karte-abspielen[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
     .karte-sidebar-abschnitt { margin-bottom: var(--space-4); }
     .karte-sidebar-abschnitt-titel { margin: 0 0 var(--space-2) 0; }
     .karte-sidebar-ort { margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border);
@@ -610,7 +629,49 @@ function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
     instanz.debounceTimer = setTimeout(() => { aktualisiereMarker(); }, DEBOUNCE_MS);
   }
 
+  // Abspielen / Pause neben dem Regler
+  const abspielBtn = document.createElement('button');
+  abspielBtn.type = 'button';
+  abspielBtn.className = 'karte-regler-btn karte-abspielen';
+  abspielBtn.disabled = deaktiviert;
+  const zeigeAbspielSymbol = (laeuft) => {
+    abspielBtn.innerHTML = laeuft ? SYMBOL_PAUSE : SYMBOL_ABSPIELEN;
+    abspielBtn.setAttribute('aria-label', laeuft ? 'Zeitraum-Animation anhalten' : 'Zeitraum-Animation abspielen');
+    abspielBtn.title = laeuft ? 'Anhalten' : 'Abspielen';
+    abspielBtn.setAttribute('aria-pressed', String(laeuft));
+  };
+  zeigeAbspielSymbol(false);
+  function halteAn() {
+    clearInterval(instanz.abspielTimer);
+    instanz.abspielTimer = null;
+    zeigeAbspielSymbol(false);
+  }
+  function setzeFenster(von, bis) {
+    vonInput.value = String(von);
+    bisInput.value = String(bis);
+    aktualisiereReglerAnzeige();
+    instanz.aktiverZeitraum = { von, bis };
+    clearTimeout(instanz.debounceTimer);
+    aktualisiereMarker();
+  }
+  function spieleAb() {
+    const [anfang, ende] = jahresSpanneVoll;
+    const von = anfang;
+    let bis = Number(bisInput.value);
+    if (bis >= ende) bis = Math.min(anfang + JAHRZEHNT_SCHRITT, ende); // am Ende (oder volle Spanne): von vorn
+    setzeFenster(von, bis);
+    zeigeAbspielSymbol(true);
+    instanz.abspielTimer = setInterval(() => {
+      if (!instanz || !abspielBtn.isConnected) { clearInterval(instanz?.abspielTimer); return; }
+      if (bis >= ende) { halteAn(); return; }
+      bis += JAHRZEHNT_SCHRITT;
+      setzeFenster(von, bis);
+    }, ABSPIEL_TAKT_MS);
+  }
+  abspielBtn.addEventListener('click', () => (instanz.abspielTimer ? halteAn() : spieleAb()));
+
   vonInput.addEventListener('input', () => {
+    if (instanz.abspielTimer) halteAn(); // Greift man selbst zum Regler, hält die Animation an
     if (Number(vonInput.value) > Number(bisInput.value) - JAHRZEHNT_SCHRITT) {
       vonInput.value = String(Number(bisInput.value) - JAHRZEHNT_SCHRITT);
     }
@@ -618,6 +679,7 @@ function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
     planeLiveUpdate();
   });
   bisInput.addEventListener('input', () => {
+    if (instanz.abspielTimer) halteAn();
     if (Number(bisInput.value) < Number(vonInput.value) + JAHRZEHNT_SCHRITT) {
       bisInput.value = String(Number(vonInput.value) + JAHRZEHNT_SCHRITT);
     }
@@ -633,6 +695,7 @@ function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
   alleBtn.textContent = 'Alle';
   alleBtn.disabled = deaktiviert;
   alleBtn.addEventListener('click', () => {
+    if (instanz.abspielTimer) halteAn();
     vonInput.value = String(jahresSpanneVoll[0]);
     bisInput.value = String(jahresSpanneVoll[1]);
     aktualisiereReglerAnzeige();
@@ -641,7 +704,7 @@ function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
     aktualisiereMarker();
   });
 
-  reglerGruppe.append(reglerLabel, sliderWrapper, reglerAnzeige, alleBtn);
+  reglerGruppe.append(reglerLabel, abspielBtn, sliderWrapper, reglerAnzeige, alleBtn);
 
   if (deaktiviert) {
     const hinweis = document.createElement('span');
@@ -738,6 +801,8 @@ async function zeichneKarte() {
   // document-Listener.
   if (instanz.infoButton) instanz.infoButton.destroy();
   clearTimeout(instanz.debounceTimer);
+  clearInterval(instanz.abspielTimer);
+  instanz.abspielTimer = null;
   container.innerHTML = '';
   fuegeStyleEin(container);
 
@@ -771,7 +836,8 @@ async function zeichneKarte() {
   instanz.mapDiv = mapDiv;
 
   const start = kartenStartpunkt();
-  const karte = L.map(mapDiv);
+  // zoomSnap 0.25 (2026-10-28): die Startansicht (alle Orte um Krems) passt in Viertelstufen enger als in ganzen
+  const karte = L.map(mapDiv, { zoomSnap: 0.25 });
   if (start) karte.setView(start.zentrum, start.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
@@ -861,6 +927,7 @@ export function resize(neueOptionen = {}) {
 export function destroy() {
   if (!instanz) return;
   clearTimeout(instanz.debounceTimer);
+  clearInterval(instanz.abspielTimer);
   if (instanz.infoButton) instanz.infoButton.destroy();
   if (instanz.karte) {
     instanz.karte.remove();
