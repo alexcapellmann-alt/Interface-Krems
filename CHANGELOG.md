@@ -7,6 +7,30 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (168) – Führungen: Vertiefungslinks zu ausgeblendeten Ansichten entfernt
+
+- Geprüft: jeder Vertiefungslink in `fuehrungen.csv` gegen die angebotenen Bereiche und Ansichten in `ansichten.csv`. Sechs Stationen verwiesen auf die ausgeblendeten Bereiche Bürgerbuch und Verlassenschaften - Links entfernt: wer-fehlt/5 (Trellis), wer-fehlt/7 (Vermögensschichtung), frauen-im-archiv/1, /6 (Parallelkoordinaten), frauen-im-archiv/5 (Vermögensschichtung); frauen-im-archiv/8 behält den Link zu den Regesten, nur der zu den Parallelkoordinaten entfällt. Alle übrigen Links führen zu angebotenen Ansichten.
+- Behoben: schule-gasthaus/1 hatte durch ein Semikolon in `quellen_intern` ein Feld zu viel (Anzeige nicht betroffen) - Feld richtig gequotet, Inhalt unverändert.
+- Nur das Feld `vertiefung` der sechs Stationen hat sich geändert (Feldvergleich gegen HEAD). Sicherung: `KI-Tribunal\sicherungen\fuehrungen_vor_vertiefung_2026-10-28.csv`.
+- Offen (Rückfrage): donau-bruecke/3 enthält im Feld `vertiefung` nach dem Treemap-Link zwei Textabsätze zum Bruckerladenamt; sie erscheinen als zwei Fehlerkästen („Vertiefungslink … verweist auf keine vorhandene Ansicht“).
+- Geprüft auf dem Testserver 8845; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-28 (167) – Infotexte ohne Hinweise auf interne Dateien
+
+- Grundsatz (Wunsch des Autors): Infotexte nennen keine internen CSV-Dateien.
+- Wortwolke: der automatisch angehängte Absatz zu den Filtern ohne „(Datei wortwolke_filter.csv)“; der Satz über nicht verwendete Zeilen der Filterdatei (eine Konfigurationsmeldung) steht nicht mehr im Infotext (`wortwolke.js`).
+- Bilderwand (`infotexte.csv`): „nur Orte mit Koordinaten aus orte.csv“ → „nur Orte mit bekannten Koordinaten“.
+- Urkundennetzwerk: Ersatztext des Info-Knopfs bei fehlender Erklärung ohne Dateinamen.
+- Geprüft: keine Zeile in `infotexte.csv` nennt mehr eine CSV-Datei; Zusatzinhalte der Info-Knöpfe (Stammbaum, Wortwolke) ebenfalls nicht; Wortwolke auf dem Testserver 8845 geprüft. Nicht geändert (Hinweisbalken und Fehlermeldungen außerhalb der Infotexte, siehe Chat): Meldungen zu ausgeblendeten Ansichten, fehlenden Dateien und Literaturangaben der Führungen.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (166) – Infotexte überarbeitet (Autor), Semikolon-Fehler in zwei CSV-Zeilen behoben
 
 - Neue Infotexte vom Autor wörtlich übernommen (`infotexte.csv`, Spalte `text`): Karte Soziale Gruppen, Dot Plot, Gantt-Diagramm, Karte, Regesten, Streamgraph, Verbindungskarte, Wortwolke, Urkundennetzwerk. Nur Leerzeichen um das Absatzzeichen „|“ entfernt. Die Zeilen sind CSV-korrekt in Anführungszeichen gesetzt (die Texte enthalten Semikolon und gerade Anführungszeichen).
