@@ -5,8 +5,29 @@
 // ändert sich. Dafür merkt sich merkeAusschnitt() Mitte und Zoomstufe der aktuellen Karte; die nächste neu
 // erzeugte Leaflet-Karte nimmt bei ihrer ersten Positionierung (fitBounds()/setView() des Moduls) stattdessen
 // diesen Ausschnitt. Die Module selbst bleiben unverändert.
+//
+// Außerdem (2026-10-28, Wunsch des Autors) für alle Kartenansichten: ein Klick auf eine freie Fläche der Karte
+// klappt eine offene Sidebar der Ansicht wieder ein (über ihren Schließen-Knopf, damit jedes Modul seine Auswahl
+// selbst zurücksetzt). „Frei“ heißt: Kartenkachel, Kartenhintergrund oder die leere Fläche einer darübergelegten
+// Zeichnung - nicht ein Ort, Band oder anderes gezeichnetes Element.
 
 const karten = new Set();
+
+function istFreieFlaeche(ziel) {
+  if (!(ziel instanceof Element)) return false;
+  if (ziel.classList.contains('leaflet-interactive')) return false; // Leaflet-Formen (z. B. Orte der Karte)
+  if (ziel.closest('.leaflet-control, .leaflet-popup')) return false;
+  if (ziel instanceof SVGElement && ziel.tagName.toLowerCase() !== 'svg') return false; // Zeichnung über der Karte
+  return true; // Kachel, Kartenhintergrund, leere Zeichenfläche
+}
+
+function klappeSidebarEin(karte, event) {
+  if (!istFreieFlaeche(event.originalEvent?.target)) return;
+  const ansicht = karte.getContainer().closest('.viz-inhalt') || karte.getContainer().parentElement;
+  const offen = ansicht?.querySelector('.bestand-sidebar.offen');
+  if (!offen) return;
+  [...offen.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Sidebar schließen')?.click();
+}
 let wunsch = null;
 const WUNSCH_GUELTIG_MS = 8000; // die Karte entsteht teils erst nach dem Laden von orte.csv
 
@@ -14,6 +35,7 @@ if (window.L?.Map) {
   window.L.Map.addInitHook(function merkeUndUebernimm() {
     karten.add(this);
     this.on('unload', () => karten.delete(this));
+    this.on('click', (event) => klappeSidebarEin(this, event));
     if (!wunsch || Date.now() - wunsch.zeit > WUNSCH_GUELTIG_MS) return;
     const { zentrum, zoom } = wunsch;
     wunsch = null;

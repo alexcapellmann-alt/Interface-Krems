@@ -194,9 +194,7 @@ function fuegeStyleEin(container) {
     .verbindungskarte-werkzeugleiste { display: flex; justify-content: space-between; align-items: center;
       flex-wrap: wrap; gap: var(--space-3); margin-bottom: 6px; position: relative; z-index: 900; }
     .verbindungskarte-werkzeugleiste { justify-content: flex-end; }
-    /* Gedämpfte Kartenkacheln (2026-10-28): Graustufen mit leichtem Papierton, damit die feinen Bögen lesbar bleiben */
-    .verbindungskarte-viz-container .leaflet-container { background: #f7f5f0; }
-    .verbindungskarte-viz-container .leaflet-tile-pane { filter: grayscale(1) sepia(.18) contrast(.82) brightness(1.08); opacity: .6; }
+    /* gedämpfte Kartenkacheln: css/components.css (gemeinsam mit der Bipartite Flow Map) */
     .orts-knoten { cursor: pointer; fill: #6b6358; fill-opacity: .55; stroke: #f7f5f0; stroke-width: .8;
       transition: fill-opacity .15s, fill .15s; }
     .orts-knoten.tritt-zurueck { fill-opacity: .15; }

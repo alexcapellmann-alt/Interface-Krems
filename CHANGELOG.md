@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (160) – Bipartite Flow Map gedämpft, Sidebar schließt bei Klick auf freie Kartenfläche
+
+- Bipartite Flow Map: dieselben gedämpften Kartenkacheln wie die Verbindungskarte (Graustufen mit leichtem Papierton). Die Regel steht jetzt für beide gemeinsam in `components.css` statt im Modul der Verbindungskarte.
+- Alle Kartenansichten (Karte, Verbindungskarte, Bipartite Flow Map): ein Klick auf eine freie Fläche der Karte klappt eine offene Sidebar ein - über deren Schließen-Knopf, sodass jedes Modul seine Auswahl selbst zurücksetzt (Verbindungskarte: festgehaltener Ort wird gelöst). Frei = Kartenkachel, Kartenhintergrund oder leere Zeichenfläche, nicht Orte, Bänder oder Steuerelemente; Ziehen der Karte zählt nicht als Klick. Umgesetzt einmal für alle Leaflet-Karten in `js/utils/kartenAusschnitt.js`.
+- Geprüft auf dem Testserver 8845: in allen drei Ansichten öffnet ein Ort/Band die Sidebar, ein Klick auf die freie Karte schließt sie; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (159) – Verbindungskarte nach dem Prinzip der Bilderwand-Karte
 
 - Die Verbindungskarte behält ihre Leaflet-Karte, zeichnet darüber aber nach dem Prinzip der Karte hinter der Bilderwand: in Ruhe nur die Orte (Kreisgröße = Zahl der Urkunden, zurückhaltendes Graubraun), keine Linien. Zeigen oder Tastaturfokus auf einen Ort: er tritt in Tintenblau mit Hof und Namen hervor, nur seine Verbindungen erscheinen als dünne, leicht gebogene Bögen (Deckkraft und Stärke nach Zahl gemeinsamer Urkunden), verbundene Orte leuchten dezent mit, alle übrigen treten zurück. Klick hält die Auswahl fest und öffnet die Sidebar mit den Urkunden des Ortes; zweiter Klick, Klick auf die freie Karte oder Schließen der Sidebar löst sie. Tooltip am Ort: Zahl der Urkunden und der verbundenen Orte; am Bogen: gemeinsame Nennungen.
