@@ -792,6 +792,12 @@
 .darstellung-knopf[aria-pressed="true"] { background: var(--accent); color: #fff; cursor: default; }
 .darstellung-knopf:focus-visible { outline: 3px solid #e0b429; outline-offset: 2px; position: relative; }
 @media (max-width: 700px) { .ansicht-wechsel-leiste { margin-left: 0; margin-top: var(--space-2); } }
+/* Gedämpfte Kartenkacheln (2026-10-28) für Verbindungskarte und Bipartite Flow Map: Graustufen mit leichtem
+   Papierton, damit die feinen Bögen und Bänder darüber lesbar bleiben */
+.verbindungskarte-viz-container .leaflet-container,
+.bipartiteflowmap-viz-container .leaflet-container { background: #f7f5f0; }
+.verbindungskarte-viz-container .leaflet-tile-pane,
+.bipartiteflowmap-viz-container .leaflet-tile-pane { filter: grayscale(1) sepia(.18) contrast(.82) brightness(1.08); opacity: .6; }
 /* Wechsel zwischen den Kartenansichten der Orte (2026-10-28): kurzes Einblenden über stehendem Ausschnitt */
 @keyframes karten-einblenden { from { opacity: .35; } to { opacity: 1; } }
 .viz-inhalt.karten-einblenden { animation: karten-einblenden .45s ease; }
