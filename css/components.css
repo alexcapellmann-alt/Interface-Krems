@@ -795,6 +795,8 @@
 .bestand-uebergang { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
 .viz-inhalt svg { transition: opacity .3s ease; }
 .viz-inhalt.bestand-uebergang-laeuft svg { opacity: 0; transition: none; }
+.bestand-uebergang-bild { position: fixed; z-index: 91; pointer-events: none; transition: opacity 250ms ease; }
+.bestand-uebergang-bild > svg { display: block; }
 
 /* Eigene Vorschlagsliste (2026-10-28, statt <datalist>): Überfahren hebt den Bestand in der Ansicht hervor */
 .bestand-suche-feld { position: relative; display: inline-block; }

@@ -18,6 +18,7 @@ const FORMEN = 'rect.bestand-rand, rect.kategorie-rahmen-rect, path.sunburst-pfa
 const PUNKTE = 24;
 const DAUER = 900;
 const MAX_FORMEN = 700;
+const BILD_BLENDE = 250; // Ein-/Ausblenden der Grafik am Anfang und Ende des Übergangs (ms)
 
 const istKnoten = (d) => d && typeof d === 'object' && typeof d.leaves === 'function';
 
@@ -82,9 +83,17 @@ const sichtbar = (box) => box[2] > -50 && box[0] < window.innerWidth + 50 && box
 
 // Festhalten: je Schlüssel die größte Form (eine Kachel besteht teils aus mehreren Formen). Auch Formen
 // außerhalb des Fensters (lange Gantt-Liste) - sie fliegen beim Übergang von dort herein bzw. hinaus.
-export function erfasseFormen(container) {
+// `bild: true` (2026-10-28): zusätzlich eine Kopie der bisherigen Grafik festhalten, die zu Beginn des
+// Übergangs über den wandernden Formen ausblendet (Beschriftungen, Schraffur verschwinden dann nicht schlagartig).
+// Nur für Ansichten, deren Grafik ganz im Fenster liegt (nicht für die scrollende Gantt-Liste).
+export function erfasseFormen(container, { bild = false } = {}) {
   const formen = new Map();
   if (!container) return formen;
+  if (bild) {
+    formen.bild = [...container.querySelectorAll('svg')]
+      .filter((svg) => !svg.parentElement.closest('svg') && svg.getBoundingClientRect().width > 0)
+      .map((svg) => ({ kopie: svg.cloneNode(true), rect: svg.getBoundingClientRect() }));
+  }
   container.querySelectorAll(FORMEN).forEach((el) => {
     const d = el.__data__;
     if (!istKnoten(d)) return;
@@ -94,7 +103,10 @@ export function erfasseFormen(container) {
     if (!umriss) return;
     const bisher = formen.get(key);
     if (bisher && bisher.flaeche >= umriss.flaeche) return;
-    formen.set(key, { ...umriss, farbe: farbeVon(el), vorfahren: vorfahrenSchluessel(d) });
+    // gefuellt: Rahmen ohne Füllung (Kategorie-Rahmen der Treemap) bleiben im Übergang Rahmen (2026-10-28)
+    const fuellung = el.getAttribute('fill');
+    const gefuellt = !(fuellung === 'none' || fuellung === 'transparent');
+    formen.set(key, { ...umriss, farbe: farbeVon(el), gefuellt, vorfahren: vorfahrenSchluessel(d) });
   });
   return formen;
 }
@@ -118,28 +130,38 @@ export function spieleUebergang(vorher, container) {
     const findeIn = (formen, f) => f.vorfahren.map((k) => formen.get(k)).find(Boolean);
     nachher.forEach((ziel, key) => {
       const start = vorher.get(key) || findeIn(vorher, ziel) || ziel;
-      if (sichtbar(start.box) || sichtbar(ziel.box)) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: ziel.farbe, opVon: vorher.has(key) ? 1 : (start === ziel ? 0 : 0.25), opNach: 1 });
+      // aus der Kategorie kommende Formen erst in der zweiten Hälfte einblenden: am Anfang liegen sie alle
+      // übereinander und würden sich sonst zu einer deckenden Fläche summieren (2026-10-28)
+      const blende = vorher.has(key) ? null : (start === ziel ? (e) => e : (e) => Math.max(0, (e - 0.5) * 2));
+      if (sichtbar(start.box) || sichtbar(ziel.box)) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: ziel.farbe, opVon: vorher.has(key) ? 1 : 0, opNach: 1, blende, fuellVon: start.gefuellt ? 1 : 0, fuellNach: ziel.gefuellt ? 1 : 0 });
     });
     vorher.forEach((start, key) => {
       if (nachher.has(key)) return;
       const ziel = findeIn(nachher, start) || start;
-      if (sichtbar(start.box) || sichtbar(ziel.box)) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: start.farbe, opVon: 1, opNach: 0 });
+      // Spiegelbild: in die Kategorie wandernde Formen sind zur Hälfte des Wegs ausgeblendet
+      const blende = ziel === start ? (e) => e : (e) => Math.min(1, e * 2);
+      if (sichtbar(start.box) || sichtbar(ziel.box)) paare.push({ von: start.punkte, nach: ziel.punkte, farbeVon: start.farbe, farbe: start.farbe, opVon: 1, opNach: 0, blende, fuellVon: start.gefuellt ? 1 : 0, fuellNach: start.gefuellt ? 1 : 0 });
     });
     if (!paare.length) { fertig(); return; }
     paare.splice(MAX_FORMEN);
 
+    // Reste eines noch ausblendenden vorigen Übergangs sofort entfernen
+    document.querySelectorAll('.bestand-uebergang, .bestand-uebergang-bild').forEach((el) => el.remove());
     const ns = 'http://www.w3.org/2000/svg';
     const ueberlagerung = document.createElementNS(ns, 'svg');
     ueberlagerung.setAttribute('aria-hidden', 'true');
     ueberlagerung.setAttribute('class', 'bestand-uebergang');
     ueberlagerung.setAttribute('width', String(window.innerWidth));
     ueberlagerung.setAttribute('height', String(window.innerHeight));
+    // Rahmen (Füllung 0) zuerst, damit sie unter den Flächen liegen
+    paare.sort((a, b) => Math.max(a.fuellVon, a.fuellNach) - Math.max(b.fuellVon, b.fuellNach));
     const elemente = paare.map((p) => {
       const el = document.createElementNS(ns, 'path');
       el.setAttribute('d', pfad(p.von));
       el.setAttribute('fill', p.farbeVon);
-      el.setAttribute('stroke', '#ffffff');
-      el.setAttribute('stroke-width', '0.5');
+      el.setAttribute('fill-opacity', String(p.fuellVon));
+      el.setAttribute('stroke', p.fuellVon ? '#ffffff' : p.farbeVon);
+      el.setAttribute('stroke-width', p.fuellVon ? '0.5' : '2.5');
       el.style.opacity = String(p.opVon);
       ueberlagerung.appendChild(el);
       return el;
@@ -148,12 +170,31 @@ export function spieleUebergang(vorher, container) {
     document.body.appendChild(ueberlagerung);
     container.classList.add('bestand-uebergang-laeuft');
 
+    // Anfang: die bisherige Grafik liegt kurz über den Formen und blendet aus
+    (vorher.bild || []).forEach(({ kopie, rect }) => {
+      const huelle = document.createElement('div');
+      huelle.className = 'bestand-uebergang-bild';
+      huelle.setAttribute('aria-hidden', 'true');
+      Object.assign(huelle.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+      huelle.appendChild(kopie);
+      document.body.appendChild(huelle);
+      void huelle.offsetWidth;
+      huelle.style.opacity = '0';
+      setTimeout(() => huelle.remove(), BILD_BLENDE + 100);
+    });
+
     let beendet = false;
     const ende = () => {
       if (beendet) return;
       beendet = true;
-      ueberlagerung.remove();
+      // Ende: erst die neue Grafik unter den Formen ganz einblenden (CSS-Übergang .3s), dann die Formen
+      // ausblenden - sonst scheint während des Einblendens kurz der Hintergrund durch
       container.classList.remove('bestand-uebergang-laeuft');
+      setTimeout(() => {
+        ueberlagerung.style.transition = `opacity ${BILD_BLENDE}ms ease`;
+        ueberlagerung.style.opacity = '0';
+        setTimeout(() => ueberlagerung.remove(), BILD_BLENDE + 50);
+      }, 320);
       fertig();
     };
     const t0 = performance.now();
@@ -163,8 +204,14 @@ export function spieleUebergang(vorher, container) {
       const e = sanft(t);
       paare.forEach((p, i) => {
         elemente[i].setAttribute('d', pfad(mische(p.von, p.nach, e)));
-        elemente[i].setAttribute('fill', farbe[i](e));
-        elemente[i].style.opacity = String(p.opVon + (p.opNach - p.opVon) * e);
+        const f = farbe[i](e);
+        const fuellung = p.fuellVon + (p.fuellNach - p.fuellVon) * e;
+        elemente[i].setAttribute('fill', f);
+        elemente[i].setAttribute('fill-opacity', fuellung.toFixed(3));
+        // gefüllte Formen mit feinem weißem Rand, Rahmen in ihrer Farbe
+        elemente[i].setAttribute('stroke', fuellung > 0.5 ? '#ffffff' : f);
+        elemente[i].setAttribute('stroke-width', (2.5 - 2 * fuellung).toFixed(2));
+        elemente[i].style.opacity = String(p.opVon + (p.opNach - p.opVon) * (p.blende ? p.blende(e) : e));
       });
       if (t < 1) requestAnimationFrame(schritt);
       else ende();

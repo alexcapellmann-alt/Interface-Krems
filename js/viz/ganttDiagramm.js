@@ -439,9 +439,9 @@ function zeichneBalken(gruppe, mitZeitraum, kategorieFarbSkala, container, zeige
     .attr('height', ZEILENHOEHE)
     .attr('rx', 2)
     .attr('fill', (d) => farbeFuerBlatt(d, kategorieFarbSkala))
-    .attr('stroke', (d) => (istUnsicher(d, zeigeUnsicherheit) ? '#c0392b' : '#ffffff'))
-    .attr('stroke-width', (d) => (istUnsicher(d, zeigeUnsicherheit) ? 2 : 1))
-    .attr('stroke-dasharray', (d) => (istUnsicher(d, zeigeUnsicherheit) ? '4,3' : null));
+    // 2026-10-28: keine roten Strichrahmen mehr für unsichere Bestände (der Filter zeigt ohnehin nur sie)
+    .attr('stroke', '#ffffff')
+    .attr('stroke-width', 1);
 
   zeilen.filter((d) => istUnsicher(d, zeigeUnsicherheit))
     .append('text')
@@ -513,7 +513,7 @@ function zeichneOhneZeitraumMarker(gruppe, ohneZeitraum, startIndex, kategorieFa
     .attr('class', 'gantt-ohne-zeitraum-sichtbar')
     .attr('width', 90).attr('height', ZEILENHOEHE).attr('rx', 2)
     .attr('fill', 'none')
-    .attr('stroke', (d) => (istUnsicher(d, zeigeUnsicherheit) ? '#c0392b' : farbeFuerBlatt(d, kategorieFarbSkala)))
+    .attr('stroke', (d) => farbeFuerBlatt(d, kategorieFarbSkala))
     .attr('stroke-width', 1.5)
     .attr('stroke-dasharray', '3,2');
 
@@ -827,8 +827,7 @@ function zeichneKategorieAnsicht({ namensspalte, zeitbereich, xSkalaBasis, achse
   const baender = formen.append('path')
     .attr('class', 'gantt-kategorie-band')
     .attr('fill', (d, i) => kategorieFarbe(kategorieZeilen[i], kategorieFarbSkala))
-    .attr('stroke', (d, i) => (zeigeUnsicherheit && kategorieZeilen[i].blaetter.some((b) => b.data.record.daten_unsicher) ? '#c0392b' : 'none'))
-    .attr('stroke-dasharray', '4,3');
+    .attr('stroke', 'none');
   gruppen.each(function verdrahte(d, i) {
     const zeile = kategorieZeilen[i];
     const eintrag = instanz.kategorieElemente.get(zeile.name);
@@ -1092,7 +1091,7 @@ function zeichneGantt() {
     'Ein horizontaler Balken pro Bestand, Position und Breite nach überliefertem ' +
     'Zeitraum, chronologisch aufsteigend sortiert. Farbton zeigt die Kategorie ' +
     '(Legende oberhalb), "ohne Kategorie" erscheint neutral grau mit Punktmuster. ' +
-    'Gestrichelter roter Rand und Warnsymbol kennzeichnen unsichere Angaben. ' +
+    'Ein Warnsymbol kennzeichnet unsichere Angaben. ' +
     'Bestände ohne verzeichneten Zeitraum erscheinen am Ende der Liste als ' +
     'gestrichelter Platzhalter ohne Balken, nicht ausgeblendet. Ziehen verschiebt ' +
     'die Zeitachse, Strg+Mausrad bzw. Trackpad-Zoomgeste zoomt.'

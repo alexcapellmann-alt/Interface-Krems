@@ -29,8 +29,8 @@
 // -> bkk_kategorie -> bkk_unterkategorie -> Bestand, siehe bestandsHierarchie.js),
 // die übergebenen Records selbst werden nicht verändert (Abschnitt 5).
 //
-// Unsicherheits-Kennzeichnung (daten_unsicher) pro Bestand-Zelle, DREI Kanäle:
-// gestrichelter roter Rand, Warnsymbol, Schraffur-Overlay - folgt
+// Unsicherheits-Kennzeichnung (daten_unsicher) pro Bestand-Zelle: Warnsymbol und
+// Schraffur-Overlay (roter Strichrahmen seit 2026-10-28 entfernt) - folgt
 // options.showUncertainty (Unsicherheits-Button, Abschnitt 11). Unabhängig davon:
 // "ohne Kategorie" ist ein eigener, dauerhafter Status (fehlende Zuordnung ist
 // bereits in daten_unsicher/unsicherheit_anmerkung dokumentiert, siehe SCHEMA.md)
@@ -519,9 +519,9 @@ function zeichneEineKachel(gruppe, knoten, kategorieName, zeigeUnsicherheit) {
     .attr('width', breite).attr('height', hoehe)
     .attr('fill', farbe)
     .attr('rx', 3)
-    .attr('stroke', istAusgewaehlt ? AUSWAHL_FARBE : (istUnsicher ? '#c0392b' : '#ffffff'))
-    .attr('stroke-width', istAusgewaehlt || istUnsicher ? 2 : 1)
-    .attr('stroke-dasharray', istUnsicher ? '4,3' : null)
+    // 2026-10-28: kein roter Strichrahmen mehr für unsichere Bestände (der Filter zeigt ohnehin nur sie)
+    .attr('stroke', istAusgewaehlt ? AUSWAHL_FARBE : '#ffffff')
+    .attr('stroke-width', istAusgewaehlt ? 2 : 1)
     .attr('stroke-opacity', istAusgewaehlt ? 0.9 : 1);
 
   if (ohneKategorie) {
@@ -669,7 +669,7 @@ function zeichneTreemap() {
     'Jede Kachel entspricht einem Bestand, Fläche nach Umfang in Laufmetern ' +
     '(Quadratwurzel-skaliert für Lesbarkeit). Farbton zeigt die Kategorie, ' +
     'Helligkeit die Unterkategorie; "ohne Kategorie" erscheint neutral grau mit ' +
-    'Punktmuster. Gestrichelter roter Rand, Warnsymbol und Schraffur ' +
+    'Punktmuster. Warnsymbol und Schraffur ' +
     'kennzeichnen Bestände mit unsicheren Angaben. Klick auf eine ' +
     'Kategorie-Fläche in der Wurzel-Ansicht zeigt nur deren Bestände; Klick auf ' +
     'einen Bestand in der Kategorie-Ansicht öffnet Details in der Seitenleiste.'
