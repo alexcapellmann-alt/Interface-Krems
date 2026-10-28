@@ -80,7 +80,7 @@ export const OHNE_KATEGORIE_FARBE = '#8a8a8a';
 // Farbverläufe der Startseite (css/startseite.css, .startseite-slide-bg--1 bis --4) - Tintenblau, Petrol,
 // Braun-Gold, Bordeaux - mit je zwei bis drei Varianten. Reihenfolge abwechselnd nach Familie, damit die
 // nach Größe benachbarten Kategorien nie dieselbe Familie bekommen.
-const BESTAND_PALETTE = [
+export const BESTAND_PALETTE = [ // seit 2026-10-28 auch für die farbigen Galerie-Kacheln (visualisierungsGalerie.js)
   '#2c4a6e', '#3d6f6e', '#6b4a30', '#5c1f2e',
   '#4f6f94', '#5d8c8a', '#c99a3a', '#8a6a3f',
   '#8a4a5a', '#1b2f45', '#3a2436'
