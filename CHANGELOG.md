@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (169) – Führung „Donaubrücke“, Station 3: Absätze aus der Vertiefung in den Stationstext
+
+- donau-bruecke/3 („Wer bestimmt über die Brücke?“): die beiden Absätze zum Bruckerladenamt („Auch die Stadt nahm Maut ein …“, „Von diesem Amt ist nach dem Verzeichnis nur dieses eine Rechnungsheft erhalten …“) standen im Feld `vertiefung` und erschienen als zwei Fehlerkästen. Jetzt die letzten beiden Absätze des Stationstexts (`text`, Wortlaut unverändert); `vertiefung` enthält nur noch den Link zur Treemap.
+- Geprüft auf dem Testserver 8845: vier Textabsätze, keine Fehlerkästen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (168) – Führungen: Vertiefungslinks zu ausgeblendeten Ansichten entfernt
 
 - Geprüft: jeder Vertiefungslink in `fuehrungen.csv` gegen die angebotenen Bereiche und Ansichten in `ansichten.csv`. Sechs Stationen verwiesen auf die ausgeblendeten Bereiche Bürgerbuch und Verlassenschaften - Links entfernt: wer-fehlt/5 (Trellis), wer-fehlt/7 (Vermögensschichtung), frauen-im-archiv/1, /6 (Parallelkoordinaten), frauen-im-archiv/5 (Vermögensschichtung); frauen-im-archiv/8 behält den Link zu den Regesten, nur der zu den Parallelkoordinaten entfällt. Alle übrigen Links führen zu angebotenen Ansichten.
