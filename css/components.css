@@ -281,7 +281,7 @@
 @media (max-width: 560px)  { .fuehrungen-felder { grid-template-columns: 1fr; } }
 .fuehrungen-feld { position: relative; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
   border-radius: var(--radius); color: var(--fuehrung-buehne-text); background-color: var(--fuehrung-buehne-bg);
-  background-image: linear-gradient(rgba(23, 34, 44, .86), rgba(23, 34, 44, .86)), var(--fuehrungen-feld-bild, none);
+  background-image: linear-gradient(var(--fuehrungen-feld-farbe, rgba(23, 34, 44, .86)), var(--fuehrungen-feld-farbe, rgba(23, 34, 44, .86))), var(--fuehrungen-feld-bild, none); /* Farbe je Feld seit 2026-10-28 (fuehrungenGalerie.js) */
   background-size: cover; background-position: center; }
 .fuehrungen-feld-kopf { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4);
   font: inherit; text-align: left; color: inherit; background: none; border: none; cursor: pointer; }
