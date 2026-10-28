@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-28 (170) – Neue Ansicht „Bürgerinnen?“ (Personen) und Station in der Führung „Frauen im Archiv“
+
+- Neu `js/viz/buergerinnen.js`: ein Punkt je Person im Bürgerbuch (Neubürger und Bürgen, je Kennung einmal gezählt: 2 655), als Punktwolke. „Nach Geschlecht ordnen“ lässt die Punkte animiert in zwei Spalten fließen: „Männer · 2 655“ und „Frauen · 0“ (leerer gestrichelter Rahmen, „keine Einträge“); „Wieder mischen“ kehrt zurück. Danach erscheint ein Schlusssatz mit Link zur Führung „Frauen im Archiv“. Tooltip: Name und Rolle (Neubürger mit Jahr / Bürge). Optionale Spalte `geschlecht` wird ausgewertet, falls sie künftig ergänzt wird.
+- Eingebunden unter Personen: `archivalienRegistry.js`, `datenAnforderungen.js`, `data/ansichten.csv` (Reihenfolge 7, angeboten), `data/infotexte.csv` (neue Zeile `buergerinnen`, drei Absätze), Symbol in `vizIcons.js`.
+- `data/fuehrungen.csv`: neue Station frauen-im-archiv/7 „Bürgerinnen?“ (1535–1625), Vertiefung `#visualisierungen/personen/buergerinnen`; bisherige Stationen 7 und 8 als 8 und 9. Sicherung: `KI-Tribunal\sicherungen\fuehrungen_vor_buergerinnen_2026-10-28.csv`.
+- `js/utils/datensatzAufruf.js`: `VERTIEFUNG_BESCHRIFTUNG` – Linktext „Zur Ansicht „Bürgerinnen?““ statt der allgemeinen Formulierung.
+- Geprüft auf dem Testserver 8845: 2 655 Punkte, Sortierung, Tooltips, Desktop ohne Scrollen, Mobilansicht; Station rendert, Link öffnet die Ansicht; Personen-Galerie mit sechs Kacheln; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (169) – Führung „Donaubrücke“, Station 3: Absätze aus der Vertiefung in den Stationstext
 
 - donau-bruecke/3 („Wer bestimmt über die Brücke?“): die beiden Absätze zum Bruckerladenamt („Auch die Stadt nahm Maut ein …“, „Von diesem Amt ist nach dem Verzeichnis nur dieses eine Rechnungsheft erhalten …“) standen im Feld `vertiefung` und erschienen als zwei Fehlerkästen. Jetzt die letzten beiden Absätze des Stationstexts (`text`, Wortlaut unverändert); `vertiefung` enthält nur noch den Link zur Treemap.

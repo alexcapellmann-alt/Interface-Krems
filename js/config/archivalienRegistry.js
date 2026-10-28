@@ -390,7 +390,11 @@ export const ARCHIVALIENTYPEN = [
       { id: 'urkundenNetzwerk', label: 'Urkundennetzwerk', modulPfad: '../viz/urkundenNetzwerk.js',
         beschreibung: 'Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.' },
       { id: 'chordDiagramm', label: 'Soziale Gruppen', modulPfad: '../viz/chordDiagramm.js',
-        beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' }
+        beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' },
+      // Wunsch des Autors (2026-10-28): das Fehlen von Frauen im Bürgerbuch sichtbar machen (ohne datenSchluessel:
+      // braucht buergerbuch und personenliste)
+      { id: 'buergerinnen', label: 'Bürgerinnen?', modulPfad: '../viz/buergerinnen.js',
+        beschreibung: 'Ein Punkt für jede der Personen im Bürgerbuch. Ein Klick ordnet sie nach Geschlecht.' }
     ]
   },
   {

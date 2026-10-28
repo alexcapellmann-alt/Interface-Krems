@@ -84,6 +84,10 @@ const DATIV_EINLEITUNG = {
   sunburst: 'Im', personennetzwerk: 'Im', marimekko: 'Im', marimekkoVerlassenschaften: 'Im', trellis: 'Im'
 };
 
+// Eigene Beschriftung für Vertiefungslinks, deren Name sich nicht in „In der … der … erkunden“ fügt
+// (2026-10-28: „Bürgerinnen?“ mit Fragezeichen)
+const VERTIEFUNG_BESCHRIFTUNG = { buergerinnen: 'Zur Ansicht „Bürgerinnen?“' };
+
 function genitiv(label, schluessel) {
   const artikel = GENITIV_ARTIKEL[schluessel] || 'der';
   const nomen = artikel === 'des' && !label.endsWith('s') ? `${label}s` : label;
@@ -138,9 +142,9 @@ export function ermittleVertiefungsLink(rohPfad) {
   const segmente = (rohPfad || '').replace(/^#\/?/, '').split('/').filter(Boolean);
   const ziel = ermittleAnsicht(segmente);
   if (!ziel) return { href: null, beschriftung: null, fehler: `Vertiefungslink „${rohPfad}" verweist auf keine vorhandene Ansicht.` };
-  const beschriftung = ziel.bereichLabel
+  const beschriftung = VERTIEFUNG_BESCHRIFTUNG[ziel.segmente.at(-1)] || (ziel.bereichLabel
     ? `${DATIV_EINLEITUNG[ziel.segmente.at(-1)] || 'In der'} ${ziel.label} ${genitiv(ziel.bereichLabel, ziel.bereichSchluessel)} erkunden`
-    : `${ziel.label} erkunden`;
+    : `${ziel.label} erkunden`);
   return { href: `#${ziel.segmente.join('/')}`, beschriftung, fehler: null };
 }
 

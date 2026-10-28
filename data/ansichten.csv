@@ -37,6 +37,7 @@ personen;bubbleChart;Bubble Chart;Ein Kreis pro Person, Fläche = Gesamt-Nennung
 personen;familienbaum;Stammbaum;Zeitleisten-Stammbaum des Hauses Habsburg von Rudolf I. bis Joseph II., mit Herrschaftszeiten von Kaisern und Königen.;3;ja;
 personen;urkundenNetzwerk;Urkundennetzwerk;Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.;5;ja;100
 personen;chordDiagramm;Soziale Gruppen;Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.;4;ja;
+personen;buergerinnen;Bürgerinnen?;Ein Punkt für jede der Personen im Bürgerbuch. Ein Klick ordnet sie nach Geschlecht.;7;ja;
 orte;;Orte;;5;ja;
 orte;ortsliste;Ortsliste;Durchsuchbare, sortierbare Liste aller Orte mit der Zahl ihrer Nennungen in Urkunden und Verlassenschaftsinventaren.;1;ja;
 orte;karte;Karte;Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.;2;ja;
