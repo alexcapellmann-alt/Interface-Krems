@@ -436,6 +436,26 @@ const GOLD_FARBE = '#c9a227';
 const HEIRAT_FARBE = '#e8cf8a'; // helle Gold-Variante, siehe Dateikopf-Kommentar
 const KRONE_PFAD = 'M-5,4 L-5,-1 L-2.5,1.5 L0,-3.5 L2.5,1.5 L5,-1 L5,4 Z';
 
+// Wunsch des Autors (2026-10-28): Ehen als liegende Acht (Lemniskate) statt Verbindungslinie. Breite in
+// Baum-Einheiten (ein Kästchen ist rund 350 breit); liegen die Partner weiter auseinander, verbindet eine
+// feine Haarlinie die Kästchen mit dem Symbol, sonst wäre nicht zu erkennen, wer zusammengehört.
+const EHE_FARBE = '#c98a2c';
+const EHE_SYMBOL_BREITE = 140;
+const EHE_SYMBOL_PFAD = (() => {
+  const a = EHE_SYMBOL_BREITE / 2;
+  const punkte = d3.range(0, 2 * Math.PI, Math.PI / 40).map((t) => {
+    const n = 1 + Math.sin(t) ** 2;
+    return `${(a * Math.cos(t) / n).toFixed(1)},${(a * Math.sin(t) * Math.cos(t) / n).toFixed(1)}`;
+  });
+  return `M${punkte.join('L')}Z`;
+})();
+// Linien bei Hover/Klick (2026-10-28): dicker; zu den Eltern durchgezogen, zu den Kindern gestrichelt und in
+// eigener Farbe. Strichstärken in Bildschirmpunkten (vector-effect: non-scaling-stroke), damit sie bei
+// jeder Zoomstufe gleich dick bleiben.
+const LINIE_NORMAL = { farbe: '#999', breite: 1.2 };
+const LINIE_ELTERN = { farbe: '#2c5d8f', breite: 4, strich: null };
+const LINIE_KINDER = { farbe: '#2e7d5b', breite: 4, strich: '7,4' };
+
 let instanz = null; // { container, wurzel, plotBereich, records, options, byId, kinderIndex, familienFarben, jahrMin, jahrMax, kastenBreite, spaltenAbstand, spaltenLaneAbstand, zoomVerhalten, zoomTransform, letzteBreite, infoButton, hoverFokusId, eingefrorenerFokusId, selektionen } – eine aktive Ansicht pro Modul-Ladung
 
 function ehepartnerListe(record) {
@@ -910,13 +930,23 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
     .selectAll('line').data(modell.elternKindLinien).join('line')
     .attr('x1', (d) => d.x1).attr('y1', (d) => d.y1)
     .attr('x2', (d) => d.x2).attr('y2', (d) => d.y2)
-    .attr('stroke', '#999').attr('stroke-width', 1.5);
+    .attr('vector-effect', 'non-scaling-stroke')
+    .attr('stroke', LINIE_NORMAL.farbe).attr('stroke-width', LINIE_NORMAL.breite);
 
+  // Ehe: Haarlinie nur bis an das Symbol heran (bei nebeneinanderstehenden Partnern entfällt sie ganz)
+  const eheMitte = (d) => (d.x1 + d.x2) / 2;
   const eheLinienSel = zoomInhalt.append('g').attr('class', 'familienbaum-ehe-linien')
-    .selectAll('line').data(modell.eheLinien).join('line')
-    .attr('x1', (d) => d.x1).attr('y1', (d) => d.y1)
-    .attr('x2', (d) => d.x2).attr('y2', (d) => d.y2)
-    .attr('stroke', '#c98a2c').attr('stroke-width', 2).attr('stroke-dasharray', '6,2');
+    .selectAll('path').data(modell.eheLinien).join('path')
+    .attr('d', (d) => {
+      const links = Math.min(d.x1, d.x2) + instanz.kastenBreite / 2;
+      const rechts = Math.max(d.x1, d.x2) - instanz.kastenBreite / 2;
+      if (rechts - links <= EHE_SYMBOL_BREITE * 1.5) return null;
+      const m = eheMitte(d);
+      return `M${links},${d.y1}H${m - EHE_SYMBOL_BREITE / 2}M${m + EHE_SYMBOL_BREITE / 2},${d.y1}H${rechts}`;
+    })
+    .attr('fill', 'none')
+    .attr('vector-effect', 'non-scaling-stroke')
+    .attr('stroke', EHE_FARBE).attr('stroke-width', 1);
 
   const knotenGruppen = zoomInhalt.append('g').attr('class', 'familienbaum-knoten')
     .selectAll('g.familienbaum-person').data(modell.knoten, (d) => d.id).join('g')
@@ -1012,11 +1042,24 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
     .attr('fill', (d) => passendeTextfarbe(istDurchHeirat(d) ? HEIRAT_FARBE : farbeFuerFamilie(d.person.familie)))
     .text((d) => ermittleKurzname(d.person.name));
 
+  // Ehe-Symbol über den Kästchen (überlappt deren Ränder bei nebeneinanderstehenden Partnern), mit weißem Hof
+  const eheSymbolSel = zoomInhalt.append('g').attr('class', 'familienbaum-ehe-symbole')
+    .selectAll('g').data(modell.eheLinien).join('g')
+    .attr('transform', (d) => `translate(${eheMitte(d)},${d.y1})`)
+    .attr('pointer-events', 'none')
+    .attr('aria-hidden', 'true');
+  eheSymbolSel.append('path').attr('class', 'familienbaum-ehe-hof')
+    .attr('d', EHE_SYMBOL_PFAD).attr('fill', 'none').attr('vector-effect', 'non-scaling-stroke')
+    .attr('stroke', '#ffffff').attr('stroke-width', 4.5).attr('stroke-linejoin', 'round');
+  eheSymbolSel.append('path').attr('class', 'familienbaum-ehe-zeichen')
+    .attr('d', EHE_SYMBOL_PFAD).attr('fill', 'none').attr('vector-effect', 'non-scaling-stroke')
+    .attr('stroke', EHE_FARBE).attr('stroke-width', 2).attr('stroke-linejoin', 'round');
+
   // Punkt 3 (3. Folgeauftrag): Referenzen auf die drei Selektionen, die
   // aktualisiereHervorhebung() bei Hover/Klick per .style('opacity', ...)
   // aktualisiert, OHNE einen kompletten Neuaufbau auszulösen - siehe
   // Dateikopf-Kommentar.
-  instanz.selektionen = { knoten: knotenGruppen, elternKindLinien: elternKindLinienSel, eheLinien: eheLinienSel };
+  instanz.selektionen = { knoten: knotenGruppen, elternKindLinien: elternKindLinienSel, eheLinien: eheLinienSel, eheSymbole: eheSymbolSel };
 
   // AUFTRAG "Teil 2f", Punkt 2: eine waehrend eines noch laufenden Aufbaus
   // eingegangene oeffneDatensatz()-Anfrage (siehe dortiger Kommentar) jetzt
@@ -1076,10 +1119,26 @@ function aktualisiereHervorhebung() {
   if (!sel) return;
   const fokusId = instanz.hoverFokusId || instanz.eingefrorenerFokusId || null;
 
+  // 2026-10-28: Linien der fokussierten Person dicker, zu den Eltern anders als zu den Kindern (LINIE_*)
+  const linienStil = (d) => {
+    if (!fokusId) return LINIE_NORMAL;
+    if (d.kindId === fokusId) return LINIE_ELTERN;
+    return d.elternIds.includes(fokusId) ? LINIE_KINDER : LINIE_NORMAL;
+  };
+  sel.elternKindLinien
+    .attr('stroke', (d) => linienStil(d).farbe)
+    .attr('stroke-width', (d) => linienStil(d).breite)
+    .attr('stroke-dasharray', (d) => linienStil(d).strich ?? null);
+  const eheAktiv = (d) => Boolean(fokusId) && (d.aId === fokusId || d.bId === fokusId);
+  sel.eheLinien.attr('stroke-width', (d) => (eheAktiv(d) ? 3 : 1));
+  sel.eheSymbole.select('.familienbaum-ehe-hof').attr('stroke-width', (d) => (eheAktiv(d) ? 7 : 4.5));
+  sel.eheSymbole.select('.familienbaum-ehe-zeichen').attr('stroke-width', (d) => (eheAktiv(d) ? 3.5 : 2));
+
   if (!fokusId) {
     sel.knoten.style('opacity', null);
     sel.elternKindLinien.style('opacity', null);
     sel.eheLinien.style('opacity', null);
+    sel.eheSymbole.style('opacity', null);
     return;
   }
 
@@ -1090,9 +1149,8 @@ function aktualisiereHervorhebung() {
   sel.elternKindLinien.style('opacity', (d) => (
     d.kindId === fokusId || d.elternIds.includes(fokusId) ? 1 : HERVORHEBUNG_DIM_OPAZITAET
   ));
-  sel.eheLinien.style('opacity', (d) => (
-    d.aId === fokusId || d.bId === fokusId ? 1 : HERVORHEBUNG_DIM_OPAZITAET
-  ));
+  sel.eheLinien.style('opacity', (d) => (eheAktiv(d) ? 1 : HERVORHEBUNG_DIM_OPAZITAET));
+  sel.eheSymbole.style('opacity', (d) => (eheAktiv(d) ? 1 : HERVORHEBUNG_DIM_OPAZITAET));
 }
 
 // --- Lokales Detail-Popover -------------------------------------------
@@ -1324,37 +1382,55 @@ function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
 // Fill-Konstanten aus, siehe Dateikopf-Kommentar - keine erfundenen
 // Kategorien. Modul-Funktion statt Inline im Aufrufer, damit die Zuordnung
 // Konstante->Legenden-Text an einer Stelle steht.
+// Wunsch des Autors (2026-10-28): die Legende steht nicht mehr im Infotext, sondern kompakt in der Zeile
+// neben „Unsicherheiten anzeigen“ - daher kurze Beschriftungen; dazu Ehe-Symbol und die beiden Linienarten.
 function baueFarblegende() {
   const wrapper = document.createElement('div');
   wrapper.className = 'familienbaum-legende';
+  wrapper.setAttribute('role', 'list');
+  wrapper.setAttribute('aria-label', 'Legende zum Stammbaum');
 
-  const titel = document.createElement('div');
-  titel.className = 'familienbaum-legende-titel';
-  titel.textContent = 'Farblegende';
-  wrapper.appendChild(titel);
+  const zeile = (zeichen, label, klasse = '') => {
+    const z = document.createElement('div');
+    z.className = `familienbaum-legende-zeile ${klasse}`.trim();
+    z.setAttribute('role', 'listitem');
+    z.append(zeichen, document.createTextNode(label));
+    wrapper.appendChild(z);
+    return z;
+  };
+  const swatch = (farbe, klasse = '') => {
+    const s = document.createElement('span');
+    s.className = `familienbaum-legende-swatch ${klasse}`.trim();
+    if (farbe) s.style.background = farbe;
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  };
+  const linie = ({ farbe, strich }) => {
+    const s = document.createElement('span');
+    s.className = 'familienbaum-legende-linie';
+    s.style.borderTop = `3px ${strich ? 'dashed' : 'solid'} ${farbe}`;
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  };
 
-  const eintraege = [
-    { farbe: HABSBURG_BASIS_FARBE, label: `Familienfarbe (${dynastieName()}-Linie, Farbton je Zweig leicht abweichend)` },
-    { farbe: GRAU_EHEPARTNERFAMILIE, label: 'Ehepartner aus anderer Familie' },
-    { farbe: GOLD_FARBE, label: 'Regierungszeit als Kaiser/König aus eigenem Recht' },
-    { farbe: HEIRAT_FARBE, label: 'Kaiserin/König durch Heirat (ganzer Balken)' }
-  ];
-  eintraege.forEach(({ farbe, label }) => {
-    const zeile = document.createElement('div');
-    zeile.className = 'familienbaum-legende-zeile';
-    const swatch = document.createElement('span');
-    swatch.className = 'familienbaum-legende-swatch';
-    swatch.style.background = farbe;
-    zeile.append(swatch, document.createTextNode(label));
-    wrapper.appendChild(zeile);
-  });
+  [
+    { farbe: HABSBURG_BASIS_FARBE, label: dynastieName() },
+    { farbe: GRAU_EHEPARTNERFAMILIE, label: 'andere Familie' },
+    { farbe: GOLD_FARBE, label: 'Regierungszeit' },
+    { farbe: HEIRAT_FARBE, label: 'Kaiserin/Königin durch Heirat' }
+  ].forEach(({ farbe, label }) => zeile(swatch(farbe), label));
 
-  const unsicherZeile = document.createElement('div');
-  unsicherZeile.className = 'familienbaum-legende-zeile';
-  const unsicherSwatch = document.createElement('span');
-  unsicherSwatch.className = 'familienbaum-legende-swatch familienbaum-legende-swatch-unsicher';
-  unsicherZeile.append(unsicherSwatch, document.createTextNode('Unsichere Angabe (gestrichelter roter Rand)'));
-  wrapper.appendChild(unsicherZeile);
+  const ehe = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  ehe.setAttribute('class', 'familienbaum-legende-ehe');
+  ehe.setAttribute('viewBox', `${-EHE_SYMBOL_BREITE / 2 - 8} -30 ${EHE_SYMBOL_BREITE + 16} 60`);
+  ehe.setAttribute('aria-hidden', 'true');
+  ehe.innerHTML = `<path d="${EHE_SYMBOL_PFAD}" fill="none" stroke="${EHE_FARBE}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  zeile(ehe, 'Ehe');
+  zeile(linie(LINIE_ELTERN), 'zu den Eltern');
+  zeile(linie(LINIE_KINDER), 'zu den Kindern');
+
+  // nur bei eingeschalteten Unsicherheiten sichtbar (siehe zeichneFamilienbaum())
+  zeile(swatch(null, 'familienbaum-legende-swatch-unsicher'), 'unsichere Angabe', 'familienbaum-legende-unsicher');
 
   return wrapper;
 }
@@ -1369,9 +1445,17 @@ function baueWerkzeugleiste(container) {
   const infoContainer = document.createElement('div');
   infoContainer.className = 'familienbaum-info-anker';
   werkzeugleiste.appendChild(infoContainer);
+  // 2026-10-28: Legende in die Zeile des Unsicherheiten-Knopfs (Geschwister des Viz-Containers, siehe
+  // app.js stelleVizFlyoutSicher()); fehlt diese Zeile, bleibt sie wie bisher im Infotext
+  const knopfZeile = instanz.container.parentElement?.querySelector(':scope > .werkzeugleiste-unsicherheit');
+  const legende = baueFarblegende();
+  if (knopfZeile) {
+    knopfZeile.appendChild(legende);
+    instanz.legende = legende;
+  }
   infotextFuerModul('familienbaum').then((cfg) => {
     if (!instanz || !cfg || !infoContainer.isConnected) return;
-    instanz.infoButton = erzeugeInfoButton(infoContainer, { ...cfg, zusatzInhalt: baueFarblegende() });
+    instanz.infoButton = erzeugeInfoButton(infoContainer, { ...cfg, zusatzInhalt: knopfZeile ? undefined : legende });
   });
 
   container.appendChild(werkzeugleiste);
@@ -1382,6 +1466,7 @@ function zeichneFamilienbaum() {
   const { container, plotBereich, byId, kinderIndex, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
   plotBereich.innerHTML = '';
+  if (instanz.legende) instanz.legende.querySelector('.familienbaum-legende-unsicher').hidden = !zeigeUnsicherheit;
   // Punkt 3 (3. Folgeauftrag): kein Element wird gerade gehovert, direkt
   // nach einem Neuaufbau (z.B. Fenster-Resize) - die eingefrorene Auswahl
   // (Klick) bleibt dagegen bewusst bestehen (siehe render()-Instanz-Objekt).
@@ -1424,8 +1509,8 @@ function zeichneFamilienbaum() {
   svg.append('desc').text(
     `Zeitleisten-Stammbaum des Hauses ${dynastieName()}: jeder Balken reicht vom Geburts- bis zum Sterbejahr der Person. `
     + 'Bei Kaisern und Königen aus eigenem Recht ist der Regierungszeitraum golden hervorgehoben, Kaiserinnen und '
-    + 'Königinnen durch Heirat sind vollständig in einem helleren Goldton gefüllt. Gestrichelt umrandete Personen '
-    + 'haben unsichere Angaben.'
+    + 'Königinnen durch Heirat sind vollständig in einem helleren Goldton gefüllt. Eine liegende Acht verbindet '
+    + 'Ehepartner. Gestrichelt umrandete Personen haben unsichere Angaben.'
   );
 
   // Linke Jahres-Achse: eigene, NICHT mitgezoomte <g> (Zoom verschiebt nur
@@ -1574,6 +1659,7 @@ export function destroy() {
   if (!instanz) return;
   schliessePersonenPopover();
   instanz.infoButton?.destroy();
+  instanz.legende?.remove();
   instanz.container.innerHTML = '';
   instanz = null;
 }
@@ -1638,11 +1724,14 @@ function fuegeStyleEin(container) {
        damit Kästchen und ihre Verbindungslinien optisch synchron ein-/ausblenden. */
     .familienbaum-eltern-kind-linien line, .familienbaum-ehe-linien line { transition: opacity 150ms ease; }
     .familienbaum-leer-hinweis { padding: var(--space-4); color: var(--text-muted); }
-    /* Punkt 4 (3. Folgeauftrag): Farblegende im Info-Popover. */
-    .familienbaum-legende { margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 6px; }
-    .familienbaum-legende-titel { font-weight: 600; font-size: var(--fs-sm); margin-bottom: 2px; }
-    .familienbaum-legende-zeile { display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-sm); }
+    /* 2026-10-28: Legende neben „Unsicherheiten anzeigen“ (vorher im Info-Popover). */
+    .familienbaum-legende { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3);
+      margin-left: var(--space-4); vertical-align: middle; max-width: 100%; }
+    .familienbaum-legende-zeile { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); white-space: nowrap; }
+    .familienbaum-legende-zeile[hidden] { display: none; }
+    .familienbaum-legende-linie { width: 22px; height: 0; flex: 0 0 auto; }
+    .familienbaum-legende-ehe { width: 24px; height: 12px; flex: 0 0 auto; }
+    @media (max-width: 700px) { .familienbaum-legende { margin-left: 0; margin-top: var(--space-2); } }
     .familienbaum-legende-swatch { width: 14px; height: 14px; min-width: 14px; border-radius: 3px;
       border: 1px solid var(--border); flex: 0 0 auto; }
     .familienbaum-legende-swatch-unsicher { background: transparent; border: 2px dashed #c0392b; }
