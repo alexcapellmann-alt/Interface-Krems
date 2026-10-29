@@ -152,7 +152,7 @@ import { erzeugeStartseite } from './startseite.js';
 import { erzeugeBereichsLeiste, erzeugeBereichsLeistenVorschau } from './bereichsLeiste.js';
 import { erzeugeVisualisierungsGalerie } from './visualisierungsGalerie.js';
 import { erzeugeFlyoutPanel, verankereFlyout, verankereVorschauFlyout, verankereIconFlyout, fuegeFlyoutStyleEin } from './visualisierungsTabs.js';
-import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN } from '../config/archivalienRegistry.js';
+import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN, ANSICHTS_FUEHRUNGEN } from '../config/archivalienRegistry.js';
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
 import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke, ersetzePlatzhalterImText } from './archivKonfiguration.js';
@@ -1124,6 +1124,18 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
   const { fuehrungen } = await ladeFuehrungenDaten();
   if (meineGeneration !== generation) return;
   const fuehrung = fuehrungen.find((f) => f.fuehrung_id === fuehrungId);
+
+  // 2026-10-29: Führungen mit eigener interaktiver Ansicht (ANSICHTS_FUEHRUNGEN, z. B. „Bürgerinnen?“) zeigen statt
+  // der Stationen das Modul; die Stationsnummer der Adresse spielt dort keine Rolle
+  const ansichtsFuehrung = fuehrung && ANSICHTS_FUEHRUNGEN[fuehrungId];
+  if (ansichtsFuehrung) {
+    const [mod, records] = await Promise.all([import(ansichtsFuehrung.modulPfad), ladeArchivalienDaten(ansichtsFuehrung.datenDatei)]);
+    if (meineGeneration !== generation) return;
+    mod.render(kontext.container, records, {});
+    kontext.modul = mod;
+    kontext.aktuellesVizModul = mod;
+    return;
+  }
 
   // AUFTRAG "Fuehrungen, Teil 2c", Punkt 2: #fuehrungen/<id>/ende - eigene
   // Ansicht statt einer Stationsnummer, VOR der stationNr-Aufloesung

@@ -133,6 +133,16 @@
 //   nur zwei Ringe - sunburst.js' eigener Info-Button-Text sowie ein
 //   dortiger Kommentar ("Rückkehr zur 3-Ebenen-Ansicht") zeigen aber drei
 //   Ringe (Kategorie/Unterkategorie/Bestand). Korrigiert, siehe unten.
+// Führungen, die statt Stationen eine interaktive Ansicht zeigen: fuehrung_id aus fuehrungen.csv → Modul und Daten
+// (app.js' aktualisiereFuehrungenAnsicht()). Wunsch des Autors (2026-10-29): „Bürgerinnen?“ aus dem Bereich Personen
+// in die Führungen („Geschichten über das Archiv“) verlegt; das Modul bekommt dieselben Daten wie bisher unter Personen.
+export const ANSICHTS_FUEHRUNGEN = {
+  buergerinnen: {
+    modulPfad: '../viz/buergerinnen.js',
+    datenDatei: { personenliste: 'data/personenliste.csv', urkunden: 'data/urkunden.csv', buergerbuch: 'data/buergerbuch.csv', verlassenschaften: 'data/verlassenschaftsinventare.csv' }
+  }
+};
+
 export const BESTAND_ANSICHTEN = [
   { id: 'treemap', label: 'Baum', modulPfad: '../viz/treemap.js',
     beschreibung: 'Zeigt Bestände als verschachtelte Flächen nach Kategorie, Größe = Umfang in Laufmetern.' },
@@ -391,11 +401,8 @@ export const ARCHIVALIENTYPEN = [
       { id: 'urkundenNetzwerk', label: 'Urkundennetzwerk', modulPfad: '../viz/urkundenNetzwerk.js',
         beschreibung: 'Ein Kreis pro Person, Größe = Nennungen in Urkunden, Linien verbinden Personen, die gemeinsam in einer Urkunde genannt werden.' },
       { id: 'chordDiagramm', label: 'Soziale Gruppen', modulPfad: '../viz/chordDiagramm.js',
-        beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' },
-      // Wunsch des Autors (2026-10-28): das Fehlen von Frauen im Bürgerbuch sichtbar machen (ohne datenSchluessel:
-      // braucht buergerbuch und personenliste)
-      { id: 'buergerinnen', label: 'Bürgerinnen?', modulPfad: '../viz/buergerinnen.js', ohneUnsicherheitsButton: true,
-        beschreibung: 'Ein Punkt für jede der Personen im Bürgerbuch. Ein Klick ordnet sie nach Geschlecht.' }
+        beschreibung: 'Zeigt, wie oft Personen aus vier sozialen Gruppen (Dynastie, Adel, Klerus, Bürgertum) gemeinsam in Urkunden genannt werden.' }
+      // „Bürgerinnen?“ ist seit 2026-10-29 keine Ansicht mehr, sondern eine Führung (ANSICHTS_FUEHRUNGEN unten)
     ]
   },
   {
