@@ -998,6 +998,7 @@ function platzhalterWert(name, id) {
   if (name === 'personen') return zahl(instanz.personen.length);
   const F = instanz.familien;
   if (F && name === 'stammbaum') return zahl(F.size);
+  if (name === 'urkpersonenunsicher' && instanz.urkPersonenUnsicher) return zahl(instanz.urkPersonenUnsicher);
   if (F && name === 'stammbaumunsicher') return zahl([...F.values()].filter((f) => istJa(f.geburtsdatum_unsicher) || istJa(f.sterbedatum_unsicher)).length);
   const A = instanz.archiv;
   if (A && name === 'bestaende') return zahl(A.items.length);
@@ -3175,6 +3176,8 @@ async function ladeStationsdaten() {
   instanz.archiv = archivKonfig ? bereiteArchivAuf(bestand, urkunden, archivKonfig) : null;
   if (instanz.archiv) baueArchivpunkte();
   instanz.karte = instanz.archiv ? bereiteKarteAuf(orte, instanz.archiv) : null;
+  // Urkunden, bei denen die Zuordnung der Personen unsicher ist (Platzhalter {urkpersonenunsicher})
+  instanz.urkPersonenUnsicher = (urkunden || []).filter((u) => istJa(u.personen_unsicher)).length;
   instanz.familien = familien?.length ? new Map(familien.map((f) => [txt(f.id), f])) : null;
   instanz.stationen = bereiteStationenAuf(stationen)
     .filter((s) => !ARCHIV_STATIONEN.includes(s.id) || instanz.archiv)
