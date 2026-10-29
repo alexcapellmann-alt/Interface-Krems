@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (197) – Bürgerinnen?: neue Folie „Nach Berufen ordnen“
+
+- Wunsch des Autors: Zwischen Steiner Tor und „Nach Geschlecht ordnen“ wird das Tor senkrecht geteilt. Links bleiben die 1 250 Personen ohne Berufsangabe genau stehen (47 %); die 1 405 Personen mit Wirtschaftssektor (53 %) rechts vom Schnitt bilden ein Balkendiagramm, ein Punkt je Person, die oberen Punkte in die oberen Balken (`layoutBerufe()`, Teil `sektoren`). Klick öffnet die Person wie auf dem Tor; der Tooltip nennt Beruf und Sektor.
+- Sektor je Person (`ergaenzeSektoren()`): Neubürger aus ihrer frühesten Aufnahme mit Sektor (1 260; 17 Personen haben mehrere); Bürgen ohne eigene Aufnahme und 5 Neubürger ohne Sektor über ihren Beruf als Bürge, mit der Zuordnung Beruf → Sektor aus den Aufnahmen (145, im Tooltip „erschlossen“). Da der Datenlader leere Stellen in |-Listen weglässt (bei 35 Aufnahmen verschöbe das die Bürgenberufe gegen die Bürgen), liest die Ansicht `buergerbuch.csv` dafür zusätzlich roh.
+- Die Plätze im Tor werden so vergeben, dass die Personen mit Sektor rechts vom Schnitt stehen, nach Balken von oben nach unten (`vergibTorPlaetze()`); die Helligkeit gehört zum Platz, das Tor sieht aus wie zuvor.
+- Neue Datei `data/buergerinnen_sektoren.csv` (acht Sektoren nach den Angaben des Autors, die sieben kleinen zusammen als „Übrige Berufe“). Neue Zeile `berufe` in `buergerinnen_stationen.csv` mit Text und Platzhaltern (`{aufnahmen}`, `{mitberuf}` usw. für die 1 541 von 2 791 Aufnahmen mit Beruf, `{personenmitberuf}` für die Personen). `docs/SCHEMA.md` 13.8 und `infotexte.csv` ergänzt.
+- Geprüft auf dem Testserver 8845 (1400 × 800): 1 405 Personen im Diagramm, die 1 250 übrigen auf Tor und Berufe-Folie an derselben Stelle; Stichprobe Bürge Wolf Sigl → Schmied, Metall & Waffen; Übergänge Tor ↔ Berufe ↔ Geschlecht je 1–8 Bilder über 30 ms, sonst rund 17 ms; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-28 (196) – Bürgerinnen?: Inwohner und Hilfskräfte im Tor, Kreuz auf der Kirche, Leinwand schneller
 
 - Wunsch des Autors: Auch die braunen Punkte der Inwohner und Hilfskräfte (graue Säule) bilden auf „Stadt und Kirche“ das Steiner Tor mit (jetzt 7 965 Punkte, gemischt mit Bürgern und Frauen) und wandern auf „Die Reformation“ mit ins Kreuz; zurück gehen sie wieder in ihre Säule. Zwischen Säule, Tor und Kreuz bewegen sie sich über die Leinwand (`zeichneGraue()`, `layoutKlerus()` mit `grauZiel`).

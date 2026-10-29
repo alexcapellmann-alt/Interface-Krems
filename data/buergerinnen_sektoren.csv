@@ -1,0 +1,10 @@
+id;name;sektoren;beispiele
+holz;Holz-, Bau- & Steingewerbe;Holz, Bau & Stein;Zimmermänner, Tischler, Hafner, Steinmetze, Maurer
+metall;Metall- & Waffengewerbe;Metall & Waffen;Schlosser, Schmiede, Büchsenmacher, Zirkelschmiede, Messerschmiede
+textil;Textil- & Bekleidungsgewerbe;Textil & Bekleidung;Schneider, Tuchscherer, Weber, Tuchmacher
+leder;Leder- & Pelzverarbeitung;Leder & Pelz;Schuster, Lederer, Kürschner
+lebensmittel;Lebensmittelgewerbe;Lebensmittelhandwerk;Bäcker, Fleischhacker, Müller
+landwirtschaft;Landwirtschaft & Weinbau;Landwirtschaft & Weinbau;Hauer (nur wer vor allem vom Weinbau lebte)
+transport;Transport-, Wasser- & Schiffswesen;Transport & Wasserwesen;Schiffsleute, Fuhrmänner, Fasszieher
+handel;Handel & Krämerei;Handel;Kaufleute, Kramer, Gschmeidler, Eisenhändler (Großhändler oft ohne Beruf eingetragen)
+uebrige;Übrige Berufe;Gesundheit|Sonstiges Handwerk|Kunst, Musik & Unterhaltung|Gastgewerbe & Getraenke|Verwaltung, Recht & Bildung|Sonstige Dienstleistungen|Kirche & Religion;Barbiere, Bader, Kammmacher, Maler, Wirte, Schreiber

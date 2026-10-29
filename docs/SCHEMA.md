@@ -634,20 +634,20 @@ Beispiel (Krems, Auszug): `regel;roemische_zahlen;;` · `auslassen;daß;;` · `v
 
 **Verhalten bei fehlender oder leerer Datei:** keine archivspezifische Filterung, kein Hinweis; die Wolke zählt wie vor Auftrag F. Ist die Datei vorhanden, aber unbrauchbar (Spalte `typ`/`wort` fehlt, falsches Trennzeichen): Wolke ungefiltert, dazu ein Hinweisbalken.
 
-### 13.8 buergerinnen_stationen.csv und buergerinnen_schichten.csv - Stationen der Ansicht „Bürgerinnen?“ (neu, 2026-10-28)
+### 13.8 buergerinnen_stationen.csv, buergerinnen_schichten.csv und buergerinnen_sektoren.csv - Stationen der Ansicht „Bürgerinnen?“ (neu, 2026-10-28)
 
-Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Beide Dateien sind **optional** und werden erst geladen, wenn die Ansicht geöffnet wird.
+Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Alle drei Dateien sind **optional** und werden erst geladen, wenn die Ansicht geöffnet wird.
 
 **buergerinnen_stationen.csv** - eine Zeile je Folie, in dieser Reihenfolge. Die Ansicht zeigt immer nur einen Weiter-Knopf (hüpfender Pfeil nach unten; `knopf` der nächsten Folie ist sein Name für Bildschirmleser und sein Tooltip) und einen Zurück-Knopf. `tor` ist immer die erste Folie.
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `station` | Text | **Pflicht** | `tor`, `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen), `vermoegenslos` (graue Säule links neben dem Text) `klerus` (Stadt und Kirche: rechts das Steiner Tor aus allen Punkten, auch denen der grauen Säule, und eine kleine Kirche mit Kreuz aus den Münzen) oder `reformation` (die Punkte des Tors bilden links neben dem Text ein Kreuz, die Kirche bleibt); andere Werte werden übergangen |
+| `station` | Text | **Pflicht** | `tor`, `berufe` (das Tor wird senkrecht geteilt: links bleiben die Personen ohne Berufsangabe stehen, rechts werden die Personen mit Wirtschaftssektor ein Balkendiagramm, ein Punkt je Person), `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen), `vermoegenslos` (graue Säule links neben dem Text) `klerus` (Stadt und Kirche: rechts das Steiner Tor aus allen Punkten, auch denen der grauen Säule, und eine kleine Kirche mit Kreuz aus den Münzen) oder `reformation` (die Punkte des Tors bilden links neben dem Text ein Kreuz, die Kirche bleibt); andere Werte werden übergangen |
 | `knopf` | Text | **Pflicht** außer bei `tor` | Name des Weiter-Pfeils, der zu dieser Folie führt (Tooltip und Bildschirmleser) |
 | `unterzeile` | Text | nein | Zeile unter „N Personen“ in dieser Station |
 | `muenze_gulden` | Zahl | nein | Gulden je Münze (erster gefundener Wert gilt; Vorgabe 1 000) |
 | `text_anhaengen` | `ja`/`nein` | nein | `ja`: der Text kommt zum Text der vorigen Folie dazu (wird angehängt und eingeblendet), statt ihn zu ersetzen |
-| `text` | Text | nein | Erklärung der Station; Absätze mit `\|` getrennt. `[[personen_id=Name]]` wird ein Knopf, der die Person zeigt und ihre Sidebar öffnet; `[Text](#ziel)` ein Link innerhalb der Seite; Platzhalter `{anteil:id}` (Prozent des Vermögens), `{summe:id}`, `{mittel:id}`, `{anzahl:id}` (id aus der Schichten-Datei) und `{muenze}` werden beim Zeichnen berechnet. Felder mit `;` in Anführungszeichen setzen. |
+| `text` | Text | nein | Erklärung der Station; Absätze mit `\|` getrennt. `[[personen_id=Name]]` wird ein Knopf, der die Person zeigt und ihre Sidebar öffnet; `[Text](#ziel)` ein Link innerhalb der Seite; Platzhalter `{anteil:id}` (Prozent des Vermögens), `{summe:id}`, `{mittel:id}`, `{anzahl:id}` (id aus der Schichten-Datei), `{muenze}` sowie `{aufnahmen}`, `{mitberuf}`, `{ohneberuf}` und `{berufanteil}` (Aufnahmen ins Bürgerbuch insgesamt, mit und ohne Wirtschaftssektor, Prozent mit) sowie `{personenmitberuf}` und `{personenanteil}` (Personen mit Sektor, Prozent aller Personen) werden beim Zeichnen berechnet. Felder mit `;` in Anführungszeichen setzen. |
 
 **buergerinnen_schichten.csv** - eine Zeile je Säule, von links nach rechts:
 
@@ -660,7 +660,18 @@ Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Beide Date
 | `beschreibung` | Text | nein | Tooltip der Säule; bei `ohne_buergerrecht` steht sie unter dem leeren Feld |
 | `quelle` | Text | nein | wird nicht ausgewertet (Herkunft der Werte, kein `;`) |
 
-**Verhalten bei fehlender Datei:** Ohne Stationsdatei gibt es nur die Folgen Steiner Tor → „Nach Geschlecht ordnen“, ohne Text. Ohne Schichten-Datei (oder ohne Zeile mit `anteil_prozent`) entfallen die drei Vermögens-Folien; ohne Zeile `ohne_buergerrecht` entfällt `vermoegenslos`.
+**buergerinnen_sektoren.csv** - eine Zeile je Balken der Folie `berufe`, von oben nach unten:
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `id` | Text | **Pflicht** | Kennung, z. B. `holz` |
+| `name` | Text | **Pflicht** | Beschriftung des Balkens |
+| `sektoren` | Text | **Pflicht** | Werte der Spalte `Wirtschaftssektor` in `buergerbuch.csv`, die dieser Balken zählt, mit `\|` getrennt; Sektoren ohne Zeile zählen zum letzten Balken |
+| `beispiele` | Text | nein | Tooltip der Punkte dieses Balkens |
+
+Gezählt werden Personen: Neubürger mit dem Sektor ihrer frühesten Aufnahme mit `Wirtschaftssektor`; Personen ohne eigenen Sektor (vor allem Bürgen, die selbst nie aufgenommen wurden) über ihren Beruf in `Buergen_Berufe` (stellengleich zu `buergen_id`), mit der Zuordnung Beruf → Sektor aus den Aufnahmen; ihr Sektor gilt als erschlossen und wird im Tooltip so gekennzeichnet. Die Personen mit Sektor stehen im Tor rechts eines senkrechten Schnitts.
+
+**Verhalten bei fehlender Datei:** Ohne Stationsdatei gibt es nur die Folgen Steiner Tor → „Nach Geschlecht ordnen“, ohne Text. Ohne Schichten-Datei (oder ohne Zeile mit `anteil_prozent`) entfallen die drei Vermögens-Folien; ohne Zeile `ohne_buergerrecht` entfällt `vermoegenslos`; ohne Sektoren-Datei entfällt `berufe`.
 
 ---
 
