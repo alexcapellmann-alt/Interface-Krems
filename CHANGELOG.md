@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (200) – Bürgerinnen?: Folie „Der Weinzoll“
+
+- Wunsch des Autors: Nach „Die Reformation“ wandert der Text nach rechts, die goldene Kirche blendet aus. Alle Punkte aus Kreuz und Kirche (Bürger, Frauen, Inwohner; 7 965) werden bordeauxrot und bilden links eine hohe Säule „1590 · 303 843 Eimer“ (gestrichelter Umriss, Grundlinie wie Tor, Kreuz und Kirche). Danach sinken die oberen 55 % hinab und verblassen; zurück bleibt „1592 · 136 431 Eimer · 45 % von 1590“ (`layoutWein()`, `weinEinbruch()`, Teil `wein`). Zurück zur Reformation kommen alle Punkte wieder, die Kirche blendet ein.
+- Leinwand: Deckkraft jetzt je Punkt (`deckkraft(e, i)`); die Kirche wird über die Leinwand aus- und eingeblendet (eine SVG-Gruppe mit 4 443 Kreisen auszublenden kostete je Bild zu viel). Gemischte Reihe aus `layoutKlerus()` als `gemischteReihe()` herausgelöst. Braune Punkte auf `weinzoll` über die Klasse `bgi-wein` gefüllt.
+- Neue Datei `data/buergerinnen_weinexport.csv` (1590, 1592); neue Zeile `weinzoll` in `buergerinnen_stationen.csv` (Zollverdopplung, Ausfuhr, siebzigjährige Krise, Vergleich mit den Strafen von 1593) mit Platzhalter `{eimer:jahr}`. Hinweis an den Autor: der Rückgang beträgt 55 % (nicht „knapp 60 %“), Tatz und Ungeld stiegen bis 1609 noch. `docs/SCHEMA.md` 13.8 und `infotexte.csv` ergänzt.
+- Geprüft auf dem Testserver 8845 (1400 × 800): nach dem Einbruch 3 576 von 7 965 Punkten sichtbar (45 %), zurück alle 7 965 und 4 443 Münzen; keine Konsolenfehler. Die Testumgebung war in dieser Sitzung allgemein langsamer (Klick zwischen Kreuz und Kirche 135–160 ms, ältere Übergänge 4–16 Bilder über 30 ms); der Klick zum Weinzoll kostet 180–250 ms, die Bewegung 19–23 Bilder über 30 ms (meist 33 ms).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (199) – Bürgerinnen?: Stadt und Kirche neu angeordnet, Katholiken in der Kirche
 
 - Wunsch des Autors: Auf „Stadt und Kirche“ wandert der Text in die Mitte der Bühne, das Steiner Tor steht links, die goldene Kirche mittig rechts neben dem Text (`layoutKlerus()`).

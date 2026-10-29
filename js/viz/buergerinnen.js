@@ -53,6 +53,7 @@ const FRAUEN_FARBE = '#7a5a8c';   // symbolische Frauen-Punkte (gedämpftes Viol
 // die Mitte beider; beim Verschmelzen gehen beide Punktfarben fließend in sie über (Wunsch des Autors, 2026-10-28;
 // zuvor kurz Türkis)
 const HAUSHALT_FARBE = '#53527d';
+const BORDEAUX = '#7b2232';        // Folie `weinzoll`: die Punkte als Wein
 const GOLD = '#c9a227';           // Münzen (wie die Regierungszeit im Stammbaum)
 const GOLD_RAND = '#8a6d1a';
 const DAUER = 1300;
@@ -72,6 +73,7 @@ const KIRCHE = {
   ],
   aussparungen: ['M66,126 V110 A8,8 0 0 1 82,110 V126 Z', 'M19,66 H27 V78 H19 Z'] // Tür, Turmfenster
 };
+const WEIN_SINKEN = 1400;         // ms: so lange sinken auf `weinzoll` die oberen Punkte der Säule und verblassen
 const REGEN_START = 700;          // ms bis der Münzregen beginnt (die Seite scrollt vorher zu den Münzfeldern)
 const REGEN_DAUER = 2600;         // ms, über die sich der Regen von der untersten bis zur obersten Reihe verteilt
 const KOPF_SPALTEN = 64;          // Platz über den Spalten für Überschrift und Zahl
@@ -80,11 +82,12 @@ const TEXT_BREITE = 400;          // höchstens so breit
 const STATIONEN_DATEI = 'data/buergerinnen_stationen.csv';
 const SCHICHTEN_DATEI = 'data/buergerinnen_schichten.csv';
 const SEKTOREN_DATEI = 'data/buergerinnen_sektoren.csv';
+const WEIN_DATEI = 'data/buergerinnen_weinexport.csv';
 const BUERGERBUCH_DATEI = 'data/buergerbuch.csv'; // roh nachgeladen: Bürgen und ihre Berufe stellengleich (siehe ergaenzeSektoren())
 const OHNE_BUERGERRECHT = 'ohne_buergerrecht'; // id der grauen Säule in buergerinnen_schichten.csv
 const STANDARD_MUENZE = 1000;     // Gulden je Münze, falls die Stationsdatei keinen Wert nennt
 const STANDARD_UNTERZEILE = 'Neubürger und ihre Bürgen, ein Punkt je Person';
-const BEKANNTE_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation'];
+const BEKANNTE_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation', 'weinzoll'];
 const VERMOEGEN_STATIONEN = ['schichten', 'muenzen', 'vermoegenslos']; // gemeinsames Säulen-Layout
 // Beiwerk je Folie (siehe zeichneTeile())
 const TEILE = {
@@ -95,7 +98,8 @@ const TEILE = {
   muenzen: ['koepfe', 'werte', 'muenzen', 'legende'],
   vermoegenslos: ['koepfe', 'werte', 'muenzen', 'grau', 'legende'],
   klerus: ['muenzen'],
-  reformation: ['muenzen']
+  reformation: ['muenzen'],
+  weinzoll: ['muenzen', 'wein'] // die Kirche blendet aus (AKTUALISIERER.muenzen), an ihrer Stelle steht der Text
 };
 const PERSONEN_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'geschlecht', 'frauen'];
 const TOR_STATIONEN = ['tor', 'buergerbuch']; // das ganze Tor (auf `buergerbuch` mit Text links daneben) // dort steht ein Punkt für eine Person (Klick öffnet die Sidebar)
@@ -426,6 +430,7 @@ function fuegeStyleEin(container) {
     .bgi-punkt { cursor: pointer; stroke: transparent; stroke-width: 3px; } /* durchsichtiger Rand: größere Klickfläche */
     .bgi-punkt.anteil { cursor: default; }
     .bgi-grau { fill: none; stroke: ${RAHMEN}; stroke-width: 1px; }
+    .bgi-wein .bgi-grau { fill: ${BORDEAUX}; fill-opacity: .9; stroke: none; } /* Folie weinzoll */
     .bgi-spaltenkopf { font-family: var(--font-heading); font-size: 1.5rem; fill: var(--text); text-anchor: middle; }
     .bgi-spaltenkopf.klein { font-size: 1.1rem; }
     .bgi-spaltenkopf.eng { font-size: 13px; }
@@ -568,10 +573,11 @@ const escapeHtml = (t) => String(t).replace(/[&<>"]/g, (z) => ({ '&': '&amp;', '
 
 // Platzhalter in den Stationstexten: {anteil:id} (Prozent des Vermögens), {summe:id}, {mittel:id}, {anzahl:id}, {muenze}, {personen},
 // {aufnahmen}, {mitberuf}, {ohneberuf}, {berufanteil} (Aufnahmen ins Bürgerbuch mit bzw. ohne Berufsangabe),
-// {personenmitberuf}, {personenanteil} (Personen mit Sektor, auch Bürgen über ihren Beruf)
+// {personenmitberuf}, {personenanteil} (Personen mit Sektor, auch Bürgen über ihren Beruf), {eimer:jahr} (Weinausfuhr)
 function platzhalterWert(name, id) {
   if (name === 'muenze') return zahl(instanz.muenzeGulden);
   if (name === 'personen') return zahl(instanz.personen.length);
+  if (name === 'eimer') { const zeile = instanz.wein?.zeilen.find((w) => String(w.jahr) === id); return zeile ? zahl(zeile.eimer) : null; }
   const B = instanz.berufe;
   if (B && name === 'aufnahmen') return zahl(B.aufnahmen);
   if (B && name === 'mitberuf') return zahl(B.aufnahmenMit);
@@ -626,6 +632,7 @@ function berechneLayout(station = instanz.station) {
   }
   if (station === 'geschlecht' || station === 'frauen') return { ...basis, ...layoutGeschlecht(b, h, radiusFeld), art: 'geschlecht' };
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b), art: 'vermoegen' };
+  if (station === 'weinzoll' && instanz.schichten && instanz.wein) return { ...basis, ...layoutWein(b), art: 'wein' };
   if ((station === 'klerus' || station === 'reformation') && instanz.schichten) {
     return { ...basis, ...layoutKlerus(b, station === 'reformation'), art: 'klerus' };
   }
@@ -746,16 +753,7 @@ function layoutKlerus(b, mitKreuz) {
   const n = personen.length;
   // alle Männer, Frauen und Inwohner/Hilfskräfte (graue Säule), gemischt (fester Zufall), bilden Tor bzw. Kreuz
   const mitGrauen = Boolean(instanz.graue);
-  const reihe = [];
-  for (let i = 0; i < n; i += 1) {
-    reihe.push(['m', i], ['f', i]);
-    if (mitGrauen) reihe.push(['g', i]);
-  }
-  const versatzVon = { m: 0, f: 7919, g: 15887 };
-  const mischWert = ([art, i]) => (Math.imul(i + versatzVon[art], 2654435761) >>> 0);
-  reihe.sort((a, c) => mischWert(a) - mischWert(c));
-  const platz = { m: new Map(), f: new Map(), g: new Map() };
-  reihe.forEach(([art, i], k) => platz[art].set(i, k));
+  const { reihe, platz } = gemischteReihe(n, mitGrauen);
   const kirche = inRechteck(KIRCHE, kircheR, true); // Kirche und Kreuz stehen auf derselben Linie wie das Tor
   let pos, zelle;
   if (mitKreuz) {
@@ -791,6 +789,66 @@ function layoutKlerus(b, mitKreuz) {
     radius: Math.max(0.8, zelle * 0.4),
     text
   };
+}
+
+// Männer, Frauen und Inwohner/Hilfskräfte gemischt (fester Zufall); platz[art] ordnet jedem Punkt seinen Rang zu
+function gemischteReihe(n, mitGrauen) {
+  const reihe = [];
+  for (let i = 0; i < n; i += 1) {
+    reihe.push(['m', i], ['f', i]);
+    if (mitGrauen) reihe.push(['g', i]);
+  }
+  const versatzVon = { m: 0, f: 7919, g: 15887 };
+  const mischWert = ([art, i]) => (Math.imul(i + versatzVon[art], 2654435761) >>> 0);
+  reihe.sort((a, c) => mischWert(a) - mischWert(c));
+  const platz = { m: new Map(), f: new Map(), g: new Map() };
+  reihe.forEach(([art, i], k) => platz[art].set(i, k));
+  return { reihe, platz };
+}
+
+// Folie `weinzoll` (Wunsch des Autors, 2026-10-29): Der Text wandert nach rechts, die Kirche blendet aus. Alle Punkte
+// aus Kreuz und Kirche werden bordeauxrot und bilden links eine hohe Säule für die Weinausfuhr des ersten Jahres
+// (buergerinnen_weinexport.csv); danach sinken die oberen Punkte - der Anteil, um den die Ausfuhr bis zum zweiten Jahr
+// fiel - hinab und verblassen (weinEinbruch()). Die Säule steht auf derselben Grundlinie wie Tor, Kreuz und Kirche.
+function layoutWein(b) {
+  const { personen, wein } = instanz;
+  const h = instanz.basisHoehe;
+  // je Breite einmal (der Klick berechnet das Layout sonst mehrfach)
+  const schluessel = `${b}|${h}|${Boolean(instanz.graue)}`;
+  if (instanz.weinLayout?.schluessel === schluessel) return instanz.weinLayout.L;
+  const LV = layoutVermoegen(b);
+  const luecke = Math.max(14, b * 0.025);
+  const mitGrauen = Boolean(instanz.graue);
+  const { reihe, platz } = gemischteReihe(personen.length, mitGrauen);
+  const N = reihe.length;
+  const text = LV.text ? { ...LV.text, x: b - LV.text.b - 8 } : null;
+  const bereich = text ? text.x - luecke * 2 : b;
+  const oben = KOPF_SPALTEN + 16, unten = h - 8;
+  const hoehe = unten - oben;
+  const breite = Math.min(bereich * 0.5, hoehe * 0.55);
+  let z = Math.sqrt((breite * hoehe) / N);
+  let spalten = Math.max(1, Math.floor(breite / z));
+  while (spalten * Math.floor(hoehe / z) < N) { z *= 0.97; spalten = Math.max(1, Math.floor(breite / z)); }
+  const x0 = (bereich - spalten * z) / 2;
+  const pos = (k) => [x0 + z / 2 + (k % spalten) * z, unten - z / 2 - Math.floor(k / spalten) * z];
+  const bleiben = Math.round((N * wein.nachher.eimer) / wein.vorher.eimer);
+  const oberkante = (anzahl) => unten - Math.ceil(anzahl / spalten) * z;
+  const ergebnis = {
+    ziel: (p) => pos(platz.m.get(p.nr)),
+    frauZiel: (j) => pos(platz.f.get(j)),
+    grauZiel: mitGrauen ? (j) => pos(platz.g.get(j)) : null,
+    sinkt: {
+      personen: (i) => platz.m.get(i) >= bleiben,
+      frauen: (j) => platz.f.get(j) >= bleiben,
+      graue: (j) => mitGrauen && platz.g.get(j) >= bleiben
+    },
+    sinkWeg: Math.max(40, z * 12),
+    radius: Math.max(0.8, z * 0.4),
+    text,
+    saeule: { x: x0, b: spalten * z, oben1: oberkante(N), oben2: oberkante(bleiben), unten }
+  };
+  instanz.weinLayout = { schluessel, L: ergebnis };
+  return ergebnis;
 }
 
 // Ein gemeinsames Layout für die drei Vermögens-Folien, damit nichts springt: links der Platz der grauen Säule
@@ -862,10 +920,13 @@ function zeichne(animiert) {
   punkte.classed('anteil', !PERSONEN_STATIONEN.includes(L.station));
   // Größe und Deckkraft springen gleich auf den Zielwert (der Unterschied ist klein), nur die Lage wird animiert
   punkte.attr('r', L.radius).attr('fill-opacity', (p, i) => (imFeld || L.bleibt?.(i) ? p.helligkeit : 0.85));
-  bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation, L.art === 'vermoegen' ? HAUSHALT_FARBE : FARBE);
-  if (mitAnimation) instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400;
+  punkte.attr('opacity', null); // auf `weinzoll` verblasste Punkte sind zurück
+  bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation,
+    L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE));
+  if (mitAnimation) instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400 + (L.art === 'wein' ? WEIN_SINKEN + 900 : 0);
   zeichneFrauen(L, mitAnimation);
   zeichneGraue(L, mitAnimation);
+  if (L.art === 'wein') weinEinbruch(L, mitAnimation);
   zeichneTeile(L, mitAnimation);
   platziereErklaerung();
   markiereAuswahl();
@@ -910,7 +971,7 @@ function beendeBewegung(name, { schreiben = true } = {}) {
     b.knoten.forEach((k, i) => {
       k.setAttribute('cx', b.ziel[i][0].toFixed(1));
       k.setAttribute('cy', b.ziel[i][1].toFixed(1));
-      if (b.deckkraft) k.setAttribute('opacity', b.deckkraft(1).toFixed(2));
+      if (b.deckkraft) k.setAttribute('opacity', b.deckkraft(1, i).toFixed(2));
     });
   }
   if (schreiben) b.knoten.forEach((k) => k.setAttribute('fill', b.farbeNach));
@@ -924,7 +985,7 @@ function lageVon(name, knoten) {
   return knoten.map((k, i) => {
     if (!b) return [Number(k.getAttribute('cx')) || 0, Number(k.getAttribute('cy')) || 0, Number(k.getAttribute('opacity') ?? 1)];
     const e = b.e[i];
-    return [b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e, b.deckkraft ? b.deckkraft(e) : 1];
+    return [b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e, b.deckkraft ? b.deckkraft(e, i) : 1];
   });
 }
 
@@ -966,7 +1027,7 @@ function zeichneLeinwand() {
       if (t < 1) alleFertig = false;
       const e = t <= 0 ? 0 : (t >= 1 ? 1 : b.ease(t));
       b.e[i] = e;
-      const a = Math.round((b.deckkraft ? b.deckkraft(e) : 1) * b.fuell[i] * 20);
+      const a = Math.round((b.deckkraft ? b.deckkraft(e, i) : 1) * b.fuell[i] * 20);
       if (a <= 0) continue;
       const schluessel = Math.round(e * 20) * 32 + a;
       let liste = buendel.get(schluessel);
@@ -1043,7 +1104,8 @@ function zeichneFrauen(L, mitAnimation) {
   const { frauenPunkte: sel, personen } = instanz;
   if (!sel) return;
   const knoten = sel.nodes();
-  const sichtbar = ['frauen', 'klerus', 'reformation'].includes(L.station);
+  const sichtbar = ['frauen', 'klerus', 'reformation', 'weinzoll'].includes(L.station);
+  const farbe = L.art === 'wein' ? BORDEAUX : FRAUEN_FARBE;
   const warSichtbar = instanz.frauenSichtbar;
   instanz.frauenSichtbar = sichtbar;
   sel.attr('r', L.radius).style('pointer-events', sichtbar ? null : 'none');
@@ -1051,12 +1113,14 @@ function zeichneFrauen(L, mitAnimation) {
   const spalte = sichtbar ? knoten.map((k, j) => L.frauZiel(j)) : null;
   const aktuell = lageVon('frauen', knoten).map(([x, y]) => [x, y]);
   if (mitAnimation && sichtbar && warSichtbar) { // z. B. vom Tor ins Kreuz: einfach mitwandern
-    animiere(knoten, aktuell, spalte, { verzoegerung: knoten.map((k, j) => personen[j].verzoegerung * STAFFELUNG), dauer: DAUER, deckkraft: () => 1 });
+    animiere(knoten, aktuell, spalte, {
+      verzoegerung: knoten.map((k, j) => personen[j].verzoegerung * STAFFELUNG), dauer: DAUER, deckkraft: () => 1, farbeNach: farbe
+    });
     return;
   }
   if (!mitAnimation || sichtbar === warSichtbar) {
     beendeBewegung('frauen', { schreiben: false });
-    if (sichtbar) knoten.forEach((k, j) => { k.setAttribute('cx', spalte[j][0]); k.setAttribute('cy', spalte[j][1]); k.setAttribute('opacity', 1); k.setAttribute('fill', FRAUEN_FARBE); });
+    if (sichtbar) knoten.forEach((k, j) => { k.setAttribute('cx', spalte[j][0]); k.setAttribute('cy', spalte[j][1]); k.setAttribute('opacity', 1); k.setAttribute('fill', farbe); });
     else knoten.forEach((k) => k.setAttribute('opacity', 0));
     return;
   }
@@ -1097,7 +1161,8 @@ function zeichneFrauen(L, mitAnimation) {
 function zeichneGraue(L, mitAnimation) {
   const { graue } = instanz;
   if (!graue) return;
-  const sichtbar = ['vermoegenslos', 'klerus', 'reformation'].includes(L.station) && Boolean(L.grauZiel);
+  const sichtbar = ['vermoegenslos', 'klerus', 'reformation', 'weinzoll'].includes(L.station) && Boolean(L.grauZiel);
+  const wein = L.art === 'wein';
   const warSichtbar = instanz.graueSichtbar;
   instanz.graueSichtbar = sichtbar;
   const unten = Math.max(L.h, L.benoetigt || 0) + 30;
@@ -1105,15 +1170,20 @@ function zeichneGraue(L, mitAnimation) {
   graue.interrupt('grau').style('pointer-events', sichtbar ? null : 'none').attr('r', L.radius);
   if (mitAnimation && sichtbar && warSichtbar) {
     // von der Säule ins Tor, vom Tor ins Kreuz und zurück: über die Leinwand (gefüllt gezeichnet, am Ende wieder hohl)
+    // auf `weinzoll` bordeauxrot gefüllt (Stil statt Klasse), sonst wieder hohl; auf `weinzoll` verblasste Punkte sind zurück
     const knoten = graue.nodes();
+    const farbeVon = instanz.ebeneGraue.classed('bgi-wein') ? BORDEAUX : RAHMEN;
     starteBewegung('graue', {
       gruppe: knoten[0].parentNode, knoten, start: lageVon('graue', knoten).map(([x, y]) => [x, y]), ziel: knoten.map((k, j) => ziel(j)),
-      ebene: 0.5, farbeVon: RAHMEN, farbeNach: RAHMEN, fuell: knoten.map(() => 0.9), radius: L.radius,
+      ebene: 0.5, farbeVon, farbeNach: wein ? BORDEAUX : RAHMEN, fuell: knoten.map(() => 0.9), radius: L.radius,
       verzoegerung: knoten.map((k, j) => (((j * 7919) % 997) / 997) * STAFFELUNG), dauer: DAUER, ease: d3.easeCubicInOut
     });
+    instanz.ebeneGraue.classed('bgi-wein', wein);
+    graue.attr('opacity', 1);
     return;
   }
   beendeBewegung('graue', { schreiben: false });
+  instanz.ebeneGraue.classed('bgi-wein', wein);
   if (!mitAnimation || sichtbar === warSichtbar) {
     graue.attr('cx', (j) => ziel(j)[0]).attr('cy', (j) => (sichtbar ? ziel(j)[1] : unten)).attr('opacity', sichtbar ? 1 : 0);
     return;
@@ -1130,6 +1200,35 @@ function zeichneGraue(L, mitAnimation) {
       .attr('cy', unten).attr('opacity', 0);
     setTimeout(() => { if (instanz?.layout === L) graue.interrupt('grau').attr('cy', unten).attr('opacity', 0); }, 1200);
   }
+}
+
+// Folie `weinzoll`: Sind die Punkte in der Säule angekommen, sinken die oberen (der verlorene Teil der Ausfuhr) ein
+// Stück hinab und verblassen; ohne Animation stehen sie gleich verblasst unten
+function weinEinbruch(L, mitAnimation) {
+  const gruppen = [['personen', instanz.punkte.nodes(), 0.85, 2], ['frauen', instanz.frauenPunkte.nodes(), 0.85, 1]];
+  if (instanz.graue) gruppen.push(['graue', instanz.graue.nodes(), 0.9, 0.5]);
+  clearTimeout(instanz.weinZeit);
+  if (!mitAnimation) {
+    gruppen.forEach(([name, knoten]) => knoten.forEach((k, i) => {
+      if (!L.sinkt[name](i)) return;
+      k.setAttribute('cy', (Number(k.getAttribute('cy')) + L.sinkWeg).toFixed(1));
+      k.setAttribute('opacity', 0);
+    }));
+    return;
+  }
+  instanz.weinZeit = setTimeout(() => {
+    if (instanz?.layout !== L) return;
+    gruppen.forEach(([name, knoten, fuell, ebene]) => {
+      const start = lageVon(name, knoten).map(([x, y]) => [x, y]);
+      const faellt = knoten.map((k, i) => L.sinkt[name](i));
+      starteBewegung(name, {
+        gruppe: knoten[0].parentNode, knoten, start, ziel: start.map(([x, y], i) => (faellt[i] ? [x, y + L.sinkWeg] : [x, y])),
+        ebene, farbeVon: BORDEAUX, farbeNach: BORDEAUX, fuell: knoten.map(() => fuell), radius: L.radius,
+        verzoegerung: knoten.map((k, i) => (faellt[i] ? (((i * 7919) % 997) / 997) * 500 : 0)),
+        dauer: WEIN_SINKEN, ease: d3.easeCubicIn, deckkraft: (e, i) => (faellt[i] ? 1 - e : 1)
+      });
+    });
+  }, DAUER + STAFFELUNG + 400);
 }
 
 // Beiwerk in Teilen, je Station eine Auswahl (TEILE). Ein Teil, der neu dazukommt, wird eingeblendet (Münzen regnen),
@@ -1171,6 +1270,25 @@ function zeichneTeile(L, mitAnimation) {
 const AKTUALISIERER = {
   // Münzen: auf „schichten“ verborgen, ab „muenzen“ sichtbar; beim Vorwärtsschritt regnen sie, rückwärts blenden sie aus
   muenzen(g, L, mitAnimation) {
+    // Folie weinzoll: die Kirche blendet aus (bleibt aber liegen, zurück blendet sie nur wieder ein). Ausgeblendet wird
+    // über die Leinwand (Deckkraft je Münze) - eine SVG-Gruppe mit 4 443 Kreisen auszublenden kostete je Bild zu viel
+    const weg = L.art === 'wein';
+    if (weg || g.property('__weg')) {
+      g.property('__weg', weg).style('pointer-events', weg ? 'none' : null);
+      const knoten = g.selectAll('circle').nodes();
+      const lage = lageVon('muenzen', knoten).map(([x, y]) => [x, y]);
+      if (mitAnimation && knoten.length) {
+        starteBewegung('muenzen', {
+          gruppe: g.node(), knoten, start: lage, ziel: lage, ebene: 0, farbeVon: GOLD, farbeNach: GOLD, fuell: knoten.map(() => 1),
+          radius: Number(knoten[0].getAttribute('r')) || 2, verzoegerung: knoten.map(() => (weg ? 0 : 300)),
+          dauer: weg ? 500 : 700, ease: d3.easeCubicInOut, deckkraft: weg ? (e) => 1 - e : (e) => e
+        });
+      } else {
+        beendeBewegung('muenzen', { schreiben: false });
+        knoten.forEach((k) => k.setAttribute('opacity', weg ? 0 : 1));
+      }
+      if (weg) return;
+    }
     // Folien klerus/reformation: die Münzen fliegen zur Kirche bzw. von dort zurück in ihre Felder
     const inKirche = L.art === 'klerus';
     if (inKirche || g.property('__inKirche')) {
@@ -1286,6 +1404,26 @@ function blendeEin(g, neu, verzoegerung = DAUER * 0.55) {
 }
 
 const ZEICHNER = {
+  // Folie `weinzoll`: gestrichelter Umriss und Zahl des ersten Jahres; Linie und Zahl des zweiten Jahres erscheinen,
+  // wenn die oberen Punkte gesunken sind
+  wein(g, L, neu) {
+    const W = instanz.wein, S = L.saeule;
+    const mitte = S.x + S.b / 2;
+    g.append('rect').attr('x', S.x - 5).attr('y', S.oben1 - 5).attr('width', S.b + 10).attr('height', S.unten - S.oben1 + 5)
+      .attr('rx', 6).attr('fill', 'none').attr('stroke', RAHMEN).attr('stroke-width', 1.2).attr('stroke-dasharray', '5 5');
+    g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', mitte).attr('y', S.oben1 - 32).text(`${W.vorher.jahr} · ${zahl(W.vorher.eimer)} Eimer`);
+    g.append('text').attr('class', 'bgi-spaltenzahl').attr('x', mitte).attr('y', S.oben1 - 13).text('Weinausfuhr über die Passauer Maut');
+    const spaet = g.append('g');
+    spaet.append('line').attr('x1', S.x - 5).attr('x2', S.x + S.b + 12).attr('y1', S.oben2 - 2).attr('y2', S.oben2 - 2)
+      .attr('stroke', BORDEAUX).attr('stroke-width', 1.5);
+    spaet.append('text').attr('class', 'bgi-spaltenkopf klein').style('text-anchor', 'start').attr('x', S.x + S.b + 18).attr('y', S.oben2 + 4)
+      .text(`${W.nachher.jahr} · ${zahl(W.nachher.eimer)} Eimer`);
+    spaet.append('text').attr('class', 'bgi-spaltenzahl').style('text-anchor', 'start').attr('x', S.x + S.b + 18).attr('y', S.oben2 + 24)
+      .text(`${prozent((W.nachher.eimer / W.vorher.eimer) * 100)} % von ${W.vorher.jahr}`);
+    blendeEin(g, neu);
+    blendeEin(spaet, neu, DAUER + STAFFELUNG + 400 + WEIN_SINKEN * 0.6);
+  },
+
   // Folie `berufe`: Überschrift und Zahl über dem Diagramm, Name und Zahl je Balken, im Tor die Beschriftung des
   // stehenden Teils (über dem linken Rundturm)
   sektoren(g, L, neu) {
@@ -1354,9 +1492,13 @@ const ZEICHNER = {
   // Auf „schichten“ verborgen und erst angelegt, wenn die Punkte angekommen sind (sonst stockt der Anfang des
   // Morphens); spätestens beim Weiterklicken legt AKTUALISIERER.muenzen sie an.
   muenzen(g, L, neu) {
-    if (L.art === 'klerus') {
+    if (L.art === 'klerus' || L.art === 'wein') { // auf `weinzoll` (z. B. nach einer Breitenänderung) ausgeblendet
       g.property('__layout', berechneLayout('muenzen'));
-      morpheMuenzen(g, L, true, false);
+      morpheMuenzen(g, L.art === 'wein' ? berechneLayout('reformation') : L, true, false);
+      if (L.art === 'wein') {
+        g.property('__weg', true).style('pointer-events', 'none');
+        g.selectAll('circle').attr('opacity', 0);
+      }
       return;
     }
     g.property('__layout', L);
@@ -1507,6 +1649,11 @@ function stationsBeschriftung() {
   }
   if (station === 'geschlecht') return `${zahl(L.maenner.length)} Männer und ${zahl(L.frauen.length)} Frauen im Bürgerbuch`;
   if (station === 'klerus') return 'Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden links wieder das Steiner Tor, rechts neben dem Text eine kleine Kirche mit Kreuz aus den Münzen';
+  if (station === 'weinzoll' && instanz.wein) {
+    const W = instanz.wein;
+    return `Weinausfuhr über die Passauer Maut: ${zahl(W.vorher.eimer)} Eimer ${W.vorher.jahr}, ${zahl(W.nachher.eimer)} Eimer ${W.nachher.jahr}. `
+      + `Alle Punkte bilden bordeauxrot eine Säule; die oberen ${prozent(100 - (W.nachher.eimer / W.vorher.eimer) * 100)} Prozent sinken hinab und verblassen`;
+  }
   if (station === 'reformation') return `Reformation: Die Punkte des Tors bilden ein Kreuz; jeder ${KATHOLISCH_JEDER}. Punkt bleibt katholisch und sitzt in der kleinen Kirche aus den Münzen`;
   if (station === 'frauen') return `${zahl(L.maenner.length)} Männer im Bürgerbuch, daneben ebenso viele symbolische Punkte für die Frauen, die es nicht nennt`;
   if (VERMOEGEN_STATIONEN.includes(station) && schichten) {
@@ -1557,15 +1704,19 @@ function geheZu(index) {
 
 // Daten der Stationen nachladen; bis dahin steht das Tor ohne Knöpfe
 async function ladeStationsdaten() {
-  const [stationen, schichten, sektoren, rohBuergerbuch] = await Promise.all([
+  const [stationen, schichten, sektoren, weinexport, rohBuergerbuch] = await Promise.all([
     ladeCSV(STATIONEN_DATEI).then((r) => r.records).catch(() => null),
     ladeCSV(SCHICHTEN_DATEI).then((r) => r.records).catch(() => null),
     ladeCSV(SEKTOREN_DATEI).then((r) => r.records).catch(() => null),
+    ladeCSV(WEIN_DATEI).then((r) => r.records).catch(() => null),
     fetch(BUERGERBUCH_DATEI).then((r) => (r.ok ? r.text() : null)).then((t) => (t ? d3.dsvFormat(';').parse(t) : null)).catch(() => null)
   ]);
   if (!instanz) return;
   if (sektoren) ergaenzeSektoren(instanz.personen, instanz.buergerbuch, rohBuergerbuch);
   instanz.schichten = bereiteSchichtenAuf(schichten, instanz.personen.length);
+  const weinZeilen = (weinexport || []).map((r) => ({ jahr: zahlWert(r.jahr), eimer: zahlWert(r.eimer) }))
+    .filter((w) => w.jahr !== null && w.eimer > 0).sort((a, c) => a.jahr - c.jahr);
+  instanz.wein = weinZeilen.length >= 2 ? { zeilen: weinZeilen, vorher: weinZeilen[0], nachher: weinZeilen[weinZeilen.length - 1] } : null;
   instanz.berufe = bereiteBerufeAuf(sektoren, instanz.buergerbuch, instanz.personen);
   if (instanz.berufe) {
     instanz.torPlatz = vergibTorPlaetze(instanz.personen, instanz.berufe);
@@ -1573,6 +1724,7 @@ async function ladeStationsdaten() {
   }
   instanz.stationen = bereiteStationenAuf(stationen)
     .filter((s) => s.id !== 'berufe' || instanz.berufe)
+    .filter((s) => s.id !== 'weinzoll' || (instanz.wein && instanz.schichten))
     .filter((s) => !VERMOEGEN_STATIONEN.includes(s.id) || instanz.schichten)
     .filter((s) => s.id !== 'vermoegenslos' || instanz.schichten?.ohne);
   instanz.muenzeGulden = instanz.stationen.find((s) => s.muenze)?.muenze || STANDARD_MUENZE;
@@ -1673,7 +1825,7 @@ export function render(container, data, options = {}) {
         zeigeTooltip(`${p.name}\n${zeile}${sektor}`, this, container);
         return;
       }
-      if (instanz.station === 'klerus' || instanz.station === 'reformation') return;
+      if (['klerus', 'reformation', 'weinzoll'].includes(instanz.station)) return;
       const s = instanz.schichten?.buerger[instanz.zuordnung[p.nr].k];
       if (s) zeigeTooltip(`${s.name}\n1 von ${zahl(s.anzahl)} Haushalten (Anteil, keine bestimmte Person)`, this, container);
     })
@@ -1706,7 +1858,7 @@ export function render(container, data, options = {}) {
 
   const sidebar = baueSidebarGeruest(container);
   instanz = {
-    container, wurzel, buehne, personen, buergerbuch, berufe: null, torPlatz: null, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
+    container, wurzel, buehne, personen, buergerbuch, berufe: null, torPlatz: null, wein: null, weinZeit: null, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
     zuordnung: null, muenzeGulden: STANDARD_MUENZE, svg, punkte, graue: null, graueSichtbar: false, frauenPunkte, frauenSichtbar: false, leinwand, bewegungen: new Map(), leinwandSchleife: null, ebeneSpalten, ebeneMuenzen,
     ebeneGraue, teileVorher: new Set(), weiterKnopf: steuerung.querySelector('.bgi-weiter'), zurueckKnopf: steuerung.querySelector('.bgi-zurueck'),
     unterzeile: kopf.querySelector('.bgi-unterzeile'), erklaerung, infoButton: null, layout: null, sidebar, quellen,
@@ -1752,6 +1904,7 @@ export function destroy() {
   instanz.beobachter?.disconnect();
   instanz.leinwandSchleife?.stop();
   instanz.regenSchleife?.stop();
+  clearTimeout(instanz.weinZeit);
   instanz.graue?.interrupt();
   instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
