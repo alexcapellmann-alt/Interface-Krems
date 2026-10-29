@@ -642,12 +642,12 @@ Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Alle drei 
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `station` | Text | **Pflicht** | `tor`, `berufe` (das Tor wird senkrecht geteilt: links bleiben die Personen ohne Berufsangabe stehen, rechts werden die Personen mit Wirtschaftssektor ein Balkendiagramm, ein Punkt je Person), `buergerbuch` (das Tor wird wieder ganz, der Text steht links daneben), `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen), `vermoegenslos` (graue Säule links neben dem Text) `klerus` (Stadt und Kirche: der Text wandert in die Mitte, links das Steiner Tor aus allen Punkten, auch denen der grauen Säule, mittig rechts neben dem Text eine kleine Kirche mit Kreuz aus den Münzen) oder `reformation` (die Punkte des Tors bilden an seiner Stelle ein Kreuz; jeder 40. Punkt, 2,5 %, bleibt katholisch und geht in die Kirche); andere Werte werden übergangen |
+| `station` | Text | **Pflicht** | `tor`, `berufe` (das Tor wird senkrecht geteilt: links bleiben die Personen ohne Berufsangabe stehen, rechts werden die Personen mit Wirtschaftssektor ein Balkendiagramm, ein Punkt je Person), `buergerbuch` (das Tor wird wieder ganz, der Text steht links daneben), `geschlecht`, `frauen` (die leere Frauen-Spalte füllt sich mit ebenso vielen symbolischen Punkten wie Männer; weiter zu `schichten` verschmelzen beide zu Haushalten), `schichten` (Säulen nach Schicht), `muenzen` (Münzen regnen in die Felder unter den Säulen), `vermoegenslos` (graue Säule links neben dem Text) `klerus` (Stadt und Kirche: der Text wandert in die Mitte, links das Steiner Tor aus allen Punkten, auch denen der grauen Säule, mittig rechts neben dem Text eine kleine Kirche mit Kreuz aus den Münzen) oder `reformation` (die Punkte des Tors bilden an seiner Stelle ein Kreuz; jeder 40. Punkt, 2,5 %, bleibt katholisch und geht in die Kirche) oder `weinzoll` (der Text wandert nach rechts, die Kirche blendet aus; alle Punkte bilden bordeauxrot links eine Säule für die Weinausfuhr des ersten Jahres aus `buergerinnen_weinexport.csv`, dann sinken die oberen Punkte um den Anteil des Rückgangs hinab und verblassen; ohne diese Datei entfällt die Folie); andere Werte werden übergangen |
 | `knopf` | Text | **Pflicht** außer bei `tor` | Name des Weiter-Pfeils, der zu dieser Folie führt (Tooltip und Bildschirmleser) |
 | `unterzeile` | Text | nein | Zeile unter „N Personen“ in dieser Station |
 | `muenze_gulden` | Zahl | nein | Gulden je Münze (erster gefundener Wert gilt; Vorgabe 1 000) |
 | `text_anhaengen` | `ja`/`nein` | nein | `ja`: der Text kommt zum Text der vorigen Folie dazu (wird angehängt und eingeblendet), statt ihn zu ersetzen |
-| `text` | Text | nein | Erklärung der Station; Absätze mit `\|` getrennt. `[[personen_id=Name]]` wird ein Knopf, der die Person zeigt und ihre Sidebar öffnet; `[Text](#ziel)` ein Link innerhalb der Seite; Platzhalter `{anteil:id}` (Prozent des Vermögens), `{summe:id}`, `{mittel:id}`, `{anzahl:id}` (id aus der Schichten-Datei), `{muenze}`, `{personen}` (Zahl der Personenpunkte) sowie `{aufnahmen}`, `{mitberuf}`, `{ohneberuf}` und `{berufanteil}` (Aufnahmen ins Bürgerbuch insgesamt, mit und ohne Wirtschaftssektor, Prozent mit) sowie `{personenmitberuf}` und `{personenanteil}` (Personen mit Sektor, Prozent aller Personen) werden beim Zeichnen berechnet. Felder mit `;` in Anführungszeichen setzen. |
+| `text` | Text | nein | Erklärung der Station; Absätze mit `\|` getrennt. `[[personen_id=Name]]` wird ein Knopf, der die Person zeigt und ihre Sidebar öffnet; `[Text](#ziel)` ein Link innerhalb der Seite; Platzhalter `{anteil:id}` (Prozent des Vermögens), `{summe:id}`, `{mittel:id}`, `{anzahl:id}` (id aus der Schichten-Datei), `{muenze}`, `{personen}` (Zahl der Personenpunkte) sowie `{aufnahmen}`, `{mitberuf}`, `{ohneberuf}` und `{berufanteil}` (Aufnahmen ins Bürgerbuch insgesamt, mit und ohne Wirtschaftssektor, Prozent mit) sowie `{personenmitberuf}` und `{personenanteil}` (Personen mit Sektor, Prozent aller Personen) und `{eimer:jahr}` (Weinausfuhr dieses Jahres aus `buergerinnen_weinexport.csv`) werden beim Zeichnen berechnet. Felder mit `;` in Anführungszeichen setzen. |
 
 **buergerinnen_schichten.csv** - eine Zeile je Säule, von links nach rechts:
 
@@ -670,6 +670,14 @@ Knöpfe, Texte und Zahlen der Ansicht „Bürgerinnen?“ (Personen). Alle drei 
 | `beispiele` | Text | nein | Tooltip der Punkte dieses Balkens |
 
 Gezählt werden Personen: Neubürger mit dem Sektor ihrer frühesten Aufnahme mit `Wirtschaftssektor`; Personen ohne eigenen Sektor (vor allem Bürgen, die selbst nie aufgenommen wurden) über ihren Beruf in `Buergen_Berufe` (stellengleich zu `buergen_id`), mit der Zuordnung Beruf → Sektor aus den Aufnahmen; ihr Sektor gilt als erschlossen und wird im Tooltip so gekennzeichnet. Die Personen mit Sektor stehen im Tor rechts eines senkrechten Schnitts.
+
+**buergerinnen_weinexport.csv** - Weinausfuhr für die Folie `weinzoll`; die erste und die letzte Zeile (nach Jahr) werden verglichen:
+
+| Spalte | Format | Pflicht | Beschreibung |
+|---|---|---|---|
+| `jahr` | Zahl | **Pflicht** | Jahr |
+| `eimer` | Zahl | **Pflicht** | ausgeführte Menge in Eimern |
+| `quelle` | Text | nein | wird nicht ausgewertet |
 
 **Verhalten bei fehlender Datei:** Ohne Stationsdatei gibt es nur die Folgen Steiner Tor → „Nach Geschlecht ordnen“, ohne Text. Ohne Schichten-Datei (oder ohne Zeile mit `anteil_prozent`) entfallen die drei Vermögens-Folien; ohne Zeile `ohne_buergerrecht` entfällt `vermoegenslos`; ohne Sektoren-Datei entfällt `berufe`.
 
