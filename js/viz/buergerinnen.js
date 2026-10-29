@@ -60,6 +60,8 @@ const LEINWAND_UEBERSTAND = 60;   // px: die Leinwand reicht unter die Bühne (P
 const STAFFELUNG = 250;           // ms: so weit setzen sich die Punkte zeitversetzt in Bewegung
 // Folien `klerus`/`reformation`: Formen in eigenen kleinen Koordinatenfeldern - Kreuz aus den Bürgerpunkten,
 // kleine Kirche (Turm mit Helm und kleinem Kreuz, Schiff mit Satteldach, Tür ausgespart) aus den Münzen
+const KATHOLISCH_JEDER = 40;       // Folie `reformation`: jeder 40. Punkt (2,5 %) bleibt katholisch und geht in die Kirche
+const KIRCHENSCHIFF = ['M38,78 H112 V124 H38 Z']; // dort sitzen sie (Tür ausgespart, siehe KIRCHE)
 const KREUZ = { w: 100, h: 150, flaechen: ['M40,0 H60 V150 H40 Z', 'M8,32 H92 V52 H8 Z'] };
 const KIRCHE = {
   w: 120, h: 126,
@@ -82,7 +84,7 @@ const BUERGERBUCH_DATEI = 'data/buergerbuch.csv'; // roh nachgeladen: Bürgen un
 const OHNE_BUERGERRECHT = 'ohne_buergerrecht'; // id der grauen Säule in buergerinnen_schichten.csv
 const STANDARD_MUENZE = 1000;     // Gulden je Münze, falls die Stationsdatei keinen Wert nennt
 const STANDARD_UNTERZEILE = 'Neubürger und ihre Bürgen, ein Punkt je Person';
-const BEKANNTE_STATIONEN = ['tor', 'berufe', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation'];
+const BEKANNTE_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation'];
 const VERMOEGEN_STATIONEN = ['schichten', 'muenzen', 'vermoegenslos']; // gemeinsames Säulen-Layout
 // Beiwerk je Folie (siehe zeichneTeile())
 const TEILE = {
@@ -95,7 +97,8 @@ const TEILE = {
   klerus: ['muenzen'],
   reformation: ['muenzen']
 };
-const PERSONEN_STATIONEN = ['tor', 'berufe', 'geschlecht', 'frauen']; // dort steht ein Punkt für eine Person (Klick öffnet die Sidebar)
+const PERSONEN_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'geschlecht', 'frauen'];
+const TOR_STATIONEN = ['tor', 'buergerbuch']; // das ganze Tor (auf `buergerbuch` mit Text links daneben) // dort steht ein Punkt für eine Person (Klick öffnet die Sidebar)
 // ohne Stationsdatei: Tor und Geschlecht ohne Text
 const STANDARD_STATIONEN = [
   { id: 'tor', knopf: 'Steiner Tor', unterzeile: '', muenze: null, anhaengen: false, absaetze: [] },
@@ -373,10 +376,10 @@ function formRaster(name, n, flaechen, form, aussparungen = []) {
   return ergebnis;
 }
 
-// Form in ein Rechteck legen (zentriert, Seitenverhältnis bleibt)
-function inRechteck(form, r) {
+// Form in ein Rechteck legen (zentriert, Seitenverhältnis bleibt); `unten`: auf die Unterkante gestellt
+function inRechteck(form, r, unten = false) {
   const skala = Math.min(r.b / form.w, r.h / form.h);
-  const ox = r.x + (r.b - form.w * skala) / 2, oy = r.y + (r.h - form.h * skala) / 2;
+  const ox = r.x + (r.b - form.w * skala) / 2, oy = r.y + (r.h - form.h * skala) * (unten ? 1 : 0.5);
   return { skala, pos: ([x, y]) => [ox + x * skala, oy + y * skala] };
 }
 
@@ -563,11 +566,12 @@ function vergibTorPlaetze(personen, B) {
 
 const escapeHtml = (t) => String(t).replace(/[&<>"]/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[z]));
 
-// Platzhalter in den Stationstexten: {anteil:id} (Prozent des Vermögens), {summe:id}, {mittel:id}, {anzahl:id}, {muenze},
+// Platzhalter in den Stationstexten: {anteil:id} (Prozent des Vermögens), {summe:id}, {mittel:id}, {anzahl:id}, {muenze}, {personen},
 // {aufnahmen}, {mitberuf}, {ohneberuf}, {berufanteil} (Aufnahmen ins Bürgerbuch mit bzw. ohne Berufsangabe),
 // {personenmitberuf}, {personenanteil} (Personen mit Sektor, auch Bürgen über ihren Beruf)
 function platzhalterWert(name, id) {
   if (name === 'muenze') return zahl(instanz.muenzeGulden);
+  if (name === 'personen') return zahl(instanz.personen.length);
   const B = instanz.berufe;
   if (B && name === 'aufnahmen') return zahl(B.aufnahmen);
   if (B && name === 'mitberuf') return zahl(B.aufnahmenMit);
@@ -615,6 +619,11 @@ function berechneLayout(station = instanz.station) {
   const radiusFeld = Math.max(1.1, feld.zelle * 0.4);
   const basis = { b, h, feld, radiusFeld, station, benoetigt: 0, text: null, art: station };
   if (station === 'berufe' && instanz.berufe) return { ...basis, ...layoutBerufe(b), art: 'berufe' };
+  if (station === 'buergerbuch') {
+    // das ganze Tor wie auf der ersten Folie (Ausgangshöhe), der Text an derselben Stelle wie auf `berufe`
+    const tor = torForm(personen.length, b, instanz.basisHoehe);
+    return { ...basis, ziel: (p, i) => tor.pos(instanz.torPlatz ? instanz.torPlatz[i] : i), radius: radiusFeld, text: textNebenTor(b, tor) };
+  }
   if (station === 'geschlecht' || station === 'frauen') return { ...basis, ...layoutGeschlecht(b, h, radiusFeld), art: 'geschlecht' };
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b), art: 'vermoegen' };
   if ((station === 'klerus' || station === 'reformation') && instanz.schichten) {
@@ -634,7 +643,6 @@ function layoutBerufe(b) {
   const feld = torForm(n, b, h);
   const lage = d3.range(n).map((i) => feld.pos(torPlatz[i]));
   const schnitt = d3.min(B.gruppen.flatMap((g) => g.mitglieder), (i) => lage[i][0]) ?? b / 2;
-  const torLinks = d3.min(lage, ([x]) => x);
   const luecke = Math.max(14, b * 0.025);
   const x0 = schnitt + luecke, breite = b - 8 - x0;
   // Balken: so viele Punktreihen je Balken, dass die Punkte möglichst so groß wie im Tor bleiben
@@ -658,15 +666,21 @@ function layoutBerufe(b) {
     });
     return { g, oben, ende: x0 + Math.ceil(g.anzahl / reihen) * z, mitte: oben + beschriftung + (reihen * z) / 2 };
   });
-  const textBreite = Math.min(TEXT_BREITE, torLinks - luecke - 8);
-  const breit = b >= TEXT_MIN_BREITE && textBreite >= 220;
   return {
     ziel: (p, i) => ziel[i],
     bleibt: (i) => !B.gruppeVon[i],
     radius: Math.max(1.1, z * 0.4),
-    text: breit ? { x: torLinks - luecke - textBreite, b: textBreite, top: 4 } : null,
+    text: textNebenTor(b, feld),
     x0, balken, torOrt: feld.ort
   };
+}
+
+// Text links neben dem ganzen Tor (Folien `berufe` und `buergerbuch`); zu schmal: unter der Bühne
+function textNebenTor(b, feld) {
+  const torLinks = d3.min(d3.range(instanz.personen.length), (i) => feld.pos(i)[0]);
+  const luecke = Math.max(14, b * 0.025);
+  const textBreite = Math.min(TEXT_BREITE, torLinks - luecke - 8);
+  return b >= TEXT_MIN_BREITE && textBreite >= 220 ? { x: torLinks - luecke - textBreite, b: textBreite, top: 4 } : null;
 }
 
 // Männer links, Frauen rechts; ab TEXT_MIN_BREITE steht die Erklärung dazwischen
@@ -708,28 +722,27 @@ function layoutGeschlecht(b, h, radiusFeld) {
   };
 }
 
-// Folien `klerus` und `reformation`: Der Text steht an derselben Stelle wie auf den Vermögens-Folien (zwischen
-// dem Platz der grauen Säule und den Bürgersäulen). Rechts daneben die kleine goldene Kirche aus allen Münzen und -
-// auf `klerus` - das Steiner Tor aus allen blauen, violetten und braunen (Inwohner und Hilfskräfte) Punkten,
-// gemischt; auf `reformation` wandern diese
-// Punkte links neben den Text und bilden dort ein Kreuz. Schmal: Tor bzw. Kreuz links, Kirche rechts, Text darunter.
+// Folien `klerus` und `reformation` (2026-10-29 umgestellt, Wunsch des Autors): Der Text wandert in die Mitte der Bühne;
+// links das Steiner Tor aus allen blauen, violetten und braunen (Inwohner und Hilfskräfte) Punkten, gemischt; mittig
+// rechts neben dem Text die kleine goldene Kirche aus allen Münzen. Auf `reformation` bilden die Punkte des Tors an
+// seiner Stelle ein Kreuz; jeder KATHOLISCH_JEDER-te Punkt (um 1570 „kaum noch 100 Katholiken“ bei rund 4 000
+// Einwohnern) geht stattdessen ins Kirchenschiff. Schmal: Tor bzw. Kreuz links, Kirche rechts, Text darunter.
 function layoutKlerus(b, mitKreuz) {
   const { personen, schichten, muenzeGulden } = instanz;
   const h = instanz.basisHoehe;
   const LV = layoutVermoegen(b);
   const luecke = Math.max(14, b * 0.025);
-  let torR, kircheR, kreuzR;
+  let torR, kircheR, text = null;
   if (LV.text) {
-    const x2 = LV.text.x + LV.text.b + luecke;
-    const rest = b - x2;
-    torR = { x: x2, y: 8, b: rest * 0.58, h: h - 16 };
-    kircheR = { x: x2 + rest * 0.62, y: h * 0.42, b: rest * 0.38, h: h * 0.52 };
-    kreuzR = { x: 0, y: 8, b: LV.text.x - luecke, h: h - 16 };
+    text = { ...LV.text, x: (b - LV.text.b) / 2 };
+    torR = { x: 0, y: 8, b: text.x - luecke * 2, h: h - 16 };
+    const x2 = text.x + text.b + luecke * 2;
+    kircheR = { x: x2, y: h * 0.5 - 8, b: Math.min(b - x2 - 8, h * 0.6), h: h * 0.5 };
   } else {
     torR = { x: 0, y: 8, b: b * 0.6, h: h - 16 };
-    kreuzR = torR;
-    kircheR = { x: b * 0.62, y: h * 0.45, b: b * 0.38, h: h * 0.5 };
+    kircheR = { x: b * 0.62, y: h * 0.5 - 8, b: b * 0.38, h: h * 0.5 };
   }
+  const kreuzR = torR;
   const n = personen.length;
   // alle Männer, Frauen und Inwohner/Hilfskräfte (graue Säule), gemischt (fester Zufall), bilden Tor bzw. Kreuz
   const mitGrauen = Boolean(instanz.graue);
@@ -743,11 +756,23 @@ function layoutKlerus(b, mitKreuz) {
   reihe.sort((a, c) => mischWert(a) - mischWert(c));
   const platz = { m: new Map(), f: new Map(), g: new Map() };
   reihe.forEach(([art, i], k) => platz[art].set(i, k));
+  const kirche = inRechteck(KIRCHE, kircheR, true); // Kirche und Kreuz stehen auf derselben Linie wie das Tor
   let pos, zelle;
   if (mitKreuz) {
-    const kreuz = inRechteck(KREUZ, kreuzR);
-    const raster = formRaster('kreuz', reihe.length, KREUZ.flaechen, KREUZ);
-    pos = (k) => kreuz.pos(raster.punkte[k % raster.punkte.length]);
+    // jeder KATHOLISCH_JEDER-te Platz der gemischten Reihe ins Kirchenschiff, die übrigen der Reihe nach ins Kreuz
+    const katholisch = (k) => k % KATHOLISCH_JEDER === KATHOLISCH_JEDER / 2;
+    const anzahlKatholisch = d3.range(reihe.length).filter(katholisch).length;
+    const kreuz = inRechteck(KREUZ, kreuzR, true);
+    const raster = formRaster('kreuz', reihe.length - anzahlKatholisch, KREUZ.flaechen, KREUZ);
+    const schiff = formRaster('kirchenschiff', anzahlKatholisch, KIRCHENSCHIFF, KIRCHE, KIRCHE.aussparungen);
+    const platzImKreuz = new Map();
+    let imKreuz = 0, imSchiff = 0;
+    d3.range(reihe.length).forEach((k) => {
+      platzImKreuz.set(k, katholisch(k)
+        ? kirche.pos(schiff.punkte[imSchiff++ % schiff.punkte.length])
+        : kreuz.pos(raster.punkte[imKreuz++ % raster.punkte.length]));
+    });
+    pos = (k) => platzImKreuz.get(k);
     zelle = raster.abstand * kreuz.skala;
   } else {
     const tor = torFormIn(reihe.length, torR);
@@ -756,7 +781,6 @@ function layoutKlerus(b, mitKreuz) {
   }
   // Kirche aus allen Münzen
   const muenzAnzahl = schichten.buerger.reduce((summe, sch) => summe + Math.ceil(sch.summe / muenzeGulden - 1e-9), 0);
-  const kirche = inRechteck(KIRCHE, kircheR);
   const kirchenRaster = formRaster('kirche', muenzAnzahl, KIRCHE.flaechen, KIRCHE, KIRCHE.aussparungen);
   return {
     ziel: (p) => pos(platz.m.get(p.nr)),
@@ -765,7 +789,7 @@ function layoutKlerus(b, mitKreuz) {
     kirchenZiel: (i) => kirche.pos(kirchenRaster.punkte[i % kirchenRaster.punkte.length]),
     kirchenRadius: Math.max(0.6, kirchenRaster.abstand * kirche.skala * 0.42),
     radius: Math.max(0.8, zelle * 0.4),
-    text: LV.text
+    text
   };
 }
 
@@ -834,7 +858,7 @@ function zeichne(animiert) {
   instanz.letzteBreite = L.b; // eigene Neuzeichnung: die Breitenüberwachung soll sie nicht noch einmal auslösen
   svg.attr('viewBox', `0 0 ${L.b} ${L.h}`);
   const mitAnimation = animiert && !ohneAnimation();
-  const imFeld = L.station === 'tor';
+  const imFeld = TOR_STATIONEN.includes(L.station);
   punkte.classed('anteil', !PERSONEN_STATIONEN.includes(L.station));
   // Größe und Deckkraft springen gleich auf den Zielwert (der Unterschied ist klein), nur die Lage wird animiert
   punkte.attr('r', L.radius).attr('fill-opacity', (p, i) => (imFeld || L.bleibt?.(i) ? p.helligkeit : 0.85));
@@ -1482,8 +1506,8 @@ function stationsBeschriftung() {
       + `${B.gruppen.map((g) => `${g.name} ${zahl(g.anzahl)}`).join(', ')}; ${zahl(B.ohne)} ohne Berufsangabe bleiben im Tor`;
   }
   if (station === 'geschlecht') return `${zahl(L.maenner.length)} Männer und ${zahl(L.frauen.length)} Frauen im Bürgerbuch`;
-  if (station === 'klerus') return 'Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden wieder das Steiner Tor, daneben eine kleine Kirche mit Kreuz aus den Münzen';
-  if (station === 'reformation') return 'Reformation: Die Punkte der Bürgerschaft bilden ein Kreuz, daneben die kleine Kirche aus den Münzen';
+  if (station === 'klerus') return 'Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden links wieder das Steiner Tor, rechts neben dem Text eine kleine Kirche mit Kreuz aus den Münzen';
+  if (station === 'reformation') return `Reformation: Die Punkte des Tors bilden ein Kreuz; jeder ${KATHOLISCH_JEDER}. Punkt bleibt katholisch und sitzt in der kleinen Kirche aus den Münzen`;
   if (station === 'frauen') return `${zahl(L.maenner.length)} Männer im Bürgerbuch, daneben ebenso viele symbolische Punkte für die Frauen, die es nicht nennt`;
   if (VERMOEGEN_STATIONEN.includes(station) && schichten) {
     const teile = schichten.buerger.map((s) => (station === 'schichten'
