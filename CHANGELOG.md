@@ -7,6 +7,91 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (209) – Bürgerinnen?: Folien zu Schreibweisen, Orten und Unsicherheit durch Verarbeitung
+
+- Wunsch des Autors (Unsicherheitstypologie: Inkonsistenz, Fehlerhaftigkeit/Mehrdeutigkeit, Unsicherheit durch digitale Verarbeitung):
+  - `schreibweisen` „Ein Name, viele Schreibweisen“ nach „Das Bürgerbuch“: Im Buch leuchten 239 Personen mit mehreren Schreibweisen (`HERVOR`), die übrigen treten zurück; drei Beispiele mit zwei oder drei Schreibweisen rechts daneben, Linie zum Punkt; Tooltip nennt alle Schreibweisen; Klick öffnet die Person. Text des Autors.
+  - `orte` „Wo liegt das?“ nach „Lücke oder Wandel?“: Die Urkunden fliegen aus ihren Jahrzehnt-Säulen auf eine Karte zu ihrem ersten Ort mit Koordinaten (`bereiteKarteAuf()`, `karteUrkunden()`), spiralförmig je Ort, mit vereinfachtem Donaulauf und den häufigsten Orten beschriftet. Die Karte ist um Krems verzerrt (Richtung bleibt, Entfernung hoch 0,42), Kreise für 100 und 500 km und ein Satz im Text machen das sichtbar. Text: überregionale Rolle von Krems (Wein, Eisen, Kaufleute am Markt), unsichere Ortszuordnung (86 von 257), Link zur Karte der Orte.
+  - `verarbeitung` „Die Karte ist sicherer als wir“: dieselbe Karte, hellrote Höfe um unsicher zugeordnete Orte, die 9 Urkunden, deren Orte keine Koordinaten haben, erscheinen unten am Rand; Text zu weitergetragener, verstärkter und übersehener Unsicherheit und zu den Entscheidungen dieser Führung (Mittelwerte, erschlossene Berufe, symbolische Frauen, geschätzte Ringe, zusammengeführte Schreibweisen).
+- Ladefehler der Folien werden jetzt in der Konsole gemeldet (vorher still verschluckt). Der Datenlader liefert Koordinaten als Zahl und `orte_unsicher` als Wahrheitswert; `bereiteKarteAuf()` nimmt beides.
+- Testumgebung: Auf Port 8845 liefen zwei Testserver, einer ohne Projektpfad gestartet; Windows verteilte die Anfragen, einzelne Moduldateien fehlten zufällig. Der falsch gestartete Server wurde beendet.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Folien 8, 21, 22 (Schreibweisen-Beispiele, Karte, Höfe, Rand), Klick auf eine Urkunde auf der Karte; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (208) – Bürgerinnen?: Punkte nur noch auf der Leinwand
+
+- Ursache des Springens beim Autor gefunden: Die Erweiterung „Stands AdBlocker“ durchsucht nach Änderungen die ganze Seite (`helpers.js`, je Durchgang bis 2,7 s); bei über 15 000 SVG-Kreisen stand der Browser dabei still, die Übergänge zu „Stadt und Kirche“ und zur Weinflasche sprangen ohne Bewegung ans Ziel.
+- Wunsch des Autors: Personen, Frauen, Inwohner und Münzen sind keine Seitenelemente mehr. Sie sind leichte Objekte (`VPunkt`, `vGruppe`, `vPunkte()`) mit `getAttribute`/`setAttribute` wie ein Element, sodass d3-Auswahlen, -Übergänge, Münzregen und Bewegungen unverändert weiterlaufen; gezeichnet wird alles auf der einen Leinwand (`zeichneAlles()`, nur wenn sich etwas ändert). Ruhende Gruppen liegen als Zwischenbild vor und werden nur neu gemalt, wenn sich einer ihrer Punkte ändert; leere Gruppen werden übersprungen; während des Münzregens fehlt der dünne Münzrand bis zur Landung. Im Seitenbaum stehen statt über 15 000 nur noch rund 1 500 Kreise (Archiv-Folien).
+- Tooltip, Handzeiger und Klick ermittelt `trefferBei()` aus der Mausposition (oberste sichtbare Gruppe zuerst); Personen bleiben auf den Folien `tor`, `berufe`, `buergerbuch`, `geschlecht`, `frauen` anklickbar, Tooltips für Haushalte, Frauen, Inwohner und Münzen bleiben. Archiv-Punkte und Urkunden bleiben SVG.
+- Geprüft auf dem Testserver 8845 (1400 × 800, Vorschau sichtbar): Folien 5–16 vor und zurück je 0–7 Bilder über 30 ms (Münzregen 0, „Stadt und Kirche“ 0, Weinflasche 5); Tooltip und Klick auf eine Person öffnen die Seitenleiste; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (207) – Bürgerinnen?: vorläufige Foliennummern und Diagnose
+
+- Vorläufig, zur Abstimmung mit dem Autor (später entfernen, Schalter `DIAGNOSE` in `js/viz/buergerinnen.js`): links neben den Knöpfen „Folie n / 20“; in der Konsole eine Warnung, wenn eine Bewegung nicht von selbst fertig wird (gezeichnete Bilder, Leinwandgröße, Bildschirmfaktor, Punktzahl, ob die Zeichenschleife läuft), und ein Hinweis, wenn der Aufbau beim Klick länger als 150 ms dauert.
+- Anlass: Beim Autor springen die Übergänge zu „Stadt und Kirche“ und zur Weinflasche ohne Bewegung ans Ziel (nach 1–2 Sekunden), ohne Fehlermeldung; auf dem Testserver nicht nachvollziehbar (vier Fenstergrößen, Leinwand zeichnet).
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (206) – Bürgerinnen?: Verlust-Folien deutlicher, Text immer links
+
+- Wunsch des Autors: Alle drei Verlust-Folien haben den Text links und das Tor rechts (`verlust2` war gespiegelt).
+- Verlust deutlicher: Ringe kräftiger (leicht gefüllt, 1,6 px Rand). Bevor sie fallen, färben sie sich rostrot (`VERLUST_ROT`), dann fallen sie 190 px tief und leicht seitlich aus dem Tor und verblassen; zurück steigen sie grau wieder auf. Neben dem Tor erscheinen groß und rot die Jahreszahlen der Verluste (neue Spalte `jahreszahlen` in `buergerinnen_stationen.csv`: 1532, 2002 · 1871, 1850–1938 · 1572–1575, 1624, 1628, 1945).
+- Gemeldet: Übergang „Wer fehlt noch?“ → „Stadt und Kirche“ funktioniere nicht mehr. Auf dem Testserver 8845 nicht nachvollziehbar (1400 × 800 und 1920 × 1000: Punkte, Frauen, Inwohner und Münzen bewegen sich, Endzustand vollständig, 8 Bilder über 30 ms); Rückfrage an den Autor.
+- Geprüft auf dem Testserver 8845 (1400 × 800): drei Verlust-Folien, Ringe 237 → 158 → 79 → 0, Jahreszahlen, Text links; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (205) – Bürgerinnen?: Verlust-Kapitel und Schluss „Ein Archiv gehört allen“
+
+- Wunsch des Autors: Nach dem Weinzoll ein Kapitel über Archivverluste, nach Ursache gruppiert, danach der Partizipationswunsch.
+  - Bild: Das Archiv-Tor wird zum „Tor mit Löchern“: zwischen den 316 Beständen 237 hohle Ringe für Verlorenes (3/4 der Bestandszahl - ein Bild, keine Messung, so auch im Text). Auf `verlust1` blenden alle Ringe ein, dann fällt das erste Drittel heraus; auf `verlust2` und `verlust3` je ein weiteres Drittel; zurück steigen sie wieder auf (`zeichneVerluste()`, `lochPlatz`, `VERLUST_STATIONEN`).
+  - `verlust1` „Was verloren ging“: Stadtbrand 1532, Hochwasser 2002 und Schimmel. `verlust2` „Aussortiert und verschwunden“: Skartierung in Stein 1871, Steiner Stadtarchiv 1850–1938. `verlust3` „Absichtlich vernichtet“: Steiner Steuerbuch 1572–1575, das „rote Buch“ 1624, Bücherverbrennung 1624/1628, Aktenvernichtung 1945 und verschwundene Gauhauptstadt-Pläne.
+  - `urkunden` „Lücke oder Wandel?“ steht jetzt hier statt am Anfang (Satz zum Bestandsverzeichnis gestrichen): Das Tor tritt zurück, die Urkunden bilden ihre Jahrzehnt-Säulen; nicht jede Lücke ist ein Verlust.
+  - `mitmachen` „Ein Archiv gehört allen“: 237 goldene Punkte fliegen über rund zehn Sekunden einzeln von unten in die Löcher; Text zu Beiträgen aus der Bevölkerung, Hinweis auf „Änderung vorschlagen“ und Link zu „Mitarbeit und Kontakt“ (`#ueber`).
+- Texte wechseln weiter die Seite (`TEXT_RECHTS`: kategorien, verlust2, urkunden). `layoutArchiv()` neu gegliedert (Paar aus Text und Tor bzw. breitem Bild).
+- Geprüft auf dem Testserver 8845 (1400 × 800): Weg vom Weinzoll bis zum Schluss und zurück; Ringe 237 → 158 → 79 → 0 und zurück; 237 goldene Punkte; Personen kehren beim Zurück in die Flasche; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (204) – Bürgerinnen?: Texte zum Bürgerbuch neu verteilt, Bestandslinks, Urkunden oben
+
+- `zeitraeume`: Absatz zum 20. Jahrhundert gestrichen (Wunsch des Autors: Annahme, nicht belegt); stattdessen Hinweis mit Link zum Strahl (`#visualisierungen/bestand/ganttDiagramm`).
+- `urkunden`: Die Säulen stehen oben auf Höhe des Textes, die Zeitachse direkt darunter (vorher am unteren Bühnenrand; auf hohen Bildschirmen lag das Bild weit unter dem Text).
+- `klick`: „Rechnungen des Spitals“ und „Abrechnungen des Stadtrichters“ öffnen die Bestände Spitalmeisteramtsrechnungen (1.1.2.3.1.) bzw. Stadt- und Landgerichtsrechnungen (1.1.2.1.3.) in der Seitenleiste. Neue Textauszeichnung `[[bestand:kuerzel=Text]]`.
+- Erzählfolge zum Bürgerbuch (Wunsch des Autors): `tor` (erstes Buch) erklärt jetzt, was das Bürgerbuch ist, welchen Zeitraum es abdeckt und dass die Punkte anklickbar sind (Text links neben dem Buch); `berufe` beginnt mit dem direkten Lesen der Quelle; `buergerbuch` erklärt das Bürgerrecht und leitet zum indirekten Lesen über (wer fehlt). Der Einführungsabsatz von `buergerbuch` ist dafür nach `tor` gewandert.
+- Text neben dem Buch schmaler (höchstens 340 px), damit er nicht am Bühnenrand steht.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Strahl-Link, beide Bestandslinks öffnen die richtige Seitenleiste, Urkunden-Säulen auf Texthöhe, Texte von `tor`, `berufe`, `buergerbuch`; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (203) – Bürgerinnen?: Archiv-Folien überarbeitet, symmetrisches Steiner Tor
+
+- Steiner Tor symmetrisch und geradlinig (Wunsch des Autors): rechtwinkliges Gitter, Spalten spiegelbildlich um die Mittelachse; ein Platz zählt nur, wenn auch sein Spiegelbild in der Form liegt. Überzählige Plätze fallen paarweise außen in der untersten Reihe weg, so bleiben Spitze, Helm und Kegeldächer erhalten (`torPunkte()`; vorher Randreihe plus versetztes Gitter). Gilt für das Archiv-Tor und das Tor auf „Stadt und Kirche“.
+- Texte stehen auf den Archiv-Folien nicht mehr am linken Rand: Text und Bild bilden ein Paar in der Mitte der Bühne, der Text wechselt die Seite (links auf `archiv`, `zeitraeume`, `klick`; rechts auf `kategorien`, `urkunden`).
+- `zeitraeume`: Bestände ohne Zeitangabe und ihre Zeile entfernt, ebenso der Satz dazu; neuer Absatz zum 20. Jahrhundert (Akten bleiben lange bei den Ämtern, Schutzfristen, Verluste 1945 und das Steiner Archiv 1850–1938).
+- `urkunden`: Die Urkundenpunkte sind anklickbar (Seitenleiste der Urkunde wie in den Urkunden-Ansichten, Tooltip mit Signatur und Datum); die abgedunkelten Bestandsbalken dahinter nicht mehr.
+- `kategorien`: Satz zur Religion entfernt. `klick`: neuer erster Absatz (Themen sagen, wofür ein Bestand angelegt wurde; Spital- und Stadtrichterrechnungen).
+- Geprüft auf dem Testserver 8845 (1400 × 800): alle Archiv-Folien, Klick auf Urkunde (StaAKr-0466 mit Bild), Bürgerbuch-Klick, Weg bis „Stadt und Kirche“; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (202) – Bürgerinnen?: Archiv-Folien vor dem Bürgerbuch, Bürgerbuch als aufgeschlagenes Buch
 
 - Wunsch des Autors (selbstreflektierte Präsentation: Geschichte hängt an überlieferten Quellen): fünf neue Folien vor dem Bürgerbuch.
