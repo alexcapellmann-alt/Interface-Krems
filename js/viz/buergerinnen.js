@@ -61,6 +61,13 @@ const LEINWAND_UEBERSTAND = 60;   // px: die Leinwand reicht unter die Bühne (P
 const STAFFELUNG = 250;           // ms: so weit setzen sich die Punkte zeitversetzt in Bewegung
 // Folien `klerus`/`reformation`: Formen in eigenen kleinen Koordinatenfeldern - Kreuz aus den Bürgerpunkten,
 // kleine Kirche (Turm mit Helm und kleinem Kreuz, Schiff mit Satteldach, Tür ausgespart) aus den Münzen
+// Weinflasche (Folie `weinzoll`), Burgunderform (Wunsch des Autors): Lippe, langer Hals, flach abfallende Schultern,
+// Bauch mit leicht gerundetem Boden
+const FLASCHE = {
+  w: 100, h: 300,
+  flaechen: ['M40,0 H60 V12 H58 V78 C58,126 90,138 90,186 V290 Q90,300 80,300 H20 Q10,300 10,290 V186 C10,138 42,126 42,78 V12 H40 Z'],
+  bauch: [10, 90] // linker und rechter Rand des Bauchs (für Pegellinie und Beschriftung)
+};
 const KATHOLISCH_JEDER = 40;       // Folie `reformation`: jeder 40. Punkt (2,5 %) bleibt katholisch und geht in die Kirche
 const KIRCHENSCHIFF = ['M38,78 H112 V124 H38 Z']; // dort sitzen sie (Tür ausgespart, siehe KIRCHE)
 const KREUZ = { w: 100, h: 150, flaechen: ['M40,0 H60 V150 H40 Z', 'M8,32 H92 V52 H8 Z'] };
@@ -807,9 +814,10 @@ function gemischteReihe(n, mitGrauen) {
 }
 
 // Folie `weinzoll` (Wunsch des Autors, 2026-10-29): Der Text wandert nach rechts, die Kirche blendet aus. Alle Punkte
-// aus Kreuz und Kirche werden bordeauxrot und bilden links eine hohe Säule für die Weinausfuhr des ersten Jahres
+// aus Kreuz und Kirche werden bordeauxrot und füllen links eine Weinflasche (FLASCHE) für die Weinausfuhr des ersten Jahres
 // (buergerinnen_weinexport.csv); danach sinken die oberen Punkte - der Anteil, um den die Ausfuhr bis zum zweiten Jahr
-// fiel - hinab und verblassen (weinEinbruch()). Die Säule steht auf derselben Grundlinie wie Tor, Kreuz und Kirche.
+// fiel - hinab und verblassen, die Flasche leert sich bis zum Pegel des zweiten Jahres (weinEinbruch()). Die Flasche steht
+// auf derselben Grundlinie wie Tor, Kreuz und Kirche.
 function layoutWein(b) {
   const { personen, wein } = instanz;
   const h = instanz.basisHoehe;
@@ -821,18 +829,17 @@ function layoutWein(b) {
   const mitGrauen = Boolean(instanz.graue);
   const { reihe, platz } = gemischteReihe(personen.length, mitGrauen);
   const N = reihe.length;
-  const text = LV.text ? { ...LV.text, x: b - LV.text.b - 8 } : null;
+  const text = LV.text ? { ...LV.text, x: Math.min(b * 0.58, b - LV.text.b - 8) } : null; // rechts, aber nah an der Mitte
   const bereich = text ? text.x - luecke * 2 : b;
   const oben = KOPF_SPALTEN + 16, unten = h - 8;
-  const hoehe = unten - oben;
-  const breite = Math.min(bereich * 0.5, hoehe * 0.55);
-  let z = Math.sqrt((breite * hoehe) / N);
-  let spalten = Math.max(1, Math.floor(breite / z));
-  while (spalten * Math.floor(hoehe / z) < N) { z *= 0.97; spalten = Math.max(1, Math.floor(breite / z)); }
-  const x0 = (bereich - spalten * z) / 2;
-  const pos = (k) => [x0 + z / 2 + (k % spalten) * z, unten - z / 2 - Math.floor(k / spalten) * z];
+  // die Punkte füllen die Flasche von unten nach oben (Rang 0 = unten)
+  const flasche = inRechteck(FLASCHE, { x: 0, y: oben, b: bereich, h: unten - oben }, true);
+  const raster = formRaster('flasche', N, FLASCHE.flaechen, FLASCHE);
+  const plaetze = raster.punkte.map(flasche.pos).sort((a, c) => c[1] - a[1] || a[0] - c[0]);
+  const z = raster.abstand * flasche.skala;
+  const pos = (k) => plaetze[k % plaetze.length];
   const bleiben = Math.round((N * wein.nachher.eimer) / wein.vorher.eimer);
-  const oberkante = (anzahl) => unten - Math.ceil(anzahl / spalten) * z;
+  const [ox, oy] = flasche.pos([0, 0]);
   const ergebnis = {
     ziel: (p) => pos(platz.m.get(p.nr)),
     frauZiel: (j) => pos(platz.f.get(j)),
@@ -845,7 +852,11 @@ function layoutWein(b) {
     sinkWeg: Math.max(40, z * 12),
     radius: Math.max(0.8, z * 0.4),
     text,
-    saeule: { x: x0, b: spalten * z, oben1: oberkante(N), oben2: oberkante(bleiben), unten }
+    flasche: {
+      ox, oy, skala: flasche.skala, oben: oy, mitte: flasche.pos([FLASCHE.w / 2, 0])[0],
+      links: flasche.pos([FLASCHE.bauch[0], 0])[0], rechts: flasche.pos([FLASCHE.bauch[1], 0])[0],
+      pegel: plaetze[Math.max(0, bleiben - 1)][1] - z / 2 // Oberkante des Weins, der bleibt
+    }
   };
   instanz.weinLayout = { schluessel, L: ergebnis };
   return ergebnis;
@@ -1407,18 +1418,17 @@ const ZEICHNER = {
   // Folie `weinzoll`: gestrichelter Umriss und Zahl des ersten Jahres; Linie und Zahl des zweiten Jahres erscheinen,
   // wenn die oberen Punkte gesunken sind
   wein(g, L, neu) {
-    const W = instanz.wein, S = L.saeule;
-    const mitte = S.x + S.b / 2;
-    g.append('rect').attr('x', S.x - 5).attr('y', S.oben1 - 5).attr('width', S.b + 10).attr('height', S.unten - S.oben1 + 5)
-      .attr('rx', 6).attr('fill', 'none').attr('stroke', RAHMEN).attr('stroke-width', 1.2).attr('stroke-dasharray', '5 5');
-    g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', mitte).attr('y', S.oben1 - 32).text(`${W.vorher.jahr} · ${zahl(W.vorher.eimer)} Eimer`);
-    g.append('text').attr('class', 'bgi-spaltenzahl').attr('x', mitte).attr('y', S.oben1 - 13).text('Weinausfuhr über die Passauer Maut');
+    const W = instanz.wein, F = L.flasche;
+    g.append('path').attr('d', FLASCHE.flaechen[0]).attr('transform', `translate(${F.ox},${F.oy}) scale(${F.skala})`)
+      .attr('fill', 'none').attr('stroke', RAHMEN).attr('stroke-width', 1.4).attr('vector-effect', 'non-scaling-stroke');
+    g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', F.mitte).attr('y', F.oben - 32).text(`${W.vorher.jahr} · ${zahl(W.vorher.eimer)} Eimer`);
+    g.append('text').attr('class', 'bgi-spaltenzahl').attr('x', F.mitte).attr('y', F.oben - 13).text('Weinausfuhr über die Passauer Maut');
     const spaet = g.append('g');
-    spaet.append('line').attr('x1', S.x - 5).attr('x2', S.x + S.b + 12).attr('y1', S.oben2 - 2).attr('y2', S.oben2 - 2)
+    spaet.append('line').attr('x1', F.links - 4).attr('x2', F.rechts + 12).attr('y1', F.pegel).attr('y2', F.pegel)
       .attr('stroke', BORDEAUX).attr('stroke-width', 1.5);
-    spaet.append('text').attr('class', 'bgi-spaltenkopf klein').style('text-anchor', 'start').attr('x', S.x + S.b + 18).attr('y', S.oben2 + 4)
+    spaet.append('text').attr('class', 'bgi-spaltenkopf klein').style('text-anchor', 'start').attr('x', F.rechts + 18).attr('y', F.pegel + 6)
       .text(`${W.nachher.jahr} · ${zahl(W.nachher.eimer)} Eimer`);
-    spaet.append('text').attr('class', 'bgi-spaltenzahl').style('text-anchor', 'start').attr('x', S.x + S.b + 18).attr('y', S.oben2 + 24)
+    spaet.append('text').attr('class', 'bgi-spaltenzahl').style('text-anchor', 'start').attr('x', F.rechts + 18).attr('y', F.pegel + 26)
       .text(`${prozent((W.nachher.eimer / W.vorher.eimer) * 100)} % von ${W.vorher.jahr}`);
     blendeEin(g, neu);
     blendeEin(spaet, neu, DAUER + STAFFELUNG + 400 + WEIN_SINKEN * 0.6);
@@ -1652,7 +1662,7 @@ function stationsBeschriftung() {
   if (station === 'weinzoll' && instanz.wein) {
     const W = instanz.wein;
     return `Weinausfuhr über die Passauer Maut: ${zahl(W.vorher.eimer)} Eimer ${W.vorher.jahr}, ${zahl(W.nachher.eimer)} Eimer ${W.nachher.jahr}. `
-      + `Alle Punkte bilden bordeauxrot eine Säule; die oberen ${prozent(100 - (W.nachher.eimer / W.vorher.eimer) * 100)} Prozent sinken hinab und verblassen`;
+      + `Alle Punkte füllen bordeauxrot eine Weinflasche; die oberen ${prozent(100 - (W.nachher.eimer / W.vorher.eimer) * 100)} Prozent sinken hinab und verblassen, die Flasche leert sich`;
   }
   if (station === 'reformation') return `Reformation: Die Punkte des Tors bilden ein Kreuz; jeder ${KATHOLISCH_JEDER}. Punkt bleibt katholisch und sitzt in der kleinen Kirche aus den Münzen`;
   if (station === 'frauen') return `${zahl(L.maenner.length)} Männer im Bürgerbuch, daneben ebenso viele symbolische Punkte für die Frauen, die es nicht nennt`;
