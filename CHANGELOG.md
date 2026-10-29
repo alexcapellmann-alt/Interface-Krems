@@ -24,6 +24,7 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 - „Zahlen aus zweiter Hand“, erster Absatz nach quellenkundlicher Präzisierung des Autors: Wein fehlt in den Waag- und Niederlagsbüchern, weil er in Eimern gemessen und nicht gewogen wurde; Einnahmen am Wein standen in eigenen Rechnungen; „Ware“ und „Krämerei“ entfallen (meinen dort Bunt-, Metall- und Kurzwaren). „Zahlen aus zweiter Hand“: „Waagbücher“ und „Niederlagsbücher“ öffnen die Bestände 1.2.2.6.1. und 1.2.2.6.2. in der Seitenleiste.
 - „Wo liegt das?“: zweiter Satz „Krems war durch die Lage an der Donau ein wichtiger Handelsplatz.“
 - „Ein Archiv gehört allen“: direkt unter dem Text drei Knöpfe „Bestand“, „Erkundung“ und „Führungen“, oval wie der Zurück-Knopf, blau mit weißer Schrift (eine Beschreibung nach `::` wäre möglich, wird hier nicht genutzt). Neue Auszeichnung in `text`: `[[ziel:#ziel=Titel::Beschreibung]]` (`trenneZiele()`, `setzeZiele()`, Leiste `.bgi-ziele`), auf anderen Folien verborgen.
+- Folie „2 655 Personen“: Zahl der Personen im zweiten Absatz entfernt (steht schon im Titel).
 - Texte: „Arm und reich“ beginnt mit „Ungleichheit findet man nicht nur innerhalb eines Haushalts.“; „Lücke oder Wandel?“ verlinkt „Hier“ auf die Zeitachse der Urkunden; „Die Karte ist sicherer als wir“ nach Vorgabe des Autors gekürzt (zwei Absätze).
 - Geprüft auf dem Testserver 8845 (1400 × 800, Folie 16 auch 1024 × 768): Folien 1 bis 23 durchgeklickt, keine Überlappungen, keine Konsolenfehler.
 
