@@ -7,6 +7,22 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (202) – Bürgerinnen?: Archiv-Folien vor dem Bürgerbuch, Bürgerbuch als aufgeschlagenes Buch
+
+- Wunsch des Autors (selbstreflektierte Präsentation: Geschichte hängt an überlieferten Quellen): fünf neue Folien vor dem Bürgerbuch.
+  - `archiv`: Das Steiner Tor besteht aus 316 Punkten, einer je Bestand (315 aus dem Bestandsverzeichnis, dazu die Urkundenreihe). Alle Punkte gleich groß, Klick öffnet den Bestand in der Seitenleiste (wie in der Treemap).
+  - `kategorien`: Die Punkte ordnen sich als Treemap nach Kategorie, Farben wie in der Treemap; je Feld gleichmäßig verteilt.
+  - `zeitraeume`: Jeder Bestand zieht sich zu einem Balken über seinen Zeitraum (Bahnen der Reihe nach belegt, Zeitachse in Jahrhunderten); die 18 Bestände ohne Zeitangabe stehen darunter. Unsichere Zeiträume sind nicht eigens gekennzeichnet (Wunsch des Autors).
+  - `urkunden`: Die Urkundenreihe ist im Bestandsverzeichnis nicht erfasst. Sie ist als ergänzter Bestand eingefügt (`data/buergerinnen_archiv.csv`, Zeitraum und Zahl aus `urkunden.csv`, in Tooltip und Seitenleiste so gekennzeichnet). Auf dieser Folie bricht ihr Punkt in 1 067 Punkte auf, Säulen je Jahrzehnt auf einer eigenen Zeitachse; die übrigen Bestände treten zurück.
+  - `klick`: wieder das Tor; der Punkt der Bürgerbücher (1.1.1.8.1.) leuchtet golden und pulsiert, „Hier klicken“ steht rechts neben dem Tor. Der Weiter-Pfeil ist ausgeblendet; der Klick (oder Enter/Leertaste auf dem fokussierbaren Punkt) führt weiter.
+- Bürgerbuch als aufgeschlagenes Buch statt als Steiner Tor (das Tor steht jetzt für das Archiv): Die 2 655 Personen brechen aus dem Bürgerbuch-Punkt hervor und bilden zwei gewölbte Seiten mit dünnem Einband und Rücken (`BUCH`, `buchForm()`, `buchPunkte()`, Teil `buch`); zurück ziehen sie sich wieder in den Punkt zurück. Auf `berufe` bleibt die linke Seite (1 250 Personen ohne Berufsangabe) stehen, die rechte (1 405) wird das Diagramm; der Schnitt ist der Buchrücken. Überzählige Rasterplätze fallen oben weg (`formRaster(…, { obenWeg })`), damit die Seiten ohne Löcher sind.
+- Kopfzeile auf den Archiv-Folien „Stadtarchiv Krems · 316 Bestände“; die Bühne bleibt verborgen, bis die Folien geladen sind. Folien in `buergerinnen_stationen.csv` (einfache Sprache); auf Wunsch des Autors ohne den Satz zur Religion auf `kategorien`, Platzhalter `{bestaende}`, `{ohnezeit}`, `{urkunden}`. `docs/SCHEMA.md` 13.8 und `infotexte.csv` angepasst.
+- Geprüft auf dem Testserver 8845 (1400 × 800, Vorschau sichtbar): alle Folien vor und zurück vom Archiv bis zum Geschlecht, je 1–5 Bilder über 30 ms; Aufbrechen ins Buch 1, Zurückziehen 2; Seitenleiste für einen Bestand und für die ergänzte Urkundenreihe; keine Konsolenfehler. (Bei verborgener Vorschau drosselt der Browser auf 30 Bilder je Sekunde, dann sind fast alle Bilder über 30 ms - das betrifft auch frühere Messungen dieser Sitzung.)
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (201) – Bürgerinnen?: Weinflasche statt Säule
 
 - Wunsch des Autors: Auf „Der Weinzoll“ füllen die bordeauxroten Punkte statt einer Säule eine Weinflasche (`FLASCHE`: Lippe, Hals, Schultern, Bauch; Punkte von unten nach oben gefüllt). Die oberen 55 % sinken hinab und verblassen, die Flasche leert sich bis zum Pegel von 1592 (Linie und Zahl rechts am Bauch). Der Umriss der Flasche bleibt als dünne Linie stehen. Form auf Wunsch des Autors nach Vergleich mehrerer Vorschläge: Burgunderflasche (langer Hals, flach abfallende Schultern). Der Text der Folie steht rechts, aber näher an der Mitte (linker Rand bei 58 % der Bühnenbreite); die Flasche rückt entsprechend nach links.
