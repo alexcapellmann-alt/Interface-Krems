@@ -501,6 +501,16 @@ function fuegeStyleEin(container) {
     .bgi-erklaerung:not(.mittig):not(.sichtbar) { display: none; }
     .bgi-erklaerung.mittig { position: absolute; margin: 0; max-width: none; }
     .bgi-erklaerung p { margin: 0 0 .7em; }
+    .bgi-ziele { order: 10; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin: var(--space-4) auto var(--space-5);
+      max-width: 1100px; padding: 0 var(--space-3); animation: bgi-einblenden .8s ease 1.2s both; }
+    .bgi-ziele[hidden] { display: none; }
+    .bgi-ziel { flex: 1 1 240px; max-width: 340px; display: flex; flex-direction: column; gap: 4px; padding: 14px 18px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); text-decoration: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+    .bgi-ziel:hover, .bgi-ziel:focus-visible { border-color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-2px); }
+    .bgi-ziel:focus-visible { outline: 3px solid #e0b429; outline-offset: 2px; }
+    .bgi-ziel-titel { font-family: var(--font-heading); font-size: var(--fs-xl); color: var(--accent); }
+    .bgi-ziel-text { font-size: var(--fs-md); color: var(--text-muted); line-height: 1.45; }
     .bgi-erklaerung p:last-child { margin-bottom: 0; }
     .bgi-erklaerung p.neu { animation: bgi-einblenden .8s ease 1.2s both; }
     @keyframes bgi-einblenden { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -540,7 +550,7 @@ function bereiteStationenAuf(records) {
     anhaengen: alsText(r.text_anhaengen).trim() === 'ja',
     ueberzeile: alsText(r.ueberzeile).trim(),
     titel: alsText(r.titel).trim(),
-    absaetze: (Array.isArray(r.text) ? r.text : [alsText(r.text)]).map((t) => String(t).trim()).filter(Boolean),
+    ...trenneZiele((Array.isArray(r.text) ? r.text : [alsText(r.text)]).map((t) => String(t).trim()).filter(Boolean)),
     jahre: (Array.isArray(r.jahreszahlen) ? r.jahreszahlen : [alsText(r.jahreszahlen)]).map((t) => String(t).trim()).filter(Boolean)
   })).filter((s) => BEKANNTE_STATIONEN.includes(s.id));
   // die erste Folie braucht keinen Knopf (zu ihr führt kein Weiter-Pfeil), alle anderen schon; `tor` muss dabei sein
@@ -993,6 +1003,28 @@ function absatzHtml(absatz, klasse = '') {
   html = html.replace(/\[\[([^=\]]+)=([^\]]+)\]\]/g, '<button type="button" class="bgi-textperson" data-person="$1">$2</button>');
   html = html.replace(/\[([^\]]+)\]\((#[^)\s]*)\)/g, '<a href="$2">$1</a>');
   return `<p${klasse ? ` class="${klasse}"` : ''}>${html}</p>`;
+}
+
+// Absätze, die nur aus [[ziel:#ziel=Titel::Beschreibung]] bestehen, werden keine Textabsätze, sondern Knöpfe unter der
+// Bühne (Wunsch des Autors, 2026-10-29: am Schluss zu Bestand, Erkundung und Führungen)
+const ZIEL_MUSTER = /\[\[ziel:(#[^=\]]*)=([^\]]*?)(?:::([^\]]*))?\]\]/g;
+function trenneZiele(absaetze) {
+  const ziele = [];
+  const rest = absaetze.filter((a) => {
+    if (a.replace(ZIEL_MUSTER, '').trim()) return true;
+    [...a.matchAll(ZIEL_MUSTER)].forEach(([, href, titel, text]) => ziele.push({ href, titel: titel.trim(), text: (text || '').trim() }));
+    return false;
+  });
+  return { absaetze: rest, ziele };
+}
+
+// Knöpfe der aktuellen Station unter der Bühne (ohne Knöpfe verborgen)
+function setzeZiele() {
+  const { zieleLeiste, stationen, stationIndex } = instanz;
+  const ziele = stationen[stationIndex]?.ziele || [];
+  zieleLeiste.hidden = !ziele.length;
+  zieleLeiste.innerHTML = ziele.map((z) => `<a class="bgi-ziel" href="${escapeHtml(z.href)}"><span class="bgi-ziel-titel">${escapeHtml(z.titel)}</span>`
+    + `${z.text ? `<span class="bgi-ziel-text">${escapeHtml(z.text)}</span>` : ''}</a>`).join('');
 }
 
 // Texte einer Station: mit `text_anhaengen` = ja kommen sie zu denen der vorigen Station dazu
@@ -2896,6 +2928,7 @@ function aktualisiereSteuerung() {
     weiterKnopf.title = naechste.knopf;
   }
   zurueckKnopf.hidden = stationIndex === 0;
+  setzeZiele();
   const vorige = stationen[stationIndex - 1];
   zurueckKnopf.setAttribute('aria-label', vorige ? `Zurück: ${vorige.knopf || 'Anfang'}` : 'Zurück');
   setzeKopf();
@@ -3098,7 +3131,11 @@ export function render(container, data, options = {}) {
   const erklaerung = document.createElement('div');
   erklaerung.className = 'bgi-erklaerung';
   erklaerung.setAttribute('aria-live', 'polite');
-  wurzel.append(werkzeugleiste, kopf, steuerung, buehne, erklaerung);
+  const zieleLeiste = document.createElement('nav');
+  zieleLeiste.className = 'bgi-ziele';
+  zieleLeiste.setAttribute('aria-label', 'Weiter im Interface');
+  zieleLeiste.hidden = true;
+  wurzel.append(werkzeugleiste, kopf, steuerung, buehne, erklaerung, zieleLeiste);
   container.appendChild(wurzel);
 
   // Höhe: die Bühne füllt den sichtbaren Platz (abzüglich Kopf); die Vermögens-Folien machen sie bei Bedarf höher
@@ -3202,7 +3239,7 @@ export function render(container, data, options = {}) {
     zuordnung: null, muenzeGulden: STANDARD_MUENZE, svg, punkte, graue: null, graueSichtbar: false, frauenPunkte, frauenSichtbar: false, leinwand, bewegungen: new Map(),
     personenGruppe, frauenGruppe, graueGruppe: null, muenzGruppen: new Set(), zeichenAnfrage: null, zeichnenBis: 0, bildNr: 0, ebeneSpalten, ebeneMuenzen,
     ebeneGraue, teileVorher: new Set(), weiterKnopf: steuerung.querySelector('.bgi-weiter'), zurueckKnopf: steuerung.querySelector('.bgi-zurueck'), foliennummer: steuerung.querySelector('.bgi-foliennummer'),
-    unterzeile: kopf.querySelector('.bgi-unterzeile'), erklaerung, infoButton: null, layout: null, sidebar, quellen,
+    unterzeile: kopf.querySelector('.bgi-unterzeile'), erklaerung, zieleLeiste, infoButton: null, layout: null, sidebar, quellen,
     auswahl: null, basisHoehe: hoehe, letzteBreite: 0, animationBis: 0
   };
   instanz.weiterKnopf.addEventListener('click', () => geheZu(instanz.stationIndex + 1));
