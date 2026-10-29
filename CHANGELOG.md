@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (201) – Bürgerinnen?: Weinflasche statt Säule
+
+- Wunsch des Autors: Auf „Der Weinzoll“ füllen die bordeauxroten Punkte statt einer Säule eine Weinflasche (`FLASCHE`: Lippe, Hals, Schultern, Bauch; Punkte von unten nach oben gefüllt). Die oberen 55 % sinken hinab und verblassen, die Flasche leert sich bis zum Pegel von 1592 (Linie und Zahl rechts am Bauch). Der Umriss der Flasche bleibt als dünne Linie stehen. Form auf Wunsch des Autors nach Vergleich mehrerer Vorschläge: Burgunderflasche (langer Hals, flach abfallende Schultern). Der Text der Folie steht rechts, aber näher an der Mitte (linker Rand bei 58 % der Bühnenbreite); die Flasche rückt entsprechend nach links.
+- Geprüft auf dem Testserver 8845 (1400 × 800): volle Flasche, danach 3 576 von 7 965 Punkten sichtbar; zurück zur Reformation alle Punkte und 4 443 Münzen; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (200) – Bürgerinnen?: Folie „Der Weinzoll“
 
 - Wunsch des Autors: Nach „Die Reformation“ wandert der Text nach rechts, die goldene Kirche blendet aus. Alle Punkte aus Kreuz und Kirche (Bürger, Frauen, Inwohner; 7 965) werden bordeauxrot und bilden links eine hohe Säule „1590 · 303 843 Eimer“ (gestrichelter Umriss, Grundlinie wie Tor, Kreuz und Kirche). Danach sinken die oberen 55 % hinab und verblassen; zurück bleibt „1592 · 136 431 Eimer · 45 % von 1590“ (`layoutWein()`, `weinEinbruch()`, Teil `wein`). Zurück zur Reformation kommen alle Punkte wieder, die Kirche blendet ein.
