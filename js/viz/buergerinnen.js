@@ -114,7 +114,8 @@ const TEXT_MIN_BREITE = 820;      // ab dieser Bühnenbreite steht die Erklärun
 // Text und Bild als Paar (Wunsch des Autors, 2026-10-29): auf breiten Bühnen stehen Textspalte und Bild nebeneinander,
 // zusammen in der Mitte (gleicher Rand links und rechts); der Text steht auf halber Höhe des Bilds (Feld `mitte`)
 const TEXT_SPALTE = 520;          // Textspalte höchstens so breit (größere Schrift, var(--fs-lg); gut 60 Zeichen)
-const BEISPIEL_BREITE = 300;      // Platz der Schreibweisen-Beispiele rechts vom Buch
+const BEISPIEL_BREITE = 200;      // Platz der Schreibweisen-Beispiele rechts vom Buch (eine Schreibweise je Zeile)
+const BLAETTERN = 1700;           // ms: Umblättern zwischen `buergerbuch` und `schreibweisen`
 const textSpalte = (b) => Math.min(TEXT_SPALTE, b * 0.36);
 const paarAbstand = (b) => Math.max(36, b * 0.035);
 const STATIONEN_DATEI = 'data/buergerinnen_stationen.csv';
@@ -351,7 +352,8 @@ function buchRahmen(b, h, { oben = 50, rechtsFrei = 0 } = {}) {
   const hoehe = h - oben - 6;
   if (b < TEXT_MIN_BREITE) return { rahmen: { x: b * 0.05, y: oben, b: b * 0.9, h: hoehe }, text: null };
   const tb = textSpalte(b), g = paarAbstand(b);
-  const bb = Math.min(hoehe * (BUCH.w / BUCH.h), b - 16 - tb - g - rechtsFrei);
+  // mit Platz rechts bleibt außen mindestens je ein schmaler Rand (das Buch wird dafür etwas kleiner)
+  const bb = Math.min(hoehe * (BUCH.w / BUCH.h), b - 16 - tb - g - rechtsFrei - (rechtsFrei ? 2 * 56 : 0));
   const x0 = Math.max(8, (b - (tb + g + bb + rechtsFrei)) / 2);
   return { rahmen: { x: x0 + tb + g, y: oben, b: bb, h: hoehe }, text: { x: x0, b: tb, top: 4, mitte: oben + hoehe / 2 } };
 }
@@ -1025,9 +1027,9 @@ function berechneLayout(station = instanz.station) {
     return { ...basis, ziel: () => LA.bbPos, radius: radiusFeld, text: LA.text, archiv: LA, art: 'archiv' };
   }
   if (station === 'buergerbuch' || station === 'tor' || station === 'schreibweisen') {
-    // das ganze Buch (Ausgangshöhe), der Text links daneben wie auf `berufe`; auf `schreibweisen` rückt das Paar nach
-    // links, damit die Beispiele rechts vom Buch Platz haben
-    const optionen = station === 'schreibweisen' ? { rechtsFrei: BEISPIEL_BREITE } : {};
+    // das ganze Buch (Ausgangshöhe), der Text links daneben wie auf `berufe`; auf `buergerbuch` und `schreibweisen` steht
+    // das Buch an derselben Stelle (dort wird umgeblättert, blaettere()), rechts mit Platz für die Beispiele
+    const optionen = station === 'tor' ? {} : { rechtsFrei: BEISPIEL_BREITE };
     const tor = buchForm(b, instanz.basisHoehe, optionen);
     const ziel = (p, i) => tor.pos(instanz.torPlatz ? instanz.torPlatz[i] : i);
     const L0 = { ...basis, ziel, radius: radiusFeld, text: buchRahmen(b, instanz.basisHoehe, optionen).text, buch: tor };
@@ -1353,7 +1355,7 @@ function zeichne(animiert) {
     return imFeld || L.bleibt?.(i) ? p.helligkeit : 0.85;
   };
   const farbeVon = (p) => (L.hervor ? (L.hervor(p) ? HERVOR : AUSGEGRAUT) : FARBE);
-  // zwischen `buergerbuch` und `schreibweisen` (gleiche Lage) färben sich die Punkte langsam um, statt zu springen
+  // zwischen `buergerbuch` und `schreibweisen` (gleiche Lage) wird umgeblättert, die Farben folgen (blaettere())
   const umfaerben = mitAnimation && [L.station, instanz.vorigesLayout?.station].sort().join() === 'buergerbuch,schreibweisen';
   punkte.interrupt('hervor').attr('r', L.radius);
   if (!umfaerben) {
@@ -1362,15 +1364,16 @@ function zeichne(animiert) {
   }
   instanz.hervorAktiv = Boolean(L.hervor);
   punkte.attr('opacity', null); // auf `weinzoll` verblasste Punkte sind zurück
-  bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation && personenBewegen,
-    umfaerben ? punkte.node().getAttribute('fill') : (L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE)));
   if (umfaerben) {
-    punkte.transition('hervor').delay((p) => p.verzoegerung * 500).duration(1800).ease(d3.easeCubicInOut)
-      .attr('fill', farbeVon).attr('fill-opacity', deckVon);
-  } else if (L.hervor) {
-    punkte.attr('fill', farbeVon);
+    blaettere(L, L.station === 'schreibweisen', farbeVon, deckVon);
+  } else {
+    bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation && personenBewegen,
+      L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE));
+    if (L.hervor) punkte.attr('fill', farbeVon);
   }
-  if (mitAnimation) instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400 + (L.art === 'wein' ? WEIN_SINKEN + 900 : 0);
+  if (mitAnimation) {
+    instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400 + (L.art === 'wein' ? WEIN_SINKEN + 900 : 0) + (umfaerben ? BLAETTERN + 1200 : 0);
+  }
   zeichneFrauen(L, mitAnimation);
   zeichneGraue(L, mitAnimation);
   if (L.art === 'wein') weinEinbruch(L, mitAnimation);
@@ -1379,6 +1382,45 @@ function zeichne(animiert) {
   zeichneArchiv(L, mitAnimation);
   platziereErklaerung();
   markiereAuswahl();
+}
+
+// Umblättern zwischen `buergerbuch` und `schreibweisen` (Wunsch des Autors, 2026-10-29): Das Buch bleibt stehen. Die
+// rechte Seite (zurück: die linke) hebt sich, schlägt im Bogen über den Rücken um und verblasst auf der anderen Seite;
+// an ihrer Stelle erscheint die Seite neu. Dabei grauen alle Punkte aus (zurück: werden wieder blau); vorwärts
+// leuchten danach die Personen mit mehreren Schreibweisen auf.
+function blaettere(L, vorwaerts, farbeVon, deckVon) {
+  const { punkte } = instanz;
+  const knoten = punkte.nodes();
+  const lage = punkte.data().map((p, i) => L.ziel(p, i));
+  const [mitte, oben] = L.buch.ort([BUCH.w / 2, 0]);
+  const [rand, unten] = L.buch.ort([0, BUCH.h]);
+  const seite = mitte - rand, hub = (unten - oben) * 0.14;
+  const wendet = lage.map(([x]) => (vorwaerts ? x > mitte : x < mitte));
+  const teil = 0.65; // so viel der Zeit dauert das Umschlagen, danach erscheint die Seite neu
+  starteBewegung('personen', {
+    gruppe: knoten[0].parentNode, knoten, start: lage, ziel: lage, ebene: 2,
+    farbeVon: vorwaerts ? FARBE : AUSGEGRAUT, farbeNach: vorwaerts ? AUSGEGRAUT : FARBE,
+    fuell: knoten.map((k) => Number(k.getAttribute('fill-opacity')) || 0.85),
+    radius: Number(knoten[0].getAttribute('r')) || 2,
+    verzoegerung: lage.map(([x], i) => (wendet[i] ? (Math.abs(x - mitte) / seite) * 220 : 0)), // der Rand folgt dem Rücken
+    dauer: BLAETTERN, ease: d3.easeSinInOut,
+    bahn: (i, e) => {
+      if (!wendet[i] || e >= teil) return lage[i];
+      const w = Math.PI * (e / teil), d = lage[i][0] - mitte;
+      return [mitte + d * Math.cos(w), lage[i][1] - Math.sin(w) * hub * (Math.abs(d) / seite)];
+    },
+    deckkraft: (e, i) => {
+      if (!wendet[i]) return 1;
+      if (e < teil) { const w = e / teil; return w < 0.7 ? 1 : Math.max(0, 1 - (w - 0.7) / 0.3); }
+      return (e - teil) / (1 - teil);
+    }
+  });
+  if (vorwaerts) {
+    punkte.transition('hervor').delay((p) => BLAETTERN + 500 + p.verzoegerung * 400).duration(1000).ease(d3.easeCubicInOut)
+      .attr('fill', farbeVon).attr('fill-opacity', deckVon);
+  } else {
+    punkte.attr('fill-opacity', deckVon); // die Farbe setzt das Ende der Bewegung
+  }
 }
 
 // Personen auf den Archiv-Folien: im Punkt des Bürgerbuchs zusammengezogen und verborgen. Weiter zum Buch brechen sie
@@ -1858,7 +1900,8 @@ function zeichneBewegung(ctx, name, b, jetzt) {
     for (let k = 0; k < liste.length; k += 2) {
       const i = liste[k], e = liste[k + 1];
       const r = b.radiusNach === undefined ? b.radius : b.radius + (b.radiusNach - b.radius) * e;
-      const x = b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, y = b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e;
+      const [x, y] = b.bahn ? b.bahn(i, e) // eigene Bahn statt der Geraden (Umblättern, blaettere())
+        : [b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e];
       ctx.moveTo(x + r, y);
       ctx.arc(x, y, r, 0, VOLLKREIS);
     }
@@ -1937,6 +1980,7 @@ function lageVon(name, knoten) {
   return knoten.map((k, i) => {
     if (!b) return [Number(k.getAttribute('cx')) || 0, Number(k.getAttribute('cy')) || 0, Number(k.getAttribute('opacity') ?? 1)];
     const e = b.e[i];
+    if (b.bahn) return [...b.bahn(i, e), b.deckkraft ? b.deckkraft(e, i) : 1];
     return [b.start[i][0] + (b.ziel[i][0] - b.start[i][0]) * e, b.start[i][1] + (b.ziel[i][1] - b.start[i][1]) * e, b.deckkraft ? b.deckkraft(e, i) : 1];
   });
 }
@@ -2417,9 +2461,13 @@ const ZEICHNER = {
         .attr('stroke', HERVOR).attr('stroke-width', 1).attr('stroke-dasharray', '3 3');
       g.append('circle').attr('cx', e.punkt[0]).attr('cy', e.punkt[1]).attr('r', L.radius + 2.5)
         .attr('fill', 'none').attr('stroke', HERVOR).attr('stroke-width', 1.5);
-      g.append('text').attr('class', 'bgi-wert').style('text-anchor', 'start').style('fill', HERVOR).attr('x', e.x).attr('y', e.y).text(e.text);
+      // eine Schreibweise je Zeile, der Block mittig auf Höhe der Linie
+      const zeilen = e.text.split(' / ');
+      const t = g.append('text').attr('class', 'bgi-wert').style('text-anchor', 'start').style('fill', HERVOR)
+        .attr('x', e.x).attr('y', e.y - ((zeilen.length - 1) * 16) / 2);
+      zeilen.forEach((z, k) => t.append('tspan').attr('x', e.x).attr('dy', k ? 16 : 0).text(z));
     });
-    blendeEin(g, neu, 500);
+    blendeEin(g, neu, instanz.vorigesLayout?.station === 'buergerbuch' ? BLAETTERN + 900 : 500); // erst nach dem Umblättern
   },
 
   buch(g, L, neu) {
@@ -2718,7 +2766,7 @@ function aktualisiereSteuerung() {
   const { stationen, stationIndex, weiterKnopf, zurueckKnopf } = instanz;
   if (instanz.foliennummer) instanz.foliennummer.textContent = DIAGNOSE ? `Folie ${stationIndex + 1} / ${stationen.length}` : '';
   const naechste = stationen[stationIndex + 1];
-  weiterKnopf.hidden = !naechste || instanz.station === 'klick'; // auf `klick` führt der Klick auf das Bürgerbuch weiter
+  weiterKnopf.hidden = !naechste; // auf `klick` führt auch der Klick auf das Bürgerbuch weiter (seit 2026-10-29 zusätzlich der Pfeil)
   if (naechste) {
     weiterKnopf.setAttribute('aria-label', `Weiter: ${naechste.knopf}`);
     weiterKnopf.title = naechste.knopf;
@@ -3067,7 +3115,7 @@ export function render(container, data, options = {}) {
 }
 
 // Mausrad (Wunsch des Autors, 2026-10-29): eine Drehung blättert eine Folie weiter oder zurück, wie die Pfeile
-// (auf `klick` also nicht weiter, dort führt der leuchtende Punkt). Kann die Seite oder ein Element unter dem Zeiger
+// (seit 2026-10-29 auch auf `klick`). Kann die Seite oder ein Element unter dem Zeiger
 // (Seitenleiste, Text) in diese Richtung noch scrollen, scrollt zuerst dieses. Eine Geste blättert nur einmal:
 // solange Ereignisse kommen, bleibt das Mausrad gesperrt (Trackpads liefern lange Nachläufer).
 let radSperre = 0;
