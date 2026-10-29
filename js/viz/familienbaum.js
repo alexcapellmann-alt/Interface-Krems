@@ -1676,9 +1676,17 @@ function oeffnePersonImBaum(id) {
   if (gefunden.empty()) return false;
   const d = gefunden.datum();
   versteckeTooltip();
+  // 2026-10-30: den Ausschnitt auf die Person zentrieren (Maßstab bleibt), bevor das Popover an ihr erscheint -
+  // sonst lag sie bei einem Aufruf von außen (z. B. aus der Willkommenstour) oft außerhalb des Bildes
+  const knoten = gefunden.node();
+  const svgElement = knoten.ownerSVGElement;
+  if (instanz.zoomVerhalten && svgElement) {
+    const box = knoten.getBBox();
+    d3.select(svgElement).call(instanz.zoomVerhalten.translateTo, d.x + box.x + box.width / 2, box.y + box.height / 2);
+  }
   instanz.eingefrorenerFokusId = d.id;
   aktualisiereHervorhebung();
-  zeigePersonenPopover(d.person, gefunden.node());
+  zeigePersonenPopover(d.person, knoten);
   return true;
 }
 
