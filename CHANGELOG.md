@@ -7,6 +7,28 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (199) – Bürgerinnen?: Stadt und Kirche neu angeordnet, Katholiken in der Kirche
+
+- Wunsch des Autors: Auf „Stadt und Kirche“ wandert der Text in die Mitte der Bühne, das Steiner Tor steht links, die goldene Kirche mittig rechts neben dem Text (`layoutKlerus()`).
+- „Die Reformation“: Das Kreuz entsteht an der Stelle des Tors. Nicht alle konvertierten: jeder 40. Punkt der gemischten Reihe (2,5 %, 199 Punkte - Bürger, Frauen, Inwohner gemischt) geht ins Kirchenschiff (`KATHOLISCH_JEDER`, `KIRCHENSCHIFF`). Grundlage: um 1570 „kaum noch 100 Katholiken“ in der Pfarrkirche bei rund 4 000 Einwohnern (Kirchgänger, eher Untergrenze). Text der Folie um diesen Satz ergänzt.
+- Kirche, Tor und Kreuz stehen auf derselben Grundlinie (Unterkante der Bühne; `inRechteck(…, unten)`), Wunsch des Autors.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Lage von Text, Tor, Kirche und Kreuz (Unterkanten auf 4 px gleich); 199 Punkte in der Kirche; keine Konsolenfehler. Der Übergang zwischen „Wer fehlt noch?“ und „Stadt und Kirche“ brauchte in dieser Sitzung 20–50 Bilder über 30 ms (meist 33 ms) - ebenso mit der unveränderten Fassung aus dem letzten Commit (Gegenprobe, Datei danach per `cmp` wiederhergestellt), also nicht durch diese Änderung; die übrigen Übergänge 1–8.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (198) – Bürgerinnen?: Folie „Das Bürgerbuch“
+
+- Wunsch des Autors: Nach „Nach Berufen ordnen“ fließen die Balken zurück und das Steiner Tor wird wieder ganz (alle Punkte exakt auf ihren Torplätzen); links daneben, an derselben Stelle wie auf der Berufe-Folie, ein kurzer Text zum Bürgerbuch (Zeitraum, Aufnahmen, Bürgen, was Bürgerrecht bedeutete). Erst danach „Nach Geschlecht ordnen“.
+- Neue Station `buergerbuch` (`TOR_STATIONEN`, `textNebenTor()`), Klick auf Punkte öffnet die Person; neuer Platzhalter `{personen}`.
+- `buergerinnen_stationen.csv`: neue Zeile `buergerbuch`; der Text von `geschlecht` beginnt jetzt mit „Bürgereid, Wahl und Ratssitz standen nur Männern offen.“ (der einleitende Satz zum Bürgerbuch steht jetzt auf der neuen Folie). `docs/SCHEMA.md` 13.8 und `infotexte.csv` ergänzt.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Tor ↔ Berufe ↔ Bürgerbuch ↔ Geschlecht vor und zurück, je 1–2 Bilder über 30 ms; Tor auf der neuen Folie deckungsgleich mit der ersten (2 655 von 2 655 Punkten); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (197) – Bürgerinnen?: neue Folie „Nach Berufen ordnen“
 
 - Wunsch des Autors: Zwischen Steiner Tor und „Nach Geschlecht ordnen“ wird das Tor senkrecht geteilt. Links bleiben die 1 250 Personen ohne Berufsangabe genau stehen (47 %); die 1 405 Personen mit Wirtschaftssektor (53 %) rechts vom Schnitt bilden ein Balkendiagramm, ein Punkt je Person, die oberen Punkte in die oberen Balken (`layoutBerufe()`, Teil `sektoren`). Klick öffnet die Person wie auf dem Tor; der Tooltip nennt Beruf und Sektor.
