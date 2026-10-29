@@ -501,16 +501,14 @@ function fuegeStyleEin(container) {
     .bgi-erklaerung:not(.mittig):not(.sichtbar) { display: none; }
     .bgi-erklaerung.mittig { position: absolute; margin: 0; max-width: none; }
     .bgi-erklaerung p { margin: 0 0 .7em; }
-    .bgi-ziele { order: 10; display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin: var(--space-4) auto var(--space-5);
-      max-width: 1100px; padding: 0 var(--space-3); animation: bgi-einblenden .8s ease 1.2s both; }
+    .bgi-ziele { display: flex; flex-wrap: wrap; gap: 10px; margin-top: var(--space-4); } /* direkt unter dem Text */
     .bgi-ziele[hidden] { display: none; }
-    .bgi-ziel { flex: 1 1 240px; max-width: 340px; display: flex; flex-direction: column; gap: 4px; padding: 14px 18px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); text-decoration: none;
-      box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
-    .bgi-ziel:hover, .bgi-ziel:focus-visible { border-color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-2px); }
-    .bgi-ziel:focus-visible { outline: 3px solid #e0b429; outline-offset: 2px; }
-    .bgi-ziel-titel { font-family: var(--font-heading); font-size: var(--fs-xl); color: var(--accent); }
-    .bgi-ziel-text { font-size: var(--fs-md); color: var(--text-muted); line-height: 1.45; }
+    .bgi-ziele .bgi-ziel { display: inline-flex; align-items: center; font-size: var(--fs-sm); font-weight: 600; min-height: 44px; padding: 10px 22px;
+      border-radius: 999px; border: 1px solid ${FARBE}; background: ${FARBE}; color: #fff; text-decoration: none;
+      transition: background .2s ease, box-shadow .2s ease; } /* Form wie der Zurück-Knopf, blau mit weißer Schrift */
+    .bgi-ziele .bgi-ziel:hover { background: #22405f; color: #fff; box-shadow: 0 4px 12px rgba(44, 74, 110, .3); }
+    .bgi-ziel:focus-visible { outline: 3px solid #e0b429; outline-offset: 3px; }
+    .bgi-ziel-text { font-weight: 400; margin-left: .5em; opacity: .85; }
     .bgi-erklaerung p:last-child { margin-bottom: 0; }
     .bgi-erklaerung p.neu { animation: bgi-einblenden .8s ease 1.2s both; }
     @keyframes bgi-einblenden { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -1005,8 +1003,8 @@ function absatzHtml(absatz, klasse = '') {
   return `<p${klasse ? ` class="${klasse}"` : ''}>${html}</p>`;
 }
 
-// Absätze, die nur aus [[ziel:#ziel=Titel::Beschreibung]] bestehen, werden keine Textabsätze, sondern Knöpfe unter der
-// Bühne (Wunsch des Autors, 2026-10-29: am Schluss zu Bestand, Erkundung und Führungen)
+// Absätze, die nur aus [[ziel:#ziel=Titel::Beschreibung]] bestehen, werden keine Textabsätze, sondern Knöpfe unter dem
+// Text (Wunsch des Autors, 2026-10-29: am Schluss zu Bestand, Erkundung und Führungen)
 const ZIEL_MUSTER = /\[\[ziel:(#[^=\]]*)=([^\]]*?)(?:::([^\]]*))?\]\]/g;
 function trenneZiele(absaetze) {
   const ziele = [];
@@ -1018,12 +1016,13 @@ function trenneZiele(absaetze) {
   return { absaetze: rest, ziele };
 }
 
-// Knöpfe der aktuellen Station unter der Bühne (ohne Knöpfe verborgen)
+// Knöpfe der aktuellen Station direkt unter ihrem Text (ohne Knöpfe verborgen)
 function setzeZiele() {
-  const { zieleLeiste, stationen, stationIndex } = instanz;
+  const { zieleLeiste, stationen, stationIndex, erklaerung } = instanz;
   const ziele = stationen[stationIndex]?.ziele || [];
   zieleLeiste.hidden = !ziele.length;
-  zieleLeiste.innerHTML = ziele.map((z) => `<a class="bgi-ziel" href="${escapeHtml(z.href)}"><span class="bgi-ziel-titel">${escapeHtml(z.titel)}</span>`
+  if (ziele.length) erklaerung.appendChild(zieleLeiste);
+  zieleLeiste.innerHTML = ziele.map((z) => `<a class="bgi-ziel" href="${escapeHtml(z.href)}"><span>${escapeHtml(z.titel)}</span>`
     + `${z.text ? `<span class="bgi-ziel-text">${escapeHtml(z.text)}</span>` : ''}</a>`).join('');
 }
 
@@ -2823,11 +2822,13 @@ function setzeText(vorherIndex) {
   const station = instanz.stationen[stationIndex];
   if (station.anhaengen && vorherIndex === stationIndex - 1 && erklaerung.classList.contains('sichtbar')) {
     erklaerung.insertAdjacentHTML('beforeend', station.absaetze.map((a) => absatzHtml(a, 'neu')).join(''));
+    setzeZiele();
     return;
   }
   erklaerung.classList.remove('sichtbar');
   void erklaerung.offsetWidth;
   erklaerung.innerHTML = absaetzeVon(stationIndex).map((a) => absatzHtml(a)).join('');
+  setzeZiele();
 }
 
 // Bühnenhöhe je Station: Säulen und Münzen sowie der Text daneben bestimmen sie, mindestens die Ausgangshöhe
@@ -2928,7 +2929,6 @@ function aktualisiereSteuerung() {
     weiterKnopf.title = naechste.knopf;
   }
   zurueckKnopf.hidden = stationIndex === 0;
-  setzeZiele();
   const vorige = stationen[stationIndex - 1];
   zurueckKnopf.setAttribute('aria-label', vorige ? `Zurück: ${vorige.knopf || 'Anfang'}` : 'Zurück');
   setzeKopf();
