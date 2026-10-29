@@ -16,7 +16,7 @@
 // mit ?datensatz=buergerbuch:... faellt hier auf den "Typ nicht unterstuetzt"-
 // Hinweis zurueck (kein Eintrag in ZUORDNUNG).
 
-import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN } from '../config/archivalienRegistry.js';
+import { ARCHIVALIENTYPEN, BESTAND_ANSICHTEN, ANSICHTS_FUEHRUNGEN } from '../config/archivalienRegistry.js';
 
 // Router-Pfadsegmente direkt (dasselbe Format wie ein Hash-Pfad ohne "#") -
 // EINE gemeinsame Form fuer "bestand" (2 Segmente) UND "visualisierungen"
@@ -86,7 +86,7 @@ const DATIV_EINLEITUNG = {
 
 // Eigene Beschriftung für Vertiefungslinks, deren Name sich nicht in „In der … der … erkunden“ fügt
 // (2026-10-28: „Bürgerinnen?“ mit Fragezeichen)
-const VERTIEFUNG_BESCHRIFTUNG = { buergerinnen: 'Zur Ansicht „Bürgerinnen?“' };
+const VERTIEFUNG_BESCHRIFTUNG = { buergerinnen: 'Zur Führung „Bürgerinnen?“' };
 
 function genitiv(label, schluessel) {
   const artikel = GENITIV_ARTIKEL[schluessel] || 'der';
@@ -117,6 +117,10 @@ function ermittleAnsicht(segmente) {
   // solange der Tab selbst existiert (er tut es, siehe app.js' renderTab()).
   if (tab === 'literatur') {
     return { segmente: ['literatur'], label: 'Literaturliste', bereichLabel: null, bereichSchluessel: 'literatur' };
+  }
+  // 2026-10-29: Führungen mit eigener Ansicht (ANSICHTS_FUEHRUNGEN, z. B. „Bürgerinnen?“) als Vertiefungsziel
+  if (tab === 'fuehrungen' && ANSICHTS_FUEHRUNGEN[a]) {
+    return { segmente: ['fuehrungen', a], label: a, bereichLabel: null, bereichSchluessel: 'fuehrungen' };
   }
   return null;
 }

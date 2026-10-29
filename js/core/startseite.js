@@ -179,6 +179,15 @@ function baueEinleitung(wurzel, block) {
     p.textContent = absatz;
     bereich.appendChild(p);
   });
+  // 2026-10-29: optionaler Link hinter dem letzten Absatz (link_text/link_ziel, z. B. zur Willkommenstour)
+  if (block.link_text && block.link_ziel && bereich.lastElementChild) {
+    const { element: link, istLink } = erzeugeLinkOderText(block.link_ziel);
+    if (istLink) {
+      link.className = 'startseite-einleitung-link';
+      link.textContent = block.link_text;
+      bereich.lastElementChild.append(' ', link);
+    }
+  }
   wurzel.appendChild(bereich);
 }
 

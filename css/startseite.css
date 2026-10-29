@@ -199,6 +199,9 @@
   margin: 0 auto;
   text-align: center;
 }
+.startseite-einleitung p + p { margin-top: var(--space-3); }
+/* Link hinter dem letzten Absatz (startseite.csv, link_text/link_ziel der Einleitung), z. B. zur Willkommenstour */
+.startseite-einleitung-link { color: var(--accent, #2c4a6e); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 
 /* ── Drei-Spalten-Kachelbereich ─────────────────────────────── */
 .startseite-kachelbereich {

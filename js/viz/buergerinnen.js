@@ -111,7 +111,12 @@ const REGEN_START = 700;          // ms bis der Münzregen beginnt (die Seite sc
 const REGEN_DAUER = 2600;         // ms, über die sich der Regen von der untersten bis zur obersten Reihe verteilt
 const KOPF_SPALTEN = 64;          // Platz über den Spalten für Überschrift und Zahl
 const TEXT_MIN_BREITE = 820;      // ab dieser Bühnenbreite steht die Erklärung neben bzw. zwischen den Säulen
-const TEXT_BREITE = 400;          // höchstens so breit
+// Text und Bild als Paar (Wunsch des Autors, 2026-10-29): auf breiten Bühnen stehen Textspalte und Bild nebeneinander,
+// zusammen in der Mitte (gleicher Rand links und rechts); der Text steht auf halber Höhe des Bilds (Feld `mitte`)
+const TEXT_SPALTE = 520;          // Textspalte höchstens so breit (größere Schrift, var(--fs-lg); gut 60 Zeichen)
+const BEISPIEL_BREITE = 300;      // Platz der Schreibweisen-Beispiele rechts vom Buch
+const textSpalte = (b) => Math.min(TEXT_SPALTE, b * 0.36);
+const paarAbstand = (b) => Math.max(36, b * 0.035);
 const STATIONEN_DATEI = 'data/buergerinnen_stationen.csv';
 const SCHICHTEN_DATEI = 'data/buergerinnen_schichten.csv';
 const SEKTOREN_DATEI = 'data/buergerinnen_sektoren.csv';
@@ -340,11 +345,22 @@ function buchPunkte(nl, nr) {
 
 // Buch auf der Bühne (oben Platz für Beschriftungen); pos(k) = k-ter Punkt (siehe buchPunkte()), ort() rechnet
 // Buchkoordinaten um
-function buchForm(b, h) {
+// Platz des Buchs und der Textspalte links daneben: breit als Paar in der Mitte (rechtsFrei: Raum rechts vom Buch, der
+// zum Paar zählt, z. B. für die Beispiele auf `schreibweisen`); schmal das Buch über die ganze Breite, Text darunter
+function buchRahmen(b, h, { oben = 50, rechtsFrei = 0 } = {}) {
+  const hoehe = h - oben - 6;
+  if (b < TEXT_MIN_BREITE) return { rahmen: { x: b * 0.05, y: oben, b: b * 0.9, h: hoehe }, text: null };
+  const tb = textSpalte(b), g = paarAbstand(b);
+  const bb = Math.min(hoehe * (BUCH.w / BUCH.h), b - 16 - tb - g - rechtsFrei);
+  const x0 = Math.max(8, (b - (tb + g + bb + rechtsFrei)) / 2);
+  return { rahmen: { x: x0 + tb + g, y: oben, b: bb, h: hoehe }, text: { x: x0, b: tb, top: 4, mitte: oben + hoehe / 2 } };
+}
+
+function buchForm(b, h, optionen) {
   const n = instanz.personen.length;
   const nl = instanz.berufe ? instanz.berufe.ohne : Math.floor(n / 2);
   const { punkte, abstand } = buchPunkte(nl, n - nl);
-  const f = inRechteck(BUCH, { x: b * 0.05, y: 50, b: b * 0.9, h: h - 56 });
+  const f = inRechteck(BUCH, buchRahmen(b, h, optionen).rahmen);
   const [ox, oy] = f.pos([0, 0]);
   return { zelle: abstand * f.skala, pos: (k) => f.pos(punkte[k % punkte.length]), ort: f.pos, transform: `translate(${ox},${oy}) scale(${f.skala})` };
 }
@@ -459,6 +475,7 @@ function fuegeStyleEin(container) {
     .bgi-archiv { cursor: pointer; }
     .bgi-geist { fill: rgba(154, 144, 129, 0.18); stroke: ${RAHMEN}; stroke-width: 1.6px; }
     .bgi-verlustjahr { font-family: var(--font-heading); font-size: 1.9rem; fill: ${VERLUST_ROT}; }
+    .bgi-archiv:focus { outline: none; } /* kein schwarzer Rahmen nach dem Mausklick auf den Bürgerbuch-Punkt */
     .bgi-archiv:focus-visible { outline: none; stroke: ${AUSWAHL}; stroke-width: 3px; }
     .bgi-puls { fill: none; stroke: ${AUSWAHL}; stroke-width: 2px; pointer-events: none; transform-box: fill-box; transform-origin: center;
       animation: bgi-puls 1.6s ease-out infinite; }
@@ -474,7 +491,7 @@ function fuegeStyleEin(container) {
     .bgi-wert { font-size: 13px; font-weight: 600; fill: var(--text); text-anchor: middle; }
     .bgi-wert-klein { font-size: 12px; fill: var(--text-muted); text-anchor: middle; }
     .bgi-legende text { font-size: 12px; fill: var(--text-muted); }
-    .bgi-erklaerung { max-width: 62ch; margin: var(--space-3) auto 0; font-size: var(--fs-sm); line-height: 1.55; color: var(--text);
+    .bgi-erklaerung { max-width: 62ch; margin: var(--space-3) auto 0; font-size: var(--fs-lg); line-height: 1.6; color: var(--text);
       opacity: 0; visibility: hidden; transform: translateY(6px);
       transition: opacity .4s ease, transform .4s ease, visibility 0s linear .4s; }
     .bgi-erklaerung.sichtbar { opacity: 1; visibility: visible; transform: none;
@@ -661,23 +678,23 @@ function layoutArchiv(station, b) {
   const N = A.items.length;
   const luecke = Math.max(14, b * 0.025);
   const breit = b >= TEXT_MIN_BREITE;
-  const textB = breit ? Math.min(TEXT_BREITE * 0.85, b * 0.28) : 0;
-  const abstand = luecke * 2.5;
+  const textB = breit ? textSpalte(b) : 0;
+  const abstand = paarAbstand(b);
   const textRechts = TEXT_RECHTS.includes(station);
   // Paar aus Text und Tor (Tor so breit, wie es bei voller Höhe ist); platzRechts: Raum für den Hinweis auf `klick`
   const torPaar = (platzRechts = 0) => {
     const torB = Math.min((h - 16) * (TOR.breite / TOR.hoehe), b * 0.4);
     const x0 = Math.max(8, (b - (textB + abstand + torB)) / 2 - platzRechts);
     return textRechts
-      ? { text: { x: x0 + torB + abstand, b: textB, top: 4 }, vis: { x: x0, y: 8, b: torB, h: h - 16 } }
-      : { text: { x: x0, b: textB, top: 4 }, vis: { x: x0 + textB + abstand, y: 8, b: torB, h: h - 16 } };
+      ? { text: { x: x0 + torB + abstand, b: textB, top: 4, mitte: h / 2 }, vis: { x: x0, y: 8, b: torB, h: h - 16 } }
+      : { text: { x: x0, b: textB, top: 4, mitte: h / 2 }, vis: { x: x0 + textB + abstand, y: 8, b: torB, h: h - 16 } };
   };
   // Paar aus Text und breitem Bild (Treemap, Zeitachse, Urkunden-Säulen)
   const breitesPaar = () => {
     const gesamt = Math.min(b - 16, 1180);
     const x0 = (b - gesamt) / 2;
     const visB = gesamt - textB - abstand;
-    return { text: { x: textRechts ? x0 + visB + abstand : x0, b: textB, top: 4 }, vis: { x: textRechts ? x0 : x0 + textB + abstand, y: 8, b: visB, h: h - 16 } };
+    return { text: { x: textRechts ? x0 + visB + abstand : x0, b: textB, top: 4, mitte: h / 2 }, vis: { x: textRechts ? x0 : x0 + textB + abstand, y: 8, b: visB, h: h - 16 } };
   };
   const torFolie = ['archiv', 'klick', ...VERLUST_STATIONEN, 'mitmachen'].includes(station);
   const paar = breit ? (torFolie ? torPaar(station === 'klick' ? 60 : 0) : breitesPaar()) : null;
@@ -916,7 +933,7 @@ function karteUrkunden(station, vis, beschriftungen, start) {
   const donau = DONAU.map(proj).filter(([x]) => x >= vis.x - 2 && x <= vis.x + vis.b + 2);
   beschriftungen.push({ art: 'linie', punkte: donau, text: 'Donau', textAn: proj([14.29, 48.31]) });
   // auf `verarbeitung` sind die Urkunden mit unsicher zugeordnetem Ort hellrot (farbe), dazu der Rand unten
-  if (verarbeitung && K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, text: `nicht auf der Karte: ${zahl(K.ohne)} Urkunden mit nicht sicher identifizierten Orten` });
+  if (verarbeitung && K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, text: `${zahl(K.ohne)} Urkunden mit nicht sicher identifizierten Orten fehlen auf der Karte` });
   // Krems und die häufigsten Orte (ohne Überlappung)
   const beschriftet = [];
   [...zaehler].sort((a, c) => (c[0].name === 'Krems') - (a[0].name === 'Krems') || c[1] - a[1]).forEach(([ort, n]) => {
@@ -1008,10 +1025,12 @@ function berechneLayout(station = instanz.station) {
     return { ...basis, ziel: () => LA.bbPos, radius: radiusFeld, text: LA.text, archiv: LA, art: 'archiv' };
   }
   if (station === 'buergerbuch' || station === 'tor' || station === 'schreibweisen') {
-    // das ganze Buch (Ausgangshöhe), der Text links daneben wie auf `berufe`
-    const tor = buchForm(b, instanz.basisHoehe);
+    // das ganze Buch (Ausgangshöhe), der Text links daneben wie auf `berufe`; auf `schreibweisen` rückt das Paar nach
+    // links, damit die Beispiele rechts vom Buch Platz haben
+    const optionen = station === 'schreibweisen' ? { rechtsFrei: BEISPIEL_BREITE } : {};
+    const tor = buchForm(b, instanz.basisHoehe, optionen);
     const ziel = (p, i) => tor.pos(instanz.torPlatz ? instanz.torPlatz[i] : i);
-    const L0 = { ...basis, ziel, radius: radiusFeld, text: textNebenTor(b, tor), buch: tor };
+    const L0 = { ...basis, ziel, radius: radiusFeld, text: buchRahmen(b, instanz.basisHoehe, optionen).text, buch: tor };
     if (station !== 'schreibweisen') return L0;
     // Folie `schreibweisen` (Inkonsistenz): Personen mit mehreren Schreibweisen leuchten, drei Beispiele rechts
     return { ...L0, hervor: (p) => p.schreibweisen.length > 1, beispiele: schreibBeispiele(ziel, tor) };
@@ -1064,7 +1083,7 @@ function layoutBerufe(b) {
     ziel: (p, i) => ziel[i],
     bleibt: (i) => !B.gruppeVon[i],
     radius: Math.max(1.1, z * 0.4),
-    text: textNebenTor(b, feld),
+    text: buchRahmen(b, h).text,
     x0, balken, buchOrt: feld.ort
   };
 }
@@ -1086,14 +1105,6 @@ function schreibBeispiele(ziel, tor) {
   }));
 }
 
-// Text links neben dem ganzen Buch (Folien `berufe` und `buergerbuch`); zu schmal: unter der Bühne
-function textNebenTor(b, feld) {
-  const torLinks = d3.min(d3.range(instanz.personen.length), (i) => feld.pos(i)[0]);
-  const luecke = Math.max(14, b * 0.025);
-  const textBreite = Math.min(TEXT_BREITE * 0.85, torLinks - luecke - 8); // nicht bis an den Rand
-  return b >= TEXT_MIN_BREITE && textBreite >= 220 ? { x: torLinks - luecke - textBreite, b: textBreite, top: 4 } : null;
-}
-
 // Folien `geschlecht` und `frauen` (2026-10-29 als Buch, Wunsch des Autors): Die Männer bilden die linke Seite des
 // aufgeschlagenen Buchs, die (symbolischen) Frauen füllen auf `frauen` die rechte, die auf `geschlecht` nur als
 // gestrichelter Umriss leer dasteht. Der Text steht links neben dem Buch.
@@ -1101,7 +1112,8 @@ function layoutGeschlecht(b, h, radiusFeld) {
   const { personen } = instanz;
   const maenner = personen.filter((p) => !istFrau(p));
   const frauen = personen.filter(istFrau);
-  const f = inRechteck(BUCH, { x: b * 0.05, y: 74, b: b * 0.9, h: instanz.basisHoehe - 80 });
+  const platz = buchRahmen(b, instanz.basisHoehe, { oben: 74 });
+  const f = inRechteck(BUCH, platz.rahmen);
   const links = formRaster('buchLinks', Math.max(1, maenner.length), [BUCH.links], BUCH, [], { obenWeg: true });
   const rechts = formRaster('buchRechts', personen.length, [BUCH.rechts], BUCH, [], { obenWeg: true });
   const index = new Map();
@@ -1109,11 +1121,10 @@ function layoutGeschlecht(b, h, radiusFeld) {
   frauen.forEach((p, i) => index.set(p, f.pos(rechts.punkte[i % rechts.punkte.length])));
   const zelle = Math.min(links.abstand, rechts.abstand) * f.skala;
   const [ox, oy] = f.pos([0, 0]);
-  const feld = { pos: (k) => f.pos(links.punkte[k % links.punkte.length]) }; // für textNebenTor()
   return {
     ziel: (p) => index.get(p),
     radius: Math.max(1.1, Math.min(zelle * 0.4, radiusFeld * 1.4)),
-    text: textNebenTor(b, feld),
+    text: platz.text,
     frauZiel: (j) => f.pos(rechts.punkte[j % rechts.punkte.length]),
     buch: { transform: `translate(${ox},${oy}) scale(${f.skala})` },
     seiten: { links: f.pos([51, 2]), rechts: f.pos([149, 2]), leerMitte: f.pos([149, 72]) },
@@ -1134,7 +1145,8 @@ function layoutKlerus(b, mitKreuz) {
   const luecke = Math.max(14, b * 0.025);
   let torR, kircheR, text = null;
   if (LV.text) {
-    text = { ...LV.text, x: (b - LV.text.b) / 2 };
+    const tb = textSpalte(b);
+    text = { ...LV.text, x: (b - tb) / 2, b: tb, mitte: h / 2 };
     torR = { x: 0, y: 8, b: text.x - luecke * 2, h: h - 16 };
     const x2 = text.x + text.b + luecke * 2;
     kircheR = { x: x2, y: h * 0.5 - 8, b: Math.min(b - x2 - 8, h * 0.6), h: h * 0.5 };
@@ -1223,11 +1235,15 @@ function layoutWein(b) {
   const mitGrauen = Boolean(instanz.graue);
   const { reihe, platz } = gemischteReihe(personen.length, mitGrauen);
   const N = reihe.length;
-  const text = LV.text ? { ...LV.text, x: Math.min(b * 0.58, b - LV.text.b - 8) } : null; // rechts, aber nah an der Mitte
-  const bereich = text ? text.x - luecke * 2 : b;
   const oben = KOPF_SPALTEN + 16, unten = h - 8;
+  // Flasche links, Text rechts, als Paar in der Mitte
+  const tb = LV.text ? textSpalte(b) : 0, g = paarAbstand(b);
+  const beschriftung = 170; // links und rechts der Flasche: Platz für Überschrift und Pegel
+  const fb = Math.min((unten - oben) * (FLASCHE.w / FLASCHE.h), b - 16 - tb - g - 2 * beschriftung);
+  const x0 = LV.text ? Math.max(8, (b - (fb + 2 * beschriftung + g + tb)) / 2) : 0;
+  const text = LV.text ? { x: x0 + fb + 2 * beschriftung + g, b: tb, top: 4, mitte: (oben + unten) / 2 } : null;
   // die Punkte füllen die Flasche von unten nach oben (Rang 0 = unten)
-  const flasche = inRechteck(FLASCHE, { x: 0, y: oben, b: bereich, h: unten - oben }, true);
+  const flasche = inRechteck(FLASCHE, text ? { x: x0 + beschriftung, y: oben, b: fb, h: unten - oben } : { x: 0, y: oben, b, h: unten - oben }, true);
   const raster = formRaster('flasche', N, FLASCHE.flaechen, FLASCHE);
   const plaetze = raster.punkte.map(flasche.pos).sort((a, c) => c[1] - a[1] || a[0] - c[0]);
   const z = raster.abstand * flasche.skala;
@@ -1264,22 +1280,28 @@ function layoutVermoegen(b) {
   const S = instanz.schichten;
   const breit = b >= TEXT_MIN_BREITE;
   const luecke = Math.max(14, b * 0.025);
-  const textBreite = breit ? Math.min(TEXT_BREITE * 0.85, b * 0.24) : 0;
+  const textBreite = breit ? textSpalte(b) : 0;
   const grau = { ...(S.ohne || { id: OHNE_BUERGERRECHT, name: '', beschreibung: '' }), anzahl: instanz.personen.length, grau: true };
   const spalten = [grau, ...S.buerger.map((s) => ({ ...s }))];
   const zwischenraeume = spalten.length - 1 + (breit ? 1 : 0);
   const sb = (b - textBreite - luecke * zwischenraeume) / spalten.length;
   const eng = sb < 120;
   const kopfRaum = 96;
-  const punktHoehe = Math.min(320, Math.max(150, instanz.basisHoehe * 0.42));
+  // Säulen und Münzfelder passen zusammen in die sichtbare Höhe (Wunsch des Autors, 2026-10-29: Folie 13 auf einer
+  // Seite, Punkte dafür kleiner): was nach Köpfen, Wertzeilen und Legende bleibt, teilen sich Punkte und Münzen
+  const frei = Math.max(220, instanz.basisHoehe - kopfRaum - 52 - (28 + 3 * 18 + 12));
+  const punktHoehe = frei * 0.42, muenzHoehe = frei - punktHoehe;
   const maxAnzahl = Math.max(...spalten.map((s) => s.anzahl), 1);
   let z = Math.sqrt((sb * punktHoehe) / maxAnzahl);
   while (Math.floor(sb / z) * Math.floor(punktHoehe / z) < maxAnzahl) z *= 0.97;
   const proZeile = Math.max(1, Math.floor(sb / z));
   const hoeheVon = (anzahl) => Math.ceil(anzahl / proZeile) * z;
   const grundlinie = kopfRaum + Math.max(...spalten.map((s) => hoeheVon(s.anzahl)));
-  const muenzStart = grundlinie + 84;
-  const mz = Math.max(5, Math.min(9, z * 1.5));
+  const muenzStart = grundlinie + 52; // Platz für höchstens zwei Wertzeilen (bis 2026-10-29 vier)
+  // Münzgröße: die meisten Münzen (eine Schicht) füllen höchstens muenzHoehe
+  const maxMuenzen = Math.max(1, ...S.buerger.map((s) => s.summe / instanz.muenzeGulden));
+  let mz = Math.min(9, Math.sqrt((sb * muenzHoehe) / maxMuenzen));
+  while (mz > 2 && Math.ceil(maxMuenzen / Math.max(1, Math.floor(sb / mz))) * mz > muenzHoehe) mz *= 0.97;
   const mProZeile = Math.max(1, Math.floor(sb / mz));
   let unten = muenzStart;
   spalten.forEach((s, k) => {
@@ -2148,10 +2170,11 @@ function layoutBehauptung(b) {
   const N = reihe.length;
   const luecke = Math.max(14, b * 0.025);
   const breit = b >= TEXT_MIN_BREITE;
-  const textB = breit ? Math.min(TEXT_BREITE * 0.85, b * 0.28) : 0;
-  const x0 = breit ? Math.max(8, (b - 1180) / 2) : 8;
-  const text = breit ? { x: x0, b: textB, top: 4 } : null;
-  const vis = breit ? { x: x0 + textB + luecke * 2.5, y: 84, b: Math.min(b - 8, x0 + 1180) - (x0 + textB + luecke * 2.5), h: h - 92 } : { x: 8, y: 84, b: b - 16, h: h - 92 };
+  const textB = breit ? textSpalte(b) : 0, g = paarAbstand(b);
+  const bb = breit ? Math.min((h - 92) * (BUCH.w / BUCH.h), b - 16 - textB - g) : 0;
+  const x0 = breit ? Math.max(8, (b - (textB + g + bb)) / 2) : 8;
+  const text = breit ? { x: x0, b: textB, top: 4, mitte: 84 + (h - 92) / 2 } : null;
+  const vis = breit ? { x: x0 + textB + g, y: 84, b: bb, h: h - 92 } : { x: 8, y: 84, b: b - 16, h: h - 92 };
   const buch = inRechteck(BUCH, vis);
   // die Punkte als geschriebene Zeilen: links das ganze Schreiben, rechts zwei kurze Zeilen für die anderen Einträge
   const links = zeilenPunkte(N - BELEG.eintraege, { x: 14, y: 30, b: 74, h: 86 });
@@ -2357,8 +2380,8 @@ function blendeEin(g, neu, verzoegerung = DAUER * 0.55) {
 const ZEICHNER = {
   // Folie `reformation`: Fragen statt Zahlen über Kreuz und Kirche
   pendel(g, L, neu) {
-    if (L.kreuzMitte) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kreuzMitte[0]).attr('y', L.kreuzMitte[1] - 14).text('evangelisch: wie viele?');
-    if (L.kircheOben) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kircheOben[0]).attr('y', L.kircheOben[1] - 14).text('katholisch: wie viele?');
+    if (L.kreuzMitte) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kreuzMitte[0]).attr('y', L.kreuzMitte[1] - 14).text('wie viele evangelisch?');
+    if (L.kircheOben) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kircheOben[0]).attr('y', L.kircheOben[1] - 14).text('wie viele katholisch?');
     blendeEin(g, neu);
   },
 
@@ -2468,16 +2491,15 @@ const ZEICHNER = {
     const buerger = L.spalten.filter((s) => !s.grau);
     g.append('line').attr('x1', buerger[0].x).attr('x2', L.b).attr('y1', L.grundlinie + 0.5).attr('y2', L.grundlinie + 0.5)
       .attr('stroke', '#c3c2b7').attr('stroke-width', 1);
-    buerger.forEach((s) => zeichneSaeulenkopf(g, s, `${prozent(s.anteil)} % · ${zahl(s.anzahl)}`));
+    buerger.forEach((s) => zeichneSaeulenkopf(g, s, `${prozent(s.anteil)} %`)); // ohne Zahl der Haushalte (Wunsch des Autors, 2026-10-29)
     blendeEin(g, neu);
   },
 
-  // Gesamtvermögen, Anteil, Mittelwert und Spanne unter der Grundlinie
+  // Anteil am Vermögen unter der Grundlinie (seit 2026-10-29 nur noch dieser, ohne Summe, Mittelwert und Spanne)
   werte(g, L, neu) {
     L.spalten.filter((s) => !s.grau).forEach((s) => {
       const mitte = s.x + s.b / 2;
-      [`${zahl(Math.round(s.summe))} fl`, s.eng ? `${prozent(s.vermoegensanteil)} %` : `${prozent(s.vermoegensanteil)} % des Vermögens`,
-        `Ø ${zahl(s.mittel)} fl`, s.eng ? `${zahl(s.von)}–${zahl(s.bis)}` : `(${zahl(s.von)}–${zahl(s.bis)} fl)`]
+      (s.eng ? [`${prozent(s.vermoegensanteil)} %`, 'des Vermögens'] : [`${prozent(s.vermoegensanteil)} % des Vermögens`])
         .forEach((t, z) => g.append('text').attr('class', z === 0 ? 'bgi-wert' : 'bgi-wert-klein')
           .attr('x', mitte).attr('y', L.grundlinie + 20 + z * 16).text(t));
     });
@@ -2570,6 +2592,12 @@ function oeffnePerson(p) {
     { personenLink: record ? baueDatensatzLink('person', p.id) : null });
 }
 
+// Oberkante des Texts: auf halber Höhe des Bilds (L.text.mitte), aber nicht über L.text.top hinaus
+function textOben(L) {
+  const t = L.text;
+  return t.mitte == null ? t.top : Math.max(t.top, Math.round(t.mitte - instanz.erklaerung.offsetHeight / 2));
+}
+
 // Erklärung zwischen bzw. neben den Säulen (breit) oder darunter (schmal); sichtbar, wenn die Station Text hat
 function platziereErklaerung() {
   const { erklaerung, buehne, layout: L } = instanz;
@@ -2579,7 +2607,7 @@ function platziereErklaerung() {
   erklaerung.classList.toggle('mittig', Boolean(L.text));
   erklaerung.style.left = L.text ? `${L.text.x}px` : '';
   erklaerung.style.width = L.text ? `${L.text.b}px` : '';
-  erklaerung.style.top = L.text ? `${L.text.top}px` : '';
+  erklaerung.style.top = L.text ? `${textOben(L)}px` : '';
   erklaerung.classList.toggle('sichtbar', sichtbar);
   erklaerung.inert = !sichtbar;
 }
@@ -2606,7 +2634,7 @@ function passeHoeheAn() {
   if (L.text && absaetzeVon(instanz.stationIndex).length) {
     erklaerung.classList.add('mittig');
     erklaerung.style.width = `${L.text.b}px`;
-    hoehe = Math.max(hoehe, L.text.top + erklaerung.offsetHeight + 12);
+    hoehe = Math.max(hoehe, textOben(L) + erklaerung.offsetHeight + 12);
   }
   buehne.style.height = `${hoehe}px`;
   void buehne.clientWidth; // Layout jetzt erzwingen: ein neu erscheinender Scrollbalken ändert die Breite vor dem Zeichnen
@@ -2618,6 +2646,7 @@ function zeigeMuenzfelder() {
   const L = instanz.layout;
   if (!L.muenzStart) return;
   const svgOben = instanz.svg.node().getBoundingClientRect().top + window.scrollY;
+  if (svgOben + (L.legendeY || L.muenzStart) + 40 <= window.scrollY + window.innerHeight) return; // schon ganz sichtbar
   const ziel = svgOben + L.muenzStart - window.innerHeight * 0.45;
   if (ziel > window.scrollY + 20) window.scrollTo({ top: ziel, behavior: ohneAnimation() ? 'auto' : 'smooth' });
 }
@@ -2774,11 +2803,15 @@ function baueArchivpunkte() {
       event.stopPropagation();
       versteckeTooltip();
       const i = A.items.indexOf(it);
-      if (istKnopf(i)) geheZu(instanz.stationIndex + 1);
+      if (istKnopf(i)) { event.currentTarget.blur(); geheZu(instanz.stationIndex + 1); } // der Punkt behält sonst den Fokus
       else oeffneBestand(it);
     })
     .on('keydown', (event, it) => {
-      if ((event.key === 'Enter' || event.key === ' ') && istKnopf(A.items.indexOf(it))) { event.preventDefault(); geheZu(instanz.stationIndex + 1); }
+      if ((event.key === 'Enter' || event.key === ' ') && istKnopf(A.items.indexOf(it))) {
+        event.preventDefault();
+        geheZu(instanz.stationIndex + 1);
+        instanz.weiterKnopf.focus(); // Tastatur: der Fokus geht zum Weiter-Pfeil
+      }
     });
   instanz.archivBeitraege = archivEbene.append('g').style('pointer-events', 'none').selectAll('circle')
     .data(d3.range(A.verloren)).join('circle').attr('fill', GOLD).attr('opacity', 0);
@@ -2880,7 +2913,7 @@ export function render(container, data, options = {}) {
   werkzeugleiste.className = 'bgi-werkzeugleiste';
   const kopf = document.createElement('div');
   kopf.className = 'bgi-kopf';
-  kopf.innerHTML = `<div class="bgi-ueberzeile">Bürgerbuch Krems${spanne ? ` · ${spanne[0]}–${spanne[1]}` : ''}</div>
+  kopf.innerHTML = `<div class="bgi-ueberzeile">Bürgerbuch Krems${spanne ? `, ${spanne[0]} bis ${spanne[1]}` : ''}</div>
     <p class="bgi-zahl">${zahl(personen.length)} Personen</p>
     <div class="bgi-unterzeile">${STANDARD_UNTERZEILE}</div>`;
   const steuerung = document.createElement('div');
@@ -2993,7 +3026,7 @@ export function render(container, data, options = {}) {
   instanz = {
     container, wurzel, buehne, personen, buergerbuch, berufe: null, torPlatz: null, wein: null, weinZeit: null,
     archiv: null, archivEbene, archivAktiv: false, personenSichtbar: true, daten: data, kopf,
-    kopfUeberzeile: `Bürgerbuch Krems${spanne ? ` · ${spanne[0]}–${spanne[1]}` : ''}`, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
+    kopfUeberzeile: `Bürgerbuch Krems${spanne ? `, ${spanne[0]} bis ${spanne[1]}` : ''}`, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
     zuordnung: null, muenzeGulden: STANDARD_MUENZE, svg, punkte, graue: null, graueSichtbar: false, frauenPunkte, frauenSichtbar: false, leinwand, bewegungen: new Map(),
     personenGruppe, frauenGruppe, graueGruppe: null, muenzGruppen: new Set(), zeichenAnfrage: null, zeichnenBis: 0, bildNr: 0, ebeneSpalten, ebeneMuenzen,
     ebeneGraue, teileVorher: new Set(), weiterKnopf: steuerung.querySelector('.bgi-weiter'), zurueckKnopf: steuerung.querySelector('.bgi-zurueck'), foliennummer: steuerung.querySelector('.bgi-foliennummer'),
@@ -3002,6 +3035,7 @@ export function render(container, data, options = {}) {
   };
   instanz.weiterKnopf.addEventListener('click', () => geheZu(instanz.stationIndex + 1));
   instanz.zurueckKnopf.addEventListener('click', () => geheZu(instanz.stationIndex - 1));
+  wurzel.addEventListener('wheel', mitMausrad, { passive: false });
   sidebar.schliessenBtn.addEventListener('click', schliessePerson);
   sidebar.zurueckBtn.addEventListener('click', () => zurueckZurKombiniertenListe(sidebar)); // Liste der Person wieder zeigen
   erklaerung.addEventListener('click', (event) => {
@@ -3030,6 +3064,36 @@ export function render(container, data, options = {}) {
     }, Math.max(150, instanz.animationBis - Date.now()));
   });
   instanz.beobachter.observe(buehne);
+}
+
+// Mausrad (Wunsch des Autors, 2026-10-29): eine Drehung blättert eine Folie weiter oder zurück, wie die Pfeile
+// (auf `klick` also nicht weiter, dort führt der leuchtende Punkt). Kann die Seite oder ein Element unter dem Zeiger
+// (Seitenleiste, Text) in diese Richtung noch scrollen, scrollt zuerst dieses. Eine Geste blättert nur einmal:
+// solange Ereignisse kommen, bleibt das Mausrad gesperrt (Trackpads liefern lange Nachläufer).
+let radSperre = 0;
+function kannScrollen(start, runter) {
+  for (let el = start; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+    const stil = getComputedStyle(el);
+    if (!/(auto|scroll)/.test(stil.overflowY) || el.scrollHeight <= el.clientHeight + 1) continue;
+    if (runter ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true;
+  }
+  // die Seite selbst erst ab einem merklichen Rest (sonst schluckt ein Rand von wenigen Pixeln die erste Drehung)
+  const seite = document.scrollingElement || document.documentElement;
+  return runter ? window.scrollY + window.innerHeight < seite.scrollHeight - 120 : window.scrollY > 120;
+}
+function mitMausrad(event) {
+  if (!instanz || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+  const runter = event.deltaY > 0;
+  if (kannScrollen(event.target, runter)) return;
+  event.preventDefault();
+  const jetzt = performance.now();
+  const gesperrt = jetzt < radSperre;
+  radSperre = Math.max(radSperre, jetzt + 300);
+  if (gesperrt) return;
+  const knopf = runter ? instanz.weiterKnopf : instanz.zurueckKnopf;
+  if (knopf.hidden) return;
+  radSperre = jetzt + 900;
+  geheZu(instanz.stationIndex + (runter ? 1 : -1));
 }
 
 export function resize() {

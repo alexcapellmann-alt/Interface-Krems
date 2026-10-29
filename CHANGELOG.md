@@ -7,6 +7,37 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (214) – Bürgerinnen?: größere Schrift, Text und Bild als Paar in der Mitte
+
+- Wunsch des Autors: Schrift der Folientexte deutlich größer (`var(--fs-lg)`, 18 px statt 14 px), Textblöcke symmetrisch zu den Animationen.
+  - Textspalte bis 520 px breit (`TEXT_SPALTE`, `textSpalte()`), Abstand zum Bild `paarAbstand()`.
+  - Text und Bild stehen als Paar in der Mitte der Bühne, gleicher Rand links und rechts: Buch (`buchRahmen()`, Folien 5 bis 10, auf „Ein Name, viele Schreibweisen“ mit Platz für die Beispiele), Tor und breite Bilder der Archiv-Folien, Buch auf „Behauptet, aber nicht belegt“, Flasche samt Beschriftungen auf „Zahlen aus zweiter Hand“; auf „Wie viele glaubten was?“ steht der breitere Text zwischen Kreuz und Kirche. `textNebenTor()` entfällt.
+  - Der Text steht auf halber Höhe des Bilds (`mitte`, `textOben()`), auf den Vermögens-Folien weiter oben neben den Säulen.
+  - Vermögens-Folien (11 bis 13): Säulen und Münzfelder teilen sich die sichtbare Höhe (`layoutVermoegen()`, Punkte und Münzen dafür kleiner), die Textspalte ist so breit wie auf den anderen Folien; „Wer fehlt noch?“ passt damit bei 1400 × 800 ganz auf eine Bildschirmseite (Bühne 469 statt 874 px). Zu den Münzen gescrollt wird nur noch, wenn sie nicht ohnehin sichtbar sind.
+- Geprüft auf dem Testserver 8845 (1400 × 800, Folie 16 auch 1024 × 768): Folien 1 bis 23 durchgeklickt, keine Überlappungen, keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (213) – „Bürgerinnen?“ wird Führung, Mausrad, Texte ohne Doppelpunkte und Striche
+
+- Wunsch des Autors:
+  - „Bürgerinnen?“ ist keine Ansicht unter Personen mehr, sondern eine Führung im Themenbereich „Geschichten über das Archiv“ (`#fuehrungen/buergerinnen`). Neu: `ANSICHTS_FUEHRUNGEN` in `js/config/archivalienRegistry.js` (Führung → Modul und Daten), `js/core/app.js` zeichnet das Modul im Tab Führungen, `js/utils/datensatzAufruf.js` erlaubt solche Führungen als Vertiefungsziel. Registry-Eintrag und Zeile in `data/ansichten.csv` entfernt, neue Zeile in `data/fuehrungen.csv`, Vertiefungslink in „Frauen im Archiv“ (Station 7) auf die Führung umgestellt, Infotext angepasst.
+  - Startseite: Satz mit Link zur Willkommenstour unter der Einleitung (`data/startseite.csv`, `link_text`/`link_ziel` der Einleitung, `js/core/startseite.js`, `css/startseite.css`).
+  - Mausrad blättert eine Folie weiter oder zurück (`mitMausrad()`), eine Geste nur einmal.
+  - Folie 2 mit Link zum Baum der Bestände; Folie 3: Strahl-Link korrigiert (`#bestand/ganttDiagramm`, vorher ein Pfad unter „Erkundung“, der nicht zum Strahl führte).
+  - Folie 4: vier Bürgerbücher, das gezeigte ist das älteste; „Rechnungen des Stadtgerichts … über die Strafen“ statt „Abrechnungen des Stadtrichters“. Folie 5 ohne Wiederholung.
+  - Nach dem Mausklick auf den Bürgerbuch-Punkt bleibt kein schwarzer Fokusrahmen mehr (Punkt verliert den Fokus, kein Rahmen bei `:focus`).
+  - Folie 10: Link zu den Verlassenschaftsinventaren (Bestand 1.1.1.6.1.). Folie 11: Satz zum Anteil entfernt, über den Säulen nur die Prozente. Folie 12: unter den Säulen nur der Anteil am Vermögen, die Münzfelder rücken nach oben.
+  - Folie 17 kürzer und allgemeiner, Baden entfernt; Folie 19 und 22 nach Vorgabe umformuliert.
+  - Alle Folientexte, Kopfzeilen und Beschriftungen ohne Doppelpunkte und Striche (z. B. „Bürgerbuch Krems, 1535 bis 1625“, „wie viele evangelisch?“, „1572 bis 1575“).
+- Geprüft auf dem Testserver 8845 (1400 × 800): Startseite mit Link, Führung öffnet im Tab Führungen, alle 23 Folien ohne Fehler, Mausrad (eine Geste eine Folie, auf Folie 4 kein Weiterblättern), Klick auf den Bürgerbuch-Punkt ohne Rahmen, Folien 11, 12, 14, 17, 19, 22; Personen ohne „Bürgerinnen?“, Führungen-Übersicht und Vertiefungslink in „Frauen im Archiv“; Baum und Strahl öffnen.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (212) – Bürgerinnen?: Titel je Folie, Buchseiten, Texte, Karte ohne Umriss, Link mit Unsicherheit
 
 - Wunsch des Autors:
