@@ -273,7 +273,7 @@ BB-0271;1549-02-08;;Georg Stockhl;georg_stockl;;;;;;;;;;;;
 BB-0272;1549-02-08;;Larenz Schachtl;laurenz_schachtl;;;;;;;;;;;;
 BB-0273;1549-02-15;;Jheronimusen Kintschen;hieronymus_kintschen;Schuster;;Leder & Pelz;;;;;;;;ja;
 BB-0274;1549-02-15;;Sigmundt Zaglawer;sigmund_zaglawer;Steinmetz;;Holz, Bau & Stein;;;;;;;;ja;
-BB-0275;1549-03-15;;Matheus Fenigast;matthaeus_fenigast;;;;;;;;;;;;
+BB-0275;1549-03-15;;Matheus Fenigast;matthaeus_fenigast;;;;;;;;;;;;Mit BB-0315 (Mathias Fenigast) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0276;1549-03-22;;G. Schockhler;g_schockler;;;;;;;;;;;;
 BB-0277;1549-05-03;;Hanns Crafft;hans_crafft;Goldschmied;;Metall & Waffen;;;;;;;;ja;
 BB-0278;1549-05-03;;Caspar Scheibenperger;kaspar_scheibenperger;;;;;;;;;;;;
@@ -382,7 +382,7 @@ BB-0380;1551-01-23;;Hanns Vleischackher;hans_fleischhacker;;;;;;;Ist ime aufgele
 BB-0381;1551-02-13;;Hanns Steuber;hans_steuber;Seiler;;Transport & Wasserwesen;;;;;;;;ja;
 BB-0382;1551-02-27;;Georg Schockhler;georg_schockler;;;;;;;;;;;;
 BB-0383;1551-02-27;;Wolfganng Zeuchpaur;wolfgang_zeuchpaur;;;;;;;;;;;;
-BB-0384;1551-02-27;;Jacob Drechsel;jakob_drechsel;Kammmacher;;Sonstiges Handwerk;Matheus Peringer (Nadler).;matthaeus_peringer;Nadler;;;;;ja;
+BB-0384;1551-02-27;;Jacob Drechsel;jakob_drechsel;Kammmacher;;Sonstiges Handwerk;Matheus Peringer (Nadler).;matthaeus_peringer;Nadler;;;;;ja;Mit BB-0402 (Jacob Drechssel), BB-0417 (Jacob Drochsel) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0385;1551-02-27;;Hanns Knaller;hans_knaller;Riemer;;Leder & Pelz;;;;;;;;ja;
 BB-0386;1551-03-20;;Steffan Alckouer;stephan_alckouer;;;;;;;;;;;;
 BB-0387;1551-04-10;;Wolfganng Irrpaur;wolfgang_irrpaur;Färber;;Textil & Bekleidung;;;;;;;;ja;
@@ -443,12 +443,12 @@ BB-0441;1552-01-14;;Jacob Klinng;jakob_klinng;Schuster;;Leder & Pelz;;;;;;;;ja;
 BB-0442;1552-02-18;;Wolfganng Tanckl;wolfgang_tanckl;;;;;;;Wolfganng Tanckl seines hauswechsl halben wollen ain ersamen rat bewilligen den auswechsl. Doch das Tanckhl den stadl auch verkhauff unnd nichts herrein fure, weder hey, stroh noch getraidt, unnd wover er sich in zwaien jaren nit wider herrein setze, solle ime des (Widpergers?) kinnder weingarten, so ime alls aine burgerlehen wider eingezogen werden.;;;;;
 BB-0443;1552-02-18;;Kaplers;kaplers;;;;;;;Herrn Kaplers halben hinaus gen Hadersarf zuschreiben. Dem Richter zuschreiben, das er den Grinnzhauser herein schaff.;;;;;
 BB-0444;1552-02-18;;Wolfganng Perger;wolfgang_perger;;;;;;;wolfganng Perger gen Leus zuschreiben, ine herein zuschaffen, sein sachen richtig zumachen.;;;;;
-BB-0445;1552-03-10;;Wilhalm Wittenpeckh;wilhelm_wittenpeck;Hafner;;Holz, Bau & Stein;;;;;;;;ja;
+BB-0445;1552-03-10;;Wilhalm Wittenpeckh;wilhelm_wittenpeck;Hafner;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-0469 (Wilhalm Pittinpeckh) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0446;1552-03-24;;Veit Veihel;veit_veihel;Zimmermann;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0447;1552-05-06;;Hanns Knolln;hans_knoll;;;;;;;Ist ain gemainer abschiedt zugeben bewilligt.;;;;;
 BB-0448;1552-06-09;;Wolfganng Durner;wolfgang_durner;Schuster;;Leder & Pelz;Wilbolt Knittinnger (Bürger zu Krems).;wilbolt_knittinnger;;;;;;ja;
 BB-0449;1552-07-08;;Cristoff Klinngel;christoph_klinngel;Kupferschmied;;Metall & Waffen;Maister Jacob Waldkhircher.;maister_jacob_waldkhircher;;;;;;ja;
-BB-0450;1552-07-15;;Michel Gierlach;michael_gierlach;Schuster;;Leder & Pelz;;;;;;;;ja;
+BB-0450;1552-07-15;;Michel Gierlach;michael_gierlach;Schuster;;Leder & Pelz;;;;;;;;ja;Mit BB-0468 (Michel Gierloch) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0451;1552-07-15;;Chunz Grill;chunz_grill;;;;Gall Zanndl.;gall_zanndl;;;;;;;
 BB-0452;1552-07-15;;Jacob Klueg;jakob_klueg;Schuster, Leistenschneider;;Leder & Pelz;;;;Möglicherweise bereits unter Jacob Klinng (14. Januar 1552) genannt.;;;;ja;
 BB-0453;1552-07-15;;Paulus Steyrer;paulus_steyrer;Fleischhacker;;Lebensmittelhandwerk;;;;;;;;ja;
@@ -489,7 +489,7 @@ BB-0487;1552-12-20;;Casstl Ernnreich;casstl_ernreich;Lederer;;Leder & Pelz;;;;;;
 BB-0488;1552-12-20;;Jorg Kapfennberger;georg_kapfennberger;;;;Cristof Weyganndt.;christoph_weyganndt;;;;;;;
 BB-0489;1553-01-30;;Jacob Faden;jakob_faden;;;;;;;Begert ain abschiedt. Fiat nach gebrauch.;;;;;
 BB-0490;1553-02-10;;Hannsen Grinnizhauser;hans_grinnizhauser;;;;;;;;;;;;
-BB-0491;1553-02-17;;Wolf Grabner;wolf_grabner;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
+BB-0491;1553-02-17;;Wolf Grabner;wolf_grabner;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;Mit BB-0626 (Wolfganng Grabner) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0492;1553-02-17;;Leonhart Wegleutner;leonhard_wegleutner;Fasszieher;;Holz, Bau & Stein;Herr Schwarzpeckh.;herr_schwarzpeck;;;;;;ja;
 BB-0493;1553-02-28;;Hanns Raschl;hans_raschl;Fleischhacker;;Lebensmittelhandwerk;;;;Dem ist gewonndlichen burgerlichen abschied zugeben bewilligt.;;;;ja;
 BB-0494;1553-03-03;;Mert Walch;martin_walch;Fleischhacker;;Lebensmittelhandwerk;;;;;;;;ja;
@@ -497,22 +497,22 @@ BB-0495;1553-03-17;;Wolfganng Seyfrider;wolfgang_seyfrider;Fleischhacker;;Lebens
 BB-0496;1553-04-14;;(+Hannsen) Grinnizhauser;hans_grinnizhauser;;;;;;;Das er sich ain burger zu Haderßdorf nennt unnd hie noch khainen abschiedt genommen, das befrembts ain ehrsamen Rat auf ine nit wenig. Darumen sol er sich mit ainen abschiedt nach gebrauch erledigen. | Erstmalig vorstellig am 10. Februar 1553.;;;;;
 BB-0497;1553-04-14;;Kampmacher;kampmacher;;;;;;;;;;;;
 BB-0498;1553-04-28;;Wolfganng Grabmer;wolf_grabner;Bäcker;;Lebensmittelhandwerk;;;;Erstmalig vorstellig am 17. Februar 1553.;;;;ja;"personen_id korrigiert (vorher wolfgang_grabner): ""Erstmalig vorstellig am 17. Februar 1553"" verweist auf BB-0491 (Wolf Grabner, Bäcker), zusätzlich bestätigt durch BB-0626, das denselben Termin nennt."
-BB-0499;1553-05-19;;Viennz Pattenperger;vinzenz_pattenperger;Leineweber;;Textil & Bekleidung;;;;;;;;ja;
+BB-0499;1553-05-19;;Viennz Pattenperger;vinzenz_pattenperger;Leineweber;;Textil & Bekleidung;;;;;;;;ja;Mit BB-0519 (Viennz Pattnperger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0500;1553-05-19;;Hanns Soldner;hans_soldner;Binder;;Holz, Bau & Stein;Wolfganng Stegrer (Binder).;wolfgang_stegrer;Binder;;;;;ja;
-BB-0501;1553-07-07;;Hanns Branns;hans_branns;Hutmacher;;Textil & Bekleidung;Seiz Messrer, Hanns Pachmair.;seiz_messerer|hans_pachmair;;;;;;ja;
+BB-0501;1553-07-07;;Hanns Branns;hans_branns;Hutmacher;;Textil & Bekleidung;Seiz Messrer, Hanns Pachmair.;seiz_messerer|hans_pachmair;;;;;;ja;Mit BB-0521 (Hannß Brans) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0502;1553-07-14;;Hanns Marchl;hans_marchl;;;;Hanns Drescher, Leonhart Niechtl.;hans_drescher|leonhard_niechtl;;;;;;;
-BB-0503;1553-08-08;;Asm Geyr;asm_geyr;;;;Gilg Vistler, Hanns Schmausser.;aegidius_vistler|hans_schmausser;;;;;;;
+BB-0503;1553-08-08;;Asm Geyr;asm_geyr;;;;Gilg Vistler, Hanns Schmausser.;aegidius_vistler|hans_schmausser;;;;;;;Mit BB-0523 (Ehrasm Geyr) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0504;1553-08-11;;Hainrichen Goteralt;heinrich_goteralt;Wundarzt;;Gesundheit;;;;;;;;ja;
 BB-0505;1553-08-11;;Peter Pat;peter_pat;;;;;;;Abschiedt. Weyll er zway heuser hie hat, ist ime, wann er zuestifft, abschiedt zugeben;;;;;
 BB-0506;1553-08-18;;Sigmundt Schachner;sigmund_schachner;Sattler;;Leder & Pelz;Hanns Holzinger (Riemer).;hans_holzinger;Riemer;;;;;ja;
-BB-0507;1553-08-18;;Georg Protngeir;georg_protngeir;Kammmacher;;Sonstiges Handwerk;Matheus Stadler (Bürger zu Krems), Jacob Schlosser (Bürger zu Krems).;matthaeus_stadler|jakob_schlosser;;;;;;ja;
-BB-0508;1553-09-01;;Magister (+Matheus) Pedarius;matthaeus_pedarius;;;;;;;;;;;;
+BB-0507;1553-08-18;;Georg Protngeir;georg_protngeir;Kammmacher;;Sonstiges Handwerk;Matheus Stadler (Bürger zu Krems), Jacob Schlosser (Bürger zu Krems).;matthaeus_stadler|jakob_schlosser;;;;;;ja;Mit BB-0525 (Georg Pratngeyr) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-0508;1553-09-01;;Magister (+Matheus) Pedarius;matthaeus_pedarius;;;;;;;;;;;;Mit BB-0540 (Magister Matheus Redarius) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0509;1553-09-15;;Paull Aigner;paul_aigner;Fuhrmann;;Transport & Wasserwesen;Benedict Gibl.;benedikt_gibl;;;;;;ja;
-BB-0510;1553-09-15;;Thoman Khrenn;thomas_krenn;;;;;;;;;;;;
+BB-0510;1553-09-15;;Thoman Khrenn;thomas_krenn;;;;;;;;;;;;Mit BB-0541 (Thoman Khreen) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0511;1553-10-20;;Hanns Helbm;hans_helbm;Salzmacher;;Handel;;;;;;;;nein;"Zuordnung zu Wirtschaftssektor unsicher: Bedeutung/Zuordnung des Berufs ""Salzmacher"" nicht eindeutig klärbar."
 BB-0512;1553-10-20;;Wolfganng Schwärtzl;wolfgang_schwaertzl;;;;;;;;;;;;
 BB-0513;1553-12-15;;Lamprechten Wisant;lamprecht_wisant;;;;;;;;;;Den 15. Decembris anno etc. im 53isten haben hernachbeschribme Burger iren geschwornnen aidt vor erwellung gethan.;;
-BB-0514;1553-12-15;;Augustin Pottner;augustin_pottner;Schneider;;Textil & Bekleidung;;;;;;;;ja;
+BB-0514;1553-12-15;;Augustin Pottner;augustin_pottner;Schneider;;Textil & Bekleidung;;;;;;;;ja;Mit BB-0544 (Augustin Reyttner) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0515;1553-12-15;;Cristoff Muer;christoph_muer;;;;;;;;;;;;
 BB-0516;1553-12-15;;Mert Walch;martin_walch;Fleischhacker;;Lebensmittelhandwerk;;;;Erstmalig vorstellig am 3. März 1553.;;;;ja;
 BB-0517;1553-12-15;;Wolf Seifrider;wolf_seyfrider;Fleischhacker;;Lebensmittelhandwerk;;;;Erstmalig vorstellig am 17. März 1553 unter Wolfganng Seyfrider.;;;;ja;
@@ -558,14 +558,14 @@ BB-0556;1554-03-02;;Michel Rodig;michael_rodig;Tischler;;Holz, Bau & Stein;;;;;;
 BB-0557;1554-03-16;;Panngraz Fischer;pangraz_fischer;;;;Jacob Anndre (Bürger zu Krems), Thoman Steyrer.;jakob_anndre|thomas_steyrer;;;;;;;
 BB-0558;1554-04-13;;Frannz Olbm;franz_olbm;Müller;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0559;1554-05-08;;Anndre Stackher;andreas_stocker;Schneider;;Textil & Bekleidung;Hannß Helbm (Bürger zu Stein), Benedict Preißschuech (Bürger zu Stein).;hans_helbm|benedikt_preissschuech;;;;;;ja;
-BB-0560;1554-05-08;;Michael Rody;michael_rody;Tischler;;Holz, Bau & Stein;Jacob Zot (Khlampfrer) (Bürger zu Stein).;jakob_zot;Klampferer;;;;;ja;
-BB-0561;1554-05-25;;Leonhart Khunz;leonhard_kunz;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
+BB-0560;1554-05-08;;Michael Rody;michael_rody;Tischler;;Holz, Bau & Stein;Jacob Zot (Khlampfrer) (Bürger zu Stein).;jakob_zot;Klampferer;;;;;ja;Mit BB-0572 (Michael Rhody) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-0561;1554-05-25;;Leonhart Khunz;leonhard_kunz;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;Mit BB-0577 (Leonhart Conz) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0562;1554-06-08;;Peter Polliteckh;peter_polliteck;Kürschner;;Leder & Pelz;;;;;;;;ja;
 BB-0563;1554-06-26;;Steffan Scholz;stephan_scholz;Schuster;;Leder & Pelz;Stöffan Garhaimer, Steffan Alkhauer.;stoeffan_garhaimer|stephan_alkhauer;;;;;;ja;
 BB-0564;1554-08-14;;Dionisy Seifriedt;dionisy_seifriedt;Bäcker;;Lebensmittelhandwerk;Caspar Schweickhl, Khop Schneider.;kaspar_schweickl|khop_schneider;;;;;;ja;
 BB-0565;1554-11-16;;Jörg Peß;joerg_pess;Glaser;;Holz, Bau & Stein;;;;;;;;ja;
-BB-0566;1554-12-14;;Lazarus Püchler;lazarus_puechler;;;;;;;;;;;;
-BB-0567;1554-12-14;;Lorennz Khisthner;lorenz_kisthner;Binder;;Holz, Bau & Stein;;;;;;;;ja;
+BB-0566;1554-12-14;;Lazarus Püchler;lazarus_puechler;;;;;;;;;;;;Mit BB-0574 (Lazarus Puchler) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-0567;1554-12-14;;Lorennz Khisthner;lorenz_kisthner;Binder;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-0575 (Lorennz Khister) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0568;1554-12-18;;Hanns Khumiß;hans_kumiss;Buchbinder;;Sonstiges Handwerk;Hannß Haußhan.;hans_hausshan;;;;;;ja;
 BB-0569;1554-12-19;;Melchior Huebmer;melchior_huebmer;Gürtler;;Metall & Waffen;;;;Erstmalig vorstellig am 5. Januar 1554.;;; Den 19. Decembris anno etc. im 54isten haben hernachgeschribme Burger vor der erwellung den aydt gethan.;ja;
 BB-0570;1554-12-19;;Pangraz Fischer;pangraz_fischer;;;;;;;Erstmalig vorstellig am 16. März 1554.;;;;;
@@ -597,14 +597,14 @@ BB-0595;1555-01-29;;Wilhalbm Petterstorffer;wilhelm_petterstorffer;;;;;;;;;;;;
 BB-0596;1555-02-12;;Matheusen Pockhbader;matthaeus_pockbader;Schneider;;Textil & Bekleidung;Wolf Storer.;wolf_storer;;;;;;ja;
 BB-0597;1555-03-08;;Thoman Pollreiter;thomas_pollreiter;Bogenbauer;;Metall & Waffen;;;;;;;;ja;
 BB-0598;1555-03-29;;Georg Khopfauer;georg_kopfauer;Wagner;;Holz, Bau & Stein;;;;;;;;ja;
-BB-0599;1555-04-05;;Benedict Khemer;benedikt_kemer;;;;Wolfganng Ziegler (Müller).;wolfgang_ziegler;Müller;;;;;;
+BB-0599;1555-04-05;;Benedict Khemer;benedikt_kemer;;;;Wolfganng Ziegler (Müller).;wolfgang_ziegler;Müller;;;;;;Mit BB-0612 (Benedict Femer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0600;1555-05-03;;Jacob Frollich;jakob_frollich;Bürstenbinder;;Sonstiges Handwerk;Hanns Agersch, Hanns Linndenschmiedt.;hans_agersch|hans_linndenschmiedt;;;;;;ja;
 BB-0601;1555-06-14;;Wolfganngen Paur;wolfgang_bauer;Kammmacher;;Sonstiges Handwerk;Jacob Anndre, Jorg Rieder.;jakob_anndre|georg_rieder;;;;;;ja;
 BB-0602;1555-06-21;;Hanns Turmair;hans_turmair;Bäcker;;Lebensmittelhandwerk;Sigmundt Gauz (Bürger zu Stein).;sigmund_gauz;;;;;;ja;
-BB-0603;1555-06-28;;Valtin Germhan;valentin_germhan;Schlosser;;Metall & Waffen;Jacob Wallkhircher (Sporer), Hanns Dröscher.;jakob_wallkhircher|hans_droescher;Sporer|;;;;;ja;
+BB-0603;1555-06-28;;Valtin Germhan;valentin_germhan;Schlosser;;Metall & Waffen;Jacob Wallkhircher (Sporer), Hanns Dröscher.;jakob_wallkhircher|hans_droescher;Sporer|;;;;;ja;Mit BB-0614 (Valtin Hermhan) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0604;1555-08-30;;Davidt Lorennz;david_lorennz;Drechsler;;Holz, Bau & Stein;Michael Sailler.;michael_seiler;;;;;;ja;
 BB-0605;1555-08-30;;Gregor Moller;gregor_moller;Schuster;;Leder & Pelz;;;;;;;;ja;
-BB-0606;1555-08-30;;Larennz Aichperger;laurenz_aichperger;Schneider;;Textil & Bekleidung;Wolf Gradt, Hanns Linndenschmidt.;wolf_gradt|hans_linndenschmidt;;;;;;ja;
+BB-0606;1555-08-30;;Larennz Aichperger;laurenz_aichperger;Schneider;;Textil & Bekleidung;Wolf Gradt, Hanns Linndenschmidt.;wolf_gradt|hans_linndenschmidt;;;;;;ja;Mit BB-0616 (Lorennz Aichperger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0607;1555-09-06;;Cristoff Räbl;christoph_raebl;Fleischhacker;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0608;1555-11-19;;Michaelln Fellnkhessl;michael_fellnkhessl;Klampferer;;Metall & Waffen;Peter Spizl.;peter_spizl;;;;;;ja;
 BB-0609;1555-12-22;;Michael Khaiser;michael_kaiser;Hutmacher;;Textil & Bekleidung;;;;Erstmalig vorstellig am 8. Januar 1555.;;;Montag den 22. Decembris anno etc. im 55isten haben hernachbenennte Burger vor der erwellung den aidt gethan.;ja;
@@ -619,7 +619,7 @@ BB-0617;1555-12-22;;Cristoff Räbl;christoph_raebl;Fleischhacker;;Lebensmittelha
 BB-0618;1555-12-22;;Hanns Walch;hans_walch;Maurer;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0619;1555-12-22;;Georg Straub;georg_straub;;;;;;;;;;;;
 BB-0620;1555-12-22;;Georg Trütkhl;georg_truetkhl;;;;;;;;;;;;
-BB-0621;1555-12-22;;Caspar Gerinnger;kaspar_gerinnger;;;;;;;;;;;;
+BB-0621;1555-12-22;;Caspar Gerinnger;kaspar_gerinnger;;;;;;;;;;;;Mit BB-0722 (Caspar Geringer), BB-0985 (Caspar Geringer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0622;1555-12-22;;Anndre Pez;andreas_pez;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0623;1555-12-22;;Leopoldt Mair;leopold_mayr;Kürschner;;Leder & Pelz;;;;;;;;ja;
 BB-0624;1555-12-22;;Collman Fuhrman;koloman_fuhrmann;;;;;;;;;;;;
@@ -663,14 +663,14 @@ BB-0661;1556-06-12;;Ambrosy Winnckhler;ambrosius_winckler;;;;;;;;;;;;
 BB-0662;1556-07-03;;Gilg Eder;aegidius_eder;Branntweinhändler;;Gastgewerbe & Getraenke;;;;;;;;ja;
 BB-0663;1556-07-10;;Paullus Mülbacher;paul_muelbacher;Zimmermann;;Holz, Bau & Stein;Steffan Pranntmair (Kürschner).;stephan_pranntmair;Kürschner;Erstmalig vorstellig am 5. Juni 1556.;;;;ja;
 BB-0664;1556-07-21;;Urban Khaltnegger;urban_kaltnegger;;;;;;;;;;;;
-BB-0665;1556-07-21;;Georg Perg;georg_perg;Barbier;;Gesundheit;Jacob Sackhl.;jakob_sackl;;;;;;ja;
+BB-0665;1556-07-21;;Georg Perg;georg_perg;Barbier;;Gesundheit;Jacob Sackhl.;jakob_sackl;;;;;;ja;Mit BB-0679 (Georg Perger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0666;1556-08-07;;Dionisi Puerer;dionysius_puerer;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0667;1556-08-07;;Hannsen Widenman;hans_widenman;Barchentweber;;Textil & Bekleidung;;;;;;;;ja;
 BB-0668;1556-11-06;;Cristoff Fölsz;christoph_foelss;;;;;;;;;;;;
 BB-0669;1556-11-20;;Hanns Widenman;hans_widenman;Barchentweber;;Textil & Bekleidung;Hanns Mersch (Schneider), Leonnhart Grieß (Müller).;hans_mersch|leonnhart_griess;Schneider|Müller;Erstmalig vorstellig am 7. August 1556.;;;;ja;
 BB-0670;1556-11-20;;Hainrich Khrauß;heinrich_krauss;Hutmacher;;Textil & Bekleidung;Jacob Anndre.;jakob_anndre;;;;;;ja;
-BB-0671;1556-12-04;;Annthoni Khärl;anton_kaerl;Tischler;;Holz, Bau & Stein;Cristoff Ruodsperger.;christoph_ruodsperger;;;;;;ja;
-BB-0672;1556-12-04;;Blasy Freiwalt;blasius_freiwalt;Weißgerber;;Leder & Pelz;Bartlme Liechtenauer.;bartholomaeus_liechtenauer;;;;;;ja;
+BB-0671;1556-12-04;;Annthoni Khärl;anton_kaerl;Tischler;;Holz, Bau & Stein;Cristoff Ruodsperger.;christoph_ruodsperger;;;;;;ja;Mit BB-0681 (Annthoni Kharl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-0672;1556-12-04;;Blasy Freiwalt;blasius_freiwalt;Weißgerber;;Leder & Pelz;Bartlme Liechtenauer.;bartholomaeus_liechtenauer;;;;;;ja;Mit BB-0682 (Blasy Freiwaldt) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0673;1556-12-22;;Hanns Pranntstetter;hans_pranntstetter;Binder;;Holz, Bau & Stein;;;;Erstmalig vorstellig am 28. Februar 1556.;;;Hernachbeschribme burger haben den 22. Decembris anno etc. im 56isten vor erwellung den aidt gethan.;ja;
 BB-0674;1556-12-22;;Steffan Schneider;stephan_schneider;Sieber;;Sonstiges Handwerk;;;;Erstmalig vorstellig am 10. März 1556.;;;;ja;
 BB-0675;1556-12-22;;Wolfganng Khlampfl;wolfgang_klampfl;Schlosser;;Metall & Waffen;;;;Erstmalig vorstellig am 17. April 1556 und am 5. Juni 1556.;;;;ja;
@@ -682,7 +682,7 @@ BB-0680;1556-12-22;;Hanns Widenman;hans_widenman;Barchentweber;;Textil & Bekleid
 BB-0681;1556-12-22;;Annthoni Kharl;anton_kaerl;Tischler;;Holz, Bau & Stein;;;;Erstmalig vorstellig am 4. Dezember 1556.;;;;ja;"personen_id vereinheitlicht (vorher anton_karl): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0671 (""Annthoni Khärl"", Ähnlichkeit 1.0) - dieselbe Person."
 BB-0682;1556-12-22;;Blasy Freiwaldt;blasius_freiwalt;Weißgerber;;Leder & Pelz;;;;Erstmalig vorstellig am 4. Dezember 1556.;;;;ja;"personen_id vereinheitlicht (vorher blasius_freiwaldt): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0672 (""Blasy Freiwalt"", Ähnlichkeit 0.966) - dieselbe Person."
 BB-0683;1556-12-22;;Adam Handl;adam_handl;;;;;;;;;;;;
-BB-0684;1556-12-22;;Caspar Gerinnger;kaspar_gerinnger;;;;;;;Erstmalig vorstellig am 22. Dezember 1555.;;;;;
+BB-0684;1556-12-22;;Caspar Gerinnger;kaspar_gerinnger;;;;;;;Erstmalig vorstellig am 22. Dezember 1555.;;;;;Mit BB-0722 (Caspar Geringer), BB-0985 (Caspar Geringer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0685;1556-12-22;;Leonhart Punngartner;leonhard_punngartner;Lebzelter;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0686;1556-12-22;;Jaseph Grafenpeckh;joseph_grafenpeck;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-0687;1556-12-22;;Ulrich Khneissl;ulrich_kneissl;;;;;;;;;;;;
@@ -693,13 +693,13 @@ BB-0691;1556-12-22;;Lorennz Bischof;lorenz_bischof;Schlosser;;Metall & Waffen;;;
 BB-0692;1557-01-08;;Hanns Unfridt;hans_unfridt;Binder;;Holz, Bau & Stein;Michael Khlerpaumb (Bürger zu Krems), N. Khreuß (Binder) (Bürger zu Krems).;michael_klerbaum|n_krauss;|Binder;;;;;ja;
 BB-0693;1557-01-26;;Georg Lannckhmair;georg_lannckmair;Hafner;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0694;1557-02-05;;Joseph Khrumpolz;joseph_krumpolz;Binder;;Holz, Bau & Stein;;;;;;;;ja;
-BB-0695;1557-02-12;;Larenntz Frollich;laurenz_frollich;;;;;;;;;;;;
+BB-0695;1557-02-12;;Larenntz Frollich;laurenz_frollich;;;;;;;;;;;;Mit BB-0713 (Lorennz Fröllich) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0696;1557-03-05;;Georg Voller;georg_voller;;;;;;;;;;;;
-BB-0697;1557-03-05;;Hanns Pürckhl;hans_puerckl_2;;;;;;;;;;;;
+BB-0697;1557-03-05;;Hanns Pürckhl;hans_puerckl_2;;;;;;;;;;;;Mit BB-0731 (Hanns Puerckhl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0698;1557-03-26;;Paulln Otto;paul_otta;;;;;;;;;;;;
 BB-0699;1557-04-05;;Geörgen Geir;georg_geyr;;;;;;;Khallingers furschrifft.;;;;;
 BB-0700;1557-04-30;;Merth Neuber;martin_neuber;Bildschnitzer;;Kunst, Musik & Unterhaltung;;;;;;;;ja;
-BB-0701;1557-06-04;;Matheus Düerstperger;matthaeus_dueerstperger;;;;Hanns Freithafer.;hans_freithafer;;;;;;;
+BB-0701;1557-06-04;;Matheus Düerstperger;matthaeus_dueerstperger;;;;Hanns Freithafer.;hans_freithafer;;;;;;;Mit BB-0715 (Matheus Tierstperger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0702;1557-07-16;;Michael Sacherl;michael_sacherl;Sporer;;Metall & Waffen;Hanns Holzinger, Cristoff Lanng.;hans_holzinger|christoph_lanng;;;;;;ja;
 BB-0703;1557-07-16;;Hanns Tham;hans_thamb;Goldschmied;;Metall & Waffen;;;;;;;;ja;
 BB-0704;1557-08-13;;Sebastian Resch;sebastian_resch;;;;;;;;;;;;
@@ -742,7 +742,7 @@ BB-0740;1557-12-18;;Leonhart Hardegger;leonhard_hardegger;Binder;;Holz, Bau & St
 BB-0741;1557-12-18;;Adam Händl;adam_haendl;;;;;;;;;;;;
 BB-0742;1557-12-18;;Paull Otta;paul_otta;;;;;;;;;;;;
 BB-0743;1558-01-21;;Wölfl Edmair;woelfl_edmair;;;;;;;;;;;;
-BB-0744;1558-03-11;;Hanns Härpl;hans_haerpl;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
+BB-0744;1558-03-11;;Hanns Härpl;hans_haerpl;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;Mit BB-0765 (Hanns Harpl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0745;1558-03-11;;Leonharten Eder;leonharten_eder;Bäckerknecht;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0746;1558-03-28;;Utz Forsster;utz_forsster;Seiler, Schiffmann;;Transport & Wasserwesen;Michael Khegl, Hanns Drescher.;michael_kegl|hans_drescher;;;;;;ja;
 BB-0747;1558-05-20;;Geörg Khaller;georg_kaller;Fischer;;Lebensmittelhandwerk;Prannthueber.;prannthueber;;;;;;ja;
@@ -750,10 +750,10 @@ BB-0748;1558-06-03;;Thobias Schwarzenperger;tobias_schwarzenperger;;;;Wolfganng 
 BB-0749;1558-06-17;;Michael Pruggmair;michael_pruggmair;Kupferschmied;;Metall & Waffen;Hanns Gmundtner (Bürger zu Krems), Wolfganng Khaupl (Schmied) (Bürger zu Krems).;hans_gmundtner|wolfgang_kaupl;|Schmied;;;;;ja;
 BB-0750;1558-06-17;;Hanns Pranntlsperger;hans_pranntlsperger;Müller;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0751;1558-08-02;;Cristoffen Pöringer;christoph_poeringer;;;;;;;;;;;;
-BB-0752;1558-08-12;;Cristoff Bernkhast;christoph_bernkhast;Goldschmied;;Metall & Waffen;Hanns Rath, Caspar Geringer.;hans_rath|kaspar_gerinnger;;;;;;ja;
+BB-0752;1558-08-12;;Cristoff Bernkhast;christoph_bernkhast;Goldschmied;;Metall & Waffen;Hanns Rath, Caspar Geringer.;hans_rath|kaspar_gerinnger;;;;;;ja;Mit BB-0758 (Cristoff Pernkhasst) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0753;1558-11-04;;Gilg Weinperger;aegidius_weinperger;Bäcker;;Lebensmittelhandwerk;Dionisy Rüerer (Bürger zu Stein), Wolfganng Grabmer (Bäcker) (Bürger zu Krems).;dionisy_rueerer|wolf_grabner;|Bäcker;;;;;ja;
 BB-0754;1558-11-17;;Georg Lechner;georg_lechner;Schneider;;Textil & Bekleidung;Barthlm Prannthueber.;barthlm_prannthueber;;;;;;ja;
-BB-0755;1558-11-18;;Jacob Feiell;jakob_feiell;Wagner;;Holz, Bau & Stein;;;;;;;;ja;
+BB-0755;1558-11-18;;Jacob Feiell;jakob_feiell;Wagner;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-0768 (Jacob Feigell) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0756;1558-12-02;;Petter Pruner;peter_brunner;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-0757;1558-12-02;;Fabian Bair;fabian_bayr;Schlosser;;Metall & Waffen;Hanns Dröscher, Georg Zeitler (Riemer).;hans_droescher|georg_zeitler;|Riemer;;;;;ja;
 BB-0758;1558-12-17;;Cristoff Pernkhasst;christoph_bernkhast;Goldschmied;;Metall & Waffen;;;;Erstmalig vorstellig am 12. August 1558.;;;Hernachbenennte burger haben den 17. tag Decembris A. im 58isten vor erwellung den aidt gethan.;ja;"personen_id vereinheitlicht (vorher christoph_pernkhasst): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0752 (""Cristoff Bernkhast"", Ähnlichkeit 0.919) - dieselbe Person."
@@ -784,17 +784,17 @@ BB-0782;1558-12-17;;Matheus Sulzpeckh;matthaeus_sulzpeck;Schiffmann;;Transport &
 BB-0783;1559-03-17;;Barthlme Suetz;bartholomaeus_suetz;;;;;;;;;;;;
 BB-0784;1559-03-17;;Georg Rambler;georg_rambler;;;;;;;;;;;;
 BB-0785;1559-03-17;;Georg Pusler;georg_pusler;;;;;;;;;;;;
-BB-0786;1559-06-09;;Georg Gmeinrath;georg_gmeinrath;Hutmacher;;Textil & Bekleidung;Wolfganng Kämpl, Wolfganng Thuermer (Schuster).;wolfgang_kaempl|wolfgang_thuermer;|Schuster;;;;;ja;
+BB-0786;1559-06-09;;Georg Gmeinrath;georg_gmeinrath;Hutmacher;;Textil & Bekleidung;Wolfganng Kämpl, Wolfganng Thuermer (Schuster).;wolfgang_kaempl|wolfgang_thuermer;|Schuster;;;;;ja;Mit BB-0804 (Georg Gmainrath) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0787;1559-06-30;;Steffan Tallinger;stephan_tallinger;;;;;;;;;;;;
 BB-0788;1559-08-04;;Georg Khagerer;georg_kagerer;;;;;;;;;;;;
 BB-0789;1559-08-25;;Thoman Seyr;thomas_seyr;Fragner;;Handel;Gilg Pleß (Messerschmied), Hanns Painstadl (Färber).;aegidius_pless|hans_painstadl;Messerschmied|Färber;;;;;ja;
-BB-0790;1559-08-29;;Michel Poiger;michael_poiger;Tischler;;Holz, Bau & Stein;Hanns Ernnsthofer (Drechsler), Anthoni Carl (Tischler).;hans_ernnsthofer|anthoni_karl;Drechsler|Tischler;;;;;ja;
-BB-0791;1559-09-15;;Thoman Oswaldt;thomas_oswaldt;Riemer;;Leder & Pelz;Hanns Holzinger (Riemer), Sigmundt Schachner (Sattler).;hans_holzinger|sigmund_schachner;Riemer|Sattler;;;;;ja;
+BB-0790;1559-08-29;;Michel Poiger;michael_poiger;Tischler;;Holz, Bau & Stein;Hanns Ernnsthofer (Drechsler), Anthoni Carl (Tischler).;hans_ernnsthofer|anthoni_karl;Drechsler|Tischler;;;;;ja;Mit BB-0808 (Michl Perger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-0791;1559-09-15;;Thoman Oswaldt;thomas_oswaldt;Riemer;;Leder & Pelz;Hanns Holzinger (Riemer), Sigmundt Schachner (Sattler).;hans_holzinger|sigmund_schachner;Riemer|Sattler;;;;;ja;Mit BB-0806 (Thoman Oßwalt) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0792;1559-09-15;;Wenndl Hartschmidt;wendelin_hartschmidt;Nadler;;Metall & Waffen;Hanns Stainer (Hafner), Wolfganng Thuerner (Schuster).;hans_stainer|wolfgang_thuerner;Hafner|Schuster;;;;;ja;
-BB-0793;1559-09-15;;Michael Poiger;michael_poiger;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
+BB-0793;1559-09-15;;Michael Poiger;michael_poiger;Tischler;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-0808 (Michl Perger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0794;1559-11-10;;Leonhart Werschhauser;leonhard_werschhauser;;;;Leonhart Caß (Schneider) (Bürger zu Krems), Hanns Vorsster (Schneider) (Bürger zu Krems).;leonhard_cass|hans_vorsster;Schneider|Schneider;;;;;;
 BB-0795;1559-11-24;;Blasy Dienwäri;blasius_dienwaeri;;;;;;;;;;;;
-BB-0796;1559-12-08;;Hanns Enndres;hans_enndres;Kammmacher;;Sonstiges Handwerk;Hanns Merch (Schneider), Matheus Khurz (Radschmied).;hans_merch|matthaeus_kurz;Schneider|Radschmied;;;;;ja;
+BB-0796;1559-12-08;;Hanns Enndres;hans_enndres;Kammmacher;;Sonstiges Handwerk;Hanns Merch (Schneider), Matheus Khurz (Radschmied).;hans_merch|matthaeus_kurz;Schneider|Radschmied;;;;;ja;Mit BB-0810 (Hanns Enndras) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0797;1559-12-13;;Sigmundt Eberwein;sigmund_eberwein;;;;;;;;;;;;
 BB-0798;1559-12-13;;Wilhalbmen Albrechten;wilhelm_albrechten;;;;;;;;;;;;
 BB-0799;1559-12-15;;Cristoff Auer;christoph_auer;;;;Gilg Vischer, Peter Prunner.;aegidius_fischer|peter_brunner;;;;;;;
@@ -827,17 +827,17 @@ BB-0825;1560-03-29;;Wolfganng Teibler;wolfgang_teibler;Fleischhacker;;Lebensmitt
 BB-0826;1560-05-02;;Georg Fischer;georg_fischer;Steinmetz;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0827;1560-05-03;;Wolfganng Weichler;wolfgang_weichler;Maurer;;Holz, Bau & Stein;Martlme Winnckhler, Leopoldt Khornhauff (Steinmetz).;martlme_winckler|leopold_kornhauff;|Steinmetz;;;;;ja;
 BB-0828;1560-05-10;;Hanns Pannzer;hans_pannzer;;;;;;;;;;;;
-BB-0829;1560-05-28;;Matheus Cramer;matthaeus_cramer;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
+BB-0829;1560-05-28;;Matheus Cramer;matthaeus_cramer;Tischler;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-0867 (Matheus Khramer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0830;1560-05-31;;Eman Panthaleon;eman_panthaleon;;;;Ambrosy Winckhler.;ambrosius_winckler;;;;;;;
 BB-0831;1560-06-14;;Sigmunndt Barz;sigmund_barz;Schneider;;Textil & Bekleidung;;;;;;;;ja;
 BB-0832;1560-06-21;;Georg Stadlman;georg_stadlman;;;;;;;;;;;;
 BB-0833;1560-06-21;;Hanns Vassl;hans_vassl;Schneider;;Textil & Bekleidung;Michl Khlerpaumb (Seiler).;michael_klerbaum;Seiler;;;;;ja;
-BB-0834;1560-08-30;;Hannsen Frischauf;hans_frischauf;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
-BB-0835;1560-09-13;;Leonharten Hickhenstallers;leonhart_hickenstaller;Schiffmann;;Transport & Wasserwesen;;;;;;;;ja;
+BB-0834;1560-08-30;;Hannsen Frischauf;hans_frischauf;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;Mit BB-0850 (Hanns Freschauf) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-0835;1560-09-13;;Leonharten Hickhenstallers;leonhart_hickenstaller;Schiffmann;;Transport & Wasserwesen;;;;;;;;ja;Mit BB-0877 (Leonhart Hickhenstaller), BB-0924 (Leonhardt Hickherstaller) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0836;1560-09-13;;Thoman Purglechner;thomas_purglechner;Leineweber;;Textil & Bekleidung;;;;;;;;ja;
 BB-0837;1560-12-03;;Hannsen Carl;hans_karl;Schreiner;;Holz, Bau & Stein;Hanns Fürst (Schneider), Hanns Arbeiller (Schlosser).;hans_fuerst|hans_arbeiller;Schneider|Schlosser;;;;;ja;
 BB-0838;1560-12-03;;Utzen Rinnderer;utz_rinnderer;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
-BB-0839;1560-12-13;;Jheronimus Welser;hieronimus_welser;Goldschmied;;Metall & Waffen;Maister Anndre (Goldschmied), Seiz Meserer.;maister_anndre|seiz_meserer;Goldschmied|;;;;;ja;
+BB-0839;1560-12-13;;Jheronimus Welser;hieronimus_welser;Goldschmied;;Metall & Waffen;Maister Anndre (Goldschmied), Seiz Meserer.;maister_anndre|seiz_meserer;Goldschmied|;;;;;ja;Mit BB-0853 (Jheronimus Wellser) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0840;1560-12-19;;Blasy Müller;blasius_muellner;Drechsler;;Holz, Bau & Stein;Ambrosy Winnckhler (Bürger zu Krems), Rueprecht Frech (Bürger zu Krems).;ambrosius_winckler|ruprecht_frech;;;;;;ja;
 BB-0841;1560-12-19;;Wolfganngen Khopferl;wolfgang_kopferl;Schneider;;Textil & Bekleidung;Hanns Fürst (Schneider).;hans_fuerst;Schneider;;;;;ja;
 BB-0842;1560-12-19;;Sebastian Paungartner;sebastian_paungartner;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
@@ -879,16 +879,16 @@ BB-0877;1560-12-19;;Leonhart Hickhenstaller;leonhart_hickenstaller;;;;;;;Erstmal
 BB-0878;1560-12-19;;Michl Friesinger;michael_friesinger;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-0879;1561-01-24;;Thoman Thanner;thomas_thanner;Bäcker;;Lebensmittelhandwerk;Hanns Gmundtner (Bäcker) (Bürger zu Krems), Hanns Arckhl (Bäcker) (Bürger zu Krems).;hans_gmundtner|hans_arckl;Bäcker|Bäcker;;;;;ja;
 BB-0880;1561-01-31;;Gregor Frischenschlag sonst;gregor_frischenschlag_sonst;;;;;;;;;;;;
-BB-0881;1561-02-14;;Georg Paungartner;georg_paungartner;Goldschmied;;Metall & Waffen;;;;;;;;ja;
+BB-0881;1561-02-14;;Georg Paungartner;georg_paungartner;Goldschmied;;Metall & Waffen;;;;;;;;ja;Mit BB-0923 (Georg Paungarnter) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0882;1561-03-21;;(Lnnprecht?) Popp;lamprecht_popp;Nestler;;Leder & Pelz;Jacob Anndre.;jakob_anndre;;;;;;ja;
 BB-0883;1561-05-09;;Hannsz Heusler;hans_heisler;Binder;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0884;1561-05-09;;Wolfganng Nepl;wolfgang_nepl;Nadler;;Metall & Waffen;Maister Jacob Niderholzer (Riemer).;maister_jacob_niderholzer;Riemer;;;;;ja;
-BB-0885;1561-05-13;;Geörgen Ritters;georg_ritters;;;;;;;;;;;;
+BB-0885;1561-05-13;;Geörgen Ritters;georg_ritters;;;;;;;;;;;;Mit BB-0889 (Georg Ritter) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0886;1561-05-13;;Joachims Priechl;joachim_priechl;Kupferschmied;;Metall & Waffen;;;;;;;;ja;
 BB-0887;1561-05-13;;Wolffen Khirchamers;wolf_kirchamers;Kupferschmied;;Metall & Waffen;;;;;;;;ja;
 BB-0888;1561-05-16;;Georg Khaltenprunner;georg_kaltenprunner;;;;Rueprecht Seiz (Messerschmied), Wolff Turner (Schuster).;ruprecht_seiz|wolf_turner;Messerschmied|Schuster;;;;;;
 BB-0889;1561-05-16;;Georg Ritter;georg_ritters;;;;;;;Erstmalig vorstellig am 13. Mai 1561.;;;;;"personen_id vereinheitlicht (vorher georg_ritter): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0885 (""Geörgen Ritters"", Ähnlichkeit 0.889) - dieselbe Person."
-BB-0890;1561-06-06;;Felix Holzpeundtner;felix_holzpeundtner;;;;;;;;;;;;
+BB-0890;1561-06-06;;Felix Holzpeundtner;felix_holzpeundtner;;;;;;;;;;;;Mit BB-0931 (Felix Holzpunntner) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0891;1561-06-20;;Georg Bayr;georg_bayr;;;;;;;In beide Städte aufgenommen.;;;;;
 BB-0892;1561-06-20;;Merth Schmidthugger;martin_schmidthueber;;;;Bartlme Prannthueber.;bartholomaeus_prannthueber;;;;;;;
 BB-0893;1561-07-04;;Hannsen Pachman;hans_pachman;Schneider;;Textil & Bekleidung;;;;;;;;ja;
@@ -897,7 +897,7 @@ BB-0895;1561-08-08;;Wolfganng Khöckh;wolfgang_koeck;Tischler;;Holz, Bau & Stein
 BB-0896;1561-08-08;;Thoman Hueber;thomas_hueber;Zimmermann;;Holz, Bau & Stein;Petter Rath.;peter_rath;;;;;;ja;
 BB-0897;1561-08-22;;Michaell Taninger;michael_taninger;;;;;;;;;;;;
 BB-0898;1561-08-29;;Cristoff Ursin;christoph_ursin;;;;;;;;;;;;
-BB-0899;1561-09-26;;Adam Seiffert;adam_seiffert;Tischler;;Holz, Bau & Stein;Matheuß Khramer (Tischler) (Bürger zu Stein).;matheuss_kramer;Tischler;;;;;ja;
+BB-0899;1561-09-26;;Adam Seiffert;adam_seiffert;Tischler;;Holz, Bau & Stein;Matheuß Khramer (Tischler) (Bürger zu Stein).;matheuss_kramer;Tischler;;;;;ja;Mit BB-0927 (Adam Seiffart) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0900;1561-10-10;;Georg Weishaimer;georg_weishaimer;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0901;1561-11-27;;Georgen Sternegger;georg_sternegger;;;;;;;;;;;;
 BB-0902;1561-12-05;;Georg Zwifl;georg_zwifl;Brotsitzer;;Handel;Hannß Gmundner (Bürger zu Krems und Stein), Dionisy Rierer (Bürger zu Krems und Stein).;hans_gmundner|dionisy_rierer;;;;;;ja;
@@ -918,7 +918,7 @@ BB-0916;1561-12-20;;Benedict Preiß;benedikt_preiss;Drechsler;;Holz, Bau & Stein
 BB-0917;1561-12-20;;Georg Olbm;georg_olbm;Müller;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-0918;1561-12-20;;Thoman Ratl;thomas_ratl;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0919;1561-12-20;;Georg Vischer;georg_fischer;Steinmetz;;Holz, Bau & Stein;;;;Erstmalig vorstellig am 2. Mai 1560.;;;;ja;
-BB-0920;1561-12-20;;Bartlmee Sieß;bartholomaeus_siess;;;;;;;;;;;;
+BB-0920;1561-12-20;;Bartlmee Sieß;bartholomaeus_siess;;;;;;;;;;;;Mit BB-0987 (Bartlme Süez) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0921;1561-12-20;;Joachimb Priechl;joachim_priechl;Kupferschmied;;Metall & Waffen;;;;;;;;ja;
 BB-0922;1561-12-20;;Gregor Feischerschlag sonnst;gregor_feischerschlag_sonnst;;;;;;;;;;;;
 BB-0923;1561-12-20;;Georg Paungarnter;georg_paungartner;Goldschmied;;Metall & Waffen;;;;Nit geschworen. | Erstmalig vorstellig am 14. Februar 1561.;;;;ja;"personen_id vereinheitlicht (vorher georg_paungarnter): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0881 (""Georg Paungartner"", Ähnlichkeit 0.941) - dieselbe Person."
@@ -928,7 +928,7 @@ BB-0926;1561-12-20;;Cristoff Ursin;christoph_ursin;;;;;;;Nit geschworen. | Erstm
 BB-0927;1561-12-20;;Adam Seiffart;adam_seiffert;Tischler;;Holz, Bau & Stein;;;;Nit geschworen. | Erstmalig vorstellig am 26.September 1561.;;;;ja;"personen_id vereinheitlicht (vorher adam_seiffart): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0899 (""Adam Seiffert"", Ähnlichkeit 0.923) - dieselbe Person."
 BB-0928;1561-12-20;;Georg Zwifl;georg_zwifl;Brotsitzer;;Handel;;;;Nit geschworen. | Erstmalig vorstellig am 5. Dezember 1561.;;;;ja;
 BB-0929;1561-12-20;;Cristoff Praun;christoph_braun;;;;;;;Nit geschworen. | Erstmalig vorstellig am 12. Dezember 1561.;;;;;
-BB-0930;1561-12-20;;Matheuß Weishäpl;matthaeus_weishaepl;;;;;;;Nit geschworen.;;;;;
+BB-0930;1561-12-20;;Matheuß Weishäpl;matthaeus_weishaepl;;;;;;;Nit geschworen.;;;;;Mit BB-0948 (Matheuß Weishapl), BB-1007 (Mathias Weißhapl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0931;1561-12-20;;Felix Holzpunntner;felix_holzpeundtner;;;;;;;Nit geschworen. | Erstmalig vorstellig am 6. Juni 1561.;;;;;"personen_id vereinheitlicht (vorher felix_holzpunntner): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0890 (""Felix Holzpeundtner"", Ähnlichkeit 0.919) - dieselbe Person."
 BB-0932;1561-12-20;;Geörg Vitter;georg_vitter;;;;;;;Nit geschworen.;;;;;
 BB-0933;1561-12-20;;Wolfganng Schenndler;wolfgang_schenndler;Fischer;;Lebensmittelhandwerk;;;;Nit geschworen.;;;;ja;
@@ -947,7 +947,7 @@ BB-0945;1562-07-31;;Phillippen Fröschls;phillip_froeschls;;;;Georg Faider (Schu
 BB-0946;1562-08-21;;Georg Wabenperger;georg_wabenperger;Binder;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0947;1562-08-21;;Hainrich Wagner;heinrich_wagner;Schlosser;;Metall & Waffen;Merth Neuber.;martin_neuber;;;;;;ja;
 BB-0948;1562-11-10;;Matheuß Weishapl;matthaeus_weishaepl;;;;;;;Erstmalig vorstellig am 20. Dezember 1561.;;;;;"personen_id vereinheitlicht (vorher matthaeus_weishapl): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0930 (""Matheuß Weishäpl"", Ähnlichkeit 1.0) - dieselbe Person."
-BB-0949;1562-11-10;;Veith Puchler;veit_puchler;;;;;;;;;;;;
+BB-0949;1562-11-10;;Veith Puchler;veit_puchler;;;;;;;;;;;;Mit BB-0961 (Veith Püchler) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0950;1562-11-13;;Wolfganng Perger;wolfgang_perger;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-0951;1562-11-27;;Hannsß Ortner;hans_ortner;Fasszieher;;Holz, Bau & Stein;Hannß Mersch (Schneider), Sihmundt Schuester.;hans_mersch|sihmundt_schuester;Schneider|;;;;;ja;
 BB-0952;1562-11-27;;Tibolt Egerers;tibolt_egerers;Bürstenbinder;;Sonstiges Handwerk;Sebastian Mamhofer (Schuster).;sebastian_mamhofer;Schuster;;;;;ja;
@@ -971,14 +971,14 @@ BB-0969;1563-01-12;;Adrian Panndtvogl;adrian_panndtvogl;Steinmetz;;Holz, Bau & S
 BB-0970;1563-02-12;;Georgen Rechling;georg_rechling;Bäcker;;Lebensmittelhandwerk;Veitt Lechner, Hanns Gruebpaur.;veit_lechner|hans_gruebpaur;;;;;;ja;
 BB-0971;1563-03-19;;Barllmeen Lackhners;bartholomaeus_lackner;Wagner;;Holz, Bau & Stein;;;;;;;;ja;
 BB-0972;1563-05-07;;Paull Schreiner;paul_schreiner;Sieber;;Sonstiges Handwerk;Michaell Khlepaumb (Seiler).;michaell_klerbaum;Seiler;;;;;ja;
-BB-0973;1563-05-25;;Wolffgang Gruendlinger;wolfgang_gruendlinger;Kürschner;;Leder & Pelz;;;;;;;;ja;
+BB-0973;1563-05-25;;Wolffgang Gruendlinger;wolfgang_gruendlinger;Kürschner;;Leder & Pelz;;;;;;;;ja;Mit BB-0978 (Wolffganngen Ginndlinger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0974;1563-05-25;;Joachim Gaunerstorffer;joachim_gaunerstorffer;;;;;;;;;;;;
 BB-0975;1563-06-08;;Tallinger Vleischakcher;tallinger_vleischakcher;;;;;;;;;;;;
 BB-0976;1563-06-08;;Larenz Langschedl;larenz_langschedl;;;;;;;;;;;;
 BB-0977;1563-06-22;;Micheln Weilpacher;michael_weilpacher;;;;;;;;;;;;
 BB-0978;1563-06-22;;Wolffganngen Ginndlinger;wolfgang_gruendlinger;;;;;;;Erstmalig vorstellig am 25. Mai 1563 unter Wolffgang Gruendlinger.;;;;;"personen_id vereinheitlicht (vorher wolfgang_ginndlinger): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0973 (""Wolffgang Gruendlinger"", Ähnlichkeit 0.826) - dieselbe Person."
 BB-0979;1563-07-09;;Thoman Eder;thomas_eder;Ringmacher;;Sonstiges Handwerk;Hannß Faden (Beutler).;hans_faden;Beutler;;;;;nein;"Zuordnung zu Wirtschaftssektor unsicher: Bedeutung/Zuordnung des Berufs ""Ringmacher"" nicht eindeutig klärbar."
-BB-0980;1563-07-16;;Wolffen Stueller;wolf_stueller;;;;;;;;;;;;
+BB-0980;1563-07-16;;Wolffen Stueller;wolf_stueller;;;;;;;;;;;;Mit BB-0982 (Wolffganng Stueller) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-0981;1563-07-16;;Hannsen Stainsaillers;hans_stainsaillers;;;;;;;;;;;;
 BB-0982;1563-08-06;;Wolffganng Stueller;wolf_stueller;;;;;;;Erstmalig vorstellig am 16. Juli 1563 unter Wolffen Stueller.;;;;;"personen_id vereinheitlicht (vorher wolfgang_stueller): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-0980 (""Wolffen Stueller"", Ähnlichkeit 0.857) - dieselbe Person."
 BB-0983;1563-09-07;;Valltin Hesell;valentin_hesell;Schneider;;Textil & Bekleidung;Gilg Plaß.;aegidius_plass;;;;;;ja;
@@ -1017,7 +1017,7 @@ BB-1015;1564-07-18;;Sebastian Stainegger;sebastian_stainegger;Hutmacher;;Textil 
 BB-1016;1564-08-04;;Hanns Obermair;hans_obermair;Bürstenbinder;;Sonstiges Handwerk;Jacob Anndre.;jakob_anndre;;;;;;ja;
 BB-1017;1564-08-11;;Jacob Beitlschiesz;jakob_beitlschiess;Sattler, Riemer, Kummetmacher;;Leder & Pelz;;;;;;;;ja;
 BB-1018;1564-09-05;;Niclasen Tyrringers;niklas_tyrringers;Kramer;;Handel;;;;;;;;ja;
-BB-1019;1564-09-15;;Leonnhardt Sauller;leonnhardt_seiler;Bäckerjunge;;Lebensmittelhandwerk;;;;;;;;ja;
+BB-1019;1564-09-15;;Leonnhardt Sauller;leonnhardt_seiler;Bäckerjunge;;Lebensmittelhandwerk;;;;;;;;ja;Mit BB-1022 (Leonhardt Sauller), BB-1055 (Leonhardt Sailler) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1020;1564-10-12;;Steffan Huetters;stephan_huetters;Maurer;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1021;1564-10-12;;Adamen Huetters sonn;adam;Lederer;;Leder & Pelz;;;;;;;;ja;
 BB-1022;1564-11-21;;Leonhardt Sauller;leonnhardt_seiler;Bäcker;;Lebensmittelhandwerk;Georg Rorer (Hafner), Hannß Gruebpaur.;georg_rorer|hans_gruebpaur;Hafner|;Erstmalig vorstellig am 15. September 1564.;;;;ja;"personen_id vereinheitlicht (vorher leonhard_seiler): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1019 (""Leonnhardt Sauller"", Ähnlichkeit 0.971) - dieselbe Person."
@@ -1033,17 +1033,17 @@ BB-1031;1564-12-27;;Thoman Weichslpaumb;thomas_weichselbaum;Teppichmacher;;Texti
 BB-1032;1564-12-27;;Daniel Reichardt;daniel_reichart;Plattner;;Metall & Waffen;;;;;;;;ja;
 BB-1033;1565-01-26;;Marthin Reichl;martin_reichl;;;;;;;;;;;;
 BB-1034;1565-01-30;;Blasien Ennzesperger;blasius_enzesperger;;;;;;;;;;;;
-BB-1035;1565-02-09;;Melchior Gerber;melchior_gerber;Weißgerber;;Leder & Pelz;Hannß Gmundtner, Jacob Anndre.;hans_gmundtner|jakob_anndre;;;;;;ja;
+BB-1035;1565-02-09;;Melchior Gerber;melchior_gerber;Weißgerber;;Leder & Pelz;Hannß Gmundtner, Jacob Anndre.;hans_gmundtner|jakob_anndre;;;;;;ja;Mit BB-1067 (Melchior Gärber) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1036;1565-05-04;;Merthen Puechenstainer;martin_puechenstainer;Wirt;;Gastgewerbe & Getraenke;;;;;;;;ja;
-BB-1037;1565-05-04;;Sebastian Tiblingers;sebastian_tiblingers;Zimmermann;;Holz, Bau & Stein;;;;;;;;ja;
+BB-1037;1565-05-04;;Sebastian Tiblingers;sebastian_tiblingers;Zimmermann;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-1056 (Sebastian Toblinger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1038;1565-05-11;;Gall Retting;gall_retting;Seiler;;Transport & Wasserwesen;Jacob Peigel (Wagner).;jakob_peigel;Wagner;;;;;ja;
 BB-1039;1565-06-08;;Wilhalbm Angerpeckh;wilhelm_angerpeck;;;;;;;;;;;;
 BB-1040;1565-07-16;;Wolffen Haidenreich;wolf_haidenreich;;;;;;;;;;;;
 BB-1041;1565-08-23;;Hainrich Stachl;heinrich_stachl;Büchsenschäfter;;Metall & Waffen;Hannß Marsch, Sigmundt Satler.;hans_marsch|sigmund_satler;;;;;;ja;
-BB-1042;1565-09-07;;Georgen Schwerthfarb;georg_schwerthfarb;Nagelschmied;;Metall & Waffen;;;;;;;;ja;
+BB-1042;1565-09-07;;Georgen Schwerthfarb;georg_schwerthfarb;Nagelschmied;;Metall & Waffen;;;;;;;;ja;Mit BB-1089 (Georg Schwerdtfurb) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1043;1565-09-11;;Wolffgang Reichl;wolfgang_reichl;;;;;;;;;;;;
 BB-1044;1565-11-17;;Wolffgang Katzperinnger;wolfgang_katzperinnger;;;;Georg Zobl (Bürger zu Stein), Michl Ralnchoßl (Bürger zu Stein).;georg_zobl|michael_ralnchossl;;;;;;;
-BB-1045;1565-12-14;;Leopoldt Kostlach;leopold_kostlach;;;;;;;;;;;;
+BB-1045;1565-12-14;;Leopoldt Kostlach;leopold_kostlach;;;;;;;;;;;;Mit BB-1062 (Leopoldt Cosstlach) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1046;1565-12-18;;Magnus Scheipl;magnus_scheipl;Hauer;;Landwirtschaft & Weinbau;Michl Rogl.;michael_rogl;;;;;;ja;
 BB-1047;1565-12-18;;Lorenz Lener;lorenz_lenner;Glaser;;Holz, Bau & Stein;Ottman Pfannenstill.;ottman_pfannenstill;;;;;;ja;
 BB-1048;1565-12-19;;Sigmundt Prandtner;sigmund_prandtner;Lederer;;Leder & Pelz;;;;;;;Hernach benente burger haben vor erwöllung den aidt gethan.;ja;
@@ -1084,17 +1084,17 @@ BB-1082;1566-02-15;;Andreen Langns;andreas_langns;Goldschmied;;Metall & Waffen;;
 BB-1083;1566-02-22;;Wolffgang Anzenauers;wolfgang_anzenauers;Maurer;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1084;1566-03-15;;Caspar Karl;kaspar_karl;;;;Vater Anthoni Carl (Tischler), Michel Peuger (Tischler).;vater_anthoni_karl|michael_peuger;Tischler|Tischler;;;;;;
 BB-1085;1566-03-22;;Jacob Annsperger;jakob_annsperger;Fleischhacker;;Lebensmittelhandwerk;;;;;;;;ja;
-BB-1086;1566-03-29;;Georgen Khorman;georg_korman;Beutler;;Leder & Pelz;;;;;;;;ja;
+BB-1086;1566-03-29;;Georgen Khorman;georg_korman;Beutler;;Leder & Pelz;;;;;;;;ja;Mit BB-1109 (Georg Hörman) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1087;1566-04-10;;Hannsen Gfeller;hans_gfeller;;;;;;;;;;;;
 BB-1088;1566-04-19;;Georg Preuer;georg_breuer;Lederer;;Leder & Pelz;;;;;;;;ja;
 BB-1089;1566-05-10;;Georg Schwerdtfurb;georg_schwerthfarb;Nagelschmied;;Metall & Waffen;Jacob Waldtkhircher (Sporer), Hanns Kuniß (Buchführer).;jakob_waldtkhircher|hans_kuniss;Sporer|Buchführer;Erstmalig vorstellig am 7. September 1565.;;;;ja;"personen_id vereinheitlicht (vorher georg_schwerdtfurb): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1042 (""Georgen Schwerthfarb"", Ähnlichkeit 0.842) - dieselbe Person."
-BB-1090;1566-05-10;;Georg Korman;georg_korman;Beutler;;Leder & Pelz;Jacob Merz, Andre Reispach.;jakob_merz|andreas_reispach;;Erstmalig vorstellig am 29. März 1566.;;;;ja;
+BB-1090;1566-05-10;;Georg Korman;georg_korman;Beutler;;Leder & Pelz;Jacob Merz, Andre Reispach.;jakob_merz|andreas_reispach;;Erstmalig vorstellig am 29. März 1566.;;;;ja;Mit BB-1109 (Georg Hörman) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1091;1566-05-10;;Leonhardt Mair;leonhard_mayr;Hofmeister;;Verwaltung, Recht & Bildung;;;;;;;;ja;
 BB-1092;1566-05-17;;Walthasar Schaffenrath;balthasar_schaffenrath;Weißgerber;;Leder & Pelz;;;;;;;;ja;
-BB-1093;1566-05-17;;Sebastian Wesstermair;sebastian_wesstermair;Gürtler;;Metall & Waffen;Adam Handl, Seyz Messerer.;adam_handl|seyz_messerer;;;;;;ja;
+BB-1093;1566-05-17;;Sebastian Wesstermair;sebastian_wesstermair;Gürtler;;Metall & Waffen;Adam Handl, Seyz Messerer.;adam_handl|seyz_messerer;;;;;;ja;Mit BB-1110 (Sebastian Westermair) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1094;1566-05-28;;Hanns Harpls;hans_harpls;;;;;;;;;;;;
 BB-1095;1566-06-28;;Pangraz Geyr;pangraz_geyr;Kampler;;Sonstiges Handwerk;;;;;;;;ja;
-BB-1096;1566-07-05;;Wilhalbm Krosperger;wilhelm_krosperger;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;
+BB-1096;1566-07-05;;Wilhalbm Krosperger;wilhelm_krosperger;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-1112 (Wilhalbm Kersperger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1097;1566-07-12;;Cristoffen Schnaidtenpordt;christoph_schnaidtenpordt;;;;;;;;;;;;
 BB-1098;1566-07-12;;Ambrosy Pecherl;ambrosius_pecherl;;;;Colman Lisst.;kolman_lisst;;;;;;;
 BB-1099;1566-08-30;;Georg Schaider;georg_schaider;;;;;;;;;;;;
@@ -1145,14 +1145,14 @@ BB-1143;1567-05-30;;Christoffen Steinzer;christoff_steinzer;Messerschmied;;Metal
 BB-1144;1567-06-03;;Merthen Friz;martin_friz;Wagner;;Holz, Bau & Stein;;;;Erstmalig vorstellig am 9. Mai 1567.;;;;ja;
 BB-1145;1567-06-06;;Georg Schenauers;georg_schenauers;Kotzenmacher, Deckenmacher;;Textil & Bekleidung;;;;;;;;ja;
 BB-1146;1567-06-20;;Petter Carl;peter_karl;Bildhauer, Tischler;;Kunst, Musik & Unterhaltung;;;;;;;;ja;
-BB-1147;1567-06-20;;Georg Stopf;georg_stopf;Hutmacher;;Textil & Bekleidung;Hanns Aeweiller (Schlosser).;hans_aeweiller;Schlosser;;;;;ja;
+BB-1147;1567-06-20;;Georg Stopf;georg_stopf;Hutmacher;;Textil & Bekleidung;Hanns Aeweiller (Schlosser).;hans_aeweiller;Schlosser;;;;;ja;Mit BB-1184 (Georg Stapf) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1148;1567-07-11;;Hannsz Weerthauff;hans_weerthauff;Bäckerjunge;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-1149;1567-07-11;;Wolffgang Mayr;wolfgang_mayr;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-1150;1567-08-05;;Lorenz Schnaidter;lorenz_schnaidter;Sattler;;Leder & Pelz;Michel Pruckhner.;michael_pruckner;;;;;;ja;
 BB-1151;1567-08-19;;Herman Gärtler;herman_gaertler;Hutmacher;;Textil & Bekleidung;Veit Lehner, Christoff Praittinger.;veit_lehner|christoph_praittinger;;;;;;ja;
-BB-1152;1567-08-29;;Andre Andresz;andreas_andress;Schneider;;Textil & Bekleidung;Bartlme Winckhler, Wilghaser Tallman.;bartholomaeus_winckler|wilghaser_tallman;;;;;;ja;
+BB-1152;1567-08-29;;Andre Andresz;andreas_andress;Schneider;;Textil & Bekleidung;Bartlme Winckhler, Wilghaser Tallman.;bartholomaeus_winckler|wilghaser_tallman;;;;;;ja;Mit BB-1196 (Andre Andres) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1153;1567-09-05;;Helias Hertnstain;elias_hertnstain;;;;Rätsch, Tanndl.;raetsch|tanndl;;;;;;;
-BB-1154;1567-09-23;;Hannsz Reisnstain;hans_reisnstain;Drechsler;;Holz, Bau & Stein;Ottman Pfannenstill, Blasy Mulner.;ottman_pfannenstill|blasius_muellner;;;;;;ja;
+BB-1154;1567-09-23;;Hannsz Reisnstain;hans_reisnstain;Drechsler;;Holz, Bau & Stein;Ottman Pfannenstill, Blasy Mulner.;ottman_pfannenstill|blasius_muellner;;;;;;ja;Mit BB-1180 (Hannß Reißnstain) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1155;1567-09-27;;Georg Hueber;georg_hueber;;;;;;;;;;;;
 BB-1156;1567-10-17;;Ulrich Wagnsperger;ulrich_wagnsperger;;;;;;;;;;;;
 BB-1157;1567-12-02;;Ulrich Prener;ulrich_breuer;Beutler;;Leder & Pelz;;;;;;;;ja;
@@ -1238,7 +1238,7 @@ BB-1236;1568-09-24;;Hannsz Weber;hans_weber;Schneider;;Textil & Bekleidung;Ambro
 BB-1237;1568-09-25;;Veit Reichel;veit_reichl;Bader;;Gesundheit;Peter Rat (Bürger zu Krems), Georg Zindler (Riemer) (Bürger zu Krems).;peter_rat|georg_zindler;|Riemer;;;;;ja;
 BB-1238;1568-11-05;;Hanns Khleblath;hans_kleblath;Schneider;;Textil & Bekleidung;;;;;;;;ja;
 BB-1239;1568-11-05;;Mert Friesz;martin_friess;Wagner;;Holz, Bau & Stein;;;;Erstmalig vorstellig am 3. Juni 1567.;;;;ja;
-BB-1240;1568-11-09;;Peter Widnerstorffer;peter_widnerstorffer;;;;;;;;;;;;
+BB-1240;1568-11-09;;Peter Widnerstorffer;peter_widnerstorffer;;;;;;;;;;;;Mit BB-1243 (Peter Widmerstorffer), BB-1269 (Peter Widmerstorffer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1241;1568-11-12;;Wolffen Forster;wolf_vorster;;;;;;;;;;;;
 BB-1242;1568-11-12;;Christoffen Puechner;christoph_puechner;;;;;;;Erstmalig vorstellig am 9. August 1568.;;;burgermaister, richter und rath beeder stet biß auf den aidt angelubdt. Darauf ime dann der begert abschiedt bewilligt.;;
 BB-1243;1568-11-12;;Peter Widmerstorffer;peter_widnerstorffer;;;;;;;Erstmalig vorstellig am 9. November 1568.;;;;;"personen_id vereinheitlicht (vorher peter_widmerstorffer): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1240 (""Peter Widnerstorffer"", Ähnlichkeit 0.95) - dieselbe Person."
@@ -1248,7 +1248,7 @@ BB-1246;1568-12-10;;Benedict Springer;benedikt_springer;Binder;;Holz, Bau & Stei
 BB-1247;1568-12-11;;Steffan Rarhofer;stephan_rarhofer;Schneider;;Textil & Bekleidung;Colman Lisst.;kolman_lisst;;Erstmalig vorstellig am 18. August 1568.;;;;ja;
 BB-1248;1568-12-11;;Hannsz Thier;hans_thier;Zinngießer;;Metall & Waffen;Veit Ratsch.;veit_ratsch;;;;;;ja;
 BB-1249;1568-12-11;;Hannsz Stainer;hans_stainer;;;;;;;;;;;;
-BB-1250;1568-12-14;;Wolff Rettenbacher;wolf_rettenbacher;;;;Paul Wurmb, Erhardt Feringer.;paul_wurmb|erhard_feringer;;;;;;;
+BB-1250;1568-12-14;;Wolff Rettenbacher;wolf_rettenbacher;;;;Paul Wurmb, Erhardt Feringer.;paul_wurmb|erhard_feringer;;;;;;;Mit BB-1284 (Wolff Rettenpacher) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1251;1568-12-17;;Wolff Christoffen;wolf_christoffen;Haubenmacher;ja;Textil & Bekleidung;;;;;;;Hernachbenente personen haben vor der erwöllung den burger aidt gethon.;ja;"Berufsbezeichnung ""Haubenmacher"" im Quellentext schwer leserlich bzw. Schreibweise/Lesart unsicher."
 BB-1252;1568-12-17;;Mert Ortner;martin_ortner;;;;;;;;;;;;
 BB-1253;1568-12-17;;Anndre Diendorffer;andreas_diendorffer;;;;;;;;;;;;
@@ -1298,15 +1298,15 @@ BB-1296;1568-12-17;;Sigmund Abstetter;sigmund_abstetter;Schneider;;Textil & Bekl
 BB-1297;1569-01-07;;Hannsz Voglgsang;hans_voglgsang;Bindergeselle;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1298;1569-02-25;;Lienhard Heiszpeckhen;lienhard_heisspeck;;;;;;;;;;;;
 BB-1299;1569-05-09;;Wolff Prandsteter;wolf_prandsteter;;;;;;;;;;;;
-BB-1300;1569-05-27;;Georg Oxlmair;georg_oxlmair;;;;Wilhalbm Pitterstorffer, Sebastian Rosch.;wilhalbm_pitterstorffer|sebastian_rosch;;;;;;;
+BB-1300;1569-05-27;;Georg Oxlmair;georg_oxlmair;;;;Wilhalbm Pitterstorffer, Sebastian Rosch.;wilhalbm_pitterstorffer|sebastian_rosch;;;;;;;Mit BB-1310 (Georg Ochslmair) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1301;1569-06-08;;Wolff Hofstetter;wolf_hoffstetter;;;;;;;;;;;;
 BB-1302;1569-06-10;;Georg Wornndl;georg_wornndl;;;;;;;;;;;;
 BB-1303;1569-06-17;;Eraszm Anwaiger;erasmus_anwaiger;Deckenmacher;;Textil & Bekleidung;;;;;;;;ja;
 BB-1304;1569-07-15;;Anndre Prunner;andreas_brunner;;;;Wilhalbm Anngerpeckh (Bürger zu Krems).;wilhelm_angerpeck;;;;;;;
 BB-1305;1569-07-19;;Hannsz Mosner;hans_mosner;Leineweber;;Textil & Bekleidung;Hannß Helbm.;hans_helbm;;;;;;ja;
-BB-1306;1569-08-05;;Wilhalbm Smidhueber;wilhelm_smidhueber;;;;;;;;;;;;
+BB-1306;1569-08-05;;Wilhalbm Smidhueber;wilhelm_smidhueber;;;;;;;;;;;;Mit BB-1311 (Wilhalbm Schmidthueber) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1307;1569-08-08;;Bärtlme Prieffer;bartholomaeus_prieffer;;;;Ulrich Wabmsperger (Bürger zu Stein).;ulrich_wabmsperger;;;;;;;
-BB-1308;1569-08-26;;Hannsz Schneyr;hans_schneyr;;;;Benedict Preiß.;benedikt_preiss;;;;;;;
+BB-1308;1569-08-26;;Hannsz Schneyr;hans_schneyr;;;;Benedict Preiß.;benedikt_preiss;;;;;;;Mit BB-1312 (Hanns Schneyer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1309;1569-12-22;;Thoman Schnotzinger;thomas_schnotzinger;;;;;;;;;;Hernachbenente burger haben den 22. Decembris anno im 69isten vor erwellung den aidt gethon.;;
 BB-1310;1569-12-22;;Georg Ochslmair;georg_oxlmair;Tuchscherer;;Textil & Bekleidung;;;;Erstmalig vorstellig am 27. Mai 1569.;;;;ja;"personen_id vereinheitlicht (vorher georg_ochslmair): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1300 (""Georg Oxlmair"", Ähnlichkeit 0.857) - dieselbe Person."
 BB-1311;1569-12-22;;Wilhalbm Schmidthueber;wilhelm_smidhueber;Zimmermann;;Holz, Bau & Stein;;;;Erstmalig vorstellig am 5. August 1569.;;;;ja;"personen_id vereinheitlicht (vorher wilhelm_schmidthueber): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1306 (""Wilhalbm Smidhueber"", Ähnlichkeit 0.927) - dieselbe Person."
@@ -1356,9 +1356,9 @@ BB-1354;1569-12-22;;Mathes Spaudl;matthaeus_spaudl;Hauer;;Landwirtschaft & Weinb
 BB-1355;1569-12-22;;Jeronimus Willtberger;hieronimus_willtberger;;;;;;;;;;;;
 BB-1356;1571-01-12;;Matheuß Khagerer;matthaeus_kagerer;;;;Ambrosin Riß, Paul Wurmb.;ambrosin_riss|paul_wurmb;;;;;;;
 BB-1357;1571-01-12;;Caspar Oßwalt;kaspar_osswalt;Schlosser;;Metall & Waffen;;;;;;;;ja;
-BB-1358;1571-02-08;;Fridrich Ostahueber;friedrich_ostahueber;Lederer;;Leder & Pelz;;;;;;;;ja;
+BB-1358;1571-02-08;;Fridrich Ostahueber;friedrich_ostahueber;Lederer;;Leder & Pelz;;;;;;;;ja;Mit BB-1398 (Fridrich Osthueber) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1359;1571-03-02;;Cristof Tallinger;christoph_tallinger;;;;;;;;;;;;
-BB-1360;1571-03-10;;Caspar Sandrer;kaspar_sandrer;Nagelschmied;;Metall & Waffen;;;;;;;;ja;
+BB-1360;1571-03-10;;Caspar Sandrer;kaspar_sandrer;Nagelschmied;;Metall & Waffen;;;;;;;;ja;Mit BB-1413 (Caspar Sanderer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1361;1571-03-10;;Lorentzen Portenhauser;lorenz_portenhauser;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-1362;1571-03-30;;Thoman Gumpoltzhamer;thomas_gumpoltzhamer;;;;Thoman Oßwolt (Riemer) (Bürger zu Krems), Voltin Schwesinger (Riemer) (Bürger zu Krems).;thomas_osswolt|voltin_schwesinger;Riemer|Riemer;;;;;;
 BB-1363;1571-04-20;;Hannßen Hirschlach;hannssen_hirschlach;Panzermacher;;Metall & Waffen;;;;;;;;ja;
@@ -1479,13 +1479,13 @@ BB-1477;1574-05-14;;Hansz Erbar;hans_erbar;Tischler;;Holz, Bau & Stein;;;;;;;;ja
 BB-1478;1574-05-14;;Mathias Troyer;matthias_troyer;;;;;;;;;;;;
 BB-1479;1574-05-19;;Hannß Seidner;hans_seidner;Nestler;;Leder & Pelz;;;;;;;;ja;
 BB-1480;1574-05-21;;Sigmundt Zipf;sigmund_zipf;;;;;;;;;;;;
-BB-1481;1574-05-28;;Christoff Pruckhner;christoph_pruckner;Kupferschmied;;Metall & Waffen;;;;;;;;ja;
+BB-1481;1574-05-28;;Christoff Pruckhner;christoph_pruckner;Kupferschmied;;Metall & Waffen;;;;;;;;ja;Mit BB-1569 (Christoff Prugkner) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1482;1574-05-28;;Mathias Troyer;matthias_troyer;;;;Balthasarn Krätschmair (Binder), Christoff Kütten (Weißgerber).;balthasarn_kraetschmair|christoph_kuetten;Binder|Weißgerber;Erstmalig vorstellig im Mai 1574.;;;;;
 BB-1483;1574-06-02;;Christoff Kren;christoph_kren;;;;;;;;;;;;
 BB-1484;1574-06-02;;Michael Mäbl;michael_maebl;;;;;;;;;;;;
 BB-1485;1574-06-18;;Michael Ostermair;michael_ostermair;;;;Thoman Schuözinger, Christoffen Zwicker.;thomas_schuoezinger|christoff_zwicker;;;;;;;
 BB-1486;1574-06-18;;Thoman Hoffstetter;thomas_hoffstetter;;;;;;;;;;;;
-BB-1487;1574-07-02;;Paul Kraudt;paul_kraudt;Schneider;;Textil & Bekleidung;Ambrosim Risen, Mertten Kagerer.;ambrosim_risen|martin_kagerer;;;;;;ja;
+BB-1487;1574-07-02;;Paul Kraudt;paul_kraudt;Schneider;;Textil & Bekleidung;Ambrosim Risen, Mertten Kagerer.;ambrosim_risen|martin_kagerer;;;;;;ja;Mit BB-1574 (Paul Kraut) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1488;1574-07-13;;Peter Gradtner;peter_gradtner;Goldschmied;;Metall & Waffen;;;;;;;;ja;
 BB-1489;1574-07-16;;Michael Marths;michael_marths;Klampferer;;Metall & Waffen;Benedicten Dandl, Wolffen Kazpreiner.;benedikt_dandl|wolffen_kazpreiner;;;;;;ja;
 BB-1490;1574-08-06;;Hanß Kaniter;hans_kaniter;Glaser;;Holz, Bau & Stein;Wilhalm Schmidthueber (Zimmermann).;wilhalm_schmidthueber;Zimmermann;;;;;ja;
@@ -1493,7 +1493,7 @@ BB-1491;1574-08-06;;Hanß Wibmpauer;hans_wibmpauer;Buchbinder;;Sonstiges Handwer
 BB-1492;1574-08-06;;Hanß Grabmaister;hans_grabmaister;Buchführer;;Handel;Mathiasen Spändl, Hannsen Oberleutner.;mathiasen_spaendl|hans_oberleutner;;;;;;nein;"Zuordnung zu Wirtschaftssektor unsicher: Bedeutung/Zuordnung des Berufs ""Buchführer"" nicht eindeutig klärbar."
 BB-1493;1574-08-17;;Peter Ehrnbeckh;peter_ehrnbeck;;;;;;;;;;;;
 BB-1494;1574-08-13;;Fridrich Schüestl;friedrich_schiestl;;;;;;;;;;;;
-BB-1495;1574-08-13;;Hainrich Luitkhe;heinrich_luitkhe;Schlosser;;Metall & Waffen;Andreen Heckher (Schmied).;andreas_hecker;Schmied;;;;;ja;
+BB-1495;1574-08-13;;Hainrich Luitkhe;heinrich_luitkhe;Schlosser;;Metall & Waffen;Andreen Heckher (Schmied).;andreas_hecker;Schmied;;;;;ja;Mit BB-1514 (Hainrich Luithae) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1496;1574-08-13;;Hansz Strauber;hans_strauber;Hutmacher;;Textil & Bekleidung;Hansen Oberleuttner.;hansen_oberleuttner;;;;;;ja;
 BB-1497;1574-08-13;;Caspar Vepauer;kaspar_vepauer;Schuster;;Leder & Pelz;Mertten Kagerer, Wolffen Turner.;martin_kagerer|wolf_turner;;;;;;ja;
 BB-1498;1574-08-13;;Steffan Fuchsz;stephan_fuchs;Drechsler;;Holz, Bau & Stein;Blasien Müllner.;blasien_muellner;;;;;;ja;
@@ -1501,7 +1501,7 @@ BB-1499;1574-08-13;;Leonhardt Windisch;leonhard_windisch;;;;;;;;;;;;
 BB-1500;1574-08-30;;Vicenz Hoffpauer;vicenz_hoffpauer;Fuhrmann;;Transport & Wasserwesen;Steffen Alckhoffer.;steffen_alckhoffer;;;;;;ja;
 BB-1501;1574-08-31;;Hanß Hoffer;hans_hoffer;Harnischpolierer;;Metall & Waffen;;;;;;;;ja;
 BB-1502;1574-09-03;;Hansz Vischer;hans_fischer;Bäcker;;Lebensmittelhandwerk;Wolffen Turner, Benedicten Dandl.;wolffen_turner|benedikt_dandl;;;;;;ja;
-BB-1503;1574-09-14;;Martin Feldtmülner;martin_feldtmuelner;Klampferer;;Metall & Waffen;Hansen Rimbser, Hansen Grabmaister (Buchbinder).;hansen_rimbser|hansen_grabmaister;|Buchbinder;;;;;ja;
+BB-1503;1574-09-14;;Martin Feldtmülner;martin_feldtmuelner;Klampferer;;Metall & Waffen;Hansen Rimbser, Hansen Grabmaister (Buchbinder).;hansen_rimbser|hansen_grabmaister;|Buchbinder;;;;;ja;Mit BB-1525 (Merth Feldtmüllner) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1504;1574-10-13;;Gabriel Tänckhler;gabriel_taenckler;Tuchscherer;;Textil & Bekleidung;Peter Tauckhler, Peter Painstadtl.;peter_tauckler|peter_painstadtl;;;;;;ja;
 BB-1505;1574-10-15;;Andreas Haubt;andreas_haubt;;;;Hansen Behamben (Bürger zu Krems), Pauln Straubaiger (Bürger zu Krems).;hansen_behamben|paul_straubaiger;;;;;;;
 BB-1506;1574-10-15;;Hanß Kluegeisen;hans_kluegeisen;;;;;;;;;;;;
@@ -1548,11 +1548,11 @@ BB-1546;1575-05-13;;Urban Hötscher;urban_hoetscher;;;;Thoman Oßwalt, Hannsen S
 BB-1547;1575-06-28;;Rueprecht Obermülner;ruprecht_obermuelner;;;;;;;;;;;;
 BB-1548;1575-07-15;;Wolff Strensdorffer;wolf_strensdorffer;Riemer;;Leder & Pelz;;;;;;;;ja;
 BB-1549;1575-08-19;;Matheus Widman;matthaeus_widman;Gürtler;;Metall & Waffen;Pauln Sanfager, Clementen Weikhamb.;paul_sanfager|clementen_weikhamb;;;;;;ja;
-BB-1550;1575-08-19;;Wolff Bottnnauer;wolf_bottnnauer;;;;Petern Painstattl.;petern_painstattl;;;;;;;
+BB-1550;1575-08-19;;Wolff Bottnnauer;wolf_bottnnauer;;;;Petern Painstattl.;petern_painstattl;;;;;;;Mit BB-1563 (Wolff Bottenmauer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1551;1575-08-23;;Urban Streng;urban_streng;;;;;;;;;;;;
-BB-1552;1575-10-21;;Steffan Tuechscherer;stephan_tuechscherer;;;;Georgen Werndl, Matheusen Krembser.;georg_werndl|matheus_kremser;;;;;;;
+BB-1552;1575-10-21;;Steffan Tuechscherer;stephan_tuechscherer;;;;Georgen Werndl, Matheusen Krembser.;georg_werndl|matheus_kremser;;;;;;;Mit BB-1565 (Steffan Davit Tuchscherer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1553;1575-12-02;;Wolff Wiszmair;wolf_wissmair;Tuchmacher;;Textil & Bekleidung;Thoman Tättl, Wilhalbmen Graßberger.;thomas_taettl|wilhalbmen_grassberger;;;;;;ja;
-BB-1554;1575-12-13;;Michael Kleefelt;michael_kleefelt;Kleinschmied;;Metall & Waffen;Wolffen Turner, Anndre Hoffer (Schlosser).;wolffen_turner|andreas_hofer;|Schlosser;Khlainfelt durchgestrichen.;;;;ja;
+BB-1554;1575-12-13;;Michael Kleefelt;michael_kleefelt;Kleinschmied;;Metall & Waffen;Wolffen Turner, Anndre Hoffer (Schlosser).;wolffen_turner|andreas_hofer;|Schlosser;Khlainfelt durchgestrichen.;;;;ja;Mit BB-1567 (Michael Klainfelt) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1555;1575-12-13;;Hannsz Karl;hans_karl;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-1556;1575-12-17;;Georg Grueber;georg_grueber;Hutmacher;;Textil & Bekleidung;;;;Erstmalig vorstellig am 11. Februar 1575.;;;Hernach benante burger haben an heut den 17. Decembris Anno 75isten den burger aidt gethon.;ja;
 BB-1557;1575-12-17;;Hannsz Schueler;hans_schueler;Schuster;;Leder & Pelz;;;;Erstmalig vorstellig am 6. Mai 1575.;;;;ja;
@@ -1583,7 +1583,7 @@ BB-1581;1576-02-03;;Urban Streng;urban_streng;;;;;;;Erstmalig vorstellig am 23. 
 BB-1582;1576-02-03;;Leonhardt Wolff;leonhard_wolff;;;;Hannsen Gierla.;hans_gierla;;;;;;;
 BB-1583;1576-02-17;;Wolff Rizinger;wolf_rizinger;Zuckermacher;;Lebensmittelhandwerk;Hainrich Stachel (Büchsenschäfter), Hannsen Stain (Seiler).;heinrich_stachel|hans_stain;Büchsenschäfter|Seiler;;;;;ja;
 BB-1584;1576-02-17;;Lorenz Till;lorenz_till;Sporer;ja;Metall & Waffen;Jacoben Bittelschirs (Sattler), Joseffen Raab (pforer?).;jacoben_bittelschirs|joseffen_raab;Sattler|pforer?;;;;;ja;"Berufsbezeichnung ""Sporer"" im Quellentext schwer leserlich bzw. Schreibweise/Lesart unsicher."
-BB-1585;1576-02-17;;Hannsz Mayrhoffer;hans_mayrhoffer;Kummetmacher;;Leder & Pelz;Steffan Kreenauer (Seiler), Thoman Oßwalden.;stephan_kreenauer|thomas_osswalden;Seiler|;;;;;ja;
+BB-1585;1576-02-17;;Hannsz Mayrhoffer;hans_mayrhoffer;Kummetmacher;;Leder & Pelz;Steffan Kreenauer (Seiler), Thoman Oßwalden.;stephan_kreenauer|thomas_osswalden;Seiler|;;;;;ja;Mit BB-1609 (Hannsz Mairhoffer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1586;1576-03-13;;Bartlmee Neumair;bartholomaeus_neumair;Maurer;;Holz, Bau & Stein;Steffan Huttnars.;stephan_huttnars;;;;;;ja;
 BB-1587;1576-04-03;;Hanns Khöller;hans_koller;;;;;;;;;;;;
 BB-1588;1576-04-13;;Lorenz Lackner;lorenz_lackner;Fragner;;Handel;Leöpoldtten Schwingenschlegl, Wolffen Hiendl.;leoepoldtten_schwingenschlegl|wolffen_hiendl;;;;;;ja;
@@ -1594,12 +1594,12 @@ BB-1592;1576-06-08;;Leonhart Wieser;leonhard_wieser;;;;;;;;;;;;
 BB-1593;1576-06-22;;Steffan Furtner;stephan_furtner;Zimmermann;;Holz, Bau & Stein;Andre Andem (Schneider).;andreas_andem;Schneider;;;;;ja;
 BB-1594;1576-06-27;;Andre Müllner;andreas_muellner;Goldschmied;;Metall & Waffen;Benedicten Bändl, Danieln Müllner.;benedikt_baendl|danieln_muellner;;;;;;ja;
 BB-1595;1576-06-27;;Hannsz Preiszberger;hans_preiszberger;Tischler;;Holz, Bau & Stein;Wolffen Turmer, Casparn Carlz (Tischler).;wolffen_tuermer|casparn_carlz;|Tischler;;;;;ja;ID nachträglich korrigiert (war noch hans_preissberger, obwohl bereits als dieselbe Person wie BB-1621/BB-1639 identifiziert).
-BB-1596;1576-07-13;;Michail Kemetler;michael_kemetler;Schneider;;Textil & Bekleidung;Mertten Kagerrer (Schneider) (Bürger zu Krems), Andreasen Andre (Schneider) (Bürger zu Krems).;martin_kagerrer|andreasen_andre;Schneider|Schneider;;;;;ja;
-BB-1597;1576-07-13;;Alexinsz Schmidthueber;alexinsz_schmidthueber;Zimmermann;;Holz, Bau & Stein;;;;;;;;ja;
+BB-1596;1576-07-13;;Michail Kemetler;michael_kemetler;Schneider;;Textil & Bekleidung;Mertten Kagerrer (Schneider) (Bürger zu Krems), Andreasen Andre (Schneider) (Bürger zu Krems).;martin_kagerrer|andreasen_andre;Schneider|Schneider;;;;;ja;Mit BB-1622 (Michl Kemater) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1597;1576-07-13;;Alexinsz Schmidthueber;alexinsz_schmidthueber;Zimmermann;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-1625 (Alexins Schmidthueber) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1598;1576-07-13;;Mathiasz Nägl;matthias_nagl;Wagner;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1599;1576-09-14;;Christoff Scheffbeckh;christoph_scheffbeck;Wollmesser;;Handel;;;;;;;;ja;
 BB-1600;1576-11-06;;Hannsz Schäbinger;hans_schaebinger;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
-BB-1601;1576-11-09;;Hannsz Nägel;hans_naegel;;;;;;;;;;;;
+BB-1601;1576-11-09;;Hannsz Nägel;hans_naegel;;;;;;;;;;;;Mit BB-1628 (Hannsz Nägl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1602;1576-11-09;;Sigmundt Römer;sigmund_roemer;;;;;;;;;;;;
 BB-1603;1576-12-07;;Leonradt Kirchner;leonhard_kirchner;Pottschmied;;Metall & Waffen;Wolffen Strennßdorffer.;wolffen_strennssdorffer;;;;;;ja;
 BB-1604;1576-12-17;;Urban Streng;urban_streng;;;;;;;Erstmalig vorstellig am 23. August 1575 und am 3. Februar 1576.;;;Hernach benente bürger haben an heüt, an den 17. Decembrisz anno 76isten den bürger aydt gethon.;;
@@ -1619,7 +1619,7 @@ BB-1617;1576-12-17;;Steffan Furtner;stephan_furtner;Zimmermann;;Holz, Bau & Stei
 BB-1618;1576-12-17;;Christoff Sebastian Maurer;christoph_sebastian_maurer;;;;;;;;;;;;
 BB-1619;1576-12-17;;Anndre Müllner;andreas_muellner;Goldschmied;;Metall & Waffen;;;;Erstmalig vorstellig am 27. Juni 1576.;;;;ja;
 BB-1620;1576-12-17;;Mathiasz Römer;matthias_roemer;;;;;;;;;;;;
-BB-1621;1576-12-17;;Hannsz Preiszberger;hans_preiszberger;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
+BB-1621;1576-12-17;;Hannsz Preiszberger;hans_preiszberger;Tischler;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-1639 (Hannsz Preiszberger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1622;1576-12-17;;Michl Kemater;michael_kemetler;Schneider;;Textil & Bekleidung;;;;Erstmalig vorstellig am 13. Juli 1576 unter Michail Kemetler.;;;;ja;"personen_id vereinheitlicht (vorher michael_kemater): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1596 (""Michail Kemetler"", Ähnlichkeit 0.828) - dieselbe Person."
 BB-1623;1576-12-17;;Christoff Wellner;christoph_wellner;;;;;;;;;;;;
 BB-1624;1576-12-17;;Hannsz Brottkarb;hans_brottkarb;;;;;;;;;;;;
@@ -1642,7 +1642,7 @@ BB-1640;1576-12-17;;Mert Weinhul;martin_weinhul;;;;;;;;;;;;
 BB-1641;1576-12-17;;Hannsz Danner;hans_dannrer;;;;;;;;;;;;
 BB-1642;1577-02-15;;Christoff Hilger;christoph_hilger;Sattler, Kummetmacher;;Leder & Pelz;;;;;;;;ja;
 BB-1643;1577-03-01;;Lucas Ruesz;lukas_ruess;Turmer;;Sonstige Dienstleistungen;;;;;;;;ja;
-BB-1644;1577-03-22;;Adam Galliannder;adam_galliannder;Schneider;;Textil & Bekleidung;Abrahamen Ernnsten, Martin Neüber.;abrahamen_ernnsten|martin_neueber;;;;;;ja;
+BB-1644;1577-03-22;;Adam Galliannder;adam_galliannder;Schneider;;Textil & Bekleidung;Abrahamen Ernnsten, Martin Neüber.;abrahamen_ernnsten|martin_neueber;;;;;;ja;Mit BB-1668 (Adam Gallianner) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1645;1577-03-22;;Christoff Thoman;christoph_thoman;;;;Thoman Schnözinger (Innerer Rat), Joachim Taller (Äußerer Rat).;thomas_schnoezinger|joachim_taller;Innerer Rat|Äußerer Rat;;;;;;
 BB-1646;1577-03-29;;Christoff Hörluns;christoph_hoerluns;Taschner;;Leder & Pelz;Hannsen Obermair, Wilhalbm Schmidthueber.;hans_obermair|wilhalbm_schmidthueber;;;;;;ja;
 BB-1647;1577-04-29;;Georg Hoffman;georg_hoffman;Schwarzfärber;;Textil & Bekleidung;;;;;;;;ja;
@@ -1651,18 +1651,18 @@ BB-1649;1577-04-29;;Hannsz Ybbser;hans_ybbser;Wundarzt;;Gesundheit;Georgen Strau
 BB-1650;1577-04-29;;Erhart Pranckh;erhart_pranck;Bürstenbinder;;Sonstiges Handwerk;Paulsen Straubinger (Messerschmied), Benedicten Zandtl.;paul_straubinger|benedikt_zandtl;Messerschmied|;;;;;ja;
 BB-1651;1577-04-26;;Hannsz Carl;hans_karl;Hauer;;Landwirtschaft & Weinbau;Veitten Lechner.;veit_lechner;;;;;;ja;
 BB-1652;1577-05-07;;Sigmundt Perlmair;sigmund_perlmair;Schneider;;Textil & Bekleidung;Leonharten Wiser (Metsieder), Hannsen Schlotter (Handschuhmacher).;leonharten_wiser|hans_schlotter;Metsieder|Handschuhmacher;;;;;ja;
-BB-1653;1577-05-10;;Adam Tenckh;adam_tenck;Gürtler;;Metall & Waffen;;;;;;;;ja;
+BB-1653;1577-05-10;;Adam Tenckh;adam_tenck;Gürtler;;Metall & Waffen;;;;;;;;ja;Mit BB-1677 (Adam Tennckh) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1654;1577-06-21;;Peter Spickhs;peter_spicks;Nestler;;Leder & Pelz;;;;;;;;ja;
-BB-1655;1577-08-09;;Anndre Maschkho;andreas_maschkho;;;;;;;;;;;;
-BB-1656;1577-08-16;;Georg Sepp;georg_sepp;Kammmacher;;Sonstiges Handwerk;;;;;;;;ja;
-BB-1657;1577-08-27;;Leonharten Schmittingers;leonhard_schmittingers;Leineweber;;Textil & Bekleidung;;;;;;;;ja;
+BB-1655;1577-08-09;;Anndre Maschkho;andreas_maschkho;;;;;;;;;;;;Mit BB-1678 (Anndreas Maschco) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1656;1577-08-16;;Georg Sepp;georg_sepp;Kammmacher;;Sonstiges Handwerk;;;;;;;;ja;Mit BB-1679 (Georg Seep) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1657;1577-08-27;;Leonharten Schmittingers;leonhard_schmittingers;Leineweber;;Textil & Bekleidung;;;;;;;;ja;Mit BB-1712 (Leonhart Schmidinger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1658;1577-08-30;;Peter Weber;peter_weber;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1659;1577-09-06;;Georg Zoll;georg_zoll;Drechsler;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1660;1577-09-06;;Sixt Schmithauser;sixt_schmithauser;Kupferschmied;;Metall & Waffen;;;;;;;;ja;
-BB-1661;1577-09-06;;Hannsz Tremel;hans_tremel;Schuster;;Leder & Pelz;;;;;;;;ja;
-BB-1662;1577-09-10;;Simon Grabmer;simon_grabner;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
+BB-1661;1577-09-06;;Hannsz Tremel;hans_tremel;Schuster;;Leder & Pelz;;;;;;;;ja;Mit BB-1682 (Hannsz Treml) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1662;1577-09-10;;Simon Grabmer;simon_grabner;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;Mit BB-1683 (Simon Bramer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1663;1577-09-27;;Hannsz Eckhl;hans_eckl;Uhrmacher;;Metall & Waffen;Daniel Hening (Goldschmied), Steffan Danit (Tuchscherer).;daniel_hening|stephan_danit;Goldschmied|Tuchscherer;;;;;ja;
-BB-1664;1577-11-08;;Paull Zimerhäckhl;paul_zimerhaeckl;;;;;;;Nachdem er sich alhier zu weillennt Petern Winderstorffer gelassen wittib ehelichen;;;;;
+BB-1664;1577-11-08;;Paull Zimerhäckhl;paul_zimerhaeckl;;;;;;;Nachdem er sich alhier zu weillennt Petern Winderstorffer gelassen wittib ehelichen;;;;;Mit BB-1685 (Paull Zimerhackhl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1665;1577-12-10;;Bartlme Neumarkher;bartholomaeus_neumarkher;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-1666;1577-12-20;;Christoff Hilger;christoph_hilger;Sattler, Kummetmacher;;Leder & Pelz;;;;;;;Hernach benante bürger haben an heut den 20. Decembris anno 77den burger aidt gethan.;ja;
 BB-1667;1577-12-20;;Lucasz Ruesz;lukas_ruess;Turmer;;Sonstige Dienstleistungen;;;;Erstmalig vorstellig am 1. März 1577.;;;;ja;
@@ -1719,19 +1719,19 @@ BB-1717;1577-12-20;;Leonhart Auer;leonhard_auer;Büchsenschäfter;;Metall & Waff
 BB-1718;1578-01-24;;Georg Sengenwolff oder Freyseysen;georg_sengenwolff;;;;;;;;;;;;
 BB-1719;1578-02-21;;Hannß Gräbmer;hans_grabner;Hufschmied;;Metall & Waffen;Wolffen Thurner, Michel Peuger.;wolffen_thurner|michael_peuger;;;;;;ja;
 BB-1720;1578-03-24;;Michel Reimbzweig;michael_reimbzweig;Fleischhacker;;Lebensmittelhandwerk;Christoffen Küttn (Weißgerber) (Bürger zu Krems), Georgen Stossr (Weißgerber) (Bürger zu Krems).;christof_kuettn|georg_stosser;Weißgerber|Weißgerber;;;;;ja;
-BB-1721;1578-04-22;;Abrahamb Holdnberger;abraham_holdnberger;;;;Hannsen Bezolt (Schneider) (Bürger zu Stein), Christoffen Nachtrueb (Schlosser) (Bürger zu Krems).;hans_bezolt|christoff_nachtrueb;Schneider|Schlosser;;;;;;
-BB-1722;1578-05-30;;Matheß Tännckhler;mathess_taenckler;;;;Moses Neuman (Bürger zu Krems), Hannsen Jäger (Bürger zu Krems).;moses_neumann|hans_jaeger;;;;;;;
+BB-1721;1578-04-22;;Abrahamb Holdnberger;abraham_holdnberger;;;;Hannsen Bezolt (Schneider) (Bürger zu Stein), Christoffen Nachtrueb (Schlosser) (Bürger zu Krems).;hans_bezolt|christoff_nachtrueb;Schneider|Schlosser;;;;;;Mit BB-1738 (Abrahamb Haldnberger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1722;1578-05-30;;Matheß Tännckhler;mathess_taenckler;;;;Moses Neuman (Bürger zu Krems), Hannsen Jäger (Bürger zu Krems).;moses_neumann|hans_jaeger;;;;;;;Mit BB-1739 (Matheß Tannckhler) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1723;1578-05-30;;Michel Dusär;michael_dusaer;;;;Wilhalmen Pitterstoffers (Innerer Rat) (Bürger zu Krems).;wilhalmen_pitterstoffers;Innerer Rat;;;;;;
-BB-1724;1578-07-06;;Vallentinus Clapper;valentin_clapper;;;;Christoffen Kütt (Weißgerber) (Bürger zu Krems), Georgen Stasse (Weißgerber) (Bürger zu Krems).;christof_kuett|georg_stasse;Weißgerber|Weißgerber;;;;;;
-BB-1725;1578-07-11;;Georg Lunnghofer;georg_lunnghofer;Harnischpolierer;;Metall & Waffen;Erhardten Feringer, Pauln Straubinger.;erhardten_feringer|paul_straubinger;;;;;;ja;
-BB-1726;1578-06-06;;Hannsz Rümisch;hans_ruemisch;;;;Steffan Kreenaur (Seiler) (Bürger zu Krems).;stephan_kreenaur;Seiler;;;;;;
-BB-1727;1578-08-01;;Dionisy Schisssling;dionisy_schisssling;Tuchmacher;;Textil & Bekleidung;Hannsen Amans (Bürger zu Krems), Petern Painstadls (Bürger zu Krems).;hans_amans|petern_painstadls;;;;;;ja;
+BB-1724;1578-07-06;;Vallentinus Clapper;valentin_clapper;;;;Christoffen Kütt (Weißgerber) (Bürger zu Krems), Georgen Stasse (Weißgerber) (Bürger zu Krems).;christof_kuett|georg_stasse;Weißgerber|Weißgerber;;;;;;Mit BB-1741 (Valentinus Clapper) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1725;1578-07-11;;Georg Lunnghofer;georg_lunnghofer;Harnischpolierer;;Metall & Waffen;Erhardten Feringer, Pauln Straubinger.;erhardten_feringer|paul_straubinger;;;;;;ja;Mit BB-1742 (Georg Lunghofer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1726;1578-06-06;;Hannsz Rümisch;hans_ruemisch;;;;Steffan Kreenaur (Seiler) (Bürger zu Krems).;stephan_kreenaur;Seiler;;;;;;Mit BB-1746 (Hannß Rünnisch) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1727;1578-08-01;;Dionisy Schisssling;dionisy_schisssling;Tuchmacher;;Textil & Bekleidung;Hannsen Amans (Bürger zu Krems), Petern Painstadls (Bürger zu Krems).;hans_amans|petern_painstadls;;;;;;ja;Mit BB-1743 (Dionisy Schissling) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1728;1578-08-05;;Conradt Lenner;konrad_lenner;Glaser;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1729;1578-08-05;;Marx Perckhman;markus_perckman;;;;Hannsen Kütten, Wolffen Klainpeutler.;hans_kuetten|wolffen_klainpeutler;;;;;;;
 BB-1730;1578-11-14;;Marx Schreyner;markus_schreyner;Drechsler;;Holz, Bau & Stein;;;;;;;;ja;
-BB-1731;1578-11-14;;Johann Haustein;johann_haustein;;;;;;;;;;;;
+BB-1731;1578-11-14;;Johann Haustein;johann_haustein;;;;;;;;;;;;Mit BB-1747 (Johann Haustain) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1732;1578-11-14;;Christoff Ypser;christoph_ypser;;;;;;;;;;;;
-BB-1733;1578-12-05;;Hannß Schlamp;hans_schlamp;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
+BB-1733;1578-12-05;;Hannß Schlamp;hans_schlamp;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;Mit BB-1749 (Hannß Schlampp) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1734;1578-12-09;;Thoman Praun;thomas_braun;;;;;;;;;;;;
 BB-1735;1578-12-12;;Michäel Rösler;michaeel_roesler;Hutmacher;;Textil & Bekleidung;;;;;;;;ja;
 BB-1736;1578-12-12;;Michäel Waiblinger;michael_waiblinger;Binder;;Holz, Bau & Stein;;;;;;;;ja;
@@ -1778,7 +1778,7 @@ BB-1776;1579-06-12;;Hannß Grabmer;hans_grabner;;;;;;;;;;;;
 BB-1777;1579-06-12;;Sigmundt Grueber;sigmund_grueber;;;;;;;;;;;;
 BB-1778;1579-07-31;;Hannß Christoff Pockhinger;hans_christoff_pockinger;;;;;;;;;;;;
 BB-1779;1579-07-31;;Hannß Dürnhofer;hans_duernhofer;Leinwander;;Handel;;;;;;;;ja;
-BB-1780;1579-08-14;;Peter Potnnaur;peter_potnnaur;Tuchmacher;;Textil & Bekleidung;Wilhalm Widnbeckh (Hafner), Georg Hofman (Schwarzfärber).;wilhalm_widnbeck|georg_hofman;Hafner|Schwarzfärber;;;;;ja;
+BB-1780;1579-08-14;;Peter Potnnaur;peter_potnnaur;Tuchmacher;;Textil & Bekleidung;Wilhalm Widnbeckh (Hafner), Georg Hofman (Schwarzfärber).;wilhalm_widnbeck|georg_hofman;Hafner|Schwarzfärber;;;;;ja;Mit BB-1790 (Peter Podnnaur) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1781;1579-08-28;;Sebastian Schwingshärl;sebastian_schwingshaerl;Nadler;;Metall & Waffen;Melchior Behamb (Nadler), Hannß Obermair (Bürstenbinder).;melchior_behaimb|hans_obermair;Nadler|Bürstenbinder;;;;;ja;
 BB-1782;1579-08-28;;Georg Ödl;georg_oedl;;;;Andree Seissenckher (Messerschmied), Larenz Tüll (Sporer).;andreas_seissencker|larenz_tuell;Messerschmied|Sporer;;;;;;
 BB-1783;1579-10-06;;Sigmundt Dietrich;sigmund_dietrich;Leineweber;;Textil & Bekleidung;;;;;;;;ja;
@@ -1847,26 +1847,26 @@ BB-1845;1580-12-17;;Georg (Sihel?);georg_sichel;Schmied;;Metall & Waffen;;;;;;;;
 BB-1846;1580-12-17;;Walthauser Messerer;walthauser_messerer;Schuster;;Leder & Pelz;;;;;;;;ja;
 BB-1847;1581-01-18;;Hörman Perger;hoerman_perger;;;;Hannsen Gezen (Sattler), Wolffen Sigl (Schmied).;hans_gezen|wolffen_sigl;Sattler|Schmied;;;;;;
 BB-1848;1581-01-27;;Georg Bremb;georg_bremb;Fleischhacker;;Lebensmittelhandwerk;Achazi Rauscher, Wolf Walchen.;achazi_rauscher|wolf_walchen;;;;;;ja;
-BB-1849;1581-01-27;;Jacob Reitmair;jakob_reitmair;;;;Niclasen Melnapf, Wolffen Pueckhamer.;niclasen_melnapf|wolfgang_puchhammer;;;;;;;
+BB-1849;1581-01-27;;Jacob Reitmair;jakob_reitmair;;;;Niclasen Melnapf, Wolffen Pueckhamer.;niclasen_melnapf|wolfgang_puchhammer;;;;;;;Mit BB-1871 (Jacob Reutman) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1850;1581-02-25;;Christoff Schmuckhner;christoph_schmuckner;;;;Abraham Ernnsten, Reicharten Khranzen.;abraham_ernnsten|reicharten_kranzen;;;;;;;
 BB-1851;1581-02-25;;Hannsz Staingastinger;hans_staingastinger;;;;Hannß Grabmer, Wolf Puechhamer.;hans_grabner|wolf_puechhamer;;;;;;;
 BB-1852;1581-04-14;;Wolff Wibmer;wolf_widmer;;;;;;;;;;;;
 BB-1853;1581-04-14;;Bernhart Rechpaumb;bernhard_rechbaum;;;;;;;;;;;;
-BB-1854;1581-04-21;;Hannsz Passeckher;hans_passecker;Tuchscherer;;Textil & Bekleidung;Christoffen Bermaur, Steffan Davit (Tuchscherer).;christoff_bermaur|stephan_davit;|Tuchscherer;;;;;ja;
+BB-1854;1581-04-21;;Hannsz Passeckher;hans_passecker;Tuchscherer;;Textil & Bekleidung;Christoffen Bermaur, Steffan Davit (Tuchscherer).;christoff_bermaur|stephan_davit;|Tuchscherer;;;;;ja;Mit BB-1875 (Hannsz Plassecker) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1855;1581-06-02;;Wolff Fetaller;wolf_fetaller;Fuhrmann;;Transport & Wasserwesen;Gilig Spenngennagl, Wolffen Rätschen.;gilig_spenngennagl|wolf_raetschen;;;;;;ja;
 BB-1856;1581-05-20;;Hannsz Hauszman;hans_haussman;;;;Wolffen Punchhamer, Veitten Schreiber.;wolfgang_puchhammer|veith_schreiber;;;;;;;
 BB-1857;1581-06-30;;Jacob Fackh;jakob_fack;Maurer;;Holz, Bau & Stein;;;;;;;;ja;
-BB-1858;1581-07-07;;Veitten Pinters;veit_pinters;;;;Thoman Schnözinger (Innerer Rat).;thomas_schnoezinger;Innerer Rat;;;;;;
+BB-1858;1581-07-07;;Veitten Pinters;veit_pinters;;;;Thoman Schnözinger (Innerer Rat).;thomas_schnoezinger;Innerer Rat;;;;;;Mit BB-1879 (Veitt Pinter) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1859;1581-07-07;;Hannsz Zistler;hans_zistler;;;;;;;;;;;;
 BB-1860;1581-08-08;;Phillip Schwarzmair;phillip_schwarzmair;;;;;;;;;;;;
 BB-1861;1581-08-08;;Thoman Sininger;thomas_sininger;;;;;;;;;;;;
 BB-1862;1581-11-15;;Matheusz Zwickhl;matthaeus_zwickl;;;;;;;;;;;;
 BB-1863;1581-12-22;;Hannsz Mulner;hans_muellner;;;;;;;;;;;;
-BB-1864;1581-12-22;;Hainrich Blosius;heinrich_blosius;Doktor;;Gesundheit;;;;;;;;ja;
+BB-1864;1581-12-22;;Hainrich Blosius;heinrich_blosius;Doktor;;Gesundheit;;;;;;;;ja;Mit BB-1885 (Hairich Blosius) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1865;1581-12-22;;Steffan Hasz;stephan_haas;;;;;;;;;;;;
 BB-1866;1581-12-22;;Hannsz Vogl;hans_vogl;;;;;;;;;;;;
 BB-1867;1581-12-22;;Michael Wolz;michael_wolz;;;;;;;;;;;;
-BB-1868;1581-12-29;;Valttin Ölhart;valttin_oelhardt;;;;;;;;;;;;
+BB-1868;1581-12-29;;Valttin Ölhart;valttin_oelhardt;;;;;;;;;;;;Mit BB-1889 (Valtin Öllhart) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1869;1581-12-21;;Hörman Perger;hoerman_perger;;;;;;;Erstmalig vorstellig am 18. Januar 1581.;;;Hernach benante so hieuor das glüb gethan haben an heut den 21. December anno 81. den burger aidt gelaistet.;;
 BB-1870;1581-12-21;;Georg Bremb;georg_bremb;Fleischhacker;;Lebensmittelhandwerk;;;;Erstmalig vorstellig am 27. Januar 1581.;;;;ja;
 BB-1871;1581-12-21;;Jacob Reutman;jakob_reitmair;;;;;;;Erstmalig vorstellig am 27. Januar 1581 unter Jacob Reitmair.;;;;;"personen_id vereinheitlicht (vorher jakob_reutman): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1849 (""Jacob Reitmair"", Ähnlichkeit 0.815) - dieselbe Person."
@@ -1896,7 +1896,7 @@ BB-1894;1581-12-21;;Marx Jägersperger;markus_jaegersperger;;;;;;;;;;;;
 BB-1895;1581-12-21;;Wolff Prandt;wolf_prandt;Schuster;;Leder & Pelz;;;;;;;;ja;
 BB-1896;1581-12-21;;Veitt Zeiller;veit_zeiller;;;;;;;;;;;;
 BB-1897;1581-12-21;;Nathanael Liebhart;nathanael_liebhart;;;;;;;;;;;;
-BB-1898;1581-12-21;;Adam Tenckh;adam_tenck;Hafner;;Holz, Bau & Stein;;;;;;;;ja;
+BB-1898;1581-12-21;;Adam Tenckh;adam_tenck;Hafner;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-1677 (Adam Tennckh) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1899;1581-12-21;;Mertt Scheiblmair;martin_scheiblmair;;;;;;;;;;;;
 BB-1900;1581-12-21;;Niclas Spitlmülner;niklas_spitlmuelner;;;;;;;;;;;;
 BB-1901;1581-12-21;;Mertt Harbacher;martin_harbacher;;;;;;;;;;;;
@@ -1909,10 +1909,10 @@ BB-1907;1581-12-21;;Wolffgang Sallich;wolfgang_sallich;;;;;;;;;;;;
 BB-1908;1582-02-09;;Hanns Wagner;hans_wagner;Messerschmied;;Metall & Waffen;Benedict Dantl, Christoff Reimb.;benedikt_dantl|christoph_reimb;;;;;;ja;
 BB-1909;1582-05-18;;Martin Vischer;martin_fischer;;;;;;;;;;;;
 BB-1910;1582-07-13;;Balthasar Schobinger;balthasar_schobinger;;;;Georgus Reichlin, Matheus Schmidtpaur, Matheus Lindtner.;georgus_reichlin|matthaeus_schmidtpaur|matthaeus_lindtner;;;;;;;
-BB-1911;1582-08-10;;Georg Rueff;georg_rueff;;;;Hanns Eckhl, Lorenz Düll.;hans_eckl|lorenz_duell;;;;;;;
+BB-1911;1582-08-10;;Georg Rueff;georg_rueff;;;;Hanns Eckhl, Lorenz Düll.;hans_eckl|lorenz_duell;;;;;;;Mit BB-1931 (Georg Ruef) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1912;1582-08-14;;Michel Gerla;michael_gerla;;;;Georg Kelner, Hanns Obermair.;georg_kelner|hans_obermair;;;;;;;
 BB-1913;1582-09-14;;Sebastian Mülbach;sebastian_muelbach;;;;Caspar Carl, Steffan David.;kaspar_karl|stephan_david;;;;;;;
-BB-1914;1582-11-09;;Wenzl Phillip;wenzel_phillip;Weißgerber;;Leder & Pelz;;;;;;;;ja;
+BB-1914;1582-11-09;;Wenzl Phillip;wenzel_phillip;Weißgerber;;Leder & Pelz;;;;;;;;ja;Mit BB-1932 (Wenzl Phillip) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1915;1582-11-16;;Lorenz Hiertl;lorenz_hiertl;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
 BB-1916;1582-01-30;;Urban Frauhofer;urban_frauhofer;;;;Steffan Mayr, Michel Wager.;stephan_mayr|michael_wager;;;;;;;
 BB-1917;1582-03-16;;Hanns Ybbser;hans_ybbser;;;;Michael Peuger, Steffan Rachofer.;michael_peuger|stephan_rachofer;;;;;;;
@@ -1952,18 +1952,18 @@ BB-1950;1582-12-14;;Melchior Salzhueber;melchior_salzhueber;Schuster;;Leder & Pe
 BB-1951;1582-12-14;;Hanns Angerlechner;hans_angerlechner;Schmied;;Metall & Waffen;;;;Erstmalig vorstellig am 7. Dezember 1582.;;;;ja;
 BB-1952;1582-12-14;;Wolff Schrettl;wolf_schrettl;;;;;;;;;;;;
 BB-1953;1582-12-14;;Hanns Pfeferl;hans_pfeferl;;;;;;;;;;;;
-BB-1954;1583-03-22;;Wolff Wildtperger;wolf_wildtperger;Schneider;;Textil & Bekleidung;Hannß Weber (Schneider), Steffan David (Scherer).;hans_weber|stephan_david;Schneider|Scherer;;;;;ja;
+BB-1954;1583-03-22;;Wolff Wildtperger;wolf_wildtperger;Schneider;;Textil & Bekleidung;Hannß Weber (Schneider), Steffan David (Scherer).;hans_weber|stephan_david;Schneider|Scherer;;;;;ja;Mit BB-1985 (Wolff Wildperger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1955;1583-03-22;;Valtin Lakner;valentin_lakner;Schneider;;Textil & Bekleidung;Merth Kagerer (Schneider), Steffan Rarhoffer (Schneider).;martin_kagerer|stephan_rarhoffer;Schneider|Schneider;;;;;ja;
 BB-1956;1583-04-26;;Wolff Vischgatter;wolf_vischgatter;Goldschmied;;Metall & Waffen;Hannß Kugl, Benedict Tandl (Klampferer).;hans_kugl|benedikt_tandl;|Klampferer;;;;;ja;
 BB-1957;1583-04-26;;Mert Seidnschwanz;martin_seidnschwanz;Weber;;Textil & Bekleidung;Merten Pfneißl (Weber), Hansen Dürnhoffer (Weber).;martin_pfneissl|hansen_duernhoffer;Weber|Weber;;;;;ja;
-BB-1958;1583-04-26;;Jacob Witteich;jakob_witteich;Binder;;Holz, Bau & Stein;Melchior Tüll (Wagner), Marchen Vischers (Binder).;melchior_tuell|marchen_vischers;Wagner|Binder;;;;;ja;
-BB-1959;1583-06-14;;Hans Dümbler;hans_duembler;Fleischhacker;;Lebensmittelhandwerk;Gilgeu Gschwandner, Cristoff Kostla.;gilgeu_gschwandner|christoph_kostla;;;;;;ja;
+BB-1958;1583-04-26;;Jacob Witteich;jakob_witteich;Binder;;Holz, Bau & Stein;Melchior Tüll (Wagner), Marchen Vischers (Binder).;melchior_tuell|marchen_vischers;Wagner|Binder;;;;;ja;Mit BB-1969 (Javob Pittich) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1959;1583-06-14;;Hans Dümbler;hans_duembler;Fleischhacker;;Lebensmittelhandwerk;Gilgeu Gschwandner, Cristoff Kostla.;gilgeu_gschwandner|christoph_kostla;;;;;;ja;Mit BB-1988 (Hans Tümbler) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1960;1583-07-09;;Michl Fleischman;michael_fleischman;Büchsenmacher;;Metall & Waffen;Steffan Mair.;stephan_mayr;;;;;;ja;
 BB-1961;1583-11-01;;Mathes Heinz;matthaeus_heinz;Apotheker;;Gesundheit;;;;;;;;ja;
 BB-1962;1583-09-20;;Hans Adam Franz;hans_adam_franz;Messerschmied;;Metall & Waffen;Benedict Tandl (Klampferer), Hans Ekl.;benedikt_tandl|hans_ekl;Klampferer|;;;;;ja;
 BB-1963;1583-09-20;;Colman Orttner;kolman_ortner;Leineweber;;Textil & Bekleidung;Hans Dürnhofer (Leineweber), Simon Dietrich.;hans_duernhofer|simon_dietrich;Leineweber|;;;;;ja;
 BB-1964;1583-12-03;;Hans Mair;hans_mayr;Sattler;;Leder & Pelz;Wolff Sigl (Schmied), Hanß Rattenperger (Riemer).;wolf_sigl|hans_rattenperger;Schmied|Riemer;;;;;ja;
-BB-1965;1583-12-23;;Leonhard Scheiffel;leonhard_scheiffel;;;;;;;;;;;;
+BB-1965;1583-12-23;;Leonhard Scheiffel;leonhard_scheiffel;;;;;;;;;;;;Mit BB-1991 (Leonhad Scheiffel) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-1966;1583-12-30;;Gregor Scholz;gregor_scholz;Apotheker;;Gesundheit;;;;;;;Hernach benante so hieüor das glüb gethan haben den dreissigisten Decembris anno im dreiundachzigisten den bürger aid gelaistet.;ja;
 BB-1967;1583-12-30;;Gabriel Furtner;gabriel_furtner;Fischer;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-1968;1583-12-30;;Valtin Lakner;valentin_lakner;Schneider;;Textil & Bekleidung;;;;Erstmalig vorstellig am 22. März 1583.;;;;ja;
@@ -1995,9 +1995,9 @@ BB-1993;1583-12-30;;Michl Fleischman;michael_fleischman;Büchsenmacher;;Metall &
 BB-1994;1584-03-15;;Michl Rath;michael_rath;Tischler;;Holz, Bau & Stein;;;;;;;;ja;
 BB-1995;1584-06-05;;Christoff Perger;christoph_perger;Maurer;;Holz, Bau & Stein;Leonhard Hochdarer, Christoff Puechner (Schwarzfärber).;leonhard_hochdarer|christoph_puechner;|Schwarzfärber;;;;;ja;
 BB-1996;1584-07-19;;Georg Perkman;georg_perkman;Tuchmacher;;Textil & Bekleidung;M. Moses Neumai, Gabriel Luniß.;m_moses_neumai|gabriel_luniss;;;;;;ja;
-BB-1997;1584-07-07;;David Ladus;david_ladus;Pulvermacher;;Metall & Waffen;;;;;;;;ja;
-BB-1998;1584-12-14;;Christoff Pühler;christoph_puehler;;;;;;;;;;;;
-BB-1999;1584-06-26;;Michl Huetstokh;michael_huetstokh;;;;;;;;;;;;
+BB-1997;1584-07-07;;David Ladus;david_ladus;Pulvermacher;;Metall & Waffen;;;;;;;;ja;Mit BB-2017 (David Latus) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1998;1584-12-14;;Christoff Pühler;christoph_puehler;;;;;;;;;;;;Mit BB-2002 (Christoff Püchler) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-1999;1584-06-26;;Michl Huetstokh;michael_huetstokh;;;;;;;;;;;;Mit BB-2032 (Michl Huetstockh) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2000;1584-07-07;;Ambrosi Stainvogl;ambrosi_stainvogl;;;;;;;;;;;;
 BB-2001;1584-12-28;;Mathes Eisler;matthaeus_eisler;;;;;;;;;;Hernach benante so hieüer das glüb gethan haben den achtundzwainzigisten Decembris des vierundachzigisten jars den burger aid gelaistet.;;
 BB-2002;1584-12-28;;Christoff Püchler;christoph_puehler;;;;;;;Erstmalig vorstellig am 14. Dezember 1584.;;;;;"personen_id vereinheitlicht (vorher christoph_puechler): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-1998 (""Christoff Pühler"", Ähnlichkeit 0.97) - dieselbe Person."
@@ -2079,17 +2079,17 @@ BB-2077;1587-12-18;;Christoff Gegenpaur;christoph_gegenpaur;Lederer;;Leder & Pel
 BB-2078;1587-12-18;;Hannsz Döölerl;hans_doeoelerl;Bader;;Gesundheit;;;;;;;;ja;
 BB-2079;1587-12-18;;Paull Lauber;paul_lauber;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-2080;1587-12-18;;Abrahamb Seidtner;abraham_seidner;;;;;;;;;;;;
-BB-2081;1587-12-18;;Wolff Radtmänndt;wolf_radtmaenndt;Binder;;Holz, Bau & Stein;;;;nit da gewest.;;;;ja;
+BB-2081;1587-12-18;;Wolff Radtmänndt;wolf_radtmaenndt;Binder;;Holz, Bau & Stein;;;;nit da gewest.;;;;ja;Mit BB-2123 (Wolf Radtmantl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2082;1587-12-18;;Eliasz Röcks;elias_roecks;Barbier;;Gesundheit;;;;nit da gewest.;;;;ja;
 BB-2083;1587-12-18;;Christoff Schmölzl;christoph_schmaelzl;;;;;;;;;;;;
 BB-2084;1587-12-18;;Geörg Zinckhen Pöckh Pinoer;georg_zinckenpoeck;;;;;;;;;;;;
 BB-2085;1587-12-18;;Michel Höpper;michael_hoepper;Flecksieder;;Lebensmittelhandwerk;;;;;;;;ja;
 BB-2086;1587-12-18;;Petter Zheysysser;peter_zheysysser;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;
-BB-2087;1588-02-12;;Andre Heuperger;andreas_heuperger;Gürtler;;Metall & Waffen;Benedict Tandl (Klampferer), Nathaniel Liebhart (Zinngießer).;benedikt_tandl|nathaniel_liebhart;Klampferer|Zinngießer;;;;;ja;
+BB-2087;1588-02-12;;Andre Heuperger;andreas_heuperger;Gürtler;;Metall & Waffen;Benedict Tandl (Klampferer), Nathaniel Liebhart (Zinngießer).;benedikt_tandl|nathaniel_liebhart;Klampferer|Zinngießer;;;;;ja;Mit BB-2103 (Andre Heyperger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2088;1588-03-24;;Benedict Sturmb;benedikt_sturm;Schneider;;Textil & Bekleidung;Mert Kagerer (Schneider) (Bürger zu Krems), Wolf Wullenxerger (Schneider) (Bürger zu Krems).;martin_kagerer|wolf_wullenxerger;Schneider|Schneider;;;;;ja;
-BB-2089;1588-02-16;;Georgen Stockher;georg_stocker;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
+BB-2089;1588-02-16;;Georgen Stockher;georg_stocker;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;Mit BB-2124 (Geörg Stockhinger) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2090;1588-03-20;;Leopoldt Holzinger;leopold_holzinger;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
-BB-2091;1588-09-02;;Christoffen Reitter;christoff_reitter;Hufschmied;;Metall & Waffen;Caspar Höekher (Hufschmied), Valtin Pinter (Hufschmied).;kaspar_hoeekher|valentin_pindter;Hufschmied|Hufschmied;;;;;ja;
+BB-2091;1588-09-02;;Christoffen Reitter;christoff_reitter;Hufschmied;;Metall & Waffen;Caspar Höekher (Hufschmied), Valtin Pinter (Hufschmied).;kaspar_hoeekher|valentin_pindter;Hufschmied|Hufschmied;;;;;ja;Mit BB-2125 (Christoph Reitter) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2092;1588-09-02;;Christoff Stortinger;christoph_stortinger;Zimmermann;;Holz, Bau & Stein;;;;;;;;ja;
 BB-2093;1588-09-13;;Geörg Sigmundt;georg_sigmundt;Fischer;;Lebensmittelhandwerk;Hanns Noglgesanng (Binder), Hanns Drer (Hufschmied).;hans_noglgesanng|hans_drer;Binder|Hufschmied;;;;;ja;
 BB-2094;1588-09-16;;Sebastian Murnauer;sebastian_murnauer;Hauer;;Landwirtschaft & Weinbau;;;;;;;;ja;
@@ -2131,16 +2131,16 @@ BB-2129;1588-12-16;;Marcissus Reischl;marcissus_reichl;Hauer;;Landwirtschaft & W
 BB-2130;1589-03-10;;Urban Oswalt;urban_oswald;Riemer;;Leder & Pelz;;;;;;;;ja;
 BB-2131;1589-03-10;;Peter Pauer;peter_bauer;;;;;;;;;;;;
 BB-2132;1589-03-17;;Geörg Steger;georg_steger;Riemer;;Leder & Pelz;Thoman Oswalt (Riemer), Melchiors Tilln (Wagner).;thomas_oswaldt|melchiors_tilln;Riemer|Wagner;;;;;ja;
-BB-2133;1589-04-21;;Hannß Paierl;hans_paierl;Binder;;Holz, Bau & Stein;Veit Schmidthueber (pinder), Michael Wäblinger (pinder).;veit_schmidthueber|michael_waeblinger;Binder|Binder;;;;;ja;
+BB-2133;1589-04-21;;Hannß Paierl;hans_paierl;Binder;;Holz, Bau & Stein;Veit Schmidthueber (pinder), Michael Wäblinger (pinder).;veit_schmidthueber|michael_waeblinger;Binder|Binder;;;;;ja;Mit BB-2156 (Hannß Peyerl) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2134;1589-04-21;;Jacob Schreiner;jakob_schreiner;Sieber;;Sonstiges Handwerk;Mert Khagerer, Hanns Obermair (Bürstenbinder).;martin_kagerer|hans_obermair;|Bürstenbinder;;;;;ja;
 BB-2135;1589-04-21;;Jacob Khainz;jakob_kainz;Kummetmacher;;Leder & Pelz;Hannß Peierl (Hufschmied), Hannß Peierl (Büchsenmacher).;hans_peierl|hans_peierl;Hufschmied|Büchsenmacher;;;;;ja;
-BB-2136;1589-04-21;;Michael Walfseder;michael_walfseder;Kummetmacher;;Leder & Pelz;Thoman Oßwaldt (Riemer), Melchior (Thüll?) (Wagner).;thomas_oswaldt|melchior_duell;Riemer|Wagner;;;;;ja;
+BB-2136;1589-04-21;;Michael Walfseder;michael_walfseder;Kummetmacher;;Leder & Pelz;Thoman Oßwaldt (Riemer), Melchior (Thüll?) (Wagner).;thomas_oswaldt|melchior_duell;Riemer|Wagner;;;;;ja;Mit BB-2158 (Michael Walfeder) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2137;1589-04-21;;Hannß Muer;hans_muer;Bäcker;;Lebensmittelhandwerk;;;;;;;;ja;
-BB-2138;1589-05-26;;Wolf Nesterer;wolf_nesterer;;;;Merth Khagerer (Schmied), Andreas Andre (Schmied).;martin_kagerer|andreas_andre;Schmied|Schmied;;;;;;
+BB-2138;1589-05-26;;Wolf Nesterer;wolf_nesterer;;;;Merth Khagerer (Schmied), Andreas Andre (Schmied).;martin_kagerer|andreas_andre;Schmied|Schmied;;;;;;Mit BB-2162 (Wolf Nestraer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2139;1589-05-26;;Melchort Khlesannfft;melchior_klesannfft;Schneider;;Textil & Bekleidung;Khagerer, Andre.;andreas_khagerer;;;;;;ja;
 BB-2140;1589-05-30;;Hannß Jacob Haß;hans_jacob_haas;;;;;;;;;;;;
 BB-2141;1589-08-11;;Mert Fraunhoffer;martin_fraunhoffer;Messerschmied;;Metall & Waffen;Walf Khlain, Phillip Gareiß (Schlosser).;walf_klain|phillip_gareiss;|Schlosser;;;;;ja;
-BB-2142;1589-08-11;;Leopoldt Erndorffer;leopold_erndorffer;Messerschmied;;Metall & Waffen;;;;;;;;ja;
+BB-2142;1589-08-11;;Leopoldt Erndorffer;leopold_erndorffer;Messerschmied;;Metall & Waffen;;;;;;;;ja;Mit BB-2187 (Leopoldt Arndorffer) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2143;1589-11-26;;Walf Greitner;wolf_greitner;Schmied;;Metall & Waffen;Merth Khagerer (Schmied), Six Stadberger (Schmied).;martin_kagerer|sixt_stadberger;Schmied|Schmied;;;;;ja;
 BB-2144;1589-11-17;;Fridreich Weinreich;friedrich_weinreich;Hosenstricker;;Textil & Bekleidung;Khilian Pierpaumb, Thoman Mittner.;kilian_bierbaum|thomas_mittner;;;;;Volgen hernach die burger so vor erwellung der raths personen den aidt gelaist.;ja;
 BB-2145;1589-11-17;;Colman Pehackher;kolman_pehhacker;Feilschmied;;Metall & Waffen;;;;;;;;ja;
@@ -2183,7 +2183,7 @@ BB-2181;1589-11-17;;Steffan Helbm;stephan_helbm;;;;;;;;;;;;
 BB-2182;1589-11-17;;Sigmundt Gruner;sigmund_gruner;Schmied;;Metall & Waffen;;;;;;;;ja;
 BB-2183;1589-11-17;;Andre Härtl;andreas_haertl;Bader;;Gesundheit;;;;;;;;ja;
 BB-2184;1589-11-17;;Adam Schmälzer;adam_schmaelzer;Tuchscherer;;Textil & Bekleidung;;;;Erstmalig vorstellig am 17. November 1589.;;;;ja;
-BB-2185;1589-11-17;;Friderich Weinreich;friderich_weinreich;;;;;;;Erstmalig vorstellig am 26. Mai 1589.;;;;;
+BB-2185;1589-11-17;;Friderich Weinreich;friderich_weinreich;;;;;;;Erstmalig vorstellig am 26. Mai 1589.;;;;;Mit BB-2258 (Fridrich Weinreich) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2186;1589-11-17;;Melchior Khlesafft;melchior_klesafft;Schneider;;Textil & Bekleidung;;;;;;;;ja;
 BB-2187;1589-11-17;;Leopoldt Arndorffer;leopold_erndorffer;Messerschmied;;Metall & Waffen;;;;Erstmalig vorstellig am 11. August 1589 unter Leopoldt Erndorffer.;;;;ja;"personen_id vereinheitlicht (vorher leopold_arndorffer): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-2142 (""Leopoldt Erndorffer"", Ähnlichkeit 0.947) - dieselbe Person."
 BB-2188;1589-11-17;;Hannß Khlingenpruner;hans_klingenpruner;;;;;;;;;;;;
@@ -2259,7 +2259,7 @@ BB-2257;1595-12-22;;Andree Haßlinger;andreas_hasslinger;Schmied;;Metall & Waffe
 BB-2258;1595-12-22;;Fridrich Weinreich;friderich_weinreich;Hosenstricker;;Textil & Bekleidung;;;;Erstmalig vorstellig am 17. November 1589.;;;;ja;"personen_id vereinheitlicht (vorher friedrich_weinreich): ""Erstmalig vorstellig""-Datum verweist exakt auf BB-2185 (""Friderich Weinreich"", Ähnlichkeit 0.973) - dieselbe Person."
 BB-2259;1595-12-22;;Hannß Graw;hans_graf;Wagner;;Holz, Bau & Stein;;;;;;;;ja;
 BB-2260;1595-12-22;;Christoff Prözner;christoph_proezner;Nestler;;Leder & Pelz;;;;;;;;ja;
-BB-2261;1595-12-22;;Geörg Paungartner;georg_paungartner;;;;;;;;;;;;
+BB-2261;1595-12-22;;Geörg Paungartner;georg_paungartner;;;;;;;;;;;;Mit BB-0923 (Georg Paungarnter) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2262;1595-12-22;;Mertt Veldtmülner;martin_veldtmuelner;Klampferer;;Metall & Waffen;;;;;;;;ja;
 BB-2263;1595-12-22;;Hannß Fux;hans_fux;Maurer;;Holz, Bau & Stein;;;;;;;;ja;
 BB-2264;1595-12-22;;Paul Staindlmair;paul_staindlmair;;;;;;;;;;;;
@@ -2657,7 +2657,7 @@ BB-2655;1621-06-25;;Enagno Lämpel;enagno_laempl;Seiler;;Transport & Wasserwesen
 BB-2656;1621-06-25;;Paul Stuelperger;paul_stuelperger;;;;Valentin Mittereggen, Geörg Lhnofla.;valentin_mittereggen|georg_lhnofla;;;;;;;
 BB-2657;1621-05-14;;Balthaser Thorr;balthasar_thorr;;;;Adam Schweigeisen (Bürger zu Krems), Peter Perg (Bürger zu Krems).;adam_schweigeisen|peter_perg;;;;;;;
 BB-2658;1621-08-13;;Jacob Perger;jakob_perger;Lederer;;Leder & Pelz;;;;;;;;ja;
-BB-2659;1621-08-13;;Peter Schuester;peter_schuester;Lederer;;Leder & Pelz;;;;;;;;ja;
+BB-2659;1621-08-13;;Peter Schuester;peter_schuester;Lederer;;Leder & Pelz;;;;;;;;ja;Mit BB-2691 (Peter Schuesster) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2660;1621-08-13;;Matheß Eilbl;matthias_eilbl;;;;;;;;;;;;
 BB-2661;1621-08-13;;Cristoph Seibl;christoph_seibl;;;;;;;;;;;;
 BB-2662;1621-09-10;;Casparn Klausen;kaspar_klausen;Zimmermann;;Holz, Bau & Stein;Jonasen Khrässen, Hannsen Khellner.;jonasen_kraessen|hans_kellner;;;;;;ja;
@@ -2672,9 +2672,9 @@ BB-2670;1622-01-29;;Georg Mayr;georg_mayr_bb1573;;;;;;;;;;;;
 BB-2671;1622-09-23;;Gotthardt Lambertus;gotthardt_lambertus;;;;;;;;;;;;
 BB-2672;1622-09-23;;Andreaß Panner;andreas_panner;;;;;;;;;;;;
 BB-2673;1622-12-07;;Wolf Schauer;wolf_schauer;;;;;;;;;;;;
-BB-2674;1622-12-07;;Wolf Haltmair;wolf_haltmair;Maurer;;Holz, Bau & Stein;;;;;;;;ja;
-BB-2675;1622-12-20;;Wolf Frieß;wolf_friess;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;
-BB-2676;1622-12-20;;Christoph Sessenmacher;christoph_sessenmacher;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;
+BB-2674;1622-12-07;;Wolf Haltmair;wolf_haltmair;Maurer;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-2694 (Wolf Haltmayr) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-2675;1622-12-20;;Wolf Frieß;wolf_friess;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-2696 (Wolf Fried) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
+BB-2676;1622-12-20;;Christoph Sessenmacher;christoph_sessenmacher;Fasszieher;;Holz, Bau & Stein;;;;;;;;ja;Mit BB-2697 (Christoph Sessenmach) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2677;1622-12-20;;Michael Rohrer;michael_rohrer;;;;;;;;;;;;
 BB-2678;1622-04-26;;Emanuel Panthaleon;emanuel_panthaleon;;;;;;;;;;;;
 BB-2679;1622-04-30;;Georg Maurer;georg_maurer;;;;;;;;;;;;
@@ -2783,7 +2783,7 @@ BB-2781;1624-11-19;;Melchior Mittermayr;melchior_mittermayr;;;;;;;Erstmalig vors
 BB-2782;1624-11-29;;Thoman Edlinger;thomas_edlinger;;;;;;;;;;;;
 BB-2783;1624-12-13;;Georg Khüeffl;georg_kueeffl;;;;;;;;;;;;
 BB-2784;1625-01-07;;Samuel Dieternagl;samuel_dieternagl;;;;;;;;;;;;
-BB-2785;1625-01-24;;Thoman Harweckh;thomas_harbeck;;;;;;;;;;;;
+BB-2785;1625-01-24;;Thoman Harweckh;thomas_harbeck;;;;;;;;;;;;Mit BB-2790 (Thoman Harwegg) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.
 BB-2786;1625-01-24;;Leopoldt Khaindl;leopold_kaindl;;;;;;;;;;;;
 BB-2787;1625-01-24;;Wolf Ropfer;wolf_ropfer;;;;;;;;;;;;
 BB-2788;1625-04-25;;Andre Weidinger;andreas_weidinger;;;;;;;;;;;;

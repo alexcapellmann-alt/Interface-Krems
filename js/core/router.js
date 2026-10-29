@@ -38,7 +38,10 @@ export function parseHash(hash) {
     // PROJEKTLOG). baueHash() bleibt unverändert (kein Aufrufer davon baut
     // aktuell einen datensatz-Link - datensatzAufruf.js baut seine Links
     // selbst, siehe dortiger Kommentar), daher hier nur die Lesehälfte nötig.
-    datensatz: params.get('datensatz')
+    datensatz: params.get('datensatz'),
+    // 2026-10-29: `unsicherheit=an` öffnet die Ansicht mit eingeschalteter Unsicherheitsdarstellung (Link aus der
+    // Führung „Bürgerinnen?“ zur Ortsliste); wird in app.js nach dem Rendern angewandt
+    unsicherheit: params.get('unsicherheit')
   };
 }
 
