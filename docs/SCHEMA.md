@@ -362,7 +362,7 @@ Datengrundlage für die künftigen Storytelling-Führungen (Darstellung/Navigati
 | `vertiefung` | Liste (Pipe-getrennt) | nein | interne Pfade im Router-Format aus Punkt 0.2 (z. B. `#visualisierungen/urkunden/zeitachse`, siehe `js/core/router.js:1-9`) - Format muss erweiterbar bleiben, da Zustandsparameter (Stufe 3, `?entity_typ=…&entity_wert=…` nach demselben Muster wie `router.js:41-46`) später an denselben Pfad angehängt werden |
 | `quellen_intern` | Text | nein | wird im Interface NIE angezeigt (interne Redaktionsnotiz) |
 
-**Führungen mit eigener Ansicht (seit 2026-10-29):** Steht eine `fuehrung_id` in `ANSICHTS_FUEHRUNGEN` (`js/config/archivalienRegistry.js`), zeigt der Tab Führungen statt der Stationen eine interaktive Ansicht, bisher nur `buergerinnen` („Bürgerinnen?“, Themenbereich „Geschichten über das Archiv“, Folien aus `buergerinnen_stationen.csv`, siehe 13.8). Die Zeile in `fuehrungen.csv` liefert Titel, Leitfrage, Kurzbeschreibung und Themenbereich für die Übersicht und braucht `station_nr` 1; Stationstext und Belege werden nicht angezeigt. Als `vertiefung` ist auch `#fuehrungen/<fuehrung_id>` einer solchen Führung erlaubt (Beschriftung „Zur Führung „…““).
+**Führungen mit eigener Ansicht (seit 2026-10-29):** Steht eine `fuehrung_id` in `ANSICHTS_FUEHRUNGEN` (`js/config/archivalienRegistry.js`), zeigt der Tab Führungen statt der Stationen eine interaktive Ansicht, bisher nur `buergerinnen` („Willkommenstour“, bis 2026-10-29 „Bürgerinnen?“, Themenbereich „Geschichten über das Archiv“, Folien aus `buergerinnen_stationen.csv`, siehe 13.8). Die Zeile in `fuehrungen.csv` liefert Titel, Leitfrage, Kurzbeschreibung und Themenbereich für die Übersicht und braucht `station_nr` 1; Stationstext und Belege werden nicht angezeigt. Als `vertiefung` ist auch `#fuehrungen/<fuehrung_id>` einer solchen Führung erlaubt (Beschriftung „Zur Willkommenstour“).
 
 **`beleg`-Präfixtabelle** (gegen die tatsächlichen Spaltennamen der Quell-CSVs geprüft):
 
@@ -636,9 +636,9 @@ Beispiel (Krems, Auszug): `regel;roemische_zahlen;;` · `auslassen;daß;;` · `v
 
 **Verhalten bei fehlender oder leerer Datei:** keine archivspezifische Filterung, kein Hinweis; die Wolke zählt wie vor Auftrag F. Ist die Datei vorhanden, aber unbrauchbar (Spalte `typ`/`wort` fehlt, falsches Trennzeichen): Wolke ungefiltert, dazu ein Hinweisbalken.
 
-### 13.8 buergerinnen_stationen.csv, buergerinnen_schichten.csv, buergerinnen_sektoren.csv und buergerinnen_archiv.csv - Folien der Führung „Bürgerinnen?“ (neu, 2026-10-28)
+### 13.8 buergerinnen_stationen.csv, buergerinnen_schichten.csv, buergerinnen_sektoren.csv und buergerinnen_archiv.csv - Folien der Willkommenstour (neu, 2026-10-28)
 
-Knöpfe, Texte und Zahlen der Führung „Bürgerinnen?“ (bis 2026-10-28 eine Ansicht unter Personen, seit 2026-10-29 im Tab Führungen, `#fuehrungen/buergerinnen`). Alle Dateien sind **optional** und werden erst geladen, wenn die Führung geöffnet wird. Weiter geht es mit dem Pfeil oder dem Mausrad (eine Drehung je Folie; kann die Seite oder ein Element unter dem Zeiger noch scrollen, scrollt zuerst dieses).
+Knöpfe, Texte und Zahlen der Willkommenstour (bis 2026-10-29 „Bürgerinnen?“; bis 2026-10-28 eine Ansicht unter Personen, seit 2026-10-29 im Tab Führungen, `#fuehrungen/buergerinnen`). Alle Dateien sind **optional** und werden erst geladen, wenn die Führung geöffnet wird. Weiter geht es mit dem Pfeil oder dem Mausrad (eine Drehung je Folie; kann die Seite oder ein Element unter dem Zeiger noch scrollen, scrollt zuerst dieses).
 
 **buergerinnen_stationen.csv** - eine Zeile je Folie, in dieser Reihenfolge. Die Ansicht zeigt immer nur einen Weiter-Knopf (hüpfender Pfeil nach unten; `knopf` der nächsten Folie ist sein Name für Bildschirmleser und sein Tooltip) und einen Zurück-Knopf. Die erste Folie braucht keinen `knopf`, alle anderen schon; `tor` muss vorkommen (sonst gilt die Vorgabe Tor → Geschlecht).
 

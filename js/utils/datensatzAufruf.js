@@ -85,8 +85,8 @@ const DATIV_EINLEITUNG = {
 };
 
 // Eigene Beschriftung für Vertiefungslinks, deren Name sich nicht in „In der … der … erkunden“ fügt
-// (2026-10-28: „Bürgerinnen?“ mit Fragezeichen)
-const VERTIEFUNG_BESCHRIFTUNG = { buergerinnen: 'Zur Führung „Bürgerinnen?“' };
+// (2026-10-28: „Bürgerinnen?“ mit Fragezeichen, seit 2026-10-29 die Führung „Willkommenstour“)
+const VERTIEFUNG_BESCHRIFTUNG = { buergerinnen: 'Zur Willkommenstour' };
 
 function genitiv(label, schluessel) {
   const artikel = GENITIV_ARTIKEL[schluessel] || 'der';

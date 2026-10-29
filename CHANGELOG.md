@@ -14,6 +14,9 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
   - Text und Bild stehen als Paar in der Mitte der Bühne, gleicher Rand links und rechts: Buch (`buchRahmen()`, Folien 5 bis 10, auf „Ein Name, viele Schreibweisen“ mit Platz für die Beispiele), Tor und breite Bilder der Archiv-Folien, Buch auf „Behauptet, aber nicht belegt“, Flasche samt Beschriftungen auf „Zahlen aus zweiter Hand“; auf „Wie viele glaubten was?“ steht der breitere Text zwischen Kreuz und Kirche. `textNebenTor()` entfällt.
   - Der Text steht auf halber Höhe des Bilds (`mitte`, `textOben()`), auf den Vermögens-Folien weiter oben neben den Säulen.
   - Vermögens-Folien (11 bis 13): Säulen und Münzfelder teilen sich die sichtbare Höhe (`layoutVermoegen()`, Punkte und Münzen dafür kleiner), die Textspalte ist so breit wie auf den anderen Folien; „Wer fehlt noch?“ passt damit bei 1400 × 800 ganz auf eine Bildschirmseite (Bühne 469 statt 874 px). Zu den Münzen gescrollt wird nur noch, wenn sie nicht ohnehin sichtbar sind.
+- Untertitel (`unterzeile`) sagen jetzt, worum es geht, statt zu beschreiben, was zu sehen ist (Vorschläge abgestimmt mit dem Autor); zuletzt „Die Quellen schweigen zur Zahl“ und „Wer schreibt, bestimmt, was bleibt“.
+- Die Führung heißt jetzt „Willkommenstour“ statt „Bürgerinnen?“ (`fuehrungen.csv`, Infotext, Vertiefungslink „Zur Willkommenstour“); Adresse bleibt `#fuehrungen/buergerinnen`.
+- Texte: „Lücke oder Wandel?“ verlinkt „Hier“ auf die Zeitachse der Urkunden; „Die Karte ist sicherer als wir“ nach Vorgabe des Autors gekürzt (zwei Absätze).
 - Geprüft auf dem Testserver 8845 (1400 × 800, Folie 16 auch 1024 × 768): Folien 1 bis 23 durchgeklickt, keine Überlappungen, keine Konsolenfehler.
 
 Kein Commit durch Claude Code.
