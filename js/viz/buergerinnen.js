@@ -77,13 +77,16 @@ const TEXT_MIN_BREITE = 820;      // ab dieser Bühnenbreite steht die Erklärun
 const TEXT_BREITE = 400;          // höchstens so breit
 const STATIONEN_DATEI = 'data/buergerinnen_stationen.csv';
 const SCHICHTEN_DATEI = 'data/buergerinnen_schichten.csv';
+const SEKTOREN_DATEI = 'data/buergerinnen_sektoren.csv';
+const BUERGERBUCH_DATEI = 'data/buergerbuch.csv'; // roh nachgeladen: Bürgen und ihre Berufe stellengleich (siehe ergaenzeSektoren())
 const OHNE_BUERGERRECHT = 'ohne_buergerrecht'; // id der grauen Säule in buergerinnen_schichten.csv
 const STANDARD_MUENZE = 1000;     // Gulden je Münze, falls die Stationsdatei keinen Wert nennt
 const STANDARD_UNTERZEILE = 'Neubürger und ihre Bürgen, ein Punkt je Person';
-const BEKANNTE_STATIONEN = ['tor', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation'];
+const BEKANNTE_STATIONEN = ['tor', 'berufe', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation'];
 const VERMOEGEN_STATIONEN = ['schichten', 'muenzen', 'vermoegenslos']; // gemeinsames Säulen-Layout
 // Beiwerk je Folie (siehe zeichneTeile())
 const TEILE = {
+  berufe: ['sektoren'],
   geschlecht: ['geschlecht', 'leeresFeld'],
   frauen: ['geschlecht'],
   schichten: ['koepfe', 'muenzen', 'legende'], // Münzen schon angelegt, aber verborgen (der Regen startet ohne Aufbau)
@@ -92,7 +95,7 @@ const TEILE = {
   klerus: ['muenzen'],
   reformation: ['muenzen']
 };
-const PERSONEN_STATIONEN = ['tor', 'geschlecht', 'frauen']; // dort steht ein Punkt für eine Person (Klick öffnet die Sidebar)
+const PERSONEN_STATIONEN = ['tor', 'berufe', 'geschlecht', 'frauen']; // dort steht ein Punkt für eine Person (Klick öffnet die Sidebar)
 // ohne Stationsdatei: Tor und Geschlecht ohne Text
 const STANDARD_STATIONEN = [
   { id: 'tor', knopf: 'Steiner Tor', unterzeile: '', muenze: null, anhaengen: false, absaetze: [] },
@@ -126,6 +129,46 @@ function sammlePersonen(buergerbuch, personenliste) {
     });
   });
   return [...personen.values()];
+}
+
+// Wirtschaftssektor je Person (Folie `berufe`, 2026-10-29): Neubürger aus ihrer frühesten Aufnahme mit Sektor;
+// sonst - Bürgen, die selbst nie aufgenommen wurden, oder Neubürger ohne Sektor - über ihren Beruf als Bürge, mit
+// derselben Zuordnung Beruf → Sektor, die die Aufnahmen zeigen (dann `sektorErschlossen`). Bürgen und Berufe gehören
+// über ihre Stelle in den |-Listen zusammen; der Datenlader lässt leere Stellen weg (bei 35 Aufnahmen verschöbe das
+// die Berufe), deshalb kommen die beiden Listen aus der roh gelesenen Datei (`rohZeilen`). Fehlt sie, zählen nur
+// Aufnahmen, bei denen gleich viele Bürgen und Berufe stehen.
+function ergaenzeSektoren(personen, buergerbuch, rohZeilen) {
+  const jahrJeRecord = new Map(teileNachJahr(buergerbuch).mitJahr.map(({ record, jahr }) => [record, jahr]));
+  const sektorVonBeruf = new Map();
+  const eigen = new Map();
+  buergerbuch.map((r, k) => ({ r, k, jahr: jahrJeRecord.get(r) ?? Infinity }))
+    .sort((a, c) => a.jahr - c.jahr || a.k - c.k)
+    .forEach(({ r }) => {
+      const sektor = alsText(r.Wirtschaftssektor).trim();
+      const beruf = alsText(r.Beruf).trim();
+      if (!sektor) return;
+      if (beruf && !sektorVonBeruf.has(beruf)) sektorVonBeruf.set(beruf, sektor);
+      const id = alsText(r.personen_id).trim();
+      if (id && !eigen.has(id)) eigen.set(id, { sektor, beruf });
+    });
+  const alsBuerge = new Map();
+  const listen = rohZeilen
+    ? rohZeilen.map((r) => [alsText(r.buergen_id).split('|'), alsText(r.Buergen_Berufe).split('|')])
+    : buergerbuch.map((r) => [r.buergen_id, r.Buergen_Berufe].map((w) => (Array.isArray(w) ? w : [alsText(w)])))
+      .filter(([ids, berufe]) => ids.length === berufe.length);
+  listen.forEach(([ids, berufe]) => {
+    ids.forEach((id, k) => {
+      const kennung = alsText(id).trim();
+      const beruf = alsText(berufe[k]).trim();
+      if (kennung && !alsBuerge.has(kennung) && sektorVonBeruf.has(beruf)) alsBuerge.set(kennung, { sektor: sektorVonBeruf.get(beruf), beruf });
+    });
+  });
+  personen.forEach((p) => {
+    const treffer = eigen.get(p.id) || alsBuerge.get(p.id);
+    p.sektor = treffer?.sektor || null;
+    p.beruf = treffer?.beruf || null;
+    p.sektorErschlossen = Boolean(treffer && !eigen.has(p.id));
+  });
 }
 
 function jahresSpanne(buergerbuch) {
@@ -287,7 +330,11 @@ function torFormIn(n, r) {
   const skala = Math.min(r.h / TOR.hoehe, r.b / TOR.breite);
   const ox = r.x + (r.b - TOR.breite * skala) / 2 - TOR.x0 * skala;
   const oy = r.y + (r.h - TOR.hoehe * skala) / 2 - TOR.y0 * skala;
-  return { zelle: torPunkteCache.get(n).abstand * skala, pos: (i) => { const [x, y] = punkte[i % punkte.length] || [512, 900]; return [ox + x * skala, oy + y * skala]; } };
+  return {
+    zelle: torPunkteCache.get(n).abstand * skala,
+    pos: (i) => { const [x, y] = punkte[i % punkte.length] || [512, 900]; return [ox + x * skala, oy + y * skala]; },
+    ort: ([x, y]) => [ox + x * skala, oy + y * skala] // Punkt in den Koordinaten der Umrisszeichnung
+  };
 }
 
 // n Punkte auf versetztem Gitter innerhalb einer Form (Flächen als Pfade im Feld form.w × form.h); Abstand per Suche
@@ -464,11 +511,70 @@ function bereiteSchichtenAuf(records, n) {
   return { buerger, ohne, gesamt };
 }
 
+// Wirtschaftssektoren (Folie `berufe`): Gruppen aus buergerinnen_sektoren.csv; je Gruppe die Personen mit diesem
+// Sektor (siehe ergaenzeSektoren()). Sektoren, die keiner Gruppe zugeordnet sind, zählen zur letzten. Dazu für die
+// Platzhalter die Aufnahmen (Zeilen) mit und ohne Sektor.
+function bereiteBerufeAuf(records, buergerbuch, personen) {
+  const gruppen = (records || []).map((r) => ({
+    id: alsText(r.id).trim(),
+    name: alsText(r.name).trim(),
+    sektoren: (Array.isArray(r.sektoren) ? r.sektoren : [r.sektoren]).map((x) => alsText(x).trim()).filter(Boolean),
+    beispiele: alsText(r.beispiele).trim(),
+    mitglieder: []
+  })).filter((g) => g.id && g.name);
+  if (!gruppen.length) return null;
+  const gruppeVonSektor = new Map();
+  gruppen.forEach((g) => g.sektoren.forEach((x) => gruppeVonSektor.set(x, g)));
+  const gruppeVon = personen.map((p, i) => {
+    if (!p.sektor) return null;
+    const g = gruppeVonSektor.get(p.sektor) || gruppen[gruppen.length - 1];
+    g.mitglieder.push(i);
+    return g;
+  });
+  const mit = gruppen.reduce((summe, g) => summe + g.mitglieder.length, 0);
+  if (!mit) return null;
+  gruppen.forEach((g) => { g.anzahl = g.mitglieder.length; });
+  const aufnahmenMit = buergerbuch.filter((r) => alsText(r.Wirtschaftssektor).trim()).length;
+  return {
+    gruppen: gruppen.filter((g) => g.anzahl > 0), gruppeVon, mit, ohne: personen.length - mit,
+    aufnahmen: buergerbuch.length, aufnahmenMit
+  };
+}
+
+// Plätze im Tor (2026-10-29): welche Person an welchem Punkt des Tors steht, war zufällig; jetzt stehen die Personen
+// mit Sektor rechts eines senkrechten Schnitts, nach Gruppen von oben nach unten (so fließen sie auf der Folie
+// `berufe` ohne Überkreuzen in ihre Balken). Die Helligkeit gehört zum Platz, das Tor sieht also aus wie zuvor.
+function vergibTorPlaetze(personen, B) {
+  const n = personen.length;
+  const roh = torPunkte(n);
+  const nachX = d3.range(n).sort((a, c) => roh[a][0] - roh[c][0] || roh[a][1] - roh[c][1]);
+  const links = nachX.slice(0, n - B.mit);
+  const rechts = nachX.slice(n - B.mit).sort((a, c) => roh[a][1] - roh[c][1] || roh[a][0] - roh[c][0]);
+  const platz = new Array(n);
+  personen.forEach((p, i) => { if (!B.gruppeVon[i]) platz[i] = links.shift(); });
+  let k = 0;
+  B.gruppen.forEach((g) => {
+    g.mitglieder.forEach((i) => { platz[i] = rechts[k]; k += 1; });
+  });
+  const helligkeit = personen.map((p) => p.helligkeit);
+  personen.forEach((p, i) => { p.helligkeit = helligkeit[platz[i]]; });
+  return platz;
+}
+
 const escapeHtml = (t) => String(t).replace(/[&<>"]/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[z]));
 
-// Platzhalter in den Stationstexten: {anteil:id} (Prozent des Vermögens), {summe:id}, {mittel:id}, {anzahl:id}, {muenze}
+// Platzhalter in den Stationstexten: {anteil:id} (Prozent des Vermögens), {summe:id}, {mittel:id}, {anzahl:id}, {muenze},
+// {aufnahmen}, {mitberuf}, {ohneberuf}, {berufanteil} (Aufnahmen ins Bürgerbuch mit bzw. ohne Berufsangabe),
+// {personenmitberuf}, {personenanteil} (Personen mit Sektor, auch Bürgen über ihren Beruf)
 function platzhalterWert(name, id) {
   if (name === 'muenze') return zahl(instanz.muenzeGulden);
+  const B = instanz.berufe;
+  if (B && name === 'aufnahmen') return zahl(B.aufnahmen);
+  if (B && name === 'mitberuf') return zahl(B.aufnahmenMit);
+  if (B && name === 'ohneberuf') return zahl(B.aufnahmen - B.aufnahmenMit);
+  if (B && name === 'berufanteil') return prozent((B.aufnahmenMit / B.aufnahmen) * 100);
+  if (B && name === 'personenmitberuf') return zahl(B.mit);
+  if (B && name === 'personenanteil') return prozent((B.mit / instanz.personen.length) * 100);
   const s = instanz.schichten?.buerger.find((x) => x.id === id);
   if (!s) return null;
   return { anteil: prozent(s.vermoegensanteil), summe: zahl(Math.round(s.summe)), mittel: zahl(s.mittel), anzahl: zahl(s.anzahl) }[name] ?? null;
@@ -508,12 +614,59 @@ function berechneLayout(station = instanz.station) {
   const feld = torForm(personen.length, b, h);
   const radiusFeld = Math.max(1.1, feld.zelle * 0.4);
   const basis = { b, h, feld, radiusFeld, station, benoetigt: 0, text: null, art: station };
+  if (station === 'berufe' && instanz.berufe) return { ...basis, ...layoutBerufe(b), art: 'berufe' };
   if (station === 'geschlecht' || station === 'frauen') return { ...basis, ...layoutGeschlecht(b, h, radiusFeld), art: 'geschlecht' };
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b), art: 'vermoegen' };
   if ((station === 'klerus' || station === 'reformation') && instanz.schichten) {
     return { ...basis, ...layoutKlerus(b, station === 'reformation'), art: 'klerus' };
   }
-  return { ...basis, ziel: (p, i) => feld.pos(i), radius: radiusFeld };
+  return { ...basis, ziel: (p, i) => feld.pos(instanz.torPlatz ? instanz.torPlatz[i] : i), radius: radiusFeld };
+}
+
+// Folie `berufe` (Wunsch des Autors, 2026-10-29): Das Tor wird senkrecht geteilt. Links bleiben die Personen ohne
+// Sektor stehen, die Personen rechts vom Schnitt (siehe vergibTorPlaetze()) bilden ein Balkendiagramm der
+// Wirtschaftssektoren, ein Punkt je Person; im Balken steht links, wer im Tor links stand. Das Tor steht wie auf der
+// ersten Folie (Ausgangshöhe, auch wenn der Text die Bühne höher macht); der Text links daneben.
+function layoutBerufe(b) {
+  const { personen, berufe: B, torPlatz } = instanz;
+  const h = instanz.basisHoehe;
+  const n = personen.length;
+  const feld = torForm(n, b, h);
+  const lage = d3.range(n).map((i) => feld.pos(torPlatz[i]));
+  const schnitt = d3.min(B.gruppen.flatMap((g) => g.mitglieder), (i) => lage[i][0]) ?? b / 2;
+  const torLinks = d3.min(lage, ([x]) => x);
+  const luecke = Math.max(14, b * 0.025);
+  const x0 = schnitt + luecke, breite = b - 8 - x0;
+  // Balken: so viele Punktreihen je Balken, dass die Punkte möglichst so groß wie im Tor bleiben
+  const zahlBreite = 46, beschriftung = 18, abstand = 8;
+  const G = B.gruppen.length;
+  const hoeheJe = (h - KOPF_SPALTEN - 8) / G;
+  const groesste = Math.max(...B.gruppen.map((g) => g.anzahl), 1);
+  const passend = (reihen) => Math.min((breite - zahlBreite) / Math.ceil(groesste / reihen), (hoeheJe - beschriftung - abstand) / reihen);
+  let reihen = 1, z = passend(1);
+  for (let r = 1; r <= 12; r += 1) {
+    const zr = passend(r);
+    if (zr >= feld.zelle) { reihen = r; z = zr; break; }
+    if (zr > z) { reihen = r; z = zr; }
+  }
+  z = Math.max(1, Math.min(z, feld.zelle));
+  const ziel = lage.slice();
+  const balken = B.gruppen.map((g, gi) => {
+    const oben = KOPF_SPALTEN + gi * (beschriftung + reihen * z + abstand);
+    [...g.mitglieder].sort((a, c) => lage[a][0] - lage[c][0] || lage[a][1] - lage[c][1]).forEach((i, j) => {
+      ziel[i] = [x0 + z / 2 + Math.floor(j / reihen) * z, oben + beschriftung + z / 2 + (j % reihen) * z];
+    });
+    return { g, oben, ende: x0 + Math.ceil(g.anzahl / reihen) * z, mitte: oben + beschriftung + (reihen * z) / 2 };
+  });
+  const textBreite = Math.min(TEXT_BREITE, torLinks - luecke - 8);
+  const breit = b >= TEXT_MIN_BREITE && textBreite >= 220;
+  return {
+    ziel: (p, i) => ziel[i],
+    bleibt: (i) => !B.gruppeVon[i],
+    radius: Math.max(1.1, z * 0.4),
+    text: breit ? { x: torLinks - luecke - textBreite, b: textBreite, top: 4 } : null,
+    x0, balken, torOrt: feld.ort
+  };
 }
 
 // Männer links, Frauen rechts; ab TEXT_MIN_BREITE steht die Erklärung dazwischen
@@ -684,7 +837,7 @@ function zeichne(animiert) {
   const imFeld = L.station === 'tor';
   punkte.classed('anteil', !PERSONEN_STATIONEN.includes(L.station));
   // Größe und Deckkraft springen gleich auf den Zielwert (der Unterschied ist klein), nur die Lage wird animiert
-  punkte.attr('r', L.radius).attr('fill-opacity', (p) => (imFeld ? p.helligkeit : 0.85));
+  punkte.attr('r', L.radius).attr('fill-opacity', (p, i) => (imFeld || L.bleibt?.(i) ? p.helligkeit : 0.85));
   bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation, L.art === 'vermoegen' ? HAUSHALT_FARBE : FARBE);
   if (mitAnimation) instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400;
   zeichneFrauen(L, mitAnimation);
@@ -1109,6 +1262,25 @@ function blendeEin(g, neu, verzoegerung = DAUER * 0.55) {
 }
 
 const ZEICHNER = {
+  // Folie `berufe`: Überschrift und Zahl über dem Diagramm, Name und Zahl je Balken, im Tor die Beschriftung des
+  // stehenden Teils (über dem linken Rundturm)
+  sektoren(g, L, neu) {
+    const B = instanz.berufe;
+    const anteil = (wert) => `${prozent((wert / instanz.personen.length) * 100)} %`;
+    g.append('text').attr('class', 'bgi-spaltenkopf klein').style('text-anchor', 'start').attr('x', L.x0).attr('y', 26).text('Mit Berufsangabe');
+    g.append('text').attr('class', 'bgi-spaltenzahl').style('text-anchor', 'start').attr('x', L.x0).attr('y', 48)
+      .text(`${zahl(B.mit)} Personen · ${anteil(B.mit)}`);
+    L.balken.forEach(({ g: gruppe, oben, ende, mitte }) => {
+      g.append('text').attr('class', 'bgi-wert-klein').style('text-anchor', 'start').attr('x', L.x0).attr('y', oben + 13).text(gruppe.name);
+      g.append('text').attr('class', 'bgi-wert').style('text-anchor', 'start').attr('x', ende + 6).attr('y', mitte + 4).text(zahl(gruppe.anzahl));
+    });
+    const [mx, my] = L.torOrt([198, 450]);
+    [['bgi-spaltenkopf klein', 'Ohne', -24], ['bgi-spaltenkopf klein', 'Berufsangabe', -4],
+      ['bgi-spaltenzahl', `${zahl(B.ohne)} · ${anteil(B.ohne)}`, 18]]
+      .forEach(([klasse, text, dy]) => g.append('text').attr('class', klasse).attr('x', mx).attr('y', my + dy).text(text));
+    blendeEin(g, neu);
+  },
+
   // Überschriften und Zahlen der beiden Spalten (bleiben auf der Folie `frauen` stehen)
   geschlecht(g, L, neu) {
     [[L.links, 'Männer', L.maenner.length], [L.rechts, 'Frauen', L.frauen.length]].forEach(([s, titel, anzahl]) => {
@@ -1304,6 +1476,11 @@ function markiereAuswahl() {
 
 function stationsBeschriftung() {
   const { station, layout: L, schichten, personen } = instanz;
+  if (station === 'berufe' && instanz.berufe) {
+    const B = instanz.berufe;
+    return `Personen im Bürgerbuch nach Wirtschaftssektor: ${zahl(B.mit)} mit Berufsangabe als Balken, `
+      + `${B.gruppen.map((g) => `${g.name} ${zahl(g.anzahl)}`).join(', ')}; ${zahl(B.ohne)} ohne Berufsangabe bleiben im Tor`;
+  }
   if (station === 'geschlecht') return `${zahl(L.maenner.length)} Männer und ${zahl(L.frauen.length)} Frauen im Bürgerbuch`;
   if (station === 'klerus') return 'Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden wieder das Steiner Tor, daneben eine kleine Kirche mit Kreuz aus den Münzen';
   if (station === 'reformation') return 'Reformation: Die Punkte der Bürgerschaft bilden ein Kreuz, daneben die kleine Kirche aus den Münzen';
@@ -1356,13 +1533,22 @@ function geheZu(index) {
 
 // Daten der Stationen nachladen; bis dahin steht das Tor ohne Knöpfe
 async function ladeStationsdaten() {
-  const [stationen, schichten] = await Promise.all([
+  const [stationen, schichten, sektoren, rohBuergerbuch] = await Promise.all([
     ladeCSV(STATIONEN_DATEI).then((r) => r.records).catch(() => null),
-    ladeCSV(SCHICHTEN_DATEI).then((r) => r.records).catch(() => null)
+    ladeCSV(SCHICHTEN_DATEI).then((r) => r.records).catch(() => null),
+    ladeCSV(SEKTOREN_DATEI).then((r) => r.records).catch(() => null),
+    fetch(BUERGERBUCH_DATEI).then((r) => (r.ok ? r.text() : null)).then((t) => (t ? d3.dsvFormat(';').parse(t) : null)).catch(() => null)
   ]);
   if (!instanz) return;
+  if (sektoren) ergaenzeSektoren(instanz.personen, instanz.buergerbuch, rohBuergerbuch);
   instanz.schichten = bereiteSchichtenAuf(schichten, instanz.personen.length);
+  instanz.berufe = bereiteBerufeAuf(sektoren, instanz.buergerbuch, instanz.personen);
+  if (instanz.berufe) {
+    instanz.torPlatz = vergibTorPlaetze(instanz.personen, instanz.berufe);
+    if (instanz.station === 'tor') zeichne(false); // gleiche Punkte, nur andere Personen darauf
+  }
   instanz.stationen = bereiteStationenAuf(stationen)
+    .filter((s) => s.id !== 'berufe' || instanz.berufe)
     .filter((s) => !VERMOEGEN_STATIONEN.includes(s.id) || instanz.schichten)
     .filter((s) => s.id !== 'vermoegenslos' || instanz.schichten?.ohne);
   instanz.muenzeGulden = instanz.stationen.find((s) => s.muenze)?.muenze || STANDARD_MUENZE;
@@ -1453,7 +1639,14 @@ export function render(container, data, options = {}) {
     .on('mouseenter', function (event, p) {
       if (PERSONEN_STATIONEN.includes(instanz.station)) {
         const zeile = p.rolle === 'neubuerger' ? `Neubürger${p.jahr ? ` ${p.jahr}` : ''}` : 'Bürge';
-        zeigeTooltip(`${p.name}\n${zeile}`, this, container);
+        let sektor = '';
+        if (instanz.station === 'berufe') {
+          const gruppe = instanz.berufe?.gruppeVon[p.nr];
+          sektor = gruppe
+            ? `\n${p.beruf ? `${p.beruf} · ` : ''}${gruppe.name}${p.sektorErschlossen ? '\n(Sektor aus dem Beruf als Bürge erschlossen)' : ''}`
+            : '\nohne Berufsangabe';
+        }
+        zeigeTooltip(`${p.name}\n${zeile}${sektor}`, this, container);
         return;
       }
       if (instanz.station === 'klerus' || instanz.station === 'reformation') return;
@@ -1489,7 +1682,7 @@ export function render(container, data, options = {}) {
 
   const sidebar = baueSidebarGeruest(container);
   instanz = {
-    container, wurzel, buehne, personen, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
+    container, wurzel, buehne, personen, buergerbuch, berufe: null, torPlatz: null, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
     zuordnung: null, muenzeGulden: STANDARD_MUENZE, svg, punkte, graue: null, graueSichtbar: false, frauenPunkte, frauenSichtbar: false, leinwand, bewegungen: new Map(), leinwandSchleife: null, ebeneSpalten, ebeneMuenzen,
     ebeneGraue, teileVorher: new Set(), weiterKnopf: steuerung.querySelector('.bgi-weiter'), zurueckKnopf: steuerung.querySelector('.bgi-zurueck'),
     unterzeile: kopf.querySelector('.bgi-unterzeile'), erklaerung, infoButton: null, layout: null, sidebar, quellen,
