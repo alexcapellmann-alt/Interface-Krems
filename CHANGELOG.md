@@ -7,6 +7,49 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-29 (212) – Bürgerinnen?: Titel je Folie, Buchseiten, Texte, Karte ohne Umriss, Link mit Unsicherheit
+
+- Wunsch des Autors:
+  - Titel: `buergerinnen_stationen.csv` hat die neuen Spalten `ueberzeile` und `titel`; zusammen mit `unterzeile` bekommt jede Folie eigene Kopfzeilen, Platzhalter wie im Text werden ersetzt (`setzeKopf()`).
+  - Übergang „Das Bürgerbuch“ → „Ein Name, viele Schreibweisen“: Die blauen Punkte grauen langsam aus (1,8 s), dann leuchten die Personen mit mehreren Schreibweisen.
+  - `geschlecht`: Die Männer bilden die linke Buchseite, die gestrichelte leere Fläche der Frauen ist die rechte Buchseite; auf `frauen` füllt sich diese Seite, die Zahlen unter „Männer“ und „Frauen“ entfallen dort.
+  - `reformation`: Absatz zur nicht bezifferbaren Unsicherheit entfernt.
+  - `behauptung`: Der Text erklärt, was ein Beichtzettel ist; die linke Buchseite zeigt das Schreiben von 1615 als stilisierte Schriftzeilen (`zeilenPunkte()`).
+  - `weinzoll`: Die Waag- und Niederlagsbücher führen den Wein höchstens unter Sammelbegriffen wie „Ware“ oder „Krämerei“.
+  - Karte (`orte`, `verarbeitung`): Umriss Österreichs und Zusätze in Klammern bei Krems und Wien wieder entfernt.
+  - `verarbeitung`: Link zur Ortsliste mit eingeschalteter Unsicherheitsdarstellung. Dafür liest `js/core/router.js` den Parameter `unsicherheit=an`, und `js/core/app.js` schaltet nach dem Laden der Ansicht den Unsicherheits-Knopf ein, wenn die Ansicht einen hat.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Folien 1–22 durchgeklickt, Titel je Folie, Ausgrauen auf Folie 8, Buchseiten auf 9 und 10, Schriftzeilen auf 15, Text 16, Karten 21 und 22 ohne Umriss; der Link öffnet die Ortsliste mit „Unsicherheiten ausblenden“ (Modus an); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (211) – Bürgerinnen?: Jahreszahlen der Verluste, Karte mit Österreich, Texte; Unsicherheit bei zusammengeführten Personen
+
+- Daten (Wunsch des Autors, Beispiel Augustin Pottner/Reyttner): Bei der Zusammenführung von Schreibweisen hatte nur der umbenannte Eintrag eine `unsicherheit_anmerkung`, der Partner nicht. In `data/buergerbuch.csv` haben jetzt 126 Partner-Einträge die Anmerkung „Mit BB-… (Name) zur selben Person zusammengeführt, die Zuordnung ist nicht sicher.“ (nur die letzte Spalte, sonst keine Änderung; per `git diff --stat` geprüft: 126 Zeilen).
+- Verlust-Folien: Die roten Jahreszahlen bleiben über alle drei Folien stehen und ordnen sich zeitlich ein; schon gezeigte rücken auf, neue schieben sich von rechts ein (die der aktuellen Folie kräftig, frühere blasser), zurück verschwinden sie wieder (`zeichneJahre()`).
+- Karte (`orte`, `verarbeitung`): dünner Umriss Österreichs (`OESTERREICH`, stark vereinfacht), größere Punkte, je Ort höchstens 40 Urkunden (Beschriftung nennt Gesamtzahl), Maßstab aus den nächsten 90 % der Orte, fernere am äußeren Kreis „weiter entfernt“. Auf `verarbeitung` statt Höfen hellrote Punkte für Urkunden mit unsicher zugeordnetem Ort.
+- Texte: `weinzoll` stellt die Abhängigkeit von Quellen von außerhalb in den Vordergrund (Passauer Maut, Kremser Waag- und Niederlagsbücher verzeichnen den Wein nicht), Literatur-Vergleich und Literatur-Pegel an der Flasche entfernt. `orte`: unklarer oder fehlender Ausstellungsort, geänderte Ortsnamen; Satz zur Verzerrung entfernt. `verarbeitung`: „hellrote Punkte“, Orte am Rand nicht sicher identifiziert, allgemeiner Satz zur Verarbeitung.
+- Geprüft auf dem Testserver 8845 (1400 × 800): Folien 17–19 (Jahre am Ende 1532, 1572–1575, 1624, 1628, 1850–1938, 1871, 1945, 2002), 21, 22 (89 hellrote Punkte, Rand); keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-10-29 (210) – Bürgerinnen?: Folien 14–16 auf Unsicherheit umgebaut
+
+- Wunsch des Autors: Die Folien zur Stadtgeschichte zeigen jetzt je eine Art von Unsicherheit.
+  - „Stadt und Kirche“ (`klerus`) aus der Folge genommen; `reformation` heißt „Wie viele glaubten was?“ (tiefe Unsicherheit nach Levontin et al.): Nach dem Ankommen pendeln die Punkte immer wieder zwischen Kreuz und Kirche durch katholische Anteile von 2,5 bis 20 % (`KATHOLISCH_ANTEILE`, `pendleKonfession()`); die Münzkirche ist dort blass (`KIRCHE_BLASS`), damit man die Punkte darin sieht; Beschriftungen „evangelisch: wie viele?“ und „katholisch: wie viele?“.
+  - Neue Folie `behauptung` „Behauptet, aber nicht belegt“ (Fehlerhaftigkeit): aufgeschlagenes Buch aus allen Punkten, links das Schreiben des Rates von 1615, rechts das Ratsprotokoll vom 14. August 1607 mit 14 Punkten für die anderen Einträge und einem gestrichelten Rahmen „kein Eintrag zur Pflicht des Beichtzettels“ (`layoutBehauptung()`, Teil `beleg`); die Kirche blendet aus.
+  - `weinzoll` heißt „Zahlen aus zweiter Hand“: Passauer Maut als fremde Perspektive, fehlender Wein in den Kremser Waagbüchern, „Ware“ bei einem Drittel der Einträge; an der Flasche zusätzlich ein gestrichelter Pegel „Literatur: knapp 60 % Verlust“ gegenüber „aus den Zahlen: 55 % Verlust“ (Inkonsistenz).
+- Texte ergänzt: „Was verloren ging“ (Verluste lassen sich nicht beziffern, dürfen aber nicht übergangen werden), „Das Archiv“ (Auswahl: nicht digitalisiert, verliehen, Entscheidung des Archivs; object uncertainty nach Windhager et al.).
+- „Lücke oder Wandel?“: Das Tor der Vorfolie ist dort ganz ausgeblendet (vorher mit 10 % Deckkraft im Hintergrund).
+- Geprüft auf dem Testserver 8845 (1400 × 800): Folien 13 → 14 → 15 → 16 und 19 → 20, Pendeln mit Lücken im Kreuz und Punkten in der Kirche, Seitentitel ohne Überlappung; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (209) – Bürgerinnen?: Folien zu Schreibweisen, Orten und Unsicherheit durch Verarbeitung
 
 - Wunsch des Autors (Unsicherheitstypologie: Inkonsistenz, Fehlerhaftigkeit/Mehrdeutigkeit, Unsicherheit durch digitale Verarbeitung):

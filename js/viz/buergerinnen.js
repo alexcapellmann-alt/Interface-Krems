@@ -83,7 +83,18 @@ const FLASCHE = {
   flaechen: ['M40,0 H60 V12 H58 V78 C58,126 90,138 90,186 V290 Q90,300 80,300 H20 Q10,300 10,290 V186 C10,138 42,126 42,78 V12 H40 Z'],
   bauch: [10, 90] // linker und rechter Rand des Bauchs (für Pegellinie und Beschriftung)
 };
-const KATHOLISCH_JEDER = 40;       // Folie `reformation`: jeder 40. Punkt (2,5 %) bleibt katholisch und geht in die Kirche
+// Folie `reformation` („Wie viele glaubten was?“, tiefe Unsicherheit): der katholische Anteil ist unbekannt; die Punkte
+// pendeln zwischen Kreuz und Kirche durch diese Anteile (höchstens KATHOLISCH_HOECHSTENS)
+const KATHOLISCH_ANTEILE = [0.025, 0.15, 0.05, 0.2, 0.08];
+const KATHOLISCH_HOECHSTENS = 0.2;
+const PENDEL_TAKT = 3800;          // ms je Schritt
+const KIRCHE_BLASS = 0.3;          // Deckkraft der Münzkirche dort
+// Folie `behauptung`: Schreiben des Rates (linke Seite) und Ratsprotokoll des Tages (rechte Seite, fast leer)
+const BELEG = {
+  eintraege: 14,                      // so viele Punkte für die anderen Einträge des Tages im Protokoll
+  streifen: 'M112,24 H186 V40 H112 Z', // dort stehen sie (oben auf der rechten Seite)
+  rahmen: [112, 52, 74, 64]           // x, y, Breite, Höhe des leeren, gestrichelten Rahmens
+};
 const KIRCHENSCHIFF = ['M38,78 H112 V124 H38 Z']; // dort sitzen sie (Tür ausgespart, siehe KIRCHE)
 const KREUZ = { w: 100, h: 150, flaechen: ['M40,0 H60 V150 H40 Z', 'M8,32 H92 V52 H8 Z'] };
 const KIRCHE = {
@@ -128,9 +139,12 @@ const ORTE_DATEI = 'data/orte.csv';
 // Wien, Pressburg, Komárom, Esztergom, Budapest)
 const DONAU = [[9.99, 48.40], [12.10, 49.02], [13.46, 48.57], [14.29, 48.31], [15.33, 48.23], [15.61, 48.41], [16.05, 48.33],
   [16.37, 48.21], [17.11, 48.14], [18.12, 47.76], [18.74, 47.79], [19.04, 47.50]];
-const HERVOR = '#b4541f';          // Folie `schreibweisen`: Personen mit mehreren Schreibweisen
+const ORT_HOECHSTENS = 40;         // so viele Urkunden je Ort zeigt die Karte höchstens (Wien und Krems haben viel mehr)
+const UNSICHER_HELL = '#d9897a';   // Folie `verarbeitung`: Urkunden mit unsicher zugeordnetem Ort
+const HERVOR = '#b4541f';
+const AUSGEGRAUT = '#b3ada2';      // Folie `schreibweisen`: die übrigen Personen          // Folie `schreibweisen`: Personen mit mehreren Schreibweisen
 const ARCHIV_STATIONEN = ['archiv', 'kategorien', 'zeitraeume', 'klick', ...VERLUST_STATIONEN, 'urkunden', ...KARTE_STATIONEN, 'mitmachen'];
-const BEKANNTE_STATIONEN = [...ARCHIV_STATIONEN, 'tor', 'berufe', 'buergerbuch', 'schreibweisen', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation', 'weinzoll'];
+const BEKANNTE_STATIONEN = [...ARCHIV_STATIONEN, 'tor', 'berufe', 'buergerbuch', 'schreibweisen', 'geschlecht', 'frauen', 'schichten', 'muenzen', 'vermoegenslos', 'klerus', 'reformation', 'behauptung', 'weinzoll'];
 const VERMOEGEN_STATIONEN = ['schichten', 'muenzen', 'vermoegenslos']; // gemeinsames Säulen-Layout
 // Beiwerk je Folie (siehe zeichneTeile())
 const TEILE = {
@@ -139,12 +153,13 @@ const TEILE = {
   schreibweisen: ['buch', 'schreibbeispiele'],
   berufe: ['sektoren'],
   geschlecht: ['geschlecht', 'leeresFeld'],
-  frauen: ['geschlecht'],
+  frauen: ['geschlecht'], // die Überschriften werden neu gesetzt (ohne Zahlen), siehe zeichneTeile()
   schichten: ['koepfe', 'muenzen', 'legende'], // Münzen schon angelegt, aber verborgen (der Regen startet ohne Aufbau)
   muenzen: ['koepfe', 'werte', 'muenzen', 'legende'],
   vermoegenslos: ['koepfe', 'werte', 'muenzen', 'grau', 'legende'],
   klerus: ['muenzen'],
-  reformation: ['muenzen'],
+  reformation: ['muenzen', 'pendel'],
+  behauptung: ['muenzen', 'beleg'], // die Kirche blendet aus (AKTUALISIERER.muenzen)
   weinzoll: ['muenzen', 'wein'] // die Kirche blendet aus (AKTUALISIERER.muenzen), an ihrer Stelle steht der Text
 };
 const PERSONEN_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'schreibweisen', 'geschlecht', 'frauen'];
@@ -504,6 +519,8 @@ function bereiteStationenAuf(records) {
     unterzeile: alsText(r.unterzeile).trim(),
     muenze: zahlWert(r.muenze_gulden),
     anhaengen: alsText(r.text_anhaengen).trim() === 'ja',
+    ueberzeile: alsText(r.ueberzeile).trim(),
+    titel: alsText(r.titel).trim(),
     absaetze: (Array.isArray(r.text) ? r.text : [alsText(r.text)]).map((t) => String(t).trim()).filter(Boolean),
     jahre: (Array.isArray(r.jahreszahlen) ? r.jahreszahlen : [alsText(r.jahreszahlen)]).map((t) => String(t).trim()).filter(Boolean)
   })).filter((s) => BEKANNTE_STATIONEN.includes(s.id));
@@ -669,7 +686,7 @@ function layoutArchiv(station, b) {
   const punkt = ([x, y], r) => ({ x: x - r, y: y - r, w: r * 2, h: r * 2, rx: r });
   const lage = new Array(N), farbe = new Array(N), deckkraft = new Array(N).fill(1);
   const beschriftungen = [];
-  let urkunden = null, puls = false, geister = null, beitraege = null;
+  let urkunden = null, puls = false, geister = null, beitraege = null, jahreSpalte = null;
   const rTor = Math.max(2.5, torFormIn(N, vis).zelle * 0.42); // Punktgröße wie im Archiv-Tor (auch für Treemap, Balken)
   if (station === 'archiv' || station === 'klick') {
     const tor = torFormIn(N, vis);
@@ -757,17 +774,15 @@ function layoutArchiv(station, b) {
     A.items.forEach((it, i) => {
       lage[i] = punkt(loch.pos(A.lochPlatz[i]), r);
       farbe[i] = FARBE;
-      if (station === 'urkunden') deckkraft[i] = i === A.urk ? 0 : 0.1;
+      if (station === 'urkunden') deckkraft[i] = 0; // das Tor der Vorfolie tritt ganz zurück
       if (KARTE_STATIONEN.includes(station)) deckkraft[i] = 0; // auf der Karte nur die Urkunden
     });
     const geisterPos = d3.range(G).map((j) => loch.pos(A.lochPlatz[N + j]));
     const gefallen = { verlust1: 1, verlust2: 2 }[station] ?? VERLUST_GRUPPEN;
     geister = { pos: geisterPos, r, gefallen };
     if (station === 'mitmachen') beitraege = { pos: geisterPos, r, start: geisterPos.map(([x], j) => [x + ((j * 7919) % 61) - 30, h + 60]) };
-    // Jahreszahlen der Verluste groß neben dem Tor; sie erscheinen, während die Ringe fallen
-    const jahre = VERLUST_STATIONEN.includes(station) ? (instanz.stationen.find((x) => x.id === station)?.jahre || []) : [];
-    const rechtsVomTor = torVis.x + torVis.b + luecke * 1.5;
-    jahre.forEach((jahr, k) => beschriftungen.push({ art: 'jahr', x: rechtsVomTor, y: torVis.y + 60 + k * 46, text: jahr, k }));
+    // Jahreszahlen der Verluste: bleiben über die drei Verlust-Folien stehen und ordnen sich zeitlich ein (zeichneJahre())
+    if (VERLUST_STATIONEN.includes(station)) jahreSpalte = { x: torVis.x + torVis.b + luecke * 1.5, y: torVis.y + 44, abstand: 40, station };
     if (KARTE_STATIONEN.includes(station) && instanz.karte && A.urk >= 0) {
       const l = lage[A.urk];
       urkunden = karteUrkunden(station, vis, beschriftungen, [l.x + l.w / 2, l.y + l.h / 2]);
@@ -809,7 +824,7 @@ function layoutArchiv(station, b) {
   }
   const bb = A.bb >= 0 ? lage[A.bb] : null;
   return {
-    lage, farbe, deckkraft, beschriftungen, urkunden, puls, text, geister, beitraege,
+    lage, farbe, deckkraft, beschriftungen, urkunden, puls, text, geister, beitraege, jahreSpalte,
     bbPos: bb ? [bb.x + Math.min(bb.w, bb.h * 3) / 2, bb.y + bb.h / 2] : [b / 2, h / 2]
   };
 }
@@ -856,33 +871,42 @@ function karteUrkunden(station, vis, beschriftungen, start) {
   const kx = Math.cos((KREMS[1] * Math.PI) / 180);
   const km = ([lon, lat]) => [(lon - KREMS[0]) * 111.3 * kx, (KREMS[1] - lat) * 111.3]; // Osten, Süden positiv
   const randUnten = 46;
-  // Ausdehnung aus den tatsächlichen Orten (verzerrt), damit alles in die Fläche passt
+  // Maßstab aus den nächsten 90 % der Orte; fernere (etwa Rom, Flandern) stehen in ihrer Richtung am äußeren Kreis
   const verzerrt = ([x, y]) => { const d = Math.hypot(x, y); const f = d > 0 ? d ** HOCH / d : 0; return [x * f, y * f]; };
-  const v = [...new Set(liste.filter((u) => u.ort).map((u) => u.ort))].map((o) => verzerrt(km([o.lon, o.lat])));
-  const [links, rechts] = [d3.min(v, (q) => q[0]), d3.max(v, (q) => q[0])];
-  const [oben, untenV] = [d3.min(v, (q) => q[1]), d3.max(v, (q) => q[1])];
-  const skala = Math.min((vis.b - 60) / (rechts - links), (vis.h - 40 - randUnten) / (untenV - oben));
-  const ox = vis.x + (vis.b - (rechts - links) * skala) / 2 - links * skala, oy = vis.y + 20 - oben * skala;
-  const proj = (lonLat) => { const [x, y] = verzerrt(km(lonLat)); return [ox + x * skala, oy + y * skala]; };
-  const hoeheGrad = (untenV - oben) * skala; // Höhe der Karte in px (für den Rand darunter)
-  [100, 500].forEach((d) => beschriftungen.push({ art: 'kreis', x: ox, y: oy, r: d ** HOCH * skala, text: `${d} km` }));
+  const radien = [...new Set(liste.filter((u) => u.ort).map((u) => u.ort))]
+    .map((o) => Math.hypot(...verzerrt(km([o.lon, o.lat])))).sort(d3.ascending);
+  const R = d3.quantile(radien, 0.9) || 1;
+  const skala = Math.min(vis.b - 60, vis.h - 50 - randUnten) / (2 * R);
+  const ox = vis.x + vis.b / 2, oy = vis.y + 30 + R * skala;
+  const proj = (lonLat) => {
+    let [x, y] = verzerrt(km(lonLat));
+    const d = Math.hypot(x, y);
+    if (d > R) { x *= R / d; y *= R / d; }
+    return [ox + x * skala, oy + y * skala];
+  };
+  const hoeheGrad = 2 * R * skala; // Höhe der Karte in px (für den Rand darunter)
+  [100, 500].filter((d) => d ** HOCH < R * 0.97).forEach((d) => beschriftungen.push({ art: 'kreis', x: ox, y: oy, r: d ** HOCH * skala, text: `${d} km` }));
+  beschriftungen.push({ art: 'kreis', x: ox, y: oy, r: R * skala, text: 'weiter entfernt' });
   const verarbeitung = station === 'verarbeitung';
-  const r = 1.4, z = r * 2.3;
+  const r = 2.2, z = r * 2.3;
   const zaehler = new Map();
-  const unten = vis.y + 20 + hoeheGrad + 34;
+  const unten = vis.y + 30 + hoeheGrad + 30;
   let fach = 0;
-  const pos = [], deckkraft = [];
+  const pos = [], deckkraft = [], farbe = [];
   liste.forEach((u) => {
+    farbe.push(verarbeitung && u.ort?.unsicher ? UNSICHER_HELL : null);
     if (u.ort) {
       const n = zaehler.get(u.ort) || 0;
       zaehler.set(u.ort, n + 1);
       const [x, y] = proj([u.ort.lon, u.ort.lat]);
-      const w = n * 2.39996, rr = z * Math.sqrt(n) * 0.62;
+      // je Ort höchstens ORT_HOECHSTENS Urkunden (die übrigen bleiben verborgen am Ortspunkt)
+      const m = Math.min(n, ORT_HOECHSTENS - 1), w = m * 2.39996, rr = n < ORT_HOECHSTENS ? z * Math.sqrt(m) * 0.62 : 0;
       pos.push([x + Math.cos(w) * rr, y + Math.sin(w) * rr]);
-      deckkraft.push(0.9);
+      deckkraft.push(n < ORT_HOECHSTENS ? 0.9 : 0);
     } else if (u.ohneKoordinaten) {
-      pos.push([vis.x + 6 + (fach % 80) * z, unten + 12 + Math.floor(fach / 80) * z]);
+      pos.push([vis.x + 6 + (fach % 60) * z, unten + 12 + Math.floor(fach / 60) * z]);
       deckkraft.push(verarbeitung ? 0.9 : 0);
+      farbe[farbe.length - 1] = verarbeitung ? UNSICHER_HELL : null;
       fach += 1;
     } else {
       pos.push([vis.x + vis.b / 2, unten]);
@@ -891,15 +915,8 @@ function karteUrkunden(station, vis, beschriftungen, start) {
   });
   const donau = DONAU.map(proj).filter(([x]) => x >= vis.x - 2 && x <= vis.x + vis.b + 2);
   beschriftungen.push({ art: 'linie', punkte: donau, text: 'Donau', textAn: proj([14.29, 48.31]) });
-  // Höfe um unsicher zugeordnete Orte, nur auf `verarbeitung`
-  if (verarbeitung) {
-    zaehler.forEach((n, ort) => {
-      if (!ort.unsicher) return;
-      const [x, y] = proj([ort.lon, ort.lat]);
-      beschriftungen.push({ art: 'hof', x, y, r: 9 + z * Math.sqrt(n) * 0.62 });
-    });
-    if (K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, text: `nicht auf der Karte: ${zahl(K.ohne)} Urkunden, deren Orte keine Koordinaten haben` });
-  }
+  // auf `verarbeitung` sind die Urkunden mit unsicher zugeordnetem Ort hellrot (farbe), dazu der Rand unten
+  if (verarbeitung && K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, text: `nicht auf der Karte: ${zahl(K.ohne)} Urkunden mit nicht sicher identifizierten Orten` });
   // Krems und die häufigsten Orte (ohne Überlappung)
   const beschriftet = [];
   [...zaehler].sort((a, c) => (c[0].name === 'Krems') - (a[0].name === 'Krems') || c[1] - a[1]).forEach(([ort, n]) => {
@@ -907,9 +924,9 @@ function karteUrkunden(station, vis, beschriftungen, start) {
     const [x, y] = proj([ort.lon, ort.lat]);
     if (beschriftet.some(([bx, by]) => Math.abs(bx - x) < 70 && Math.abs(by - y) < 18)) return;
     beschriftet.push([x, y]);
-    beschriftungen.push({ art: 'ort', x: x + z * Math.sqrt(n) * 0.62 + 5, y: y + 4, text: ort.name, haupt: ort.name === 'Krems' });
+    beschriftungen.push({ art: 'ort', x: x + z * Math.sqrt(Math.min(n, ORT_HOECHSTENS)) * 0.62 + 5, y: y + 4, haupt: ort.name === 'Krems', text: ort.name });
   });
-  return { r, start, pos, deckkraft };
+  return { r, start, pos, deckkraft, farbe };
 }
 
 // Sidebar eines Bestands (wie in der Treemap)
@@ -1002,6 +1019,7 @@ function berechneLayout(station = instanz.station) {
   if (station === 'geschlecht' || station === 'frauen') return { ...basis, ...layoutGeschlecht(b, h, radiusFeld), art: 'geschlecht' };
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b), art: 'vermoegen' };
   if (station === 'weinzoll' && instanz.schichten && instanz.wein) return { ...basis, ...layoutWein(b), art: 'wein' };
+  if (station === 'behauptung') return { ...basis, ...layoutBehauptung(b), art: 'behauptung' };
   if ((station === 'klerus' || station === 'reformation') && instanz.schichten) {
     return { ...basis, ...layoutKlerus(b, station === 'reformation'), art: 'klerus' };
   }
@@ -1076,46 +1094,35 @@ function textNebenTor(b, feld) {
   return b >= TEXT_MIN_BREITE && textBreite >= 220 ? { x: torLinks - luecke - textBreite, b: textBreite, top: 4 } : null;
 }
 
-// Männer links, Frauen rechts; ab TEXT_MIN_BREITE steht die Erklärung dazwischen
+// Folien `geschlecht` und `frauen` (2026-10-29 als Buch, Wunsch des Autors): Die Männer bilden die linke Seite des
+// aufgeschlagenen Buchs, die (symbolischen) Frauen füllen auf `frauen` die rechte, die auf `geschlecht` nur als
+// gestrichelter Umriss leer dasteht. Der Text steht links neben dem Buch.
 function layoutGeschlecht(b, h, radiusFeld) {
   const { personen } = instanz;
   const maenner = personen.filter((p) => !istFrau(p));
   const frauen = personen.filter(istFrau);
-  const breit = b >= TEXT_MIN_BREITE;
-  const luecke = b * 0.03;
-  const textBreite = breit ? Math.min(TEXT_BREITE, b * 0.36) : 0;
-  const spaltenBreite = breit ? Math.min((b - textBreite) / 2 - luecke * 2, 380) : Math.min(b * 0.36, 460);
-  const links = breit
-    ? { x: b / 2 - textBreite / 2 - luecke - spaltenBreite, b: spaltenBreite }
-    : { x: b / 2 - spaltenBreite - b * 0.04, b: spaltenBreite };
-  const rechts = breit ? { x: b / 2 + textBreite / 2 + luecke, b: spaltenBreite } : { x: b / 2 + b * 0.04, b: spaltenBreite };
-  const spaltenHoehe = h - KOPF_SPALTEN - 8;
-  // gemeinsame Zellgröße für beide Spalten (die größere Gruppe bestimmt sie)
-  const groesser = Math.max(maenner.length, frauen.length, 1);
-  const r = raster(groesser, 0, 0, spaltenBreite, spaltenHoehe);
-  const spalte = (gruppe, s) => {
-    const g = raster(gruppe.length, s.x, KOPF_SPALTEN, s.b, spaltenHoehe);
-    const zelle = Math.min(g.zelle || r.zelle, r.zelle);
-    const spaltenZahl = Math.max(1, Math.floor(s.b / zelle));
-    const ox = s.x + (s.b - spaltenZahl * zelle) / 2 + zelle / 2;
-    return (i) => [ox + (i % spaltenZahl) * zelle, KOPF_SPALTEN + zelle / 2 + Math.floor(i / spaltenZahl) * zelle];
-  };
-  const posLinks = spalte(maenner, links);
-  const posRechts = spalte(frauen, rechts);
-  const posSymbolisch = spalte({ length: maenner.length }, rechts); // Folie `frauen`: so viele Punkte wie Männer
+  const f = inRechteck(BUCH, { x: b * 0.05, y: 74, b: b * 0.9, h: instanz.basisHoehe - 80 });
+  const links = formRaster('buchLinks', Math.max(1, maenner.length), [BUCH.links], BUCH, [], { obenWeg: true });
+  const rechts = formRaster('buchRechts', personen.length, [BUCH.rechts], BUCH, [], { obenWeg: true });
   const index = new Map();
-  maenner.forEach((p, i) => index.set(p, posLinks(i)));
-  frauen.forEach((p, i) => index.set(p, posRechts(i)));
+  maenner.forEach((p, i) => index.set(p, f.pos(links.punkte[i])));
+  frauen.forEach((p, i) => index.set(p, f.pos(rechts.punkte[i % rechts.punkte.length])));
+  const zelle = Math.min(links.abstand, rechts.abstand) * f.skala;
+  const [ox, oy] = f.pos([0, 0]);
+  const feld = { pos: (k) => f.pos(links.punkte[k % links.punkte.length]) }; // für textNebenTor()
   return {
     ziel: (p) => index.get(p),
-    radius: Math.max(1.2, Math.min(r.zelle * 0.36, radiusFeld * 1.4)),
-    text: breit ? { x: b / 2 - textBreite / 2, b: textBreite, top: 4 } : null,
-    frauZiel: posSymbolisch,
-    links, rechts, spaltenHoehe, maenner, frauen
+    radius: Math.max(1.1, Math.min(zelle * 0.4, radiusFeld * 1.4)),
+    text: textNebenTor(b, feld),
+    frauZiel: (j) => f.pos(rechts.punkte[j % rechts.punkte.length]),
+    buch: { transform: `translate(${ox},${oy}) scale(${f.skala})` },
+    seiten: { links: f.pos([51, 2]), rechts: f.pos([149, 2]), leerMitte: f.pos([149, 72]) },
+    maenner, frauen
   };
 }
 
-// Folien `klerus` und `reformation` (2026-10-29 umgestellt, Wunsch des Autors): Der Text wandert in die Mitte der Bühne;
+// Seit 2026-10-29 (Wunsch des Autors) ist `klerus` aus der Folge genommen; `reformation` („Wie viele glaubten was?“)
+// pendelt den katholischen Anteil (pendleKonfession()). Folien `klerus` und `reformation` (2026-10-29 umgestellt): Der Text wandert in die Mitte der Bühne;
 // links das Steiner Tor aus allen blauen, violetten und braunen (Inwohner und Hilfskräfte) Punkten, gemischt; mittig
 // rechts neben dem Text die kleine goldene Kirche aus allen Münzen. Auf `reformation` bilden die Punkte des Tors an
 // seiner Stelle ein Kreuz; jeder KATHOLISCH_JEDER-te Punkt (um 1570 „kaum noch 100 Katholiken“ bei rund 4 000
@@ -1141,22 +1148,28 @@ function layoutKlerus(b, mitKreuz) {
   const mitGrauen = Boolean(instanz.graue);
   const { reihe, platz } = gemischteReihe(n, mitGrauen);
   const kirche = inRechteck(KIRCHE, kircheR, true); // Kirche und Kreuz stehen auf derselben Linie wie das Tor
-  let pos, zelle;
+  let pos, zelle, konfession = null, kreuzOben = null;
   if (mitKreuz) {
-    // jeder KATHOLISCH_JEDER-te Platz der gemischten Reihe ins Kirchenschiff, die übrigen der Reihe nach ins Kreuz
-    const katholisch = (k) => k % KATHOLISCH_JEDER === KATHOLISCH_JEDER / 2;
-    const anzahlKatholisch = d3.range(reihe.length).filter(katholisch).length;
+    // jeder Punkt hat einen festen Platz im Kreuz; die nach einem festen Zufallsrang ersten (Anteil × Zahl) gehen
+    // stattdessen ins Kirchenschiff, das sich von unten füllt; im Kreuz bleiben dann Lücken
+    const N = reihe.length;
+    const hoechstens = Math.round(N * KATHOLISCH_HOECHSTENS);
+    const rang = new Array(N);
+    d3.range(N).sort((a, c) => (Math.imul(a + 3, 2246822519) >>> 0) - (Math.imul(c + 3, 2246822519) >>> 0)).forEach((k, r) => { rang[k] = r; });
     const kreuz = inRechteck(KREUZ, kreuzR, true);
-    const raster = formRaster('kreuz', reihe.length - anzahlKatholisch, KREUZ.flaechen, KREUZ);
-    const schiff = formRaster('kirchenschiff', anzahlKatholisch, KIRCHENSCHIFF, KIRCHE, KIRCHE.aussparungen);
-    const platzImKreuz = new Map();
-    let imKreuz = 0, imSchiff = 0;
-    d3.range(reihe.length).forEach((k) => {
-      platzImKreuz.set(k, katholisch(k)
-        ? kirche.pos(schiff.punkte[imSchiff++ % schiff.punkte.length])
-        : kreuz.pos(raster.punkte[imKreuz++ % raster.punkte.length]));
-    });
-    pos = (k) => platzImKreuz.get(k);
+    const raster = formRaster('kreuz', N, KREUZ.flaechen, KREUZ);
+    const schiff = formRaster('kirchenschiff', hoechstens, KIRCHENSCHIFF, KIRCHE, KIRCHE.aussparungen);
+    const unten = [...schiff.punkte].sort((a, c) => c[1] - a[1] || a[0] - c[0]);
+    const posFuer = (anteil) => {
+      const grenze = Math.round(anteil * N);
+      return (k) => (rang[k] < grenze ? kirche.pos(unten[rang[k] % unten.length]) : kreuz.pos(raster.punkte[k % raster.punkte.length]));
+    };
+    pos = posFuer(KATHOLISCH_ANTEILE[0]);
+    kreuzOben = kreuz.pos([KREUZ.w / 2, 0]);
+    konfession = (anteil) => {
+      const q = posFuer(anteil);
+      return { personen: (i) => q(platz.m.get(i)), frauen: (j) => q(platz.f.get(j)), graue: mitGrauen ? (j) => q(platz.g.get(j)) : null };
+    };
     zelle = raster.abstand * kreuz.skala;
   } else {
     const tor = torFormIn(reihe.length, torR);
@@ -1173,7 +1186,9 @@ function layoutKlerus(b, mitKreuz) {
     kirchenZiel: (i) => kirche.pos(kirchenRaster.punkte[i % kirchenRaster.punkte.length]),
     kirchenRadius: Math.max(0.6, kirchenRaster.abstand * kirche.skala * 0.42),
     radius: Math.max(0.8, zelle * 0.4),
-    text
+    text, konfession,
+    kreuzMitte: kreuzOben,
+    kircheOben: kirche.pos([KIRCHE.w / 2, 0])
   };
 }
 
@@ -1311,20 +1326,33 @@ function zeichne(animiert) {
   punkte.classed('anteil', !PERSONEN_STATIONEN.includes(L.station));
   const personenBewegen = zeigePersonen(L, mitAnimation); // verborgen von Archiv-Folie zu Archiv-Folie: ohne Bewegung
   // Größe und Deckkraft springen gleich auf den Zielwert (der Unterschied ist klein), nur die Lage wird animiert
-  punkte.attr('r', L.radius).attr('fill-opacity', (p, i) => {
-    if (L.hervor) return L.hervor(p) ? 0.95 : 0.16;
+  const deckVon = (p, i) => {
+    if (L.hervor) return L.hervor(p) ? 0.95 : 0.55;
     return imFeld || L.bleibt?.(i) ? p.helligkeit : 0.85;
-  });
-  if (instanz.hervorAktiv && !L.hervor) punkte.attr('fill', FARBE); // zurück von `schreibweisen`
+  };
+  const farbeVon = (p) => (L.hervor ? (L.hervor(p) ? HERVOR : AUSGEGRAUT) : FARBE);
+  // zwischen `buergerbuch` und `schreibweisen` (gleiche Lage) färben sich die Punkte langsam um, statt zu springen
+  const umfaerben = mitAnimation && [L.station, instanz.vorigesLayout?.station].sort().join() === 'buergerbuch,schreibweisen';
+  punkte.interrupt('hervor').attr('r', L.radius);
+  if (!umfaerben) {
+    punkte.attr('fill-opacity', deckVon);
+    if (instanz.hervorAktiv && !L.hervor) punkte.attr('fill', FARBE); // zurück von `schreibweisen`
+  }
   instanz.hervorAktiv = Boolean(L.hervor);
   punkte.attr('opacity', null); // auf `weinzoll` verblasste Punkte sind zurück
   bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation && personenBewegen,
-    L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE));
-  if (L.hervor) punkte.attr('fill', (p) => (L.hervor(p) ? HERVOR : FARBE));
+    umfaerben ? punkte.node().getAttribute('fill') : (L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE)));
+  if (umfaerben) {
+    punkte.transition('hervor').delay((p) => p.verzoegerung * 500).duration(1800).ease(d3.easeCubicInOut)
+      .attr('fill', farbeVon).attr('fill-opacity', deckVon);
+  } else if (L.hervor) {
+    punkte.attr('fill', farbeVon);
+  }
   if (mitAnimation) instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400 + (L.art === 'wein' ? WEIN_SINKEN + 900 : 0);
   zeichneFrauen(L, mitAnimation);
   zeichneGraue(L, mitAnimation);
   if (L.art === 'wein') weinEinbruch(L, mitAnimation);
+  pendleKonfession(L);
   zeichneTeile(L, mitAnimation);
   zeichneArchiv(L, mitAnimation);
   platziereErklaerung();
@@ -1373,9 +1401,11 @@ function zeichneArchiv(L, mitAnimation) {
     archivUrkunden.interrupt('urk').attr('opacity', 0);
     instanz.urkundenSichtbar = false;
     zeichneVerluste(null, mitAnimation);
+    zeichneJahre(null, mitAnimation);
     return;
   }
   zeichneVerluste(L.archiv, mitAnimation);
+  zeichneJahre(L.archiv, mitAnimation);
   const LA = L.archiv;
   const ziel = (sel) => sel.attr('x', (d, i) => LA.lage[i].x).attr('y', (d, i) => LA.lage[i].y)
     .attr('width', (d, i) => LA.lage[i].w).attr('height', (d, i) => LA.lage[i].h).attr('rx', (d, i) => LA.lage[i].rx)
@@ -1400,7 +1430,8 @@ function zeichneArchiv(L, mitAnimation) {
   }
   // Urkunden: aus ihrem Bestandspunkt hervor bzw. wieder hinein
   const U = LA.urkunden;
-  archivUrkunden.interrupt('urk').style('pointer-events', U ? null : 'none');
+  archivUrkunden.interrupt('urk').style('pointer-events', (d, i) => (U && !(U.deckkraft && U.deckkraft[i] < 0.2) ? null : 'none'));
+  if (A.urk >= 0) archivUrkunden.attr('fill', (d, i) => U?.farbe?.[i] || A.items[A.urk].farbe);
   // fast unsichtbare Bestände (auf `urkunden`) sind nicht anklickbar
   archivPunkte.style('pointer-events', (d, i) => (LA.deckkraft[i] < 0.2 ? 'none' : null));
   if (U) {
@@ -1475,6 +1506,33 @@ function zeichneVerluste(LA, mitAnimation) {
   }
 }
 
+// Jahreszahlen der Verluste (Folien verlust1–3): Jede Folie fügt ihre Jahre hinzu; alle stehen zeitlich geordnet
+// untereinander, schon gezeigte rücken auf, neue schieben sich von rechts ein (die der aktuellen Folie kräftig, die
+// früheren blasser). Zurück verschwinden die Jahre der verlassenen Folie wieder.
+function zeichneJahre(LA, mitAnimation) {
+  const g = instanz.archivJahre;
+  if (!g) return;
+  const S = LA?.jahreSpalte;
+  const liste = [];
+  if (S) {
+    const bis = VERLUST_STATIONEN.indexOf(S.station);
+    VERLUST_STATIONEN.slice(0, bis + 1).forEach((id, k) => (instanz.stationen.find((x) => x.id === id)?.jahre || [])
+      .forEach((text) => liste.push({ text, aktuell: k === bis })));
+    liste.sort((a, c) => parseInt(a.text, 10) - parseInt(c.text, 10));
+  }
+  const y = (d) => S.y + liste.indexOf(d) * S.abstand;
+  const sel = g.selectAll('text').data(liste, (d) => d.text);
+  sel.exit().interrupt().transition().duration(mitAnimation ? 350 : 0).attr('opacity', 0).remove();
+  if (!S) return;
+  const neu = sel.enter().append('text').attr('class', 'bgi-verlustjahr').text((d) => d.text)
+    .attr('x', S.x + 60).attr('y', y).attr('opacity', 0);
+  const neuReihe = liste.filter((d) => d.aktuell);
+  sel.merge(neu).interrupt()
+    .transition().delay((d) => (mitAnimation ? (d.aktuell ? 1100 + neuReihe.indexOf(d) * 450 : 200) : 0)).duration(mitAnimation ? 700 : 0)
+    .ease(d3.easeCubicOut)
+    .attr('x', S.x).attr('y', y).attr('opacity', (d) => (d.aktuell ? 1 : 0.45));
+}
+
 // Feldnamen der Kategorien, Zeitachse, „ohne Zeitangabe“, Notiz zu den Urkunden, „Hier klicken“
 function zeichneArchivBeschriftung(LA, mitAnimation) {
   const g = instanz.archivBeschriftung.append('g');
@@ -1502,6 +1560,9 @@ function zeichneArchivBeschriftung(LA, mitAnimation) {
     } else if (e.art === 'jahr') {
       const t = g.append('text').attr('class', 'bgi-verlustjahr').attr('x', e.x).attr('y', e.y).text(e.text);
       if (mitAnimation) t.attr('opacity', 0).transition().delay(900 + e.k * 450).duration(600).attr('opacity', 1);
+    } else if (e.art === 'umriss') {
+      g.append('path').attr('d', `${d3.line()(e.punkte)}Z`).attr('fill', 'none').attr('stroke', '#a9a294').attr('stroke-width', 1)
+        .attr('stroke-linejoin', 'round');
     } else if (e.art === 'linie') {
       g.append('path').attr('d', d3.line()(e.punkte)).attr('fill', 'none').attr('stroke', '#9db7c9').attr('stroke-width', 2.5)
         .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
@@ -1900,7 +1961,7 @@ function zeichneFrauen(L, mitAnimation) {
   const { frauenPunkte: sel, personen } = instanz;
   if (!sel) return;
   const knoten = sel.nodes();
-  const sichtbar = ['frauen', 'klerus', 'reformation', 'weinzoll'].includes(L.station);
+  const sichtbar = ['frauen', 'klerus', 'reformation', 'behauptung', 'weinzoll'].includes(L.station);
   const farbe = L.art === 'wein' ? BORDEAUX : FRAUEN_FARBE;
   const warSichtbar = instanz.frauenSichtbar;
   instanz.frauenSichtbar = sichtbar;
@@ -1957,7 +2018,7 @@ function zeichneFrauen(L, mitAnimation) {
 function zeichneGraue(L, mitAnimation) {
   const { graue } = instanz;
   if (!graue) return;
-  const sichtbar = ['vermoegenslos', 'klerus', 'reformation', 'weinzoll'].includes(L.station) && Boolean(L.grauZiel);
+  const sichtbar = ['vermoegenslos', 'klerus', 'reformation', 'behauptung', 'weinzoll'].includes(L.station) && Boolean(L.grauZiel);
   const wein = L.art === 'wein';
   const warSichtbar = instanz.graueSichtbar;
   instanz.graueSichtbar = sichtbar;
@@ -2027,12 +2088,96 @@ function weinEinbruch(L, mitAnimation) {
   }, DAUER + STAFFELUNG + 400);
 }
 
+// Folie `reformation`: Der katholische Anteil ist unbekannt (tiefe Unsicherheit). Sind die Punkte angekommen, wandern
+// sie Schritt für Schritt zwischen Kreuz und Kirche hin und her (KATHOLISCH_ANTEILE), bis man die Folie verlässt
+function pendleKonfession(L) {
+  clearTimeout(instanz.pendelZeit);
+  if (!L.konfession || ohneAnimation()) return;
+  let schritt = 1;
+  const weiter = () => {
+    if (instanz?.layout !== L) return;
+    const Z = L.konfession(KATHOLISCH_ANTEILE[schritt % KATHOLISCH_ANTEILE.length]);
+    schritt += 1;
+    const gruppen = [['personen', instanz.punkte.nodes(), FARBE, 0.85, 2], ['frauen', instanz.frauenPunkte.nodes(), FRAUEN_FARBE, 0.85, 1]];
+    if (instanz.graue && Z.graue) gruppen.push(['graue', instanz.graue.nodes(), RAHMEN, 0.45, 0.5]);
+    gruppen.forEach(([name, knoten, farbe, fuell, ebene]) => {
+      const start = lageVon(name, knoten).map(([x, y]) => [x, y]);
+      starteBewegung(name, {
+        gruppe: knoten[0].parentNode, knoten, start, ziel: knoten.map((k, i) => Z[name](i)), ebene, farbeVon: farbe, farbeNach: farbe,
+        fuell: knoten.map(() => fuell), radius: L.radius,
+        verzoegerung: knoten.map((k, i) => (((i * 7919) % 997) / 997) * 700), dauer: 1500, ease: d3.easeCubicInOut
+      });
+    });
+    instanz.pendelZeit = setTimeout(weiter, PENDEL_TAKT);
+  };
+  instanz.pendelZeit = setTimeout(weiter, DAUER + STAFFELUNG + 1800);
+}
+
+// n Punkte als stilisierte Schrift in einem Rechteck (Buchkoordinaten): Zeilen aus Wörtern verschiedener Länge,
+// Absätze mit Einzug und kürzerer letzter Zeile; der Punktabstand wird so gesucht, dass alle hineinpassen
+function zeilenPunkte(n, r) {
+  const versuch = (a) => {
+    const punkte = [];
+    let zeile = 0;
+    for (let y = r.y + a / 2; y <= r.y + r.h; y += a * 2.7, zeile += 1) {
+      const ende = r.x + r.b - (zeile % 6 === 5 ? r.b * 0.4 : 0);
+      let x = r.x + (zeile % 6 === 0 ? a * 4 : 0);
+      let wort = 0, laenge = 2 + ((zeile * 7 + 3) % 7);
+      while (x <= ende) {
+        punkte.push([x, y]);
+        x += a;
+        wort += 1;
+        if (wort >= laenge) { x += a * 1.3; wort = 0; laenge = 2 + ((punkte.length * 13 + zeile * 5) % 7); }
+      }
+    }
+    return punkte;
+  };
+  let klein = 0.05, gross = 30;
+  for (let i = 0; i < 24; i += 1) { const m = (klein + gross) / 2; if (versuch(m).length >= n) klein = m; else gross = m; }
+  return { punkte: versuch(klein).slice(0, n), abstand: klein };
+}
+
+// Folie `behauptung` (Fehlerhaftigkeit): ein aufgeschlagenes Buch aus allen Punkten - links das Schreiben des Rates von
+// 1615 (voll), rechts das Ratsprotokoll vom 14. August 1607 mit nur wenigen Einträgen und einem leeren Rahmen, wo der
+// behauptete Beschluss stehen müsste. Text links daneben.
+function layoutBehauptung(b) {
+  const { personen } = instanz;
+  const h = instanz.basisHoehe;
+  const mitGrauen = Boolean(instanz.graue);
+  const { reihe, platz } = gemischteReihe(personen.length, mitGrauen);
+  const N = reihe.length;
+  const luecke = Math.max(14, b * 0.025);
+  const breit = b >= TEXT_MIN_BREITE;
+  const textB = breit ? Math.min(TEXT_BREITE * 0.85, b * 0.28) : 0;
+  const x0 = breit ? Math.max(8, (b - 1180) / 2) : 8;
+  const text = breit ? { x: x0, b: textB, top: 4 } : null;
+  const vis = breit ? { x: x0 + textB + luecke * 2.5, y: 84, b: Math.min(b - 8, x0 + 1180) - (x0 + textB + luecke * 2.5), h: h - 92 } : { x: 8, y: 84, b: b - 16, h: h - 92 };
+  const buch = inRechteck(BUCH, vis);
+  // die Punkte als geschriebene Zeilen: links das ganze Schreiben, rechts zwei kurze Zeilen für die anderen Einträge
+  const links = zeilenPunkte(N - BELEG.eintraege, { x: 14, y: 30, b: 74, h: 86 });
+  const rechts = zeilenPunkte(BELEG.eintraege, { x: 113, y: 24, b: 50, h: 12 });
+  const pos = (k) => buch.pos(k < N - BELEG.eintraege ? links.punkte[k] : rechts.punkte[(k - (N - BELEG.eintraege)) % rechts.punkte.length]);
+  const [ox, oy] = buch.pos([0, 0]);
+  return {
+    ziel: (p) => pos(platz.m.get(p.nr)),
+    frauZiel: (j) => pos(platz.f.get(j)),
+    grauZiel: mitGrauen ? (j) => pos(platz.g.get(j)) : null,
+    radius: Math.max(0.8, links.abstand * buch.skala * 0.4),
+    text,
+    beleg: { transform: `translate(${ox},${oy}) scale(${buch.skala})`, ort: buch.pos, skala: buch.skala }
+  };
+}
+
 // Beiwerk in Teilen, je Station eine Auswahl (TEILE). Ein Teil, der neu dazukommt, wird eingeblendet (Münzen regnen),
 // einer, der wegfällt, ausgeblendet; was bleibt, bleibt unverändert stehen.
 function zeichneTeile(L, mitAnimation) {
   const { ebeneSpalten, ebeneMuenzen } = instanz;
   const schluessel = `${L.art}|${Math.round(L.b)}`;
-  const schluesselVon = (teil) => (teil === 'muenzen' ? `geld|${Math.round(L.b)}` : schluessel); // Münzen bleiben bis zur Folie klerus
+  const schluesselVon = (teil) => {
+    if (teil === 'muenzen') return `geld|${Math.round(L.b)}`; // Münzen bleiben bis zur Folie reformation
+    if (teil === 'geschlecht') return `${L.station}|${Math.round(L.b)}`; // auf `frauen` ohne Zahlen neu
+    return schluessel;
+  };
   const jetzt = new Set(TEILE[L.station] || []);
   const bestehend = new Map();
   [ebeneSpalten, ebeneMuenzen].forEach((ebene) => ebene.selectAll(':scope > g[data-teil]').each(function () {
@@ -2068,7 +2213,11 @@ const AKTUALISIERER = {
   muenzen(g, L, mitAnimation) {
     // Folie weinzoll: die Kirche blendet aus (bleibt aber liegen, zurück blendet sie nur wieder ein). Ausgeblendet wird
     // über die Leinwand (Deckkraft je Münze) - eine SVG-Gruppe mit 4 443 Kreisen auszublenden kostete je Bild zu viel
-    const weg = L.art === 'wein';
+    const weg = L.art === 'wein' || L.art === 'behauptung';
+    // auf `reformation` ist die Kirche blass, damit man die katholischen Punkte darin sieht
+    const deck = L.station === 'reformation' ? KIRCHE_BLASS : 1;
+    const deckVorher = g.property('__deck') ?? 1;
+    g.property('__deck', deck);
     if (weg || g.property('__weg')) {
       g.property('__weg', weg).style('pointer-events', weg ? 'none' : null);
       const knoten = (g.property('__muenzen') || []).map((m) => m.knoten);
@@ -2077,18 +2226,19 @@ const AKTUALISIERER = {
         starteBewegung('muenzen', {
           gruppe: g.property('__vgruppe'), knoten, start: lage, ziel: lage, ebene: 0, farbeVon: GOLD, farbeNach: GOLD, fuell: knoten.map(() => 1),
           radius: Number(knoten[0].getAttribute('r')) || 2, verzoegerung: knoten.map(() => (weg ? 0 : 300)),
-          dauer: weg ? 500 : 700, ease: d3.easeCubicInOut, deckkraft: weg ? (e) => 1 - e : (e) => e
+          dauer: weg ? 500 : 700, ease: d3.easeCubicInOut, deckkraft: weg ? (e) => (1 - e) * deckVorher : (e) => e * deck
         });
       } else {
         beendeBewegung('muenzen', { schreiben: false });
-        knoten.forEach((k) => k.setAttribute('opacity', weg ? 0 : 1));
+        knoten.forEach((k) => k.setAttribute('opacity', weg ? 0 : deck));
       }
-      if (weg) return;
+      return;
     }
     // Folien klerus/reformation: die Münzen fliegen zur Kirche bzw. von dort zurück in ihre Felder
     const inKirche = L.art === 'klerus';
     if (inKirche || g.property('__inKirche')) {
       if (inKirche !== Boolean(g.property('__inKirche'))) morpheMuenzen(g, L, inKirche, mitAnimation);
+      if (deck !== deckVorher || inKirche) (g.property('__muenzen') || []).forEach((m) => m.knoten.setAttribute('opacity', inKirche ? deck : 1));
       return;
     }
     const sichtbar = L.station !== 'schichten';
@@ -2205,6 +2355,37 @@ function blendeEin(g, neu, verzoegerung = DAUER * 0.55) {
 }
 
 const ZEICHNER = {
+  // Folie `reformation`: Fragen statt Zahlen über Kreuz und Kirche
+  pendel(g, L, neu) {
+    if (L.kreuzMitte) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kreuzMitte[0]).attr('y', L.kreuzMitte[1] - 14).text('evangelisch: wie viele?');
+    if (L.kircheOben) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kircheOben[0]).attr('y', L.kircheOben[1] - 14).text('katholisch: wie viele?');
+    blendeEin(g, neu);
+  },
+
+  // Folie `behauptung`: Buch mit Seitentiteln, leerer Rahmen im Protokoll
+  beleg(g, L, neu) {
+    const B = L.beleg;
+    if (!B) return;
+    [BUCH.umriss, BUCH.ruecken].forEach((d) => g.append('path').attr('d', d).attr('transform', B.transform)
+      .attr('fill', 'none').attr('stroke', RAHMEN).attr('stroke-width', 1.2).attr('vector-effect', 'non-scaling-stroke'));
+    // Seitentitel (fett) und Unterzeile, je auf die Breite einer Seite umbrochen, von unten nach oben über der Seite
+    const [lx, ly] = B.ort([51, 0]);
+    const [rx] = B.ort([149, 0]);
+    const zeichen = Math.max(14, Math.floor((86 * B.skala) / 7));
+    [[lx, 'Schreiben des Rates, 1615', '„am 14. August 1607 beschlossen“'], [rx, 'Ratsprotokoll, 14. August 1607', 'andere Einträge des Tages']]
+      .forEach(([x, titel, unter]) => {
+        const zeilen = [...umbrechen(titel, zeichen).map((t) => ['bgi-wert', t]), ...umbrechen(unter, zeichen + 4).map((t) => ['bgi-wert-klein', t])];
+        zeilen.forEach(([klasse, t], k) => g.append('text').attr('class', klasse).attr('x', x).attr('y', ly - 8 - (zeilen.length - 1 - k) * 16).text(t));
+      });
+    const [x, y, w, hh] = BELEG.rahmen;
+    const [ax, ay] = B.ort([x, y]);
+    g.append('rect').attr('x', ax).attr('y', ay).attr('width', w * B.skala).attr('height', hh * B.skala).attr('rx', 6)
+      .attr('fill', 'none').attr('stroke', VERLUST_ROT).attr('stroke-width', 1.5).attr('stroke-dasharray', '6 5');
+    umbrechen('kein Eintrag zur Pflicht des Beichtzettels', Math.max(12, Math.floor((w * B.skala) / 7))).forEach((zeile, k, alle) => g.append('text')
+      .attr('class', 'bgi-wert').style('fill', VERLUST_ROT).attr('x', ax + (w * B.skala) / 2).attr('y', ay + (hh * B.skala) / 2 + (k - (alle.length - 1) / 2) * 17 + 4).text(zeile));
+    blendeEin(g, neu);
+  },
+
   // Einband und Rücken des aufgeschlagenen Buchs (hinter den Punkten)
   // Folie `schreibweisen`: Beispiele mit allen Schreibweisen, Linie zum Punkt
   schreibbeispiele(g, L, neu) {
@@ -2264,10 +2445,10 @@ const ZEICHNER = {
 
   // Überschriften und Zahlen der beiden Spalten (bleiben auf der Folie `frauen` stehen)
   geschlecht(g, L, neu) {
-    [[L.links, 'Männer', L.maenner.length], [L.rechts, 'Frauen', L.frauen.length]].forEach(([s, titel, anzahl]) => {
-      const mitte = s.x + s.b / 2;
-      g.append('text').attr('class', 'bgi-spaltenkopf').attr('x', mitte).attr('y', 26).text(titel);
-      g.append('text').attr('class', 'bgi-spaltenzahl').attr('x', mitte).attr('y', 50).text(zahl(anzahl));
+    // über den Buchseiten; die Zahlen nur auf `geschlecht` (auf `frauen` wären sie irreführend)
+    [[L.seiten.links, 'Männer', L.maenner.length], [L.seiten.rechts, 'Frauen', L.frauen.length]].forEach(([[x, y], titel, anzahl]) => {
+      g.append('text').attr('class', 'bgi-spaltenkopf').attr('x', x).attr('y', y - (L.station === 'geschlecht' ? 32 : 12)).text(titel);
+      if (L.station === 'geschlecht') g.append('text').attr('class', 'bgi-spaltenzahl').attr('x', x).attr('y', y - 10).text(zahl(anzahl));
     });
     blendeEin(g, neu);
   },
@@ -2275,11 +2456,9 @@ const ZEICHNER = {
   // leerer Rahmen der Frauen-Spalte; blendet aus, wenn sie sich auf der Folie `frauen` füllt
   leeresFeld(g, L, neu) {
     if (L.frauen.length === 0) {
-      const rechts = L.rechts;
-      g.append('rect')
-        .attr('x', rechts.x).attr('y', KOPF_SPALTEN).attr('width', rechts.b).attr('height', L.spaltenHoehe)
-        .attr('rx', 10).attr('fill', 'none').attr('stroke', RAHMEN).attr('stroke-width', 1.4).attr('stroke-dasharray', '6 6');
-      g.append('text').attr('class', 'bgi-leer').attr('x', rechts.x + rechts.b / 2).attr('y', KOPF_SPALTEN + L.spaltenHoehe / 2).text('keine Einträge');
+      g.append('path').attr('d', BUCH.rechts).attr('transform', L.buch.transform).attr('fill', 'none').attr('stroke', RAHMEN)
+        .attr('stroke-width', 1.4).attr('stroke-dasharray', '6 6').attr('vector-effect', 'non-scaling-stroke');
+      g.append('text').attr('class', 'bgi-leer').attr('x', L.seiten.leerMitte[0]).attr('y', L.seiten.leerMitte[1]).text('keine Einträge');
     }
     blendeEin(g, neu);
   },
@@ -2311,10 +2490,12 @@ const ZEICHNER = {
   // Auf „schichten“ verborgen und erst angelegt, wenn die Punkte angekommen sind (sonst stockt der Anfang des
   // Morphens); spätestens beim Weiterklicken legt AKTUALISIERER.muenzen sie an.
   muenzen(g, L, neu) {
-    if (L.art === 'klerus' || L.art === 'wein') { // auf `weinzoll` (z. B. nach einer Breitenänderung) ausgeblendet
+    if (['klerus', 'wein', 'behauptung'].includes(L.art)) { // auf `weinzoll`/`behauptung` (z. B. nach einer Breitenänderung) ausgeblendet
       g.property('__layout', berechneLayout('muenzen'));
-      morpheMuenzen(g, L.art === 'wein' ? berechneLayout('reformation') : L, true, false);
-      if (L.art === 'wein') {
+      morpheMuenzen(g, L.art === 'klerus' ? L : berechneLayout('reformation'), true, false);
+      g.property('__deck', L.station === 'reformation' ? KIRCHE_BLASS : 1);
+      if (L.station === 'reformation') (g.property('__muenzen') || []).forEach((m) => m.knoten.setAttribute('opacity', KIRCHE_BLASS));
+      if (L.art !== 'klerus') {
         g.property('__weg', true).style('pointer-events', 'none');
         (g.property('__muenzen') || []).forEach((m) => m.knoten.setAttribute('opacity', 0));
       }
@@ -2491,7 +2672,8 @@ function stationsBeschriftung() {
     return `Weinausfuhr über die Passauer Maut: ${zahl(W.vorher.eimer)} Eimer ${W.vorher.jahr}, ${zahl(W.nachher.eimer)} Eimer ${W.nachher.jahr}. `
       + `Alle Punkte füllen bordeauxrot eine Weinflasche; die oberen ${prozent(100 - (W.nachher.eimer / W.vorher.eimer) * 100)} Prozent sinken hinab und verblassen, die Flasche leert sich`;
   }
-  if (station === 'reformation') return `Reformation: Die Punkte des Tors bilden ein Kreuz; jeder ${KATHOLISCH_JEDER}. Punkt bleibt katholisch und sitzt in der kleinen Kirche aus den Münzen`;
+  if (station === 'reformation') return 'Kreuz und kleine Kirche: Die Punkte wandern immer wieder zwischen beiden hin und her, weil niemand weiß, wie viele katholisch waren';
+  if (station === 'behauptung') return 'Aufgeschlagenes Buch: links das Schreiben des Rates von 1615, rechts das Ratsprotokoll vom 14. August 1607 mit einem leeren Rahmen, wo der Beschluss stehen müsste';
   if (station === 'frauen') return `${zahl(L.maenner.length)} Männer im Bürgerbuch, daneben ebenso viele symbolische Punkte für die Frauen, die es nicht nennt`;
   if (VERMOEGEN_STATIONEN.includes(station) && schichten) {
     const teile = schichten.buerger.map((s) => (station === 'schichten'
@@ -2522,8 +2704,13 @@ function aktualisiereSteuerung() {
 function setzeKopf() {
   const { kopf, archiv, station } = instanz;
   const imArchiv = ARCHIV_STATIONEN.includes(station) && archiv;
-  kopf.querySelector('.bgi-ueberzeile').textContent = imArchiv ? 'Stadtarchiv Krems' : instanz.kopfUeberzeile;
-  kopf.querySelector('.bgi-zahl').textContent = imArchiv ? `${zahl(archiv.items.length)} Bestände` : `${zahl(instanz.personen.length)} Personen`;
+  // je Folie aus der Stationsdatei (Spalten `ueberzeile`, `titel`, Platzhalter wie im Text); sonst wie bisher
+  const s = instanz.stationen[instanz.stationIndex];
+  const mitWerten = (t) => t.replace(/\{(\w+)(?::([\w-]+))?\}/g, (treffer, name, id) => platzhalterWert(name, id) ?? treffer);
+  kopf.querySelector('.bgi-ueberzeile').textContent = s?.ueberzeile ? mitWerten(s.ueberzeile) : (imArchiv ? 'Stadtarchiv Krems' : instanz.kopfUeberzeile);
+  kopf.querySelector('.bgi-zahl').textContent = s?.titel ? mitWerten(s.titel)
+    : (imArchiv ? `${zahl(archiv.items.length)} Bestände` : `${zahl(instanz.personen.length)} Personen`);
+  instanz.unterzeile.textContent = mitWerten(s?.unterzeile || STANDARD_UNTERZEILE);
 }
 
 function geheZu(index) {
@@ -2542,7 +2729,7 @@ function geheZu(index) {
   if (DIAGNOSE && dauerKlick > 150) console.info(`[Bürgerinnen? Diagnose] Folie ${index + 1} (${instanz.station}): Aufbau beim Klick ${Math.round(dauerKlick)} ms`);
   instanz.svg.attr('aria-label', stationsBeschriftung());
   if (instanz.station === 'muenzen' && index > vorher) zeigeMuenzfelder();
-  if (instanz.station === 'klerus') { // Bühne wieder ganz zeigen (die Münzfelder lagen weiter unten)
+  if (instanz.layout.art === 'klerus') { // Bühne wieder ganz zeigen (die Münzfelder lagen weiter unten)
     const oben = instanz.svg.node().getBoundingClientRect().top + window.scrollY - 90;
     if (window.scrollY > oben + 20) window.scrollTo({ top: Math.max(0, oben), behavior: ohneAnimation() ? 'auto' : 'smooth' });
   }
@@ -2596,6 +2783,7 @@ function baueArchivpunkte() {
   instanz.archivBeitraege = archivEbene.append('g').style('pointer-events', 'none').selectAll('circle')
     .data(d3.range(A.verloren)).join('circle').attr('fill', GOLD).attr('opacity', 0);
   instanz.archivBeschriftung = archivEbene.append('g').style('pointer-events', 'none');
+  instanz.archivJahre = archivEbene.append('g').style('pointer-events', 'none');
   instanz.archivPuls = archivEbene.append('circle').attr('class', 'bgi-puls').attr('display', 'none');
 }
 
@@ -2742,7 +2930,7 @@ export function render(container, data, options = {}) {
         zeigeTooltip(`${p.name}\n${zeile}${sektor}`, k, container);
         return;
       }
-      if (['klerus', 'reformation', 'weinzoll'].includes(instanz.station)) return;
+      if (['klerus', 'reformation', 'behauptung', 'weinzoll'].includes(instanz.station)) return;
       const s = instanz.schichten?.buerger[instanz.zuordnung[p.nr].k];
       if (s) zeigeTooltip(`${s.name}\n1 von ${zahl(s.anzahl)} Haushalten (Anteil, keine bestimmte Person)`, k, container);
     },
@@ -2856,6 +3044,7 @@ export function destroy() {
   if (instanz.zeichenAnfrage) cancelAnimationFrame(instanz.zeichenAnfrage);
   instanz.regenSchleife?.stop();
   clearTimeout(instanz.weinZeit);
+  clearTimeout(instanz.pendelZeit);
   instanz.graue?.interrupt();
   instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';

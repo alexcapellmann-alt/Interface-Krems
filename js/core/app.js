@@ -1012,6 +1012,10 @@ async function aktualisiereGalerieFlyoutAnsicht(kontext) {
   // weiterhin aktiven Modul steht) - ein zweiter datensatz-Link auf
   // dieselbe Ansicht wirkt dadurch trotzdem.
   verarbeiteDatensatzAufruf(kontext.aktuellesVizModul, route);
+  // 2026-10-29: Link mit `?unsicherheit=an` schaltet die Unsicherheitsdarstellung ein (wie ein Klick auf den σ-Knopf)
+  if (route.unsicherheit === 'an' && !getZustand().unsicherheitModusAktiv && kontext.unsicherheitsContainer?.style.display !== 'none') {
+    kontext.unsicherheitsContainer.querySelector('button')?.click();
+  }
 }
 
 // Literatur (und der generische "Route nicht gefunden"-Fall): klar
