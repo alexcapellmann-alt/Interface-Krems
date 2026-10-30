@@ -7,6 +7,19 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-30 (216) – Erkundung: Einleitungen für Urkunden, Personen und Orte
+
+- Wunsch des Autors: Über den Kacheln der Bereiche Urkunden, Personen und Orte steht jetzt ein Einleitungstext in einfacher Sprache, ohne Doppelpunkte, Strichpunkte und Bindestriche. Er erklärt nicht die Ansichten, sondern die Quellen dahinter und was über sie bekannt ist, auch das Unsichere (Spalte `beschreibung` der Bereichszeilen in `data/ansichten.csv`, wie bisher schon beim Bestand).
+  - Urkunden: was eine Urkunde ist, Zahl und Zeitraum (Platzhalter `{n_urkunden_punkt}`), Schwerpunkt im 14. und 15. Jahrhundert, Themen, Regesten von 1960 und 2020, Fotos, unsichere Angaben.
+  - Personen: die drei Quellen (Urkunden, Bürgerbuch mit `{n_buergerbuch_punkt}` Aufnahmen, Verlassenschaftsinventare 1671 bis 1719), soziale Gruppen, Stammbaum, zusammengeführte Schreibweisen, Frauen in den Quellen.
+  - Orte: Zahl und häufigste Orte, Zuordnung zu heutigen Orten mit Koordinaten, unsichere Zuordnung bei etwa einem Drittel, Hinweis auf die Ortsliste.
+- Zahlen ohne Platzhalter sind gerundet (über 4.000 Menschen, rund 250 Orte, etwa ein Drittel), damit die Texte nicht veralten.
+- Geprüft auf dem Testserver 8845 (1400 × 800): alle drei Seiten zeigen die Texte über den Kacheln, Platzhalter aufgelöst, keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-30 (215) – Willkommenstour auf dem Handy
 
 - Hinweis des Autors (Samsung A55, 360 px): Beschriftungen in den Bildern waren abgeschnitten oder überlappten. Ursache: Die Bilder waren für die breite Anordnung (Text neben dem Bild) gebaut; schmal wandert nur der Text nach unten. Alle Änderungen greifen nur, wenn die Bühne schmaler als `TEXT_MIN_BREITE` (820 px) ist, die breite Ansicht bleibt unverändert.
