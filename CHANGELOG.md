@@ -20,6 +20,7 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
   - Verlust-Folien: die roten Jahreszahlen in zwei Spalten unter dem Tor (vorher in einer Spalte rechts außerhalb der Bühne).
   - Karte („Wo liegt das?“, „Die Karte ist sicherer als wir“): nutzt die ganze Breite, kleinere Punkte und Haufen (höchstens 20 Urkunden je Ort), „Krems“ links neben seinem Haufen, weggelassen wird nur eine Beschriftung, die eine andere tatsächlich überlappt (vorher fester Abstand von 70 px, dadurch fehlte „Wien“ und „Krems“ stand an seiner Stelle); der Satz zu den Urkunden am Rand ist umbrochen.
   - Zeitachse („Wie weit die Überlieferung reicht“): schmal nur jedes zweite Jahrhundert beschriftet.
+- „Im Auftrag des Kaisers“ (Wunsch des Autors): Die Punkte neben der Zeitleiste bilden statt einer namenlosen Menge vier Formen aus Schriftgut, Urkunde mit Siegel, offenes Buch (Protokolle), geschlossenes Buch und Brief (Umschlag mit Klappe und Siegel), ohne Beschriftung (`SCHRIFTGUT`, `layoutMenge(b, station)`); die Punkte verteilen sich nach Fläche, damit alle Formen gleich dicht sind. Schmal stehen die vier Formen zu zweit über der Zeitleiste.
 - Geprüft auf dem Testserver 8845 bei 360 × 800, 390 × 844 und 412 × 915: alle 25 Folien mit einer Messung aller sichtbaren Beschriftungen (keine ragt über die Bühne, keine überlappt eine andere), dazu Bildschirmfotos der betroffenen Folien; bei 1400 × 800 greift der Randschutz nirgends, keine Konsolenfehler.
 
 Kein Commit durch Claude Code.
