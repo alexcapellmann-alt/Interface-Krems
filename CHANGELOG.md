@@ -7,6 +7,25 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-10-30 (215) – Willkommenstour auf dem Handy
+
+- Hinweis des Autors (Samsung A55, 360 px): Beschriftungen in den Bildern waren abgeschnitten oder überlappten. Ursache: Die Bilder waren für die breite Anordnung (Text neben dem Bild) gebaut; schmal wandert nur der Text nach unten. Alle Änderungen greifen nur, wenn die Bühne schmaler als `TEXT_MIN_BREITE` (820 px) ist, die breite Ansicht bleibt unverändert.
+  - Randschutz (`schuetzeRand()`): Nach dem Zeichnen wird jede Beschriftung gemessen und, wenn nötig, waagrecht in die Bühne geschoben.
+  - „Gegen den Strich lesen“: rechts vom Tor bleibt Platz für „Hier klicken“.
+  - „Nach Berufen“: die Balken stehen unter dem Buch über die ganze Breite, die Zahl hinter dem Namen.
+  - „Ein Name, viele Schreibweisen“: die Beispiele stehen unter dem Buch.
+  - Vermögens-Folien: kleinere Säulenköpfe, unter den Säulen nur die Prozentzahl (Erklärung in der Legende), Legende am linken Rand.
+  - „Von wenigen wissen wir fast alles“ und „Im Auftrag des Kaisers“: Menge oben, Stammbaum bzw. Zeitleiste darunter über die ganze Breite; der Stammbaum von unten nach oben angeordnet, mit kurzen Namen und kleinerer Schrift.
+  - „Wie viele glaubten was?“: Kreuz und Kirche als Paar in der Mitte (vorher 60 zu 40 geteilt, nach rechts versetzt), die Fragen zweizeilig.
+  - Verlust-Folien: die roten Jahreszahlen in zwei Spalten unter dem Tor (vorher in einer Spalte rechts außerhalb der Bühne).
+  - Karte („Wo liegt das?“, „Die Karte ist sicherer als wir“): nutzt die ganze Breite, kleinere Punkte und Haufen (höchstens 20 Urkunden je Ort), „Krems“ links neben seinem Haufen, weggelassen wird nur eine Beschriftung, die eine andere tatsächlich überlappt (vorher fester Abstand von 70 px, dadurch fehlte „Wien“ und „Krems“ stand an seiner Stelle); der Satz zu den Urkunden am Rand ist umbrochen.
+  - Zeitachse („Wie weit die Überlieferung reicht“): schmal nur jedes zweite Jahrhundert beschriftet.
+- Geprüft auf dem Testserver 8845 bei 360 × 800, 390 × 844 und 412 × 915: alle 25 Folien mit einer Messung aller sichtbaren Beschriftungen (keine ragt über die Bühne, keine überlappt eine andere), dazu Bildschirmfotos der betroffenen Folien; bei 1400 × 800 greift der Randschutz nirgends, keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-29 (214) – Bürgerinnen?: größere Schrift, Text und Bild als Paar in der Mitte
 
 - Wunsch des Autors: Schrift der Folientexte deutlich größer (`var(--fs-lg)`, 18 px statt 14 px), Textblöcke symmetrisch zu den Animationen.

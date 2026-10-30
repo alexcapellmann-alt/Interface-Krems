@@ -493,6 +493,7 @@ function fuegeStyleEin(container) {
     .bgi-archiv { cursor: pointer; }
     .bgi-geist { fill: rgba(154, 144, 129, 0.18); stroke: ${RAHMEN}; stroke-width: 1.6px; }
     .bgi-verlustjahr { font-family: var(--font-heading); font-size: 1.9rem; fill: ${VERLUST_ROT}; }
+    .bgi-verlustjahr.klein { font-size: 1.25rem; }
     .bgi-archiv:focus { outline: none; } /* kein schwarzer Rahmen nach dem Mausklick auf den Bürgerbuch-Punkt */
     .bgi-archiv:focus-visible { outline: none; stroke: ${AUSWAHL}; stroke-width: 3px; }
     .bgi-puls { fill: none; stroke: ${AUSWAHL}; stroke-width: 2px; pointer-events: none; transform-box: fill-box; transform-origin: center;
@@ -502,7 +503,7 @@ function fuegeStyleEin(container) {
     .bgi-wein .bgi-grau { fill: ${BORDEAUX}; fill-opacity: .9; stroke: none; } /* Folie weinzoll */
     .bgi-spaltenkopf { font-family: var(--font-heading); font-size: 1.5rem; fill: var(--text); text-anchor: middle; }
     .bgi-spaltenkopf.klein { font-size: 1.1rem; }
-    .bgi-spaltenkopf.eng { font-size: 13px; }
+    .bgi-spaltenkopf.eng { font-size: 11px; }
     .bgi-spaltenzahl { font-size: var(--fs-md); fill: var(--text-muted); text-anchor: middle; letter-spacing: .04em; }
     .bgi-spaltenzahl.eng { font-size: 11px; letter-spacing: 0; }
     .bgi-leer { font-size: var(--fs-md); font-style: italic; fill: ${RAHMEN}; text-anchor: middle; }
@@ -730,7 +731,8 @@ function layoutArchiv(station, b) {
   const torFolie = ['archiv', 'klick', ...VERLUST_STATIONEN, 'mitmachen'].includes(station);
   const paar = breit ? (torFolie ? torPaar(station === 'klick' ? 60 : 0) : breitesPaar()) : null;
   const text = paar ? paar.text : null;
-  const vis = paar ? paar.vis : { x: 8, y: 8, b: b - 16, h: h - 16 };
+  // schmal (Handy, 2026-10-30): auf `klick` bleibt rechts vom Tor Platz für „Hier klicken“
+  const vis = paar ? paar.vis : (station === 'klick' ? { x: 8, y: 8, b: b - 126, h: h - 16 } : { x: 8, y: 8, b: b - 16, h: h - 16 });
   const punkt = ([x, y], r) => ({ x: x - r, y: y - r, w: r * 2, h: r * 2, rx: r });
   const lage = new Array(N), farbe = new Array(N), deckkraft = new Array(N).fill(1);
   const beschriftungen = [];
@@ -747,7 +749,7 @@ function layoutArchiv(station, b) {
       // Hinweis rechts neben dem Tor, mit einer Linie zum Punkt
       const l = lage[A.bb];
       const rechts = d3.max(lage, (q) => q.x + q.w);
-      beschriftungen.push({ art: 'hinweis', x: rechts + 34, y: l.y + l.h / 2, von: l.x + l.w + 4, text: 'Hier klicken' });
+      beschriftungen.push({ art: 'hinweis', x: rechts + (breit ? 34 : 16), y: l.y + l.h / 2, von: l.x + l.w + 4, text: 'Hier klicken' });
     }
   } else if (station === 'kategorien') {
     // Treemap aus Punkten: Fläche je Kategorie nach Zahl der Bestände, darin die Punkte im Raster
@@ -815,7 +817,10 @@ function layoutArchiv(station, b) {
   } else {
     // Tor mit Löchern: Bestände und verlorene (Ringe) gemischt auf einem Tor aus N + G Plätzen; das Tor steht auf
     // `urkunden` an derselben Stelle wie auf der Folie davor (dort tritt es zurück)
-    const torVis = (station === 'urkunden' || KARTE_STATIONEN.includes(station)) && breit ? torPaar().vis : vis;
+    const torVis0 = (station === 'urkunden' || KARTE_STATIONEN.includes(station)) && breit ? torPaar().vis : vis;
+    // schmal: auf den Verlust-Folien stehen die Jahreszahlen unter dem Tor, die Bühne wird dafür höher (2026-10-30)
+    const jahreUnten = !breit && VERLUST_STATIONEN.includes(station);
+    const torVis = torVis0;
     const G = A.verloren;
     const loch = torFormIn(N + G, torVis);
     const r = Math.max(1.8, loch.zelle * 0.42);
@@ -830,7 +835,11 @@ function layoutArchiv(station, b) {
     geister = { pos: geisterPos, r, gefallen };
     if (station === 'mitmachen') beitraege = { pos: geisterPos, r, start: geisterPos.map(([x], j) => [x + ((j * 7919) % 61) - 30, h + 60]) };
     // Jahreszahlen der Verluste: bleiben über die drei Verlust-Folien stehen und ordnen sich zeitlich ein (zeichneJahre())
-    if (VERLUST_STATIONEN.includes(station)) jahreSpalte = { x: torVis.x + torVis.b + luecke * 1.5, y: torVis.y + 44, abstand: 40, station };
+    if (VERLUST_STATIONEN.includes(station)) {
+      jahreSpalte = jahreUnten
+        ? { reihe: true, x: vis.x + 4, y: torVis.y + torVis.h + 34, spaltenB: vis.b / 2, abstand: 30, station }
+        : { x: torVis.x + torVis.b + luecke * 1.5, y: torVis.y + 44, abstand: 40, station };
+    }
     if (KARTE_STATIONEN.includes(station) && instanz.karte && A.urk >= 0) {
       const l = lage[A.urk];
       urkunden = karteUrkunden(station, vis, beschriftungen, [l.x + l.w / 2, l.y + l.h / 2]);
@@ -873,6 +882,7 @@ function layoutArchiv(station, b) {
   const bb = A.bb >= 0 ? lage[A.bb] : null;
   return {
     lage, farbe, deckkraft, beschriftungen, urkunden, puls, text, geister, beitraege, jahreSpalte,
+    benoetigt: jahreSpalte?.reihe ? jahreSpalte.y + 4 * jahreSpalte.abstand : (urkunden?.benoetigt || 0),
     bbPos: bb ? [bb.x + Math.min(bb.w, bb.h * 3) / 2, bb.y + bb.h / 2] : [b / 2, h / 2]
   };
 }
@@ -924,7 +934,8 @@ function karteUrkunden(station, vis, beschriftungen, start) {
   const radien = [...new Set(liste.filter((u) => u.ort).map((u) => u.ort))]
     .map((o) => Math.hypot(...verzerrt(km([o.lon, o.lat])))).sort(d3.ascending);
   const R = d3.quantile(radien, 0.9) || 1;
-  const skala = Math.min(vis.b - 60, vis.h - 50 - randUnten) / (2 * R);
+  // schmal (Handy, 2026-10-30): die Karte nutzt die ganze Breite, die Bühne wird dafür höher (benoetigt)
+  const skala = ((instanz.buehne?.clientWidth || TEXT_MIN_BREITE) < TEXT_MIN_BREITE ? vis.b - 40 : Math.min(vis.b - 60, vis.h - 50 - randUnten)) / (2 * R);
   const ox = vis.x + vis.b / 2, oy = vis.y + 30 + R * skala;
   const proj = (lonLat) => {
     let [x, y] = verzerrt(km(lonLat));
@@ -936,7 +947,10 @@ function karteUrkunden(station, vis, beschriftungen, start) {
   [100, 500].filter((d) => d ** HOCH < R * 0.97).forEach((d) => beschriftungen.push({ art: 'kreis', x: ox, y: oy, r: d ** HOCH * skala, text: `${d} km` }));
   beschriftungen.push({ art: 'kreis', x: ox, y: oy, r: R * skala, text: 'weiter entfernt' });
   const verarbeitung = station === 'verarbeitung';
-  const r = 2.2, z = r * 2.3;
+  // schmal (Handy, 2026-10-30): kleinere Punkte und Haufen, damit Krems und Wien getrennt bleiben
+  const schmal = (instanz.buehne?.clientWidth || TEXT_MIN_BREITE) < TEXT_MIN_BREITE; // wie überall: Text unter der Bühne
+  const hoechstens = schmal ? 20 : ORT_HOECHSTENS;
+  const r = schmal ? 1.7 : 2.2, z = r * 2.3;
   const zaehler = new Map();
   const unten = vis.y + 30 + hoeheGrad + 30;
   let fach = 0;
@@ -948,11 +962,11 @@ function karteUrkunden(station, vis, beschriftungen, start) {
       zaehler.set(u.ort, n + 1);
       const [x, y] = proj([u.ort.lon, u.ort.lat]);
       // je Ort höchstens ORT_HOECHSTENS Urkunden (die übrigen bleiben verborgen am Ortspunkt)
-      const m = Math.min(n, ORT_HOECHSTENS - 1), w = m * 2.39996, rr = n < ORT_HOECHSTENS ? z * Math.sqrt(m) * 0.62 : 0;
+      const m = Math.min(n, hoechstens - 1), w = m * 2.39996, rr = n < hoechstens ? z * Math.sqrt(m) * 0.62 : 0;
       pos.push([x + Math.cos(w) * rr, y + Math.sin(w) * rr]);
-      deckkraft.push(n < ORT_HOECHSTENS ? 0.9 : 0);
+      deckkraft.push(n < hoechstens ? 0.9 : 0);
     } else if (u.ohneKoordinaten) {
-      pos.push([vis.x + 6 + (fach % 60) * z, unten + 12 + Math.floor(fach / 60) * z]);
+      pos.push([vis.x + 6 + (fach % 60) * z, unten + (schmal ? 26 : 12) + Math.floor(fach / 60) * z]);
       deckkraft.push(verarbeitung ? 0.9 : 0);
       farbe[farbe.length - 1] = verarbeitung ? UNSICHER_HELL : null;
       fach += 1;
@@ -964,17 +978,32 @@ function karteUrkunden(station, vis, beschriftungen, start) {
   const donau = DONAU.map(proj).filter(([x]) => x >= vis.x - 2 && x <= vis.x + vis.b + 2);
   beschriftungen.push({ art: 'linie', punkte: donau, text: 'Donau', textAn: proj([14.29, 48.31]) });
   // auf `verarbeitung` sind die Urkunden mit unsicher zugeordnetem Ort hellrot (farbe), dazu der Rand unten
-  if (verarbeitung && K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, text: `${zahl(K.ohne)} Urkunden mit nicht sicher identifizierten Orten fehlen auf der Karte` });
+  if (verarbeitung && K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, breite: schmal ? vis.b : null, text: `${zahl(K.ohne)} Urkunden mit nicht sicher identifizierten Orten fehlen auf der Karte` });
   // Krems und die häufigsten Orte (ohne Überlappung)
   const beschriftet = [];
+  const kaesten = [];
   [...zaehler].sort((a, c) => (c[0].name === 'Krems') - (a[0].name === 'Krems') || c[1] - a[1]).forEach(([ort, n]) => {
     if (ort.name !== 'Krems' && (n < 12 || beschriftet.length >= 7)) return;
     const [x, y] = proj([ort.lon, ort.lat]);
+    if (schmal) {
+      // Krems links neben seinem Haufen (Wien liegt östlich), die übrigen rechts; weggelassen wird nur, was sich mit
+      // einer anderen Beschriftung tatsächlich überlappt
+      const haupt = ort.name === 'Krems';
+      const rr = z * Math.sqrt(Math.min(n, hoechstens)) * 0.62 + 4;
+      const w = ort.name.length * (haupt ? 7.4 : 6.2);
+      const kx = haupt ? x - rr - w : x + rr;
+      const kasten = [kx, y - 8, kx + w, y + 6];
+      if (kaesten.some((k) => k[0] < kasten[2] && kasten[0] < k[2] && k[1] < kasten[3] && kasten[1] < k[3])) return;
+      kaesten.push(kasten);
+      beschriftet.push([x, y]);
+      beschriftungen.push({ art: 'ort', x: haupt ? x - rr : x + rr, y: y + 4, haupt, anker: haupt ? 'end' : 'start', text: ort.name });
+      return;
+    }
     if (beschriftet.some(([bx, by]) => Math.abs(bx - x) < 70 && Math.abs(by - y) < 18)) return;
     beschriftet.push([x, y]);
     beschriftungen.push({ art: 'ort', x: x + z * Math.sqrt(Math.min(n, ORT_HOECHSTENS)) * 0.62 + 5, y: y + 4, haupt: ort.name === 'Krems', text: ort.name });
   });
-  return { r, start, pos, deckkraft, farbe };
+  return { r, start, pos, deckkraft, farbe, benoetigt: schmal ? unten + 26 + Math.ceil(fach / 60) * z + 16 : 0 };
 }
 
 // Sidebar eines Bestands (wie in der Treemap)
@@ -1083,7 +1112,7 @@ function berechneLayout(station = instanz.station) {
   if (station === 'berufe' && instanz.berufe) return { ...basis, ...layoutBerufe(b), art: 'berufe' };
   if (ARCHIV_STATIONEN.includes(station) && instanz.archiv) {
     const LA = layoutArchiv(station, b);
-    return { ...basis, ziel: () => LA.bbPos, radius: radiusFeld, text: LA.text, archiv: LA, art: 'archiv' };
+    return { ...basis, ziel: () => LA.bbPos, radius: radiusFeld, text: LA.text, archiv: LA, art: 'archiv', benoetigt: LA.benoetigt };
   }
   if (station === 'buergerbuch' || station === 'tor' || station === 'schreibweisen') {
     // das ganze Buch (Ausgangshöhe), der Text links daneben wie auf `berufe`; auf `buergerbuch` und `schreibweisen` steht
@@ -1094,7 +1123,9 @@ function berechneLayout(station = instanz.station) {
     const L0 = { ...basis, ziel, radius: radiusFeld, text: buchRahmen(b, instanz.basisHoehe, optionen).text, buch: tor };
     if (station !== 'schreibweisen') return L0;
     // Folie `schreibweisen` (Inkonsistenz): Personen mit mehreren Schreibweisen leuchten, drei Beispiele rechts
-    return { ...L0, hervor: (p) => p.schreibweisen.length > 1, beispiele: schreibBeispiele(ziel, tor) };
+    const beispiele = schreibBeispiele(ziel, tor, b);
+    const benoetigt = b < TEXT_MIN_BREITE && beispiele.length ? beispiele[beispiele.length - 1].y + 40 : 0;
+    return { ...L0, hervor: (p) => p.schreibweisen.length > 1, beispiele, benoetigt };
   }
   if (station === 'geschlecht' || station === 'frauen') return { ...basis, ...layoutGeschlecht(b, h, radiusFeld), art: 'geschlecht' };
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b, station), art: 'vermoegen' };
@@ -1119,11 +1150,14 @@ function layoutBerufe(b) {
   const lage = d3.range(n).map((i) => feld.pos(torPlatz[i]));
   const schnitt = d3.min(B.gruppen.flatMap((g) => g.mitglieder), (i) => lage[i][0]) ?? b / 2;
   const luecke = Math.max(14, b * 0.025);
-  const x0 = schnitt + luecke, breite = b - 8 - x0;
+  // schmal (Handy, 2026-10-30): die Balken stehen unter dem Buch über die ganze Breite, die Zahl hinter dem Namen
+  const schmal = b < TEXT_MIN_BREITE;
+  const kopfOben = schmal ? feld.ort([0, BUCH.h])[1] + 4 : 0;
+  const x0 = schmal ? 8 : schnitt + luecke, breite = b - 8 - x0;
   // Balken: so viele Punktreihen je Balken, dass die Punkte möglichst so groß wie im Tor bleiben
-  const zahlBreite = 46, beschriftung = 18, abstand = 8;
+  const zahlBreite = schmal ? 0 : 46, beschriftung = 18, abstand = 8;
   const G = B.gruppen.length;
-  const hoeheJe = (h - KOPF_SPALTEN - 8) / G;
+  const hoeheJe = schmal ? 60 : (h - KOPF_SPALTEN - 8) / G;
   const groesste = Math.max(...B.gruppen.map((g) => g.anzahl), 1);
   const passend = (reihen) => Math.min((breite - zahlBreite) / Math.ceil(groesste / reihen), (hoeheJe - beschriftung - abstand) / reihen);
   let reihen = 1, z = passend(1);
@@ -1135,7 +1169,7 @@ function layoutBerufe(b) {
   z = Math.max(1, Math.min(z, feld.zelle));
   const ziel = lage.slice();
   const balken = B.gruppen.map((g, gi) => {
-    const oben = KOPF_SPALTEN + gi * (beschriftung + reihen * z + abstand);
+    const oben = kopfOben + KOPF_SPALTEN + gi * (beschriftung + reihen * z + abstand);
     [...g.mitglieder].sort((a, c) => lage[a][0] - lage[c][0] || lage[a][1] - lage[c][1]).forEach((i, j) => {
       ziel[i] = [x0 + z / 2 + Math.floor(j / reihen) * z, oben + beschriftung + z / 2 + (j % reihen) * z];
     });
@@ -1146,13 +1180,14 @@ function layoutBerufe(b) {
     bleibt: (i) => !B.gruppeVon[i],
     radius: Math.max(1.1, z * 0.4),
     text: buchRahmen(b, h).text,
-    x0, balken, buchOrt: feld.ort
+    x0, balken, buchOrt: feld.ort, schmal, kopfOben,
+    benoetigt: schmal ? kopfOben + KOPF_SPALTEN + G * (beschriftung + reihen * z + abstand) + 12 : 0
   };
 }
 
 // drei Beispiele (zwei oder drei Schreibweisen, kurz genug für eine Zeile), rechts neben dem Buch untereinander, je mit
 // Linie zum Punkt; über die Höhe des Buchs verteilt
-function schreibBeispiele(ziel, tor) {
+function schreibBeispiele(ziel, tor, b) {
   const { personen } = instanz;
   const passend = personen.map((p, i) => ({ p, i, text: p.schreibweisen.join(' / ') }))
     .filter(({ p, text }) => p.schreibweisen.length >= 2 && p.schreibweisen.length <= 3 && text.length <= 40)
@@ -1162,6 +1197,11 @@ function schreibBeispiele(ziel, tor) {
     .sort((a, c) => a.punkt[1] - c.punkt[1]);
   const [rechts, oben] = tor.ort([BUCH.w, 20]);
   const [, unten] = tor.ort([BUCH.w, BUCH.h - 10]);
+  // schmal (Handy, 2026-10-30): unter dem Buch untereinander, links beginnend
+  if (b < TEXT_MIN_BREITE) {
+    const [, buchUnten] = tor.ort([0, BUCH.h]);
+    return kandidaten.map(({ p, punkt }, k) => ({ punkt, x: 18, y: buchUnten + 34 + k * 56, text: p.schreibweisen.join(' / ') }));
+  }
   return kandidaten.map(({ p, punkt }, k) => ({
     punkt, x: rechts + 34, y: oben + ((k + 0.5) / kandidaten.length) * (unten - oben), text: p.schreibweisen.join(' / ')
   }));
@@ -1207,7 +1247,8 @@ function layoutKlerus(b, mitKreuz) {
   const luecke = Math.max(14, b * 0.025);
   let torR, kircheR, text = null;
   // Kreuz und Kirche etwa gleich hoch (Wunsch des Autors, 2026-10-29; vorher Kreuz in voller Höhe, Kirche halb so hoch)
-  const gross = (h - 16) * 0.68;
+  let gross = (h - 16) * 0.68;
+  let kreuzBox = null;
   if (LV.text) {
     const tb = textSpalte(b);
     text = { ...LV.text, x: (b - tb) / 2, b: tb, mitte: h / 2 };
@@ -1216,9 +1257,15 @@ function layoutKlerus(b, mitKreuz) {
     kircheR = { x: x2, y: h - 8 - gross, b: Math.min(b - x2 - 8, gross * 1.1), h: gross };
   } else {
     torR = { x: 0, y: 8, b: b * 0.6, h: h - 16 };
-    kircheR = { x: b * 0.62, y: h - 8 - gross, b: b * 0.38, h: gross };
+    // schmal (Handy, 2026-10-30): Kreuz und Kirche gleich hoch als Paar in der Mitte (vorher 60 zu 40 geteilt, nach rechts versetzt)
+    const abstandKK = Math.max(16, b * 0.05);
+    gross = Math.min(gross, (b - 16 - abstandKK) / (KREUZ.w / KREUZ.h + KIRCHE.w / KIRCHE.h));
+    const kb = gross * (KREUZ.w / KREUZ.h), cb = gross * (KIRCHE.w / KIRCHE.h);
+    const x0 = (b - (kb + abstandKK + cb)) / 2;
+    kreuzBox = { x: x0, b: kb };
+    kircheR = { x: x0 + kb + abstandKK, y: h - 8 - gross, b: cb, h: gross };
   }
-  const kreuzR = { ...torR, y: h - 8 - gross, h: gross };
+  const kreuzR = { ...torR, ...(kreuzBox || {}), y: h - 8 - gross, h: gross };
   const n = personen.length;
   // alle Männer, Frauen und Inwohner/Hilfskräfte (graue Säule), gemischt (fester Zufall), bilden Tor bzw. Kreuz
   const mitGrauen = Boolean(instanz.graue);
@@ -1449,6 +1496,28 @@ function zeichne(animiert) {
   zeichneArchiv(L, mitAnimation);
   platziereErklaerung();
   markiereAuswahl();
+  schuetzeRand(L);
+}
+
+// Randschutz (2026-10-30, Handy): Auf schmalen Bühnen ragten Beschriftungen über den Rand. Nach dem Zeichnen wird jede
+// Beschriftung gemessen und, wenn nötig, waagrecht hineingeschoben. Breite Bühnen bleiben unverändert; die roten
+// Jahreszahlen der Verlust-Folien ordnen sich selbst an (zeichneJahre()).
+function schuetzeRand(L) {
+  if (L.b >= TEXT_MIN_BREITE) return;
+  const wurzel = instanz.svg.node();
+  const umkehr = wurzel.getScreenCTM()?.inverse();
+  if (!umkehr) return;
+  const jahre = instanz.archivJahre?.node();
+  wurzel.querySelectorAll('text').forEach((t) => {
+    if (jahre?.contains(t)) return;
+    if (t.dataset.rand) { t.removeAttribute('transform'); delete t.dataset.rand; }
+    const box = t.getBBox();
+    if (!box.width) return;
+    const m = umkehr.multiply(t.getScreenCTM());
+    const links = m.a * box.x + m.e, rechts = m.a * (box.x + box.width) + m.e;
+    const dx = links < 4 ? 4 - links : (rechts > L.b - 4 ? Math.max(4 - links, L.b - 4 - rechts) : 0);
+    if (Math.abs(dx) > 0.5) { t.setAttribute('transform', `translate(${dx.toFixed(1)},0)`); t.dataset.rand = '1'; }
+  });
 }
 
 // Umblättern zwischen `buergerbuch` und `schreibweisen` (Wunsch des Autors, 2026-10-29): Das Buch bleibt stehen. Die
@@ -1651,17 +1720,19 @@ function zeichneJahre(LA, mitAnimation) {
       .forEach((text) => liste.push({ text, aktuell: k === bis })));
     liste.sort((a, c) => parseInt(a.text, 10) - parseInt(c.text, 10));
   }
-  const y = (d) => S.y + liste.indexOf(d) * S.abstand;
+  // breit eine Spalte rechts vom Tor; schmal (S.reihe) zwei Spalten unter dem Tor, kleiner
+  const y = (d) => (S.reihe ? S.y + Math.floor(liste.indexOf(d) / 2) * S.abstand : S.y + liste.indexOf(d) * S.abstand);
+  const x = (d) => (S.reihe ? S.x + (liste.indexOf(d) % 2) * S.spaltenB : S.x);
   const sel = g.selectAll('text').data(liste, (d) => d.text);
   sel.exit().interrupt().transition().duration(mitAnimation ? 350 : 0).attr('opacity', 0).remove();
   if (!S) return;
-  const neu = sel.enter().append('text').attr('class', 'bgi-verlustjahr').text((d) => d.text)
-    .attr('x', S.x + 60).attr('y', y).attr('opacity', 0);
+  const neu = sel.enter().append('text').attr('class', S.reihe ? 'bgi-verlustjahr klein' : 'bgi-verlustjahr').text((d) => d.text)
+    .attr('x', (d) => (S.reihe ? x(d) : S.x + 60)).attr('y', (d) => (S.reihe ? y(d) + 20 : y(d))).attr('opacity', 0);
   const neuReihe = liste.filter((d) => d.aktuell);
   sel.merge(neu).interrupt()
     .transition().delay((d) => (mitAnimation ? (d.aktuell ? 1100 + neuReihe.indexOf(d) * 450 : 200) : 0)).duration(mitAnimation ? 700 : 0)
     .ease(d3.easeCubicOut)
-    .attr('x', S.x).attr('y', y).attr('opacity', (d) => (d.aktuell ? 1 : 0.45));
+    .attr('x', x).attr('y', y).attr('opacity', (d) => (d.aktuell ? 1 : 0.45));
 }
 
 // Feldnamen der Kategorien, Zeitachse, „ohne Zeitangabe“, Notiz zu den Urkunden, „Hier klicken“
@@ -1680,12 +1751,15 @@ function zeichneArchivBeschriftung(LA, mitAnimation) {
     } else if (e.art === 'achse') {
       g.append('line').attr('x1', e.x0).attr('x2', e.x1).attr('y1', e.y + 4).attr('y2', e.y + 4).attr('stroke', '#c3c2b7');
       const [a, z] = e.xs.domain();
-      for (let j = a; j <= z; j += 100) {
+      const schritt = e.xs(a + 100) - e.xs(a) < 36 ? 200 : 100; // schmal (Handy): jedes zweite Jahrhundert
+      for (let j = a; j <= z; j += schritt) {
         g.append('line').attr('x1', e.xs(j)).attr('x2', e.xs(j)).attr('y1', e.y + 4).attr('y2', e.y + 9).attr('stroke', '#c3c2b7');
         g.append('text').attr('class', 'bgi-wert-klein').attr('x', e.xs(j)).attr('y', e.y + 22).text(j);
       }
     } else if (e.art === 'ohneZeit') {
-      g.append('text').attr('class', 'bgi-wert-klein').style('text-anchor', 'start').attr('x', e.x).attr('y', e.y).text(e.text);
+      // mit `breite` (schmal) umbrochen
+      const t = g.append('text').attr('class', 'bgi-wert-klein').style('text-anchor', 'start').attr('x', e.x).attr('y', e.y);
+      (e.breite ? umbrechen(e.text, Math.floor(e.breite / 6.2)) : [e.text]).forEach((zeile, k) => t.append('tspan').attr('x', e.x).attr('dy', k ? 14 : 0).text(zeile));
     } else if (e.art === 'notiz') {
       g.append('text').attr('class', 'bgi-wert').attr('x', e.x).attr('y', e.y).text(e.text);
     } else if (e.art === 'jahr') {
@@ -1706,7 +1780,7 @@ function zeichneArchivBeschriftung(LA, mitAnimation) {
       g.append('circle').attr('cx', e.x).attr('cy', e.y).attr('r', e.r * 1.7).attr('fill', VERLUST_ROT).attr('fill-opacity', 0.07);
       g.append('circle').attr('cx', e.x).attr('cy', e.y).attr('r', e.r).attr('fill', VERLUST_ROT).attr('fill-opacity', 0.13);
     } else if (e.art === 'ort') {
-      g.append('text').attr('class', e.haupt ? 'bgi-wert' : 'bgi-wert-klein').style('text-anchor', 'start')
+      g.append('text').attr('class', e.haupt ? 'bgi-wert' : 'bgi-wert-klein').style('text-anchor', e.anker || 'start')
         .attr('x', e.x).attr('y', e.y).text(e.text);
     } else if (e.art === 'hinweis') {
       g.append('line').attr('x1', e.von).attr('x2', e.x - 8).attr('y1', e.y).attr('y2', e.y)
@@ -2284,8 +2358,9 @@ function layoutMenge(b) {
   const breit = b >= TEXT_MIN_BREITE;
   const tb = breit ? textSpalte(b) : 0, g = paarAbstand(b);
   const seite = breit ? (b - tb - 2 * g) / 2 : b / 2;
-  const mengeR = { x: 8, y: 16, b: seite - 16, h: h - 32 };
-  const bild = breit ? { x: seite + tb + 2 * g, y: 8, b: seite - 8, h: h - 16 } : { x: seite + 8, y: 8, b: seite - 16, h: h - 16 };
+  // schmal (Handy, 2026-10-30): Menge oben, Stammbaum bzw. Zeitleiste darunter über die ganze Breite
+  const mengeR = breit ? { x: 8, y: 16, b: seite - 16, h: h - 32 } : { x: 8, y: 8, b: b - 16, h: 170 };
+  const bild = breit ? { x: seite + tb + 2 * g, y: 8, b: seite - 8, h: h - 16 } : { x: 8, y: 200, b: b - 16, h: 340 };
   const r = raster(reihe.length, mengeR.x, mengeR.y, mengeR.b, mengeR.h);
   return {
     ziel: (p) => r.pos(platz.m.get(p.nr)),
@@ -2293,7 +2368,8 @@ function layoutMenge(b) {
     grauZiel: mitGrauen ? (j) => r.pos(platz.g.get(j)) : null,
     radius: Math.max(0.8, r.zelle * 0.34),
     text: breit ? { x: seite + g, b: tb, top: 4, mitte: h / 2 } : null,
-    bild
+    bild,
+    benoetigt: breit ? 0 : bild.y + bild.h + 10
   };
 }
 
@@ -2627,8 +2703,19 @@ function blendeEin(g, neu, verzoegerung = DAUER * 0.55) {
 const ZEICHNER = {
   // Folie `reformation`: Fragen statt Zahlen über Kreuz und Kirche
   pendel(g, L, neu) {
-    if (L.kreuzMitte) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kreuzMitte[0]).attr('y', L.kreuzMitte[1] - 14).text('wie viele evangelisch?');
-    if (L.kircheOben) g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', L.kircheOben[0]).attr('y', L.kircheOben[1] - 14).text('wie viele katholisch?');
+    // schmal (Handy): zweizeilig, sonst berühren sich die beiden Fragen
+    const frage = ([x, y], wort) => {
+      const t = g.append('text').attr('class', 'bgi-spaltenkopf klein').attr('x', x).attr('y', y - 14);
+      if (L.b < TEXT_MIN_BREITE) {
+        t.attr('y', y - 34);
+        t.append('tspan').attr('x', x).text('wie viele');
+        t.append('tspan').attr('x', x).attr('dy', '1.1em').text(`${wort}?`);
+      } else {
+        t.text(`wie viele ${wort}?`);
+      }
+    };
+    if (L.kreuzMitte) frage(L.kreuzMitte, 'evangelisch');
+    if (L.kircheOben) frage(L.kircheOben, 'katholisch');
     blendeEin(g, neu);
   },
 
@@ -2638,7 +2725,19 @@ const ZEICHNER = {
     if (!F || !B) return;
     const zeilen = STAMMBAUM.length;
     const ort = new Map();
-    STAMMBAUM.forEach((reihe, z) => {
+    const schmal = !L.text; // Handy (Text unter der Bühne): von unten nach oben angeordnet, kurze Namen, kleinere Schrift
+    const zeileY = (z) => B.y + B.h * (0.1 + (z / Math.max(1, zeilen - 1)) * 0.62);
+    if (schmal) {
+      // unterste Reihe gleichmäßig verteilt, Eltern mittig über ihren Kindern
+      for (let z = zeilen - 1; z >= 0; z -= 1) {
+        STAMMBAUM[z].forEach((id, k) => {
+          const kinder = z < zeilen - 1 ? STAMMBAUM[z + 1].filter((x) => txt(F.get(x).vater_id) === id).map((x) => ort.get(x)[0]) : [];
+          const x = kinder.length ? d3.mean(kinder) : B.x + ((k + 0.5) / STAMMBAUM[z].length) * B.b;
+          ort.set(id, [x, zeileY(z)]);
+        });
+      }
+    }
+    if (!schmal) STAMMBAUM.forEach((reihe, z) => {
       const y = B.y + B.h * (0.1 + (z / Math.max(1, zeilen - 1)) * 0.62);
       reihe.forEach((id, k) => {
         // Kinder unter dem Vater: x aus der Lage des Vaters, Geschwister nebeneinander
@@ -2664,6 +2763,7 @@ const ZEICHNER = {
     ort.forEach(([x, y], id) => {
       const f = F.get(id);
       const name = txt(f.name).split(' (')[0];
+      const kurz = schmal ? name.split(' von ')[0] : name;
       // Punkt und Name führen zur Person im Stammbaum (Wunsch des Autors, 2026-10-30)
       const link = g.append('a').attr('class', 'bgi-stammbaum-link').attr('href', baueDatensatzLink('familie', id))
         .attr('aria-label', `${name} im Stammbaum zeigen`);
@@ -2671,7 +2771,8 @@ const ZEICHNER = {
       link.append('circle').attr('cx', x).attr('cy', y).attr('r', 8).attr('fill', GOLD).attr('stroke', GOLD_RAND).attr('stroke-width', 1);
       const datum = (wert, unsicher, zeichen) => `${zeichen} ${txt(wert)}${istJa(unsicher) ? ' ?' : ''}`;
       [[name, 'bgi-wert'], [datum(f.geburtsdatum, f.geburtsdatum_unsicher, '*'), 'bgi-wert-klein'], [datum(f.sterbedatum, f.sterbedatum_unsicher, '†'), 'bgi-wert-klein']]
-        .forEach(([t, klasse], k) => (k ? g : link).append('text').attr('class', klasse).attr('x', x).attr('y', y + 26 + k * 15).text(t));
+        .forEach(([t, klasse], k) => (k ? g : link).append('text').attr('class', klasse).attr('x', x).attr('y', y + 26 + k * (schmal ? 13 : 15))
+          .style('font-size', schmal ? (k ? '10.5px' : '12px') : null).text(k ? t : kurz));
     });
     blendeEin(g, neu, DAUER * 0.8);
   },
@@ -2769,12 +2870,15 @@ const ZEICHNER = {
   sektoren(g, L, neu) {
     const B = instanz.berufe;
     const anteil = (wert) => `${prozent((wert / instanz.personen.length) * 100)} %`;
-    g.append('text').attr('class', 'bgi-spaltenkopf klein').style('text-anchor', 'start').attr('x', L.x0).attr('y', 26).text('Mit Berufsangabe');
-    g.append('text').attr('class', 'bgi-spaltenzahl').style('text-anchor', 'start').attr('x', L.x0).attr('y', 48)
+    const k0 = L.kopfOben || 0;
+    g.append('text').attr('class', 'bgi-spaltenkopf klein').style('text-anchor', 'start').attr('x', L.x0).attr('y', k0 + 26).text('Mit Berufsangabe');
+    g.append('text').attr('class', 'bgi-spaltenzahl').style('text-anchor', 'start').attr('x', L.x0).attr('y', k0 + 48)
       .text(`${zahl(B.mit)} Personen · ${anteil(B.mit)}`);
     L.balken.forEach(({ g: gruppe, oben, ende, mitte }) => {
-      g.append('text').attr('class', 'bgi-wert-klein').style('text-anchor', 'start').attr('x', L.x0).attr('y', oben + 13).text(gruppe.name);
-      g.append('text').attr('class', 'bgi-wert').style('text-anchor', 'start').attr('x', ende + 6).attr('y', mitte + 4).text(zahl(gruppe.anzahl));
+      // schmal steht die Zahl hinter dem Namen (am Balkenende fehlt der Platz)
+      g.append('text').attr('class', 'bgi-wert-klein').style('text-anchor', 'start').attr('x', L.x0).attr('y', oben + 13)
+        .text(L.schmal ? `${gruppe.name} · ${zahl(gruppe.anzahl)}` : gruppe.name);
+      if (!L.schmal) g.append('text').attr('class', 'bgi-wert').style('text-anchor', 'start').attr('x', ende + 6).attr('y', mitte + 4).text(zahl(gruppe.anzahl));
     });
     const [mx, my] = L.buchOrt([51, 4]); // über der linken Seite
     [['bgi-spaltenkopf klein', 'Ohne Berufsangabe', -26], ['bgi-spaltenzahl', `${zahl(B.ohne)} Personen · ${anteil(B.ohne)}`, -8]]
@@ -2817,7 +2921,7 @@ const ZEICHNER = {
     g.property('__versatz', L.versatz ?? 0);
     L.spalten.filter((s) => !s.grau).forEach((s) => {
       const mitte = s.x + s.b / 2;
-      (s.eng ? [`${prozent(s.vermoegensanteil)} %`, 'des Vermögens'] : [`${prozent(s.vermoegensanteil)} % des Vermögens`])
+      (s.eng ? [`${prozent(s.vermoegensanteil)} %`] : [`${prozent(s.vermoegensanteil)} % des Vermögens`]) // eng: Erklärung in der Legende
         .forEach((t, z) => g.append('text').attr('class', z === 0 ? 'bgi-wert' : 'bgi-wert-klein')
           .attr('x', mitte).attr('y', L.grundlinie + 20 + z * 16).text(t));
     });
@@ -2870,9 +2974,11 @@ const ZEICHNER = {
 
   // Legende: Einträge je nach Station (ohne Einblenden, sie wird bei jedem Wechsel neu gesetzt)
   legende(g, L) {
-    const lg = g.attr('class', 'bgi-legende').attr('transform', `translate(${L.spalten[1].x + 4},${L.legendeY})`);
+    // schmal (ohne Textspalte) am linken Rand, sonst unter den Säulen der Bürgerschaft
+    const lg = g.attr('class', 'bgi-legende').attr('transform', `translate(${L.text ? L.spalten[1].x + 4 : 4},${L.legendeY})`);
     const eintraege = [['punkt', '1 Punkt = 1 Haushalt der Bürgerschaft (Anteil)']];
     if (L.station !== 'schichten') eintraege.push(['muenze', `1 Münze = ${zahl(instanz.muenzeGulden)} Gulden`]);
+    if (L.station !== 'schichten' && L.spalten[1].eng) eintraege.push(['anteil', 'Prozent unter den Säulen = Anteil am Vermögen']);
     if (L.station === 'vermoegenslos') eintraege.push(['grau', '1 Punkt = Einwohner ohne Bürgerrecht']);
     eintraege.forEach(([art, text], z) => {
       const y = z * 18;
@@ -2880,6 +2986,7 @@ const ZEICHNER = {
       if (art === 'punkt') zeichen.attr('r', L.radius + 0.4).attr('fill', HAUSHALT_FARBE).attr('fill-opacity', 0.85);
       if (art === 'muenze') zeichen.attr('r', L.muenzRadius).attr('fill', GOLD).attr('stroke', GOLD_RAND).attr('stroke-width', 0.6);
       if (art === 'grau') zeichen.attr('r', L.radius + 0.4).attr('class', 'bgi-grau');
+      if (art === 'anteil') zeichen.remove();
       lg.append('text').attr('x', 18).attr('y', y + 4).text(text);
     });
   }
