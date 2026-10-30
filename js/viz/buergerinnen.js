@@ -76,6 +76,22 @@ const BUCH = {
   ruecken: 'M100,20 V128'
 };
 
+// Schriftgut der Mächtigen (Folie `khlesl`, Wunsch des Autors 2026-10-30): die Punkte bilden eine Urkunde mit Siegel,
+// ein offenes Buch (Protokolle), ein geschlossenes Buch und einen Brief, passend zum Text („Schreiben, Urteile und
+// Protokolle der Mächtigen“); ohne Beschriftung
+const SCHRIFTGUT = [
+  { name: 'Urkunden', form: { w: 120, h: 140 },
+    flaechen: ['M8,4 H112 V95 H8 Z', 'M8,98 H112 V108 H8 Z', 'M58,108 H62 V121 H58 Z', 'M50,128 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0'] },
+  { name: 'Protokolle', form: { w: BUCH.w, h: BUCH.h }, flaechen: [BUCH.links, BUCH.rechts] },
+  { name: 'Bücher', form: { w: 100, h: 130 },
+    flaechen: ['M12,4 H84 Q92,4 92,12 V118 Q92,126 84,126 H12 Z'], aussparungen: ['M22,4 H25 V126 H22 Z', 'M36,28 H80 V34 H36 Z'] },
+  // Brief: Umschlag mit Klappe (schmale Fuge in V-Form) und Siegel an ihrer Spitze (ein ausgesparter Ring trennt es)
+  { name: 'Brief', form: { w: 150, h: 100 },
+    flaechen: ['M4,8 H146 V96 H4 Z'],
+    aussparungen: ['M4,8 L75,57 L146,8 L146,14 L75,63 L4,14 Z',
+      'M63,62 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z M68,62 a7,7 0 1,1 14,0 a7,7 0 1,1 -14,0 Z'] }
+];
+
 // Weinflasche (Folie `weinzoll`), Burgunderform (Wunsch des Autors): Lippe, langer Hals, flach abfallende Schultern,
 // Bauch mit leicht gerundetem Boden
 const FLASCHE = {
@@ -1131,7 +1147,7 @@ function berechneLayout(station = instanz.station) {
   if (VERMOEGEN_STATIONEN.includes(station) && instanz.schichten) return { ...basis, ...layoutVermoegen(b, station), art: 'vermoegen' };
   if (station === 'weinzoll' && instanz.schichten && instanz.wein) return { ...basis, ...layoutWein(b), art: 'wein' };
   if (station === 'behauptung') return { ...basis, ...layoutBehauptung(b), art: 'behauptung' };
-  if (station === 'habsburger' || station === 'khlesl') return { ...basis, ...layoutMenge(b), art: 'menge' };
+  if (station === 'habsburger' || station === 'khlesl') return { ...basis, ...layoutMenge(b, station), art: 'menge' };
   if ((station === 'klerus' || station === 'reformation') && instanz.schichten) {
     return { ...basis, ...layoutKlerus(b, station === 'reformation'), art: 'klerus' };
   }
@@ -2350,7 +2366,7 @@ function zeilenPunkte(n, r) {
 // behauptete Beschluss stehen müsste. Text links daneben.
 // Folien `habsburger` und `khlesl`: alle Bürger, Frauen sowie Inwohner und Hilfskräfte, gemischt, als namenlose Menge
 // links; der Text in der Mitte, rechts das Bild (Stammbaum bzw. Zeitleiste, L.bild). Schmal: Menge links, Bild rechts.
-function layoutMenge(b) {
+function layoutMenge(b, station) {
   const { personen } = instanz;
   const h = instanz.basisHoehe;
   const mitGrauen = Boolean(instanz.graue);
@@ -2359,14 +2375,45 @@ function layoutMenge(b) {
   const tb = breit ? textSpalte(b) : 0, g = paarAbstand(b);
   const seite = breit ? (b - tb - 2 * g) / 2 : b / 2;
   // schmal (Handy, 2026-10-30): Menge oben, Stammbaum bzw. Zeitleiste darunter über die ganze Breite
-  const mengeR = breit ? { x: 8, y: 16, b: seite - 16, h: h - 32 } : { x: 8, y: 8, b: b - 16, h: 170 };
-  const bild = breit ? { x: seite + tb + 2 * g, y: 8, b: seite - 8, h: h - 16 } : { x: 8, y: 200, b: b - 16, h: 340 };
-  const r = raster(reihe.length, mengeR.x, mengeR.y, mengeR.b, mengeR.h);
+  const schriftgut = station === 'khlesl';
+  const mengeH = schriftgut ? 250 : 170; // schmal: für die vier Formen etwas höher
+  const mengeR = breit ? { x: 8, y: 16, b: seite - 16, h: h - 32 } : { x: 8, y: 8, b: b - 16, h: mengeH };
+  const bild = breit ? { x: seite + tb + 2 * g, y: 8, b: seite - 8, h: h - 16 } : { x: 8, y: mengeH + 30, b: b - 16, h: 340 };
+  let pos, radius;
+  if (schriftgut) {
+    // vier Felder (2 × 2), je eine Form mit Platz für die Beschriftung darunter; Punkte nach Fläche verteilt, damit
+    // alle Formen gleich dicht sind (Fläche aus einem Probe-Raster mit 400 Punkten)
+    const N = reihe.length;
+    const fb = mengeR.b / 2, fh = mengeR.h / 2;
+    const teile = SCHRIFTGUT.map((sg, k) => {
+      const feld = { x: mengeR.x + (k % 2) * fb + 8, y: mengeR.y + Math.floor(k / 2) * fh + 8, b: fb - 16, h: fh - 16 };
+      const ort = inRechteck(sg.form, feld);
+      const probe = formRaster(`schriftgut${k}`, 400, sg.flaechen, sg.form, sg.aussparungen || []);
+      return { sg, k, feld, ort, flaeche: probe.abstand ** 2 * ort.skala ** 2 };
+    });
+    const summe = d3.sum(teile, (t) => t.flaeche);
+    let start = 0;
+    teile.forEach((t, k) => {
+      t.start = start;
+      t.n = k === teile.length - 1 ? N - start : Math.round((N * t.flaeche) / summe);
+      start += t.n;
+      t.raster = formRaster(`schriftgut${k}`, t.n, t.sg.flaechen, t.sg.form, t.sg.aussparungen || []);
+    });
+    pos = (i) => {
+      const t = teile.find((x) => i < x.start + x.n) || teile[teile.length - 1];
+      return t.ort.pos(t.raster.punkte[(i - t.start) % t.raster.punkte.length]);
+    };
+    radius = Math.max(0.8, d3.min(teile, (t) => t.raster.abstand * t.ort.skala) * 0.36);
+  } else {
+    const r = raster(reihe.length, mengeR.x, mengeR.y, mengeR.b, mengeR.h);
+    pos = r.pos;
+    radius = Math.max(0.8, r.zelle * 0.34);
+  }
   return {
-    ziel: (p) => r.pos(platz.m.get(p.nr)),
-    frauZiel: (j) => r.pos(platz.f.get(j)),
-    grauZiel: mitGrauen ? (j) => r.pos(platz.g.get(j)) : null,
-    radius: Math.max(0.8, r.zelle * 0.34),
+    ziel: (p) => pos(platz.m.get(p.nr)),
+    frauZiel: (j) => pos(platz.f.get(j)),
+    grauZiel: mitGrauen ? (j) => pos(platz.g.get(j)) : null,
+    radius,
     text: breit ? { x: seite + g, b: tb, top: 4, mitte: h / 2 } : null,
     bild,
     benoetigt: breit ? 0 : bild.y + bild.h + 10
