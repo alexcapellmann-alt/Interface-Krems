@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-02 (217) – Willkommenstour: Urkundennetzwerk auf „Von wenigen wissen wir fast alles“
+
+- Wunsch des Autors: Links bilden die Punkte statt eines Rechtecks ein kleines Urkundennetzwerk wie in der Ansicht „Urkundennetzwerk“. Knoten sind die 24 in den Urkunden am häufigsten genannten Personen (`NETZ_KNOTEN`, je Urkunde einmal gezählt), als Scheiben aus Punkten mit einer Fläche nach der Zahl der Nennungen; Linien verbinden Personen, die gemeinsam in einer Urkunde stehen (Stärke nach Zahl der gemeinsamen Urkunden). Anordnung mit einem Kräftelayout, das immer gleich ausgeht (`bereiteNetzAuf()`, `netzLayout()`, Zeichner `netzwerk`). Die sieben größten Knoten tragen ihren Namen; jeder Knoten zeigt beim Darüberfahren Name und Zahl der Urkunden und öffnet per Klick oder Eingabetaste die Person mit ihren Urkunden in der Seitenleiste. Schmal steht das Netzwerk über dem Stammbaum.
+- Befund aus den Daten: Die meistgenannten Personen sind fast nur Herrscher (Friedrich III. 136 Urkunden, Ferdinand I. 59, Albrecht V. 44, Maximilian I. 39, Ladislaus V. 35); der häufigste Bürger kommt auf 11.
+- Text: „Auch in den Urkunden stehen sie im Mittelpunkt. Das Netzwerk zeigt die Menschen, die dort am häufigsten genannt werden, und fast alle großen Kreise gehören Herrschern.“, „Netzwerk“ verlinkt auf die Ansicht Urkundennetzwerk. „Was aufbewahrt wurde“: neuer Absatz nach „… eine Entscheidung des Archivs.“, der nächste beginnt mit „Rat und Ämter hoben auf …“.
+- Fehler behoben: Klickte man weiter, solange die Münzen auf „Das Vermögen“ noch fielen, machte das Ende des Regens die eben ausgeblendeten Münzen auf den folgenden Folien wieder sichtbar. Der Regen wird jetzt vor dem Ausblenden beendet.
+- Geprüft auf dem Testserver 8845 bei 1400 × 800 und 360 × 800: Netzwerk, Klick auf Friedrich III. (Seitenleiste mit seinen Urkunden), keine überlappenden oder abgeschnittenen Beschriftungen, Münzen auf Folie 14 ausgeblendet, auf 15 als blasse Kirche, zurück wieder ausgeblendet; keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-10-30 (216) – Erkundung: Einleitungen für Urkunden, Personen und Orte
 
 - Wunsch des Autors: Über den Kacheln der Bereiche Urkunden, Personen und Orte steht jetzt ein Einleitungstext in einfacher Sprache, ohne Doppelpunkte, Strichpunkte und Bindestriche. Er erklärt nicht die Ansichten, sondern die Quellen dahinter und was über sie bekannt ist, auch das Unsichere (Spalte `beschreibung` der Bereichszeilen in `data/ansichten.csv`, wie bisher schon beim Bestand).

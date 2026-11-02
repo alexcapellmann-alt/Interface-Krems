@@ -195,7 +195,7 @@ const TEILE = {
   vermoegenslos: ['koepfe', 'werte', 'muenzen', 'grau', 'legende'],
   klerus: ['muenzen'],
   reformation: ['muenzen', 'pendel'],
-  habsburger: ['muenzen', 'stammbaum'], // die Münzen blenden aus (AKTUALISIERER.muenzen)
+  habsburger: ['muenzen', 'netzwerk', 'stammbaum'], // die Münzen blenden aus (AKTUALISIERER.muenzen)
   khlesl: ['muenzen', 'khlesl'],
   behauptung: ['muenzen', 'beleg'], // die Kirche blendet aus (AKTUALISIERER.muenzen)
   weinzoll: ['muenzen', 'wein'] // die Kirche blendet aus (AKTUALISIERER.muenzen), an ihrer Stelle steht der Text
@@ -535,6 +535,8 @@ function fuegeStyleEin(container) {
     .bgi-erklaerung.mittig { position: absolute; margin: 0; max-width: none; }
     .bgi-erklaerung p { margin: 0 0 .7em; }
     .bgi-stammbaum-link { cursor: pointer; }
+    .bgi-netzknoten { fill: transparent; cursor: pointer; }
+    .bgi-netzknoten:hover, .bgi-netzknoten:focus-visible { stroke: ${AUSWAHL}; stroke-width: 2px; outline: none; }
     .bgi-stammbaum-link circle { transition: r .15s ease; }
     .bgi-stammbaum-link:hover circle, .bgi-stammbaum-link:focus-visible circle { r: 11px; }
     .bgi-stammbaum-link:hover text { text-decoration: underline; }
@@ -2376,11 +2378,25 @@ function layoutMenge(b, station) {
   const seite = breit ? (b - tb - 2 * g) / 2 : b / 2;
   // schmal (Handy, 2026-10-30): Menge oben, Stammbaum bzw. Zeitleiste darunter über die ganze Breite
   const schriftgut = station === 'khlesl';
-  const mengeH = schriftgut ? 250 : 170; // schmal: für die vier Formen etwas höher
+  const netzwerk = station === 'habsburger' && instanz.netz;
+  const mengeH = schriftgut ? 250 : (netzwerk ? 300 : 170); // schmal: für die Formen bzw. das Netzwerk etwas höher
   const mengeR = breit ? { x: 8, y: 16, b: seite - 16, h: h - 32 } : { x: 8, y: 8, b: b - 16, h: mengeH };
   const bild = breit ? { x: seite + tb + 2 * g, y: 8, b: seite - 8, h: h - 16 } : { x: 8, y: mengeH + 30, b: b - 16, h: 340 };
-  let pos, radius;
-  if (schriftgut) {
+  let pos, radius, netz = null;
+  if (netzwerk) {
+    // Netzwerk: die Punkte füllen die Scheiben der Knoten (Sonnenblumenmuster), je Knoten ein Anteil nach Nennungen
+    const N = reihe.length;
+    netz = netzLayout(mengeR, N);
+    const zuKnoten = (i) => netz.knoten.find((k) => i < k.start + k.punkte) || netz.knoten[netz.knoten.length - 1];
+    pos = (i) => {
+      const k = zuKnoten(i);
+      const j = i - k.start;
+      const rr = k.r * Math.sqrt((j + 0.5) / Math.max(1, k.punkte));
+      const w = j * 2.39996;
+      return [k.x + Math.cos(w) * rr, k.y + Math.sin(w) * rr];
+    };
+    radius = Math.max(0.7, netz.zelle * 0.38);
+  } else if (schriftgut) {
     // vier Felder (2 × 2), je eine Form mit Platz für die Beschriftung darunter; Punkte nach Fläche verteilt, damit
     // alle Formen gleich dicht sind (Fläche aus einem Probe-Raster mit 400 Punkten)
     const N = reihe.length;
@@ -2410,6 +2426,7 @@ function layoutMenge(b, station) {
     radius = Math.max(0.8, r.zelle * 0.34);
   }
   return {
+    netz,
     ziel: (p) => pos(platz.m.get(p.nr)),
     frauZiel: (j) => pos(platz.f.get(j)),
     grauZiel: mitGrauen ? (j) => pos(platz.g.get(j)) : null,
@@ -2418,6 +2435,77 @@ function layoutMenge(b, station) {
     bild,
     benoetigt: breit ? 0 : bild.y + bild.h + 10
   };
+}
+
+// Folie `habsburger` (Wunsch des Autors, 2026-11-02): links ein kleines Urkundennetzwerk statt der namenlosen Menge.
+// Knoten = die NETZ_KNOTEN in den Urkunden am häufigsten genannten Personen (personen_id, je Urkunde einmal gezählt),
+// Kanten = gemeinsame Nennung in einer Urkunde, wie in der Ansicht „Urkundennetzwerk“.
+const NETZ_KNOTEN = 24;
+function bereiteNetzAuf(urkunden, personenliste) {
+  if (!urkunden?.length) return null;
+  const liste = (w) => (Array.isArray(w) ? w : txt(w).split('|')).map((x) => txt(x)).filter(Boolean);
+  const anzahl = new Map();
+  const paare = new Map();
+  urkunden.forEach((u) => {
+    const ids = [...new Set(liste(u.personen_id))].sort();
+    ids.forEach((id) => anzahl.set(id, (anzahl.get(id) || 0) + 1));
+    for (let a = 0; a < ids.length; a += 1) for (let c = a + 1; c < ids.length; c += 1) {
+      const k = `${ids[a]}|${ids[c]}`;
+      paare.set(k, (paare.get(k) || 0) + 1);
+    }
+  });
+  const verzeichnis = new Map((personenliste || []).map((x) => [txt(x.personen_id), x]));
+  // Anzeigename: die längste Schreibweise (z. B. „Ladislaus V.“ statt „Ladislaus“)
+  const name = (id) => liste(verzeichnis.get(id)?.schreibweisen).sort((a, c) => c.length - a.length)[0] || id;
+  const knoten = [...anzahl].sort((a, c) => c[1] - a[1] || a[0].localeCompare(c[0])).slice(0, NETZ_KNOTEN)
+    .map(([id, n]) => ({ id, n, name: name(id) }));
+  const drin = new Set(knoten.map((k) => k.id));
+  const kanten = [...paare].map(([k, n]) => { const [a, c] = k.split('|'); return { a, c, n }; })
+    .filter((e) => drin.has(e.a) && drin.has(e.c));
+  return knoten.length >= 2 ? { knoten, kanten } : null;
+}
+
+// Lage des Netzwerks in einem Rechteck: Scheibengröße nach Zahl der Nennungen (Fläche), Anordnung mit einem
+// Kräftelayout, das immer gleich ausgeht (feste Startlage, feste Zahl von Schritten); je Breite und Höhe einmal
+function netzLayout(R, N) {
+  const netz = instanz.netz;
+  const schluessel = `${Math.round(R.b)}|${Math.round(R.h)}|${N}`;
+  if (instanz.netzLage?.schluessel === schluessel) return instanz.netzLage;
+  const summe = d3.sum(netz.knoten, (k) => k.n);
+  // Punkte je Knoten nach Fläche; Zelle so, dass die Scheiben zusammen knapp ein Viertel der Fläche füllen
+  let start = 0;
+  const knoten = netz.knoten.map((k, i) => {
+    const n = i === netz.knoten.length - 1 ? N - start : Math.round((N * k.n) / summe);
+    const o = { ...k, punkte: n, start };
+    start += n;
+    return o;
+  });
+  let zelle = Math.sqrt((0.22 * R.b * R.h) / (0.866 * N));
+  knoten.forEach((k) => { k.r = zelle * Math.sqrt((k.punkte * 0.866) / Math.PI); });
+  const nachId = new Map(knoten.map((k) => [k.id, k]));
+  const links = netz.kanten.map((e) => ({ source: e.a, target: e.c, n: e.n }));
+  const cx = R.x + R.b / 2, cy = R.y + R.h / 2;
+  const sim = d3.forceSimulation(knoten)
+    .force('link', d3.forceLink(links).id((k) => k.id).distance((l) => l.source.r + l.target.r + 40).strength(0.3))
+    .force('abstossung', d3.forceManyBody().strength(-60))
+    .force('kollision', d3.forceCollide((k) => k.r + 14)) // Platz zwischen den Scheiben, auch für die Namen
+    .force('x', d3.forceX(cx).strength(0.07))
+    .force('y', d3.forceY(cy).strength(0.1))
+    .stop();
+  for (let i = 0; i < 320; i += 1) sim.tick();
+  // ins Rechteck einpassen (Lage und Größe gemeinsam verkleinern, falls nötig)
+  const x0 = d3.min(knoten, (k) => k.x - k.r), x1 = d3.max(knoten, (k) => k.x + k.r);
+  const y0 = d3.min(knoten, (k) => k.y - k.r), y1 = d3.max(knoten, (k) => k.y + k.r - 0) + 16; // Platz für Namen
+  const f = Math.min(1, R.b / (x1 - x0), R.h / (y1 - y0));
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  knoten.forEach((k) => { k.x = cx + (k.x - mx) * f; k.y = cy + (k.y - my) * f; k.r *= f; });
+  zelle *= f;
+  const lage = {
+    schluessel, knoten, zelle,
+    kanten: links.map((l) => ({ a: nachId.get(l.source.id ?? l.source), c: nachId.get(l.target.id ?? l.target), n: l.n }))
+  };
+  instanz.netzLage = lage;
+  return lage;
 }
 
 function layoutBehauptung(b) {
@@ -2517,6 +2605,8 @@ const AKTUALISIERER = {
       (g.property('__muenzen') || []).forEach((m) => m.knoten.setAttribute('opacity', 1));
     }
     if (!ortWechsel && (weg || g.property('__weg'))) {
+      // fällt der Münzregen noch (schnell weitergeklickt), erst beenden; sonst machte sein Ende die Münzen wieder sichtbar
+      instanz.regenSchleife?.stop();
       g.property('__weg', weg).style('pointer-events', weg ? 'none' : null);
       const knoten = (g.property('__muenzen') || []).map((m) => m.knoten);
       const lage = lageVon('muenzen', knoten).map(([x, y]) => [x, y]);
@@ -2767,6 +2857,28 @@ const ZEICHNER = {
   },
 
   // Folie `habsburger`: kleiner Stammbaum mit Geburts- und Todestag (unsichere Daten blasser, mit Fragezeichen)
+  // Folie `habsburger`: Kanten des Netzwerks (unter den Punkten), Namen der großen Knoten und unsichtbare Flächen,
+  // die die Person in der Seitenleiste öffnen (Klick oder Eingabetaste)
+  netzwerk(g, L, neu) {
+    const N = L.netz;
+    if (!N) return;
+    const staerke = d3.scaleSqrt().domain([1, d3.max(N.kanten, (e) => e.n) || 1]).range([1, 4]);
+    N.kanten.forEach((e) => g.append('line').attr('x1', e.a.x).attr('y1', e.a.y).attr('x2', e.c.x).attr('y2', e.c.y)
+      .attr('stroke', '#9aa5b1').attr('stroke-opacity', 0.55).attr('stroke-width', staerke(e.n)));
+    const grenze = N.knoten.map((k) => k.r).sort(d3.descending)[Math.min(6, N.knoten.length - 1)]; // die sieben größten
+    N.knoten.forEach((k) => {
+      if (k.r >= grenze) g.append('text').attr('class', 'bgi-wert-klein').attr('x', k.x).attr('y', k.y + k.r + 13).text(k.name);
+      const titel = `${k.name}\n${zahl(k.n)} Urkunden`;
+      g.append('circle').attr('class', 'bgi-netzknoten').attr('cx', k.x).attr('cy', k.y).attr('r', k.r + 2)
+        .attr('tabindex', 0).attr('role', 'button').attr('aria-label', `${k.name}, ${zahl(k.n)} Urkunden, in der Seitenleiste zeigen`)
+        .on('mouseenter', function () { zeigeTooltip(titel, this, instanz.container); })
+        .on('mouseleave', () => versteckeTooltip())
+        .on('click', (event) => { event.stopPropagation(); versteckeTooltip(); oeffnePerson({ id: k.id, name: k.name }); })
+        .on('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); oeffnePerson({ id: k.id, name: k.name }); } });
+    });
+    blendeEin(g, neu, DAUER * 0.8);
+  },
+
   stammbaum(g, L, neu) {
     const F = instanz.familien, B = L.bild;
     if (!F || !B) return;
@@ -3332,6 +3444,7 @@ async function ladeStationsdaten() {
   instanz.karte = instanz.archiv ? bereiteKarteAuf(orte, instanz.archiv) : null;
   // Urkunden, bei denen die Zuordnung der Personen unsicher ist (Platzhalter {urkpersonenunsicher})
   instanz.urkPersonenUnsicher = (urkunden || []).filter((u) => istJa(u.personen_unsicher)).length;
+  instanz.netz = bereiteNetzAuf(urkunden, instanz.daten?.personenliste);
   instanz.familien = familien?.length ? new Map(familien.map((f) => [txt(f.id), f])) : null;
   instanz.stationen = bereiteStationenAuf(stationen)
     .filter((s) => !ARCHIV_STATIONEN.includes(s.id) || instanz.archiv)
