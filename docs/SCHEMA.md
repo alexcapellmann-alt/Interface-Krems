@@ -638,7 +638,7 @@ Beispiel (Krems, Auszug): `regel;roemische_zahlen;;` · `auslassen;daß;;` · `v
 
 ### 13.8 buergerinnen_stationen.csv, buergerinnen_schichten.csv, buergerinnen_sektoren.csv und buergerinnen_archiv.csv - Folien der Willkommenstour (neu, 2026-10-28)
 
-Knöpfe, Texte und Zahlen der Willkommenstour (bis 2026-10-29 „Bürgerinnen?“; bis 2026-10-28 eine Ansicht unter Personen, seit 2026-10-29 im Tab Führungen, `#fuehrungen/buergerinnen`). Alle Dateien sind **optional** und werden erst geladen, wenn die Führung geöffnet wird. Weiter geht es mit dem Pfeil oder dem Mausrad (eine Drehung je Folie; kann die Seite oder ein Element unter dem Zeiger noch scrollen, scrollt zuerst dieses).
+Knöpfe, Texte und Zahlen der Willkommenstour (bis 2026-10-29 „Bürgerinnen?“; bis 2026-10-28 eine Ansicht unter Personen, seit 2026-10-29 im Tab Führungen, `#fuehrungen/buergerinnen`). Alle Dateien sind **optional** und werden erst geladen, wenn die Führung geöffnet wird. Weiter geht es mit dem Pfeil; das Mausrad scrollt nur die Seite.
 
 **buergerinnen_stationen.csv** - eine Zeile je Folie, in dieser Reihenfolge. Die Ansicht zeigt immer nur einen Weiter-Knopf (hüpfender Pfeil nach unten; `knopf` der nächsten Folie ist sein Name für Bildschirmleser und sein Tooltip) und einen Zurück-Knopf. Die erste Folie braucht keinen `knopf`, alle anderen schon; `tor` muss vorkommen (sonst gilt die Vorgabe Tor → Geschlecht).
 

@@ -157,6 +157,9 @@ const FALL_WEG = 190;              // px: so tief fallen sie
 // Karte der Urkunden-Orte (2026-10-29): `orte` (wo liegt das?) und `verarbeitung` (die Karte ist sicherer als wir)
 const KARTE_STATIONEN = ['orte', 'verarbeitung'];
 const ORTE_DATEI = 'data/orte.csv';
+// Karte (`orte`, `verarbeitung`): so groß mindestens (Durchmesser in px), auch wenn das Fenster niedriger ist; die Bühne
+// wird dann höher (Wunsch des Autors, 2026-11-03: auf dem Laptop war sie deutlich kleiner als am großen Bildschirm)
+const KARTE_MIN = 560;
 const FAMILIEN_DATEI = 'data/familien.csv'; // Folie `habsburger`: Lebensdaten für den kleinen Stammbaum
 // Folien `habsburger` und `khlesl` (Wunsch des Autors, 2026-10-30): alle Menschen als namenlose Menge links, rechts
 // ein kleiner Stammbaum der Habsburger um 1600 (Zeilen von oben; Kinder unter ihrem Vater, ids aus familien.csv) bzw.
@@ -861,6 +864,7 @@ function layoutArchiv(station, b) {
     if (KARTE_STATIONEN.includes(station) && instanz.karte && A.urk >= 0) {
       const l = lage[A.urk];
       urkunden = karteUrkunden(station, vis, beschriftungen, [l.x + l.w / 2, l.y + l.h / 2]);
+      if (text && urkunden.benoetigt > h) text.mitte = urkunden.mitte; // höhere Bühne: der Text bleibt auf Höhe der Karte
     }
     if (station === 'urkunden' && A.urk >= 0) {
       // die Urkunden einzeln, in Säulen je Jahrzehnt, auf einer Zeitachse über ihren Zeitraum
@@ -953,7 +957,7 @@ function karteUrkunden(station, vis, beschriftungen, start) {
     .map((o) => Math.hypot(...verzerrt(km([o.lon, o.lat])))).sort(d3.ascending);
   const R = d3.quantile(radien, 0.9) || 1;
   // schmal (Handy, 2026-10-30): die Karte nutzt die ganze Breite, die Bühne wird dafür höher (benoetigt)
-  const skala = ((instanz.buehne?.clientWidth || TEXT_MIN_BREITE) < TEXT_MIN_BREITE ? vis.b - 40 : Math.min(vis.b - 60, vis.h - 50 - randUnten)) / (2 * R);
+  const skala = ((instanz.buehne?.clientWidth || TEXT_MIN_BREITE) < TEXT_MIN_BREITE ? vis.b - 40 : Math.min(vis.b - 60, Math.max(KARTE_MIN, vis.h - 50 - randUnten))) / (2 * R);
   const ox = vis.x + vis.b / 2, oy = vis.y + 30 + R * skala;
   const proj = (lonLat) => {
     let [x, y] = verzerrt(km(lonLat));
@@ -1021,7 +1025,7 @@ function karteUrkunden(station, vis, beschriftungen, start) {
     beschriftet.push([x, y]);
     beschriftungen.push({ art: 'ort', x: x + z * Math.sqrt(Math.min(n, ORT_HOECHSTENS)) * 0.62 + 5, y: y + 4, haupt: ort.name === 'Krems', text: ort.name });
   });
-  return { r, start, pos, deckkraft, farbe, benoetigt: schmal ? unten + 26 + Math.ceil(fach / 60) * z + 16 : 0 };
+  return { r, start, pos, deckkraft, farbe, mitte: oy, benoetigt: unten + (schmal ? 26 : 12) + Math.ceil(fach / 60) * z + 16 };
 }
 
 // Sidebar eines Bestands (wie in der Treemap)
@@ -1499,9 +1503,14 @@ function zeichne(animiert) {
   if (umfaerben) {
     blaettere(L, L.station === 'schreibweisen', farbeVon, deckVon);
   } else {
+    // mit Hervorhebung (zurück auf `schreibweisen`): grau ankommen, danach leuchten die Personen auf; das Ende der
+    // Bewegung schreibt allen Punkten die eine Zielfarbe, die Farben je Person dürfen also erst danach kommen
+    const aufleuchten = L.hervor
+      ? () => punkte.interrupt('hervor').transition('hervor').delay((p) => p.verzoegerung * 300).duration(800).ease(d3.easeCubicInOut).attr('fill', farbeVon)
+      : null;
     bewegePunkte(punkte.data().map((p, i) => L.ziel(p, i)), mitAnimation && personenBewegen,
-      L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE));
-    if (L.hervor) punkte.attr('fill', farbeVon);
+      L.hervor ? AUSGEGRAUT : (L.art === 'vermoegen' ? HAUSHALT_FARBE : (L.art === 'wein' ? BORDEAUX : FARBE)), aufleuchten);
+    if (L.hervor && !instanz.bewegungen.has('personen')) punkte.attr('fill', farbeVon);
   }
   if (mitAnimation) {
     instanz.animationBis = Date.now() + DAUER + STAFFELUNG + 400 + (L.art === 'wein' ? WEIN_SINKEN + 900 : 0) + (umfaerben ? BLAETTERN + 1200 : 0);
@@ -2131,6 +2140,7 @@ function beendeBewegung(name, { schreiben = true } = {}) {
   if (schreiben) b.knoten.forEach((k) => k.setAttribute('fill', b.farbeNach));
   if (schreiben && b.zielRadien) b.knoten.forEach((k, i) => k.setAttribute('r', b.zielRadien[i].toFixed(2)));
   b.gruppe.style.visibility = '';
+  if (schreiben) b.danach?.();
   neuZeichnen();
 }
 
@@ -2147,7 +2157,7 @@ function lageVon(name, knoten) {
 
 // Morphen der Personenpunkte (Lage; Größe und Deckkraft springen vorher auf den Zielwert). Jeder Punkt startet mit
 // höchstens STAFFELUNG ms Verzögerung; Punkte, die schon am Ziel stehen, bleiben unberührt.
-function bewegePunkte(ziele, mitAnimation, zielFarbe) {
+function bewegePunkte(ziele, mitAnimation, zielFarbe, danach = null) {
   const knoten = instanz.punkte.nodes();
   const farbeVon = knoten[0].getAttribute('fill') || FARBE;
   if (!mitAnimation) {
@@ -2166,7 +2176,7 @@ function bewegePunkte(ziele, mitAnimation, zielFarbe) {
     fuell: knoten.map((k) => Number(k.getAttribute('fill-opacity')) || 0.85),
     radius: Number(knoten[0].getAttribute('r')) || 2,
     verzoegerung: instanz.punkte.data().map((p) => p.verzoegerung * STAFFELUNG),
-    dauer: DAUER, ease: d3.easeCubicInOut
+    dauer: DAUER, ease: d3.easeCubicInOut, danach
   });
 }
 
@@ -3244,6 +3254,22 @@ function zeigeMuenzfelder() {
   if (ziel > window.scrollY + 20) window.scrollTo({ top: ziel, behavior: ohneAnimation() ? 'auto' : 'smooth' });
 }
 
+// Karte höher als der sichtbare Platz (niedrige Fenster): die Seite so weit hochschieben, dass die ganze Karte zu sehen
+// ist und die Pfeile sichtbar bleiben; beim Verlassen wieder nach oben. Schmal bleibt es beim normalen Scrollen.
+function zeigeKarte(vorher) {
+  const L = instanz.layout;
+  const verhalten = ohneAnimation() ? 'auto' : 'smooth';
+  if (KARTE_STATIONEN.includes(instanz.station)) {
+    if (!L.text || !L.archiv?.urkunden?.benoetigt) return;
+    const svgOben = instanz.svg.node().getBoundingClientRect().top + window.scrollY;
+    const steuerung = instanz.wurzel.querySelector('.bgi-steuerung').getBoundingClientRect().top + window.scrollY;
+    const ziel = Math.min(svgOben + L.archiv.urkunden.benoetigt + 8 - window.innerHeight, steuerung - 8);
+    if (ziel > 0) window.scrollTo({ top: ziel, behavior: verhalten });
+  } else if (KARTE_STATIONEN.includes(instanz.stationen[vorher]?.id) && L.text) {
+    window.scrollTo({ top: 0, behavior: verhalten });
+  }
+}
+
 function zeigePersonMitId(id) {
   if (id.startsWith('bestand:')) {
     const it = instanz.archiv?.items.find((x) => alsText(x.record.kuerzel).trim() === id.slice('bestand:'.length));
@@ -3353,6 +3379,7 @@ function geheZu(index) {
   if (DIAGNOSE && dauerKlick > 150) console.info(`[Bürgerinnen? Diagnose] Folie ${index + 1} (${instanz.station}): Aufbau beim Klick ${Math.round(dauerKlick)} ms`);
   instanz.svg.attr('aria-label', stationsBeschriftung());
   if (instanz.station === 'muenzen' && index > vorher) zeigeMuenzfelder();
+  zeigeKarte(vorher);
   if (instanz.layout.art === 'klerus') { // Bühne wieder ganz zeigen (die Münzfelder lagen weiter unten)
     const oben = instanz.svg.node().getBoundingClientRect().top + window.scrollY - 90;
     if (window.scrollY > oben + 20) window.scrollTo({ top: Math.max(0, oben), behavior: ohneAnimation() ? 'auto' : 'smooth' });
@@ -3638,7 +3665,6 @@ export function render(container, data, options = {}) {
   };
   instanz.weiterKnopf.addEventListener('click', () => geheZu(instanz.stationIndex + 1));
   instanz.zurueckKnopf.addEventListener('click', () => geheZu(instanz.stationIndex - 1));
-  wurzel.addEventListener('wheel', mitMausrad, { passive: false });
   sidebar.schliessenBtn.addEventListener('click', schliessePerson);
   sidebar.zurueckBtn.addEventListener('click', () => zurueckZurKombiniertenListe(sidebar)); // Liste der Person wieder zeigen
   erklaerung.addEventListener('click', (event) => {
@@ -3667,36 +3693,6 @@ export function render(container, data, options = {}) {
     }, Math.max(150, instanz.animationBis - Date.now()));
   });
   instanz.beobachter.observe(buehne);
-}
-
-// Mausrad (Wunsch des Autors, 2026-10-29): eine Drehung blättert eine Folie weiter oder zurück, wie die Pfeile
-// (seit 2026-10-29 auch auf `klick`). Kann die Seite oder ein Element unter dem Zeiger
-// (Seitenleiste, Text) in diese Richtung noch scrollen, scrollt zuerst dieses. Eine Geste blättert nur einmal:
-// solange Ereignisse kommen, bleibt das Mausrad gesperrt (Trackpads liefern lange Nachläufer).
-let radSperre = 0;
-function kannScrollen(start, runter) {
-  for (let el = start; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
-    const stil = getComputedStyle(el);
-    if (!/(auto|scroll)/.test(stil.overflowY) || el.scrollHeight <= el.clientHeight + 1) continue;
-    if (runter ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true;
-  }
-  // die Seite selbst erst ab einem merklichen Rest (sonst schluckt ein Rand von wenigen Pixeln die erste Drehung)
-  const seite = document.scrollingElement || document.documentElement;
-  return runter ? window.scrollY + window.innerHeight < seite.scrollHeight - 120 : window.scrollY > 120;
-}
-function mitMausrad(event) {
-  if (!instanz || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-  const runter = event.deltaY > 0;
-  if (kannScrollen(event.target, runter)) return;
-  event.preventDefault();
-  const jetzt = performance.now();
-  const gesperrt = jetzt < radSperre;
-  radSperre = Math.max(radSperre, jetzt + 300);
-  if (gesperrt) return;
-  const knopf = runter ? instanz.weiterKnopf : instanz.zurueckKnopf;
-  if (knopf.hidden) return;
-  radSperre = jetzt + 900;
-  geheZu(instanz.stationIndex + (runter ? 1 : -1));
 }
 
 export function resize() {

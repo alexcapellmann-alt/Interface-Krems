@@ -7,6 +7,27 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-03 (219) – Willkommenstour: Farben beim Zurückblättern, kein Blättern mit dem Mausrad, größere Karte
+
+- „Ein Name, viele Schreibweisen“: Kam man von „Männer und Frauen“ zurück, waren die Punkte blau statt grau und orange, weil das Ende der Bewegung allen Punkten eine Farbe schrieb. Jetzt kommen sie grau an, danach leuchten die Personen mit mehreren Schreibweisen auf (`bewegePunkte(…, danach)`, `b.danach` in `beendeBewegung()`).
+- Mausrad (Wunsch des Autors): blättert nicht mehr, es scrollt nur die Seite (`mitMausrad()` entfernt, Infotext und `docs/SCHEMA.md` angepasst).
+- Karte auf „Wo liegt das?“ und „Die Karte ist sicherer als wir“ (Wunsch des Autors): Die Größe hing an der Fensterhöhe, auf dem Laptop war sie deshalb viel kleiner. Jetzt mindestens 560 px Durchmesser (`KARTE_MIN`), begrenzt durch die Breite; die Bühne wird bei Bedarf höher, der Text bleibt auf Höhe der Karte. Beim Ankommen rückt die Seite so weit hoch, dass die ganze Karte zu sehen ist und die Pfeile sichtbar bleiben, beim Verlassen wieder nach oben (`zeigeKarte()`).
+- Gemessen auf dem Testserver 8845: bei 1536 × 730 Karte 548 px (vorher rund 280 px, aus der Fensterhöhe berechnet), ganz sichtbar; bei 1920 × 950 Karte 534 px (vorher rund 500 px, berechnet). Rücksprung von Folie 9 auf 8 mit richtigen Farben, Mausrad blättert nicht, Wege 22 bis 25 vor und zurück, keine Konsolenfehler.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-03 (218) – Bilderwand: kein Einfrieren mehr beim Öffnen
+
+- Hinweis des Autors: Die Bilderwand fror beim Öffnen ein. Gemessen (Testserver, 1400 × 800): ein Block von 8 426 ms direkt nach dem Laden des Sprite-Bilds; das Laden selbst war schnell. Ursache: `zeichneInAtlas()` lief für jede der 1 054 Urkunden einzeln durch fünf Bildstufen, mit Pixelabfrage je Urkunde. Die kleinste Stufe lag wegen `willReadFrequently` im Hauptspeicher, vermutlich wurde die Stufe darüber deshalb jedes Mal von der Grafikkarte zurückgelesen (nicht einzeln gemessen).
+- `zeichneSpriteInAtlanten()`: das ganze Sprite-Sheet in einem Durchgang; größte Stufe einmal füllen, jede kleinere durch einmaliges Verkleinern der nächstgrößeren, Durchschnittsfarben aus einer Mini-Kopie des Sheets mit einem Pixel je Zelle. Beim einzelnen Nachladen (Bilder, die das Sheet nicht enthält) kommt die Farbe jetzt aus dem Bild selbst, kein Atlas wird mehr ausgelesen.
+- Gemessen danach: längster Block 74 ms (1400 × 800), 67 ms (360 × 800), keine Konsolenfehler; Bilder beim Hineinzoomen geprüft.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-11-02 (217) – Willkommenstour: Urkundennetzwerk auf „Von wenigen wissen wir fast alles“
 
 - Wunsch des Autors: Links bilden die Punkte statt eines Rechtecks ein kleines Urkundennetzwerk wie in der Ansicht „Urkundennetzwerk“. Knoten sind die 24 in den Urkunden am häufigsten genannten Personen (`NETZ_KNOTEN`, je Urkunde einmal gezählt), als Scheiben aus Punkten mit einer Fläche nach der Zahl der Nennungen; Linien verbinden Personen, die gemeinsam in einer Urkunde stehen (Stärke nach Zahl der gemeinsamen Urkunden). Anordnung mit einem Kräftelayout, das immer gleich ausgeht (`bereiteNetzAuf()`, `netzLayout()`, Zeichner `netzwerk`). Die sieben größten Knoten tragen ihren Namen; jeder Knoten zeigt beim Darüberfahren Name und Zahl der Urkunden und öffnet per Klick oder Eingabetaste die Person mit ihren Urkunden in der Seitenleiste. Schmal steht das Netzwerk über dem Stammbaum.

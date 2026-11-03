@@ -401,7 +401,6 @@ function baueAtlanten() {
     const c = document.createElement('canvas');
     c.width = spalten * w;
     c.height = Math.ceil(I.tiles.length / spalten) * Math.round(w * CH);
-    if (w === MIP_W[0]) c.getContext('2d', { willReadFrequently: true }); // Durchschnittsfarbe je Zelle
     return c;
   });
   ladeSpriteSheet().finally(() => {
@@ -425,15 +424,49 @@ async function ladeSpriteSheet() {
   bild.src = SPRITE_BILD;
   try { await bild.decode(); } catch { return; }
   if (!I) return;
+  zeichneSpriteInAtlanten(bild, manifest);
+  requestDraw();
+}
+
+// Das ganze Sprite-Sheet in einem Durchgang in die Atlanten (2026-11-03, „friert beim Öffnen ein“: je Urkunde einzeln
+// durch alle Stufen und mit Pixelabfrage standen über 8 Sekunden lang still): die größte Stufe einmal füllen, jede
+// kleinere Stufe durch einmaliges Verkleinern der nächstgrößeren, die Durchschnittsfarben aus einer Mini-Kopie des
+// Sheets mit einem Pixel je Zelle.
+function zeichneSpriteInAtlanten(bild, manifest) {
   const [zw, zh] = manifest.zelle, spalten = manifest.spalten;
+  const oben = MIP_W.length - 1, w = MIP_W[oben], h = Math.round(w * CH);
+  const g = I.atlanten[oben].getContext('2d');
+  g.imageSmoothingQuality = 'high';
+  const r = Math.min(w / zw, h / zh), dw = zw * r, dh = zh * r;
+  const treffer = [];
   for (const t of I.tiles) {
     const eintrag = manifest.urkunden?.[t.signatur];
     if (!eintrag || !t.bild || !t.bild.endsWith(`/${eintrag[1]}`)) continue;
     const k = eintrag[0];
-    zeichneInAtlas(t, bild, (k % spalten) * zw, Math.floor(k / spalten) * zh, zw, zh);
+    const x0 = (t.i % I.atlasSpalten) * w, y0 = Math.floor(t.i / I.atlasSpalten) * h;
+    g.fillStyle = FARBE.buehne;
+    g.fillRect(x0, y0, w, h);
+    g.drawImage(bild, (k % spalten) * zw, Math.floor(k / spalten) * zh, zw, zh, x0 + (w - dw) / 2, y0 + (h - dh) / 2, dw, dh);
     t.geladen = true;
+    treffer.push([t, k]);
   }
-  requestDraw();
+  for (let L = oben - 1; L >= 0; L--) {
+    const ziel = I.atlanten[L], c = ziel.getContext('2d');
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(I.atlanten[L + 1], 0, 0, ziel.width, ziel.height);
+  }
+  const zeilen = Math.max(1, Math.round(bild.naturalHeight / zh));
+  const probe = document.createElement('canvas');
+  probe.width = spalten;
+  probe.height = zeilen;
+  const pg = probe.getContext('2d', { willReadFrequently: true });
+  pg.imageSmoothingQuality = 'high';
+  pg.drawImage(bild, 0, 0, spalten * zw, zeilen * zh, 0, 0, spalten, zeilen);
+  const pixel = pg.getImageData(0, 0, spalten, zeilen).data;
+  for (const [t, k] of treffer) {
+    const o = k * 4;
+    t.farbe = `rgb(${pixel[o]},${pixel[o + 1]},${pixel[o + 2]})`;
+  }
 }
 
 function ladeNaechstes() {
@@ -460,6 +493,17 @@ function ladeNaechstes() {
 // Stufe schrittweise verkleinert.
 function zeichneInAtlas(t, img, qx, qy, qw, qh) {
   const x0 = t.i % I.atlasSpalten, y0 = Math.floor(t.i / I.atlasSpalten);
+  // Durchschnittsfarbe für winzige Zellen: aus dem Bild selbst in einen Punkt (kein Zurücklesen aus einem Atlas)
+  if (!I.farbProbe) {
+    const c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    I.farbProbe = c.getContext('2d', { willReadFrequently: true });
+  }
+  try {
+    I.farbProbe.drawImage(img, qx, qy, qw, qh, 0, 0, 1, 1);
+    const p = I.farbProbe.getImageData(0, 0, 1, 1).data;
+    t.farbe = `rgb(${p[0]},${p[1]},${p[2]})`;
+  } catch { /* ohne Farbe weiter */ }
   let quelle = img;
   for (let L = MIP_W.length - 1; L >= 0; L--) {
     const w = MIP_W[L], h = Math.round(w * CH), g = I.atlanten[L].getContext('2d');
@@ -471,10 +515,6 @@ function zeichneInAtlas(t, img, qx, qy, qw, qh) {
     g.drawImage(quelle, qx, qy, qw, qh, zx, zy, dw, dh);
     quelle = I.atlanten[L]; qx = zx; qy = zy; qw = dw; qh = dh;
   }
-  try { // Durchschnittsfarbe für winzige Zellen
-    const p = I.atlanten[0].getContext('2d').getImageData(x0 * MIP_W[0] + 1, y0 * Math.round(MIP_W[0] * CH) + 1, 1, 1).data;
-    t.farbe = `rgb(${p[0]},${p[1]},${p[2]})`;
-  } catch { /* ohne Farbe weiter */ }
 }
 
 // Für große Zellen das Originalbild (aus dem Browser-Cache) statt der Atlas-Kopie
