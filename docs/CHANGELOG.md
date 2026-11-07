@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (224) – Bürgerbuch: neun Wirtschaftssektoren wie in der Willkommenstour
+
+- `data/buergerbuch.csv` (Wunsch des Autors): Spalte `Wirtschaftssektor` auf die Einteilung der Willkommenstour umgestellt, die sich auf Schönfellner stützt. Acht Sektoren nur umbenannt, sieben kleine zu „Übrige Berufe“ zusammengefasst (159 Einträge). Per CSV-Parser belegt: nur diese Spalte hat sich geändert, 1411 Zeilen.
+- `data/buergerinnen_sektoren.csv`: Spalte `sektoren` auf die neuen Namen. Text der Tour unverändert.
+- Geprüft auf dem Testserver 8845: Streamgraph mit neun Sektoren und „Beruf nicht angegeben“, Tour-Folie `berufe`.
+
+Commit durch Claude Code auf ausdrücklichen Wunsch des Autors.
+
+---
+
 ## 2026-11-07 (223) – Startseite ohne „Platzhalterbild“, Willkommenstour zählt die Urkundensammlung einfach
 
 - `js/core/startseite.js`, `css/startseite.css` (Wunsch des Autors): Hinweis „Platzhalterbild“ entfernt; ohne Bild bleibt die Farbfläche.
