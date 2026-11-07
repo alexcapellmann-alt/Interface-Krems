@@ -682,8 +682,8 @@ Gezählt werden Personen: Neubürger mit dem Sektor ihrer frühesten Aufnahme mi
 
 | Spalte | Format | Pflicht | Beschreibung |
 |---|---|---|---|
-| `rolle` | Text | **Pflicht** | `buergerbuch` (der Bestand, dessen Punkt auf `klick` leuchtet und zum Bürgerbuch führt) oder `ergaenzung` (ein Bestand, der im Bestandsverzeichnis fehlt) |
-| `kuerzel` | Text | bei `buergerbuch` | `kuerzel` des Bestands im Bestandsverzeichnis |
+| `rolle` | Text | **Pflicht** | `buergerbuch` (der Bestand, dessen Punkt auf `klick` leuchtet und zum Bürgerbuch führt) oder `ergaenzung` (ein Bestand, dessen Zeitraum und Zahl aus den Einzelstücken berechnet werden) |
+| `kuerzel` | Text | bei `buergerbuch`, sonst nein | `kuerzel` des Bestands im Bestandsverzeichnis. Bei `ergaenzung` ersetzt die Zeile den Bestand mit diesem Kürzel, damit er nicht doppelt zählt |
 | `name` | Text | bei `ergaenzung` | Name des ergänzten Bestands |
 | `bkk_kategorie` | Text | nein | Kategorie des ergänzten Bestands (Feld in der Treemap) |
 | `quelle` | Text | bei `ergaenzung` | bisher nur `urkunden`: Zeitraum und Zahl werden aus den Urkunden (Spalte `jahr`) berechnet, die Folie `urkunden` zeigt sie einzeln |

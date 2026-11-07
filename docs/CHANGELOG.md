@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (223) – Startseite ohne „Platzhalterbild“, Willkommenstour zählt die Urkundensammlung einfach
+
+- `js/core/startseite.js`, `css/startseite.css` (Wunsch des Autors): Hinweis „Platzhalterbild“ entfernt; ohne Bild bleibt die Farbfläche.
+- `data/startseite.csv` (Wunsch des Autors): Kachel nennt nur noch Baum, Sonne und Strahl.
+- `js/viz/buergerinnen.js`, `data/buergerinnen_archiv.csv`: Seit der Zeile `7.1.` zählte die Tour die Urkunden doppelt (316 statt 315 Bestände). Die Ergänzung ersetzt jetzt den Bestand mit ihrem Kürzel. Name und Kategorie wie in `bestandsverzeichnis.csv`.
+- Geprüft auf dem Testserver 8845.
+
+---
+
 ## 2026-11-07 (222) – Über-Tab: Herkunft von Personenliste und Ortsverzeichnis
 
 - `data/ueber.csv`: Die Personenliste enthält auch die Verlassenschaftsinventare, alle Orte in `orte.csv` stammen aus den Urkunden (das Bürgerbuch hat kein Ortsfeld).

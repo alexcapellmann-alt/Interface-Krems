@@ -42,18 +42,12 @@ function baueSlide(daten, index, anzahl) {
   const hintergrund = document.createElement('div');
   hintergrund.className = `startseite-slide-bg ${SLIDE_HINTERGRUND_KLASSEN[index % SLIDE_HINTERGRUND_KLASSEN.length]}`;
 
-  // Punkt 2.5: "Ist die Spalte bild befüllt, wird das Bild aus data/ als
-  // Hintergrund verwendet und der Hinweis 'Platzhalterbild' entfällt."
+  // Ist die Spalte bild befüllt, wird das Bild aus data/ als Hintergrund verwendet.
+  // Ohne Bild bleibt die Farbfläche (Wunsch des Autors, 2026-11-07: kein Hinweis „Platzhalterbild“).
   if (daten.bild) {
     hintergrund.style.backgroundImage = `url("data/${daten.bild}")`;
     hintergrund.style.backgroundSize = 'cover';
     hintergrund.style.backgroundPosition = 'center';
-  } else {
-    const platzhalterHinweis = document.createElement('span');
-    platzhalterHinweis.className = 'startseite-platzhalter-hinweis';
-    platzhalterHinweis.setAttribute('aria-hidden', 'true');
-    platzhalterHinweis.textContent = 'Platzhalterbild';
-    hintergrund.appendChild(platzhalterHinweis);
   }
 
   const overlay = document.createElement('div');

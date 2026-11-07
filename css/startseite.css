@@ -63,16 +63,6 @@
 .startseite-slide-bg--3 { background: linear-gradient(135deg, #2a1520 0%, #5c1f2e 55%, #3a2436 100%); }
 .startseite-slide-bg--4 { background: linear-gradient(135deg, #2c4a6e 0%, #7a5a2e 65%, #c99a3a 100%); }
 
-.startseite-platzhalter-hinweis {
-  margin: var(--space-3);
-  padding: 2px 10px;
-  border-radius: 99px;
-  background: rgba(0, 0, 0, .38);
-  color: rgba(255, 255, 255, .8);
-  font-size: 11px;
-  letter-spacing: .04em;
-}
-
 .startseite-slide-overlay {
   position: absolute;
   inset: 0;

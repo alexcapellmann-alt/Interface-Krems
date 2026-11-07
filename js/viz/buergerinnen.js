@@ -689,6 +689,9 @@ function bereiteArchivAuf(bestand, urkunden, konfig) {
     von: zahlWert(r.zeitraum_von), bis: zahlWert(r.zeitraum_bis), buergerbuch: Boolean(bbKuerzel) && alsText(r.kuerzel).trim() === bbKuerzel
   }));
   zeilen.filter((z) => z.rolle === 'ergaenzung' && z.quelle === 'urkunden' && urkunden?.length).forEach((z) => {
+    // Steht der Bestand auch im Bestandsverzeichnis (kuerzel), ersetzt ihn dieser Eintrag, sonst zählte er doppelt
+    const doppelt = z.kuerzel ? items.findIndex((i) => alsText(i.record.kuerzel).trim() === z.kuerzel) : -1;
+    if (doppelt >= 0) items.splice(doppelt, 1);
     // nach Jahr (dann Signatur) geordnet: so liegen sie auch in ihren Säulen
     const liste = urkunden.map((u) => ({ record: u, jahr: zahlWert(u.jahr) })).filter((u) => u.jahr !== null)
       .sort((a, c) => a.jahr - c.jahr || alsText(a.record.signatur).localeCompare(alsText(c.record.signatur), 'de', { numeric: true }));
