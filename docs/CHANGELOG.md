@@ -7,9 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (225) – Führung „Was musste man mitbringen“: Zahlen zum Bürgerbuch
+
+- `data/fuehrungen.csv`, Station 5 von `buergerrecht-krems` (Wunsch des Autors): 2.791 Einträge und 1.541 mit Beruf statt 2.792 und 1.542. In `quellen_intern` die neuen Sektornamen.
+- Eintrag (224) berichtigt: Die neun Sektoren sind eine eigene Einteilung des Autors, sie stammen nicht aus der Literatur.
+
+Commit durch Claude Code auf ausdrücklichen Wunsch des Autors.
+
+---
+
 ## 2026-11-07 (224) – Bürgerbuch: neun Wirtschaftssektoren wie in der Willkommenstour
 
-- `data/buergerbuch.csv` (Wunsch des Autors): Spalte `Wirtschaftssektor` auf die Einteilung der Willkommenstour umgestellt, die sich auf Schönfellner stützt. Acht Sektoren nur umbenannt, sieben kleine zu „Übrige Berufe“ zusammengefasst (159 Einträge). Per CSV-Parser belegt: nur diese Spalte hat sich geändert, 1411 Zeilen.
+- `data/buergerbuch.csv` (Wunsch des Autors): Spalte `Wirtschaftssektor` auf die Einteilung der Willkommenstour umgestellt, eine eigene Einteilung des Autors. Acht Sektoren nur umbenannt, sieben kleine zu „Übrige Berufe“ zusammengefasst (159 Einträge). Per CSV-Parser belegt: nur diese Spalte hat sich geändert, 1411 Zeilen.
 - `data/buergerinnen_sektoren.csv`: Spalte `sektoren` auf die neuen Namen. Text der Tour unverändert.
 - Geprüft auf dem Testserver 8845: Streamgraph mit neun Sektoren und „Beruf nicht angegeben“, Tour-Folie `berufe`.
 
