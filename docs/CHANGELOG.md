@@ -7,6 +7,14 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (226) – Startseite: „Benutzerordnung“ statt „Benützerordnung“
+
+- `data/startseite.csv`, Zeile `download_2` (Wunsch des Autors): Linktext „Benutzerordnung (PDF)“, so lautet der Titel des Dokuments. Die Adresse der PDF-Datei bleibt unverändert.
+
+Commit durch Claude Code auf ausdrücklichen Wunsch des Autors.
+
+---
+
 ## 2026-11-07 (225) – Führung „Was musste man mitbringen“: Zahlen zum Bürgerbuch
 
 - `data/fuehrungen.csv`, Station 5 von `buergerrecht-krems` (Wunsch des Autors): 2.791 Einträge und 1.541 mit Beruf statt 2.792 und 1.542. In `quellen_intern` die neuen Sektornamen.
