@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (222) – Über-Tab: Herkunft von Personenliste und Ortsverzeichnis
+
+- `data/ueber.csv`: Die Personenliste enthält auch die Verlassenschaftsinventare, alle Orte in `orte.csv` stammen aus den Urkunden (das Bürgerbuch hat kein Ortsfeld).
+- Geprüft auf dem Testserver 8845.
+
+Commit durch Claude Code auf ausdrücklichen Wunsch des Autors.
+
+---
+
 ## 2026-11-07 (221) – Bestandsverzeichnis: Urkundensammlung als 7.1, Über-Tab: Angabe zu 1492
 
 - `data/bestandsverzeichnis.csv` (Wunsch des Autors): Neue Zeile `7.1.` „Urkundensammlung“ mit 1067 Stück, 1108–1844, Kategorie „Kultur“ / „Historische Identität und Erinnerungskultur“. Die Zeile ist eine Ergänzung des Autors, kein Teil des AUGIAS-Exports; die Nummer ist erschlossen (die Sammlungen beginnen dort bei 7.2), Laufmeter sind unbekannt.
