@@ -134,6 +134,8 @@ Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht;
 
 ## 3. bestandsverzeichnis.csv (aus bestandsverzeichnis.xlsx, Sheet LookupListe_Becker15)
 
+**Seit 2026-11-07:** 315 Bestandsdatensätze. Übergeordnete Positionen ohne eigenen Inhalt sind entfernt. Die Zeile `7.1.` „Urkundensammlung“ ist eine Ergänzung des Autors und enthält auch die Hollenburger Urkunden (früher `5.3.1.1.`); ihre Nummer ist erschlossen und nicht aus dem AUGIAS-Export.
+
 329 Bestandsdatensätze (verifiziert in Etappe 2 durch den tatsächlichen D3-Parser; frühere Angabe "330" war eine grobe Schätzung). **Hierarchie (korrigiert):** Gesamtbestand → `bkk_kategorie` → `bkk_unterkategorie` → einzelner Bestand (Zeile) – vier Ebenen, nicht drei wie zuvor dokumentiert. Frühere Fassung hatte die Unterkategorie-Ebene fälschlich mit der Bestands-Ebene gleichgesetzt. `kuerzel` bleibt Sortierschlüssel innerhalb der untersten Ebene, keine eigene Hierarchietiefe.
 
 | Spalte | Format | Pflicht | Beschreibung |

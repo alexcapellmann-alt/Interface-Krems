@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (221) – Bestandsverzeichnis: Urkundensammlung als 7.1, Über-Tab: Angabe zu 1492
+
+- `data/bestandsverzeichnis.csv` (Wunsch des Autors): Neue Zeile `7.1.` „Urkundensammlung“ mit 1067 Stück, 1108–1844, Kategorie „Kultur“ / „Historische Identität und Erinnerungskultur“. Die Zeile ist eine Ergänzung des Autors, kein Teil des AUGIAS-Exports; die Nummer ist erschlossen (die Sammlungen beginnen dort bei 7.2), Laufmeter sind unbekannt.
+- Zeile `5.3.1.1.` „Urkunden Hollenburg“ entfernt, die Hollenburger Urkunden zählen zu 7.1. Weiterhin 315 Verzeichnungseinheiten.
+- `data/ueber.csv` (Commit 19198ae): 1492 nach Kühnel 1961, S. 156 als Befehl zur getrennten Verwahrung statt als „systematische Registrierung“.
+- Geprüft auf dem Testserver 8845.
+
+Commit durch Claude Code auf ausdrücklichen Wunsch des Autors.
+
+---
+
 ## 2026-11-07 (220) – Projektordner: Änderungsprotokoll und Arbeitsregeln verschoben
 
 - Wunsch des Autors: `CHANGELOG.md` liegt jetzt in `docs/`, `CLAUDE.md` in `.claude/` (beide mit `git mv`). Das Interface lädt keine der beiden Dateien. `.claude/CLAUDE.md` nennt den neuen Ort des Protokolls. Ältere Erwähnungen in Kommentaren und im Projektlog bleiben unverändert.
