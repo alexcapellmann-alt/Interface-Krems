@@ -1398,7 +1398,7 @@ Kein Commit durch Claude Code.
 Auftrag G, Teil G1.
 - **Neu `js/viz/urkundenNetzwerk.js`** (Bereich Personen, „Personennetzwerk (Urkunden)“):
   - Knoten = Person (`personen_id`), Größe = Nennungen; Kante = gemeinsame Urkunde, vier Stufen mit Legende.
-  - Optik und Skalen nach der Alpha-Version (Commit `d303e41`), Auswahl in `#b85c00`.
+  - Optik und Skalen nach der Alpha-Version (Commit `6a78a3a`), Auswahl in `#b85c00`.
   - Tastaturbedienung, Suche, „50 weitere“, „Alle“, Tabelle als Alternative, σ-Modus gestrichelt.
   - Lädt erst beim Öffnen.
 - **Obergrenze:** neue Spalte `obergrenze` in `data/ansichten.csv` (`js/core/ansichtenKonfiguration.js`, über

@@ -6,7 +6,7 @@
 // in vier Stufen = Zahl der gemeinsamen Urkunden. Keine Gruppierung (keine
 // Familien, keine sozialen Gruppen). Modul-Interface siehe Abschnitt 5.
 //
-// Optik nach der Netzwerkansicht der Alpha-Version (Commit d303e41, index.html
+// Optik nach der Netzwerkansicht der Alpha-Version (Commit 6a78a3a, index.html
 // renderNetwork(); nur als Referenz, kein Code übernommen): Radius 5 + 1,6·√Nennungen
 // (5–20 px), Namen weiß mit dunkler Kontur, Personen ohne Verbindung blasser.
 // Abweichend (Freigabe G1): Kanten in vier Stufen, Auswahl-Orange #b85c00,

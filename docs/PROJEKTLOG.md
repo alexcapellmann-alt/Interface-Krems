@@ -73,7 +73,7 @@ Protokolleintrag wörtlich steht.
 **Quelle:** CHANGELOG Eintrag 9 (2026-09-07): Die Kategorie „Bevölkerung und
 Bevölkerungsgruppen“ wurde auf Anweisung zu „Bevölkerung“ gekürzt (Daten und
 Farbtabelle). Die Daten waren seit dem ersten Commit des Repositorys
-(`243aae6`, 2026-09-22) wieder auf dem langen Namen - vermutlich ein Rückfall
+(`d247bb2`, 2026-09-22) wieder auf dem langen Namen - vermutlich ein Rückfall
 beim Umzug aus dem früheren Ordner. Die Farbtabelle trug weiter
 „Bevölkerung“, die 100 Urkunden erschienen dadurch grau.
 
@@ -472,8 +472,8 @@ Wunsch des Autors: der Knopf auch in den Regesten-Kacheln und in jeder Sidebar.
 
 **Kontext:**
 - Phase 1: `Pruefung_2026-10-03/Nachher_G1b/phase1/VORSCHLAG_PHASE1.md`. Bei Phase 1 war G1 noch nicht committet
-  (HEAD `a6ea24a`).
-- Vor Phase 2 vom Autor committet: **HEAD `8723bab` („g1“)**; das ist der Vorher-Stand.
+  (HEAD `d0345c2`).
+- Vor Phase 2 vom Autor committet: **HEAD `3f29992` („g1“)**; das ist der Vorher-Stand.
 - Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen
   (`Nachher_G1b/laufprotokoll.txt`, in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten:
   `Pruefung_2026-10-03/Nachher_G1b/`.
@@ -581,7 +581,7 @@ Wunsch des Autors: der Knopf auch in den Regesten-Kacheln und in jeder Sidebar.
 
 **Kontext:** Phase 1 (`Pruefung_2026-10-03/Nachher_G/phase1/VORSCHLAG_PHASE1.md`) vom Autor für G1 freigegeben.
 G2 (Wirtschaftsnetzwerk) folgt nach der Abnahme von G1 und der Zuordnung der fünf offenen Bürgen-Berufe.
-Vorher-Stand `a6ea24a` (F). Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen
+Vorher-Stand `d0345c2` (F). Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen
 (`Nachher_G/laufprotokoll.txt`, in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten: `Pruefung_2026-10-03/Nachher_G/`.
 
 ### Freigabe des Autors (G1)
@@ -591,7 +591,7 @@ Vorher-Stand `a6ea24a` (F). Neuer Wrapper, ein Browser, vor jedem Lauf weniger a
    - Adjazenzmatrix und Arc-Diagramm: Vorgabe 40, Rang nach Vernetzung, Anzeige wie bisher.
 2. „50 weitere“, „Alle“, Suche (Person samt Partnern), Tabelle als gleichwertige Alternative. Prüfen, ob „Alle“
    bedienbar ist; sonst eine gemessene Obergrenze mit Hinweis.
-3. Bereich Personen, Optik und Skalen wie Alpha (`d303e41`), Kanten in vier Stufen mit Legende. Anzeigename =
+3. Bereich Personen, Optik und Skalen wie Alpha (`6a78a3a`), Kanten in vier Stufen mit Legende. Anzeigename =
    Personenliste unverändert; fehlerhafte oder unvollständige Namen melden, nicht korrigieren.
 4. Auswahl `#b85c00` (Grafik ≥ 3:1, Text ≥ 4,5:1), Grau unsicherer Personen ≥ 3:1, Strichelung im σ-Modus.
 5. Zugänglichkeit und Laden nach den Regeln des Auftrags.
@@ -719,7 +719,7 @@ Vorher-Stand `a6ea24a` (F). Neuer Wrapper, ein Browser, vor jedem Lauf weniger a
 ## 2026-10-08 (64) – Auftrag F: Wortwolke bereinigen (Filter, Zusammenführung, Info-Button)
 
 **Kontext:** Phase 1 (`Pruefung_2026-10-03/Nachher_F/phase1/VORSCHLAG_PHASE1.md`) vom Autor mit Entscheidungen
-freigegeben. Vorher-Stand `9858a3f` (E). Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100
+freigegeben. Vorher-Stand `80b3fc4` (E). Neuer Wrapper, ein Browser, vor jedem Lauf weniger als 100
 TIME_WAIT-Verbindungen (`Nachher_F/laufprotokoll.txt`, in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten:
 `Pruefung_2026-10-03/Nachher_F/`.
 
@@ -856,7 +856,7 @@ entfällt über die Auslassliste.
 
 ## 2026-10-08 (63) – Auftrag E: Abschluss (Literaturprüfung, „Quelle“, Undatiert-Test, Matrix, Zeitmessung)
 
-**Kontext:** Abschluss der Folgeaufträge zum Prüfbericht vom 2026-10-03. Vorher-Stand ist `d5b2fe4` (D).
+**Kontext:** Abschluss der Folgeaufträge zum Prüfbericht vom 2026-10-03. Vorher-Stand ist `3c90591` (D).
 Funktionsläufe mit dem neuen Wrapper (HTTP/1.1), Zeitmessung mit dem alten (`server_pruefung_http10.py`);
 vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen, ein Browser
 (`Pruefung_2026-10-03/Nachher_E/laufprotokoll.txt`; in keinem Lauf `ERR_NO_BUFFER_SPACE`). Rohdaten:
@@ -938,7 +938,7 @@ vor jedem Lauf weniger als 100 TIME_WAIT-Verbindungen, ein Browser
 - **Bedingungen:**
   - Wie in B2: 100 ms RTT, Durchsatz unbegrenzt, Cache aus, je Ladevorgang frischer Server und Browser,
     abwechselnde Reihenfolge, 20 Läufe je Stand und Ansicht.
-  - Alter Wrapper. B1 = `Pruefung_2026-10-03/_ref_B1` (`git archive d8ccea5`), Endstand = `kopie_En`.
+  - Alter Wrapper. B1 = `Pruefung_2026-10-03/_ref_B1` (`git archive 16ea6ab`), Endstand = `kopie_En`.
   - Ryzen 5 2600X, 3 600 MHz (Takt vor und nach gleich), Energieplan „Ausbalanciert“, CPU-Last 25 % bzw. 6 %
     vor der Probe.
   - Prozessliste in `Nachher_E/zeitmessung/bedingungen.txt`: Claude-Desktop, Explorer und dauerhaft laufende
@@ -992,7 +992,7 @@ bekannten Einschränkungen.
 
 **Kontext:** Phase 1 (Vorschlag: `Pruefung_2026-10-03/Nachher_D/phase1/VORSCHLAG_PHASE1.md`) vom Autor
 freigegeben, als ein Auftrag ohne Teilung. Reihenfolge: Teil 0, Punkt 1 und 2, Punkt 4 und 5, Punkt 3,
-Punkt 6. Vorher-Stand ist `ca00d0a` (C2). Rohdaten: `Pruefung_2026-10-03/Nachher_D/`.
+Punkt 6. Vorher-Stand ist `b7decb2` (C2). Rohdaten: `Pruefung_2026-10-03/Nachher_D/`.
 
 ### Messumstellung (Prüfwerkzeug, außerhalb des Repositorys)
 - Der erste Referenzlauf nach Teil 0 war trotz nur einem Browser gestört (`ERR_NO_BUFFER_SPACE`
@@ -1205,7 +1205,7 @@ Kein Commit durch Claude Code.
 ## 2026-10-07 (61) – Auftrag C2: automatische Kategorienfarben, Restpunkte aus C1, Kategorie „Bevölkerung“
 
 **Kontext:** Auftrag C, Teil C2, gemäß Freigabe von Phase 1 (Eintrag 59).
-- C1 ist als `741187a` committet; das ist der Vorher-Stand.
+- C1 ist als `27d8c96` committet; das ist der Vorher-Stand.
 - Prüfumfang laut Vorgabe des Autors:
   - Referenzlauf;
   - Farb- und Pixelvergleich der Ansichten mit Kategorienfarben;
@@ -1370,7 +1370,7 @@ Kein Commit durch Claude Code.
 ## 2026-10-07 (60) – Auftrag C1: Archivspezifisches aus dem Code in die Daten
 
 **Kontext:** Auftrag C, Teil C1, gemäß Freigabe von Phase 1 (Eintrag 59).
-- C3 ist als `ca4657a` committet; das ist der Vorher-Stand.
+- C3 ist als `04908a6` committet; das ist der Vorher-Stand.
 - Prüfumfang laut Vorgabe des Autors (risikoproportional):
   - Referenzlauf nach jedem Teilschritt;
   - erweiterter Zweitarchiv-Test;
@@ -1586,7 +1586,7 @@ Kein Commit durch Claude Code.
 - Vorschlag: `Pruefung_2026-10-03/Nachher_C/phase1/VORSCHLAG_PHASE1.md`.
 - C3 übernimmt die zwei Funde aus B3 (Eintrag 58, Scope-Meldungen): Punkt 7
   `literatur.csv` und Punkt 8 Wortlaut des Beleghinweises.
-- Vorher-Stand ist `6a97482` (B3).
+- Vorher-Stand ist `2c1d54c` (B3).
 - Rohdaten liegen in `Pruefung_2026-10-03/Nachher_C/C3/`.
 
 **Entscheidungen zu Phase 1** (gelten für C1/C2, hier nur festgehalten):
@@ -1676,7 +1676,7 @@ Kein Commit durch Claude Code.
 
 ## 2026-10-03 (58) – Auftrag B3: Fehlende Belegquelle in den Führungen
 
-**Kontext:** Scope-Meldung aus B2 (Eintrag 57). B2 ist als `3729e20`
+**Kontext:** Scope-Meldung aus B2 (Eintrag 57). B2 ist als `03b3e2a`
 committet; das ist der Vorher-Stand. Rohdaten und Werkzeuge liegen in
 `Pruefung_2026-10-03/Nachher_B3/` bzw. `Pruefung_2026-10-03/tools/pB3_*`,
 außerhalb des Repositorys.
@@ -1724,7 +1724,7 @@ Sonderfall Bürgerbuch/Personenliste und den zusätzlichen B2-Balken;
 **Führungsvarianten** (`tools/pB3_fuehrungen.mjs`):
 - Je Fall und Stand die Übersicht, alle Stationen aller Führungen und alle
   Abschlussseiten: 114 Routen.
-- Vorher ist `kopie_B3v`, gleich `3729e20` (per `git archive` und
+- Vorher ist `kopie_B3v`, gleich `03b3e2a` (per `git archive` und
   `diff --strip-trailing-cr` belegt); nachher ist `kopie_B3n`, gleich dem
   Arbeitsbaum.
 - Fehlfall heißt: Datei entfernt, also 404.
@@ -1779,7 +1779,7 @@ Kein Commit durch Claude Code.
 
 ## 2026-10-03 (57) – Auftrag B2: Pflichtspalten und sichtbare Hinweise (Prüfbericht Punkt 3)
 
-**Kontext:** B1 ist als `d8ccea5` committet. Vorher-Stand sind die gesicherten
+**Kontext:** B1 ist als `16ea6ab` committet. Vorher-Stand sind die gesicherten
 Ergebnisse aus `Pruefung_2026-10-03/Nachher_B1/` (nicht neu erzeugt).
 Messungen und Rohdaten liegen in `Pruefung_2026-10-03/Nachher_B2/`, außerhalb
 des Repositorys.
@@ -1999,7 +1999,7 @@ Rückbau der Testdaten jeweils per `diff -rq` belegt (diff-exit 0). Die
 übrige Matrix wurde laut Entscheidung nicht erneut ausgeführt.
 
 ### Gedrosselte Ladezeitmessung
-- **Vorgesehen:** Startseite und Treemap, vorher (`d8ccea5`) gegen nachher,
+- **Vorgesehen:** Startseite und Treemap, vorher (`16ea6ab`) gegen nachher,
   100 ms RTT (CDP `Network.emulateNetworkConditions`, Latenz je Anfrage,
   Durchsatz unbegrenzt, Cache aus), je Lauf abwechselnd, frischer Server und
   frischer Browser je Ladevorgang, 20 Läufe je Stand; Kennzahlen
@@ -2064,7 +2064,7 @@ Rückbau der Testdaten jeweils per `diff -rq` belegt (diff-exit 0). Die
 - **Messung (Versuch 5, 18:41 Uhr):** Probe Faktor 1,16 und 1,17, also gültig.
   Bedingungen wie Versuch 3: 100 ms RTT, 20 + 20 Läufe je Ansicht,
   abwechselnde Reihenfolge, frischer Server und Browser je Ladevorgang,
-  Vergleich gegen `d8ccea5` (`messung_versuch5.json`, `statistik_versuch5.txt`).
+  Vergleich gegen `16ea6ab` (`messung_versuch5.json`, `statistik_versuch5.txt`).
 
 | Ansicht | Kennzahl | Median vorher | Median nachher | Differenz | p (Mann-Whitney) | nachher langsamer (paarweise) |
 |---|---|---|---|---|---|---|
@@ -2111,7 +2111,7 @@ Rückbau der Testdaten jeweils per `diff -rq` belegt (diff-exit 0). Die
 
 ## 2026-10-03 (56) – Auftrag B1: Robustheit gegenüber Pipe-Zeichen und leeren Daten (Prüfbericht Punkt 3)
 
-**Kontext:** Prüfbericht vom 2026-10-03; Auftrag A ist als `9a40ef7`
+**Kontext:** Prüfbericht vom 2026-10-03; Auftrag A ist als `10bcbb2`
 committet. Entscheidung des Autors: `|` bleibt in jeder Spalte das
 Listentrennzeichen. Die Zerlegung in `js/core/dataLoader.js` ist
 unverändert (der Auftrag nennt den Pfad `js/utils/dataLoader.js`, die Datei
@@ -2173,7 +2173,7 @@ gilt.
 **Pipe-Test:** In dieselben 364 Freitextfelder wie in Lauf 1 des
 Prüfberichts wurde `PIPE-A|PIPE-B` geschrieben, dann alle 47 Ansichten
 geöffnet.
-- **Vorher (`9a40ef7`):** Genau die fünf Abstürze des Prüfberichts.
+- **Vorher (`10bcbb2`):** Genau die fünf Abstürze des Prüfberichts.
 - **Nachher:** 0 Seitenfehler, 0 Konsolenfehler, 0 NaN-Attribute.
 - **Sichtbar mit ` | `:**
   - Treemap (Beschriftung),
@@ -2235,7 +2235,7 @@ Chart, Trellis und Parallelkoordinaten greifen nur bei 0 Datensätzen bzw.
 
 ## 2026-10-03 (55) – Auftrag A: Sicherheit (Prüfbericht Punkt 5)
 
-**Kontext:** Qualitätsprüfung vom 2026-10-03 am Commit `b7ea4ca`
+**Kontext:** Qualitätsprüfung vom 2026-10-03 am Commit `2be421a`
 (Prüfbericht und Rohausgaben außerhalb des Repositorys in
 `Pruefung_2026-10-03/`). Behoben werden die Befunde 5a, 5b und 5e. Die
 Nachher-Messungen liegen in `Pruefung_2026-10-03/Nachher_A/`.
@@ -2289,7 +2289,7 @@ ist der Wert gesetzt.
     3 Literatur, 1 Über; `Nachher_A/abgewiesene_linkwerte.json`);
   - auf der Startseite erscheint das Markup jetzt 18-mal als Text statt
     15-mal, weil die drei Adressfelder hinzukommen.
-- **`href`-Zählung mit Originaldaten**, vorher (`b7ea4ca`) und nachher:
+- **`href`-Zählung mit Originaldaten**, vorher (`2be421a`) und nachher:
   - je Ansicht identisch, 703 = 703; auch die `href`-Listen sind identisch
     (`Nachher_A/href_vergleich.tsv`);
   - das `<address>`-HTML von Startseite und Über unterscheidet sich nur in
@@ -5710,11 +5710,11 @@ Der unten dokumentierte Befund zu Punkt 1 (uncommitteter Arbeitsstand,
 `HEAD` = „Alpha durch Beta ersetzt") war zum Zeitpunkt der Prüfung (Beginn
 dieser Sitzung) wörtlich korrekt. **Im Verlauf dieser Sitzung** ist jedoch
 - vermutlich durch den Auftraggeber selbst, außerhalb dieser Sitzung - ein
-neuer Commit `f7a4799` „führungen" entstanden, der genau die zuvor als
-uncommittet gemeldeten Dateien enthält (`git show --stat f7a4799`: 15
+neuer Commit `315a1fd` „führungen" entstanden, der genau die zuvor als
+uncommittet gemeldeten Dateien enthält (`git show --stat 315a1fd`: 15
 Dateien, u. a. `js/fuehrungen/*`, `css/components.css`, `css/layout.css`,
 `js/core/app.js`, `data/fuehrungen.csv`) - **und bereits nach `origin/main`
-gepusht** (`git log origin/main -1` zeigt ebenfalls `f7a4799`). Die
+gepusht** (`git log origin/main -1` zeigt ebenfalls `315a1fd`). Die
 Commit-Nachricht lautet „führungen", nicht wie im Auftrag erwartet
 „Beta-Stand nach Führungen 2a-K (Freigabe ausstehend)". Da dieser Auftrag
 ausdrücklich keine Commits/Pushes durch Claude Code vorsieht und keiner
@@ -5757,7 +5757,7 @@ Untracked files:
 	server_starten.bat
 
 $ git log -1
-commit 243aae607671b776163e138f4aef83e18ef8c1fb
+commit d247bb209f38c1c7f9bc76a3ad91e6756cedd732
 Author: alexcapellmann-alt <alex.capellmann@gmail.com>
 Date:   Tue Sep 22 09:04:12 2026 +0200
 
