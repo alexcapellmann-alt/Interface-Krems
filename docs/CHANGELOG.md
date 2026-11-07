@@ -7,6 +7,14 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-07 (220) – Projektordner: Änderungsprotokoll und Arbeitsregeln verschoben
+
+- Wunsch des Autors: `CHANGELOG.md` liegt jetzt in `docs/`, `CLAUDE.md` in `.claude/` (beide mit `git mv`). Das Interface lädt keine der beiden Dateien. `.claude/CLAUDE.md` nennt den neuen Ort des Protokolls. Ältere Erwähnungen in Kommentaren und im Projektlog bleiben unverändert.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-11-03 (219) – Willkommenstour: Farben beim Zurückblättern, kein Blättern mit dem Mausrad, größere Karte
 
 - „Ein Name, viele Schreibweisen“: Kam man von „Männer und Frauen“ zurück, waren die Punkte blau statt grau und orange, weil das Ende der Bewegung allen Punkten eine Farbe schrieb. Jetzt kommen sie grau an, danach leuchten die Personen mit mehreren Schreibweisen auf (`bewegePunkte(…, danach)`, `b.danach` in `beendeBewegung()`).

@@ -16,6 +16,9 @@ committet und pusht nach jeder Freigabe selbst.
 CSV-Dateien) werden immer per `git diff` bzw. `git diff --stat` belegt,
 nicht nur per `grep` oder Dateizeitstempel.
 
+**Dokumentation:** Das Änderungsprotokoll liegt in `docs/CHANGELOG.md` (neueste Einträge oben), daneben
+`docs/PROJEKTLOG.md` und `docs/SCHEMA.md`.
+
 **Cache-Busting:** Kein Cache-Busting (z. B. `?v=...`-Parameter) in
 Projektdateien - weder dauerhaft noch temporär. Bei Cache-Problemen wird
 stattdessen der Testserver unten verwendet bzw. das Problem zurückgemeldet,
