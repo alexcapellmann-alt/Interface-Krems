@@ -67,6 +67,7 @@ import { farbeFuerUrkundenKategorie } from './urkundenKategorieFarben.js'; // AU
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from './bilder.js';
 import { oeffneLightbox } from './lightbox.js';
 import { baueUnsicherheitAbsatz } from './unsicherAbsatz.js';
+import { orteWieImRegest } from './ortsart.js'; // Auftrag 11
 import { baueGenanntePersonenZeile, baueVerlinkteOrte } from './genanntePersonen.js';
 import { urkundeBezug, bestandBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 
@@ -412,9 +413,10 @@ export function baueUrkundenDetailInhalt(record) {
   const kategorienFeld = baueUrkundenKategorienFeld(record);
   if (kategorienFeld) wrapper.appendChild(kategorienFeld);
   // Seit 2026-10-28 als Links zur Ortsliste (Wunsch des Autors)
-  if (record.orte && record.orte.length) {
+  const orteAnzeige = orteWieImRegest(record); // Auftrag 11: Orte wie im Regest
+  if (orteAnzeige && orteAnzeige.length) {
     const orteFeld = baueSidebarFeld('Orte', '');
-    orteFeld.lastChild.appendChild(baueVerlinkteOrte(Array.isArray(record.orte) ? record.orte : [record.orte]));
+    orteFeld.lastChild.appendChild(baueVerlinkteOrte(Array.isArray(orteAnzeige) ? orteAnzeige : [orteAnzeige]));
     wrapper.appendChild(orteFeld);
   }
   // AUFTRAG "Teil 2h", Punkt 1: Personen jetzt verlinkt zur Personenliste -

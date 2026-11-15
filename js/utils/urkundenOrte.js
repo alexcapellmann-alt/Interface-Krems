@@ -8,6 +8,7 @@
 // bipartiteFlowMap.js. Änderungen hier wirken sich auf alle drei aus.
 
 import { ladeCSV } from '../core/dataLoader.js';
+import { hatOrtsbezug } from './ortsart.js';
 
 let ortsVerzeichnisPromise = null;
 
@@ -28,6 +29,7 @@ export function ladeOrtsVerzeichnis() {
         const lat = parseKommaZahl(record.lat);
         const lon = parseKommaZahl(record.lon);
         if (lat === null || lon === null) return;
+        if (!hatOrtsbezug(record)) return; // Auftrag 11: Herkunftsname ist kein Ort
         verzeichnis.set(record.orte, {
           lat,
           lon,

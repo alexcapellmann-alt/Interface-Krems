@@ -22,6 +22,7 @@ Namens), das Muster löst Node selbst auf. Erwartet: alle Tests bestanden (`fail
 | `dataLoader.test.mjs` | `js/core/dataLoader.js`: BOM, Semikolon, Pipe-Listen, Zeilenumbruch in Anführungszeichen, unbekannte Spalte, `errors` (leere Zeile, fehlender Pflichtwert mit Zeile und Spalte; der Datensatz bleibt in `records`) |
 | `datePrecision.test.mjs` | `js/utils/datePrecision.js`: alle Beispiele der Mustertabelle (Masterprompt §12) und die Randfälle aus Nachbesserung 7 (unmögliche Tage und Monate, „o. D.“, „undatiert“) |
 | `uncertainty.test.mjs` | `js/utils/uncertainty.js`: Format `<feld>: <Erklärung>`, `filtereErklaerungFuerFeld()`, lesbare Feldnamen |
+| `unsicherheitTyp.test.mjs` | `js/utils/uncertainty.js`: Parser der Unsicherheitstypen (Leerzeichen, Groß-/Kleinschreibung, mehrere Doppelpunkte, leere Einträge), Prüfung; Vokabulardateien; alle sieben Dateien mit `unsicherheit_typ` ohne Fehler, Warnungen nur die dokumentierten |
 | `bildschirmHinweis.test.mjs` | `js/utils/bildschirmHinweis.js`: Grenze für den Hinweis „größerer Bildschirm“ (900 × 500), gängige Laptop-Fenster, Telefon, Breite 0 |
 | `bestandsHierarchie.test.mjs` | `js/utils/bestandsHierarchie.js`: vier Ebenen aus `bestandsverzeichnis.csv` |
 | `datenformat.test.mjs` | alle `unsicherheit_anmerkung`-Einträge der CSV-Dateien in `data/` gegen das Format; bewusste Ausnahmen stehen als Liste im Test |
@@ -71,3 +72,13 @@ Ende vergleicht sie die Kopie mit dem Original (`diff-exit=0`). Die Dateien in `
 Zuletzt gemessen (15.11.2026): axe 0 Verstöße in 124 Zuständen; Lighthouse 1,0 in 31 von 31 Ansichten; Tastatur alle
 Bedienelemente erreichbar (außer den Links im zugeklappten Impressum, wie vorgesehen); Sitzung 39 Ansichten, 0 Fehler (auch bei 1366 × 768 und 1280 × 720, ohne Ersatztext); 34 Tests;
 Matrix 0 Abstürze, 0 „leer ohne Hinweis“, 0 „stark abweichend“ ohne Hinweis. Einzelheiten: PROJEKTLOG 87–89.
+
+## 3. Datenerhebungen (nur lesen)
+
+Die Vorerhebung für den Unsicherheits-Modus (15.11.2026, PROJEKTLOG 92) liegt in `Vorerhebung_2026-11-15/`: Bericht,
+CSV-Listen und die Skripte (`werkzeuge/*.py`, `*.mjs`), die nur lesen. Wiederholen nach einer Datenlieferung:
+`python -I werkzeuge/<skript>.py` im Ordner `werkzeuge`; `e12_knopf.mjs` braucht den Testserver auf 8845.
+
+Datenbereinigung (Auftrag 11, PROJEKTLOG 93): `Unsicherheitstypen_2026-11/a11/` – Prüfblätter, Änderungsskript mit
+Protokoll (`werkzeuge/a11_umsetzung.py`, `aenderungsprotokoll.csv`) und Zahlenvergleich der Oberfläche
+(`node werkzeuge/a11_zahlen.mjs <name>`: Ortsliste, Kartenpunkte, unsichere Orte, Verbindungskarte, Ortswolke, Kategoriefluss).

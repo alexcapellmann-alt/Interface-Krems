@@ -261,6 +261,135 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-15 (94) – Unsicherheitstypen: Schema und Inhalte (Auftrag 12)
+
+**Bestätigung nach Masterprompt §14:** Der Autor bestätigt ausdrücklich, dass die Bedeutung des Unsicherheitsknopfs erweitert
+wird (Auswahl nach Unsicherheitstypen, Auftrag 13). Die Daten- und Schemaänderungen dieses Auftrags sind additiv;
+bestehende Spalten und Werte werden nicht umgedeutet.
+
+Grundlage: Vorerhebung (PROJEKTLOG 92), Auftrag 11 (93, vom Autor freigegeben nach Klärung der Zahlen und der
+Schrattental-Verweise: Name nur noch im Regesttext, `haeufigkeit` stimmt bei allen 256 Orten). Stufe A (Entwürfe) und
+Stufe B in `Unsicherheitstypen_2026-11/a12/`; Entscheidung des Autors (15.11.2026): den Empfehlungen folgen, Kategorien der
+Urkunden „nur automatisch“ (ohne Sprachmodell-Angabe). Umsetzung über `werkzeuge/a12_umsetzung.py` mit Protokoll (244
+Einträge); jede Datei mit dem CSV-Modul neu geschrieben, Roundtrip vorher wortgleich geprüft.
+
+- **Vokabular:** 8 Typen nach Windhager, Salisu, Mayr (2019, Abb. 2), `identifikation` als eigene Ergänzung gekennzeichnet; 4 Ausprägungen.
+- **Befüllung `unsicherheit_typ`** (Regeln je Zeile in `befuellung.csv`):
+  - urkunden: datum zeitlich/ungenau 46, zeitlich/strittig 31 (Kühnel/Wilhelm); orte geographisch/mehrdeutig 56,
+    fehlend 13; ausstellungsort geographisch/fehlend 571, ungenau 4 (Feldlager); personen identifikation/ungenau 85.
+  - orte: lat/lon geographisch/fehlend 30; orte geographisch/mehrdeutig 59, ungenau 3 (Flur/Gewässer mit Koordinaten).
+  - buergerbuch: Datum strittig 11 („Erstmalig vorstellig“), ungenau 32, mehrdeutig 1 (BB-0019); Beruf attribut/ungenau 9;
+    Wirtschaftssektor zuordnung/fehlend 1250 (nur Typ), zuordnung/ungenau 14 (Doktor, Fasszieher mit neuem Text);
+    personen_id identifikation/ungenau 7; Name identifikation/mehrdeutig 2 (Tschernvueter).
+  - familien: Lebensdaten zeitlich/ungenau 29, zeitlich/mehrdeutig 9 (zwei Lesarten; nicht „strittig“, weil
+    verschiedene Quellen nicht belegt sind). Beziehungsfelder: keine.
+  - verlassenschaftsinventare: Vermoegensgruppe S zuordnung/fehlend 7 (mit Seite bei Dietrich), Lang zuordnung/strittig,
+    Järitschin Ort attribut/ungenau.
+  - personenliste: soziale_gruppe zuordnung/ungenau 1299 (nur Typ), personen_id identifikation/ungenau 2.
+  - bestandsverzeichnis: zeitraum_von/bis zeitlich/fehlend 18, umfang attribut/fehlend 14, form_inhalt 6,
+    fehlende_jahrgaenge objekt/fehlend 31 (28 mit Werten, 3 nur mit Text), bestandsgeschichte herkunft/ungenau 2
+    (Gemeindearchiv Angern, Spitalmeisteramtsrechnungen; die übrigen 6 vorsichtigen Sätze betreffen Ordnungsarbeiten).
+- **Anmerkungen:** nur ergänzt, wo zum Feld noch keine bestand (190 Texte, ohne Semikolon, senkrechten Strich, gerade
+  Anführungszeichen). Für „Kein Beruf verzeichnet“ (1250) und „Als Bürger angenommen“ (1299) steht die Erklärung als
+  Methodenhinweis statt als Anmerkung, damit der σ-Filter von Bürgerbuch und Personenliste unverändert bleibt.
+  5 Personen-Teile aus Auftrag 11 (BB-1885, -1889, -2694, -2696, -2697) berichtigt: sie verwiesen noch auf eine
+  „vermutlich fehlzugeordnete Fußnote“. Hinweis: Orte ohne Koordinaten tragen „Die Lage ist nicht ermittelt.“ je für
+  `lat` und `lon` (Vorgabe: lat und lon getrennt).
+- **Markierungen:** gesetzt, wo eine `<feld>_unsicher`-Spalte besteht und ein Typ vergeben wurde (43; vor allem 30
+  strittige Urkundendaten und die 11 Bürgerbuch-Daten).
+- **Neue Spalten:** `ausstellungsort` (496 Werte: 427 direkt, 65 über die Zuordnungstabelle, 4 Feldlager), `fehlende_jahrgaenge` (28).
+- **Neue Dateien:** `datumsabweichungen.csv`, `soziale_gruppe_regeln.csv`, `methodenhinweise.csv` (8 aus dem Auftrag,
+  Kategorien „automatisch“ ohne Sprachmodell-Angabe, dazu Ausstellungsort, fehlender Beruf, Standardgruppe),
+  `luecken_hinweise.csv`. Die Excel-Spalte „Unsicherheitstyp“ vom 31.07.2026 lag nicht vor; der Abgleich entfiel.
+- **Code:** Parser und Prüfung in `uncertainty.js`; DataLoader prüft `unsicherheit_typ` beim Laden und liefert
+  zusätzlich `warnungen` (Vertrag §6 erweitert, additiv; der Test der Rückgabeschlüssel ist angepasst).
+- **Prüfung:** 0 Fehler in allen Dateien; 53 Warnungen, alle dokumentiert (orte 32, bestandsverzeichnis 21). Tests
+  47 (12 neu in `unsicherheitTyp.test.mjs`), alle bestanden. Stichprobe je Datei bis 20 Zeilen (135) von Hand gegen die Regel: 0 Abweichungen
+  (`a12/stichprobe.txt`). axe 0 Verstöße in 124 Zuständen; Sitzungsbedienung 39 Ansichten, 0 Fehler. In der Kachel von
+  StaAKr-0036 erscheint der neue Hinweis zur Datumsabweichung.
+- **σ-Verschiebung (Datensätze mit Anmerkung oder Markierung):** Urkunden 191 → 215 (`datum_unsicher` 47 → 77), Orte
+  92 → 94, Inventare 4 → 11, Bestand 21 → 53; Bürgerbuch 323, Familien 29, Personenliste 5 unverändert
+  (Bürgerbuch `Datum_unsicher` 33 → 44, die 11 hatten schon eine Anmerkung).
+
+---
+
+## 2026-11-15 (93) – Nachbesserung 11: Datenbereinigung (Auftrag 11)
+
+Grundlage: Vorerhebung (PROJEKTLOG 92). Stufe A (Prüfblätter) und Stufe B (Umsetzung) in `Unsicherheitstypen_2026-11/a11/`.
+Entscheidung des Autors (15.11.2026): den Empfehlungen aus `BERICHT_STUFE_A.md` folgen; seine Tabelle der 45 Orte
+(`orte_unsicherheitsvermutungen.xlsx`, Hypothese nach dem Namen) steht im Prüfblatt A1 neben dem Regestbefund. Jede
+Änderung lief über `werkzeuge/a11_umsetzung.py` mit Protokoll (`aenderungsprotokoll.csv`, 145 Einträge). Es handelt sich
+um Fehlerbehebungen, nicht um Unsicherheitstypen (Auftrag 12).
+
+- **ortsart (B1):** neue Spalte in `orte.csv`. Geprüft 44 Einträge (45 minus Schrattental): Siedlung 16, Flur/Gewässer 7,
+  Burg/Herrschaft 6, Institution 4, unklar 9, Herkunftsname 2 (Ankenwarth, Trauttmansdorf). Regel: Siedlung, wo ein Ort
+  nachweisbar ist, auch wenn das Regest ihn nur im Namen einer Person nennt. Grafenegg und Wallsee kommen in einzelnen
+  Urkunden als Ort vor („Herrschaft Grafenegg“, Ausstellungsort „Nieder Wallsee“), in anderen als Namensteil: Siedlung.
+  Marquartsurfar abweichend vom ersten Vorschlag Siedlung (Regest: „Kirche in Marquensurfar“, Tabelle: Wüstung). Die
+  übrigen 212 Einträge sind nicht einzeln geprüft (leer = Siedlung). Umsetzung zentral: `js/utils/ortsart.js`, angewandt
+  in `ladeArchivalienDaten()` (`app.js`) – `orte` der Urkunden ohne Herkunftsnamen, Original in `orte_im_regest` – und im
+  Ortsverzeichnis der Karten. Kachel, Seitenleiste, Bilderwand-Beschriftung und Beteiligungsformular zeigen die Orte wie
+  im Regest. Auffällig, nicht geändert: StaAKr-0258 hängt an Rappottenstein, das Regest nennt den Ort nicht.
+- **Koordinaten (B2):** geleert bei Fladnitzbach, Hall, Kollmitz, Lindberg, Plank, Säusenstein, Thaya, Wagram, Weißenstein,
+  Hasendorf; dazu `orte_unsicher = ja` und die Anmerkung „Koordinaten entfernt, weil sie vermutlich auf einen gleichnamigen
+  anderen Ort zeigten“, damit sie in den Listen „ohne Koordinaten“ erscheinen. Herkunft der Koordinaten nicht nachweisbar
+  (erster Stand, Commit `d247bb2`).
+- **Doppelter Ort (A5):** `schrattental` entfernt (die einzige Löschung), StaAKr-0357 verweist auf Schrattenthal und ist
+  wie StaAKr-0368 als unsicher vermerkt („vermutlich Schrattenthal (Regest nennt „Schrattental“)“).
+- **Inventarorte (A3):** Krems für Masko (Dietrich S. 31), Rabrath (S. 33), Wolfin (S. 52), Gindlin (S. 51); Järitschin bleibt
+  unklar.
+- **Datum (A4):** sechs fehlende Leerzeichen in `datum` berichtigt (Regesttext unverändert); `datePrecision.js` toleriert sie
+  künftig (`normalisiereDatumsText()`, Test ergänzt); BB-1516/BB-1675 Monatsnamen; StAK-UrkKr-0175 unverändert (bereits
+  markiert und erklärt); Eleonore von Portugal `geburtsdatum_unsicher` → nein (Tag bekannt, kein Grund vermerkt); 17
+  Lebensdaten (nur Jahr bzw. Monat und Jahr) markiert, je mit „<feld>: Nur das Jahr ist überliefert.“
+- **Bürgerbuch (A6):** Anmerkung der 11 Einträge ersetzt: „Datum: Das Datum bei „Erstmalig vorstellig am“ liegt laut Vorlage
+  (Hellerschmid, …) nach dem Aufnahmedatum.“ Zweitteile zur Person bleiben. Die Vermutung zu Veit Reichel ist nicht in den
+  Daten.
+- **Zahlen vorher → nachher:** Ortsliste 257 → 254; Kartenpunkte 235 → 224; unsichere Orte 86 → 90 (völlig unklar 22 → 30,
+  kartiert 64 → 60); Verbindungskarte 179 → 170 Punkte; Bilderwand-Ortswolke 41 ab 5 (unverändert); Kategoriefluss 22
+  Ortsknoten (unverändert); σ Urkunden 190 → 191 (`orte_unsicher` 68 → 69, `datum_unsicher` 47 unverändert); Stammbaum:
+  `geburtsdatum_unsicher` 19 → 27, `sterbedatum_unsicher` 3 → 11, markierte Personen 19 → 29 (Willkommenstour nennt
+  über `{stammbaumunsicher}` entsprechend 29). Infotexte: einzige feste Ortszahl „rund 250 Orte“ (Personen/Orte-Einleitung)
+  stimmt weiter.
+- **Regressionstest:** Tests 34 → 35, alle bestanden (Datenformat-Test eingeschlossen); axe 0 Verstöße in 124 Zuständen;
+  Sitzungsbedienung bei 1366 × 900 und 1366 × 768: je 39 Ansichten, 0 Fehler, kein Ersatztext.
+
+---
+
+## 2026-11-15 (92) – Vorerhebung für den Unsicherheits-Modus (Auftrag 10, nur lesen)
+
+Grundlage: Auftrag 10. Erhebung der Zahlen und Listen für einen Unsicherheits-Modus nach Windhager/Salisu/Mayr 2019
+(Typen und Ausprägungen). Stand `ac30ceb`; **keine Änderung an Daten oder Code**. Ergebnis außerhalb des Repositorys:
+`Vorerhebung_2026-11-15/BERICHT.md` mit CSV-Listen E1–E12, Skripte in `werkzeuge/`. Jede Zahl auf einem zweiten Weg
+gegengeprüft (zweites Muster, `datePrecision.js`, Textsuche oder Durchsicht von Hand); Abweichungen sind im Bericht erklärt.
+
+Wichtigste Befunde (Vorher = Septemberzahlen aus dem Gespräch):
+- E1/E2: 86 unsichere Orte, 22 ohne Koordinaten (Sept. 23). Viele Einträge der Ortsliste sind Personennamen (10),
+  Flurnamen von Weingärten (7) oder Burgen/Herrschaften als Adelstitel (15); bei 8 Einträgen zeigen die Koordinaten
+  vermutlich auf einen falschen gleichnamigen Ort. Kein Ort ist mit Beleg „strittig“.
+- E3: Ausstellungsort aus dem Regest bei 496 von 1067 Urkunden ableitbar (Sept. rund 490 von 1069); 30 ohne Ortsangabe;
+  in 89 Urkunden fehlt der Ausstellungsort in `orte` (75 × Krems).
+- E4: 47 `datum_unsicher` (gleich). Nur eine Urkunde hat Monat ohne Tag; „Tag fehlt = ungenau“ ändert den σ-Filter nicht.
+  6 Datumsangaben mit fehlendem Leerzeichen stuft das Interface fälschlich als „nur Jahr“ ein. 31 Datumsabweichungen
+  Kühnel/Wilhelm stehen nur in der Arbeitskopie `urkunden_merged.csv`. „Erstmalig vorstellig“ nach der Aufnahme: 11
+  (nicht 6); laut Diplomarbeit steht der Widerspruch in der Vorlage, die Fußnoten sind nicht verrutscht.
+- E5: Regel der sozialen Gruppe aus der Git-Geschichte rekonstruiert (stimmt bei allen 4168 Personen); 1299 Personen mit
+  Standardwert „buerger“ nur aus Urkunden.
+- E6: Vergabe der Urkundenkategorien nirgends dokumentiert; von 72 Urkunden mit kirchlichem Stichwort außerhalb von
+  „Religion“ hat 1 religiösen Inhalt. „Religion“ bei 1 von 315 Beständen (gleich).
+- E7: 1250 ohne Beruf und Sektor, dieselben Einträge; `zuordnung_sicher = nein` 20, davon nur 11 zum Sektor. Spalte
+  `Wirtschaftssektor_unsicher` existiert nicht.
+- E8/E9: „S“ = Sonderfälle nach Dietrich (7, mit Seitenangaben); Lang (Gruppe D/E) von Dietrich angezweifelt. Für
+  „(geschaetzt)“ beim Geschlecht gibt es bei Dietrich keine Begründung; die fünf Orte „unklar“ nennt er im Text.
+- E10: keine Beziehung im Stammbaum als unsicher markiert; 43 ohne Eltern = Rand des Ausschnitts.
+- E11: 28 Bestände mit auslesbaren fehlenden Jahrgängen (Sept. 27), sechs Fehlerfälle benannt; 21 Hinweissätze mit einem
+  Muster; 8 vorsichtige Herkunftsaussagen (Sept. etwa 10); 17 Verweise auf andere Archive.
+- E12: Unsicherheitsknopf im Browser in 17 von 26 angebotenen Ansichten sichtbar; Tabelle Modul × Datei × Spalte.
+
+Offene Entscheidungen des Autors: Liste am Ende des Berichts. Danach folgt ein eigener Umsetzungsauftrag.
+
+---
+
 ## 2026-11-15 (91) – Nachbesserung 9: Stammbaum auf dem Laptop, Text der Willkommenstour
 
 Grundlage: Auftrag 9. Nachweise: `Nachbesserung_2026-11-15/a9/`, Skripte `tools/a9_*.mjs`.

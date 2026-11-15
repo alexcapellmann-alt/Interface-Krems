@@ -138,6 +138,7 @@
 import { starteRouter, navigiereZu, aktuelleRoute } from './router.js';
 import { getZustand, setUnsicherheitModus, setAktiverTab, setAktiveAnsicht } from './state.js';
 import { ladeGecachteCSV } from './datenCache.js';
+import { namenOhneOrtsbezug, bereinigeUrkundenOrte, hatOrtsbezug } from '../utils/ortsart.js'; // Auftrag 11
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
 import { setzeAbdunkelung } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
@@ -328,13 +329,20 @@ function zeigeSeitenPruefung(container, pruefung, entferneModul) {
 // und die Sidebar dieselbe Zuordnung. Das Farbmodul kommt per import()
 // gleichzeitig mit den Daten (nicht im Startgraphen, kein zusätzlicher Schritt).
 const URKUNDEN_DATEI = 'data/urkunden.csv';
+const ORTE_DATEI = 'data/orte.csv';
 
 async function ladeArchivalienDaten(datenDatei) {
   const mitUrkunden = typeof datenDatei === 'string' ? datenDatei === URKUNDEN_DATEI : Object.values(datenDatei).includes(URKUNDEN_DATEI);
+  const mitOrten = typeof datenDatei !== 'string' && Object.values(datenDatei).includes(ORTE_DATEI);
   const farbModul = mitUrkunden ? import('../utils/urkundenKategorieFarben.js') : null;
+  // Auftrag 11 (ortsart): Namen ohne Ortsbezug (js/utils/ortsart.js) an dieser einen Stelle aus den Ortslisten nehmen
+  const ohneOrtsbezug = (mitUrkunden || mitOrten)
+    ? ladeGecachteCSV(ORTE_DATEI).then(namenOhneOrtsbezug).catch(() => new Set())
+    : null;
   if (typeof datenDatei === 'string') {
     const records = await ladeGecachteCSV(datenDatei);
     if (farbModul) (await farbModul).vergibKategorieFarben(records);
+    if (mitUrkunden) bereinigeUrkundenOrte(records, await ohneOrtsbezug);
     return records;
   }
   const eintraege = await Promise.all(
@@ -344,6 +352,13 @@ async function ladeArchivalienDaten(datenDatei) {
   if (farbModul) {
     const urkundenSchluessel = Object.keys(datenDatei).find((k) => datenDatei[k] === URKUNDEN_DATEI);
     (await farbModul).vergibKategorieFarben(ergebnis[urkundenSchluessel] || []);
+  }
+  if (ohneOrtsbezug) {
+    const ohne = await ohneOrtsbezug;
+    Object.keys(datenDatei).forEach((k) => {
+      if (datenDatei[k] === URKUNDEN_DATEI) bereinigeUrkundenOrte(ergebnis[k], ohne);
+      if (datenDatei[k] === ORTE_DATEI && Array.isArray(ergebnis[k])) ergebnis[k] = ergebnis[k].filter(hatOrtsbezug);
+    });
   }
   return ergebnis;
 }

@@ -1,0 +1,5 @@
+﻿auspraegung_id;anzeigename;erklaerung;reihenfolge
+ungenau;ungenau;Die Angabe ist nicht genau genug, zum Beispiel ist nur das Jahr bekannt.;1
+strittig;strittig;Quellen oder Fachleute sind uneins.;2
+fehlend;fehlt;Die Angabe ist nicht überliefert oder nicht erfasst.;3
+mehrdeutig;mehrdeutig;Es kommen mehrere Möglichkeiten in Frage.;4

@@ -14,6 +14,7 @@
 // Nachbesserung 7, Punkt 1: kleines Blattmodul ohne eigene Importe (verlängert die Importkette beim Start nur um eine
 // winzige Datei; die Ansichts-Prüfung datenAnforderungen.js bleibt wie in PROJEKTLOG 57 begründet außen vor)
 import { fehlendeMindestfelder } from '../utils/vollstaendigkeit.js';
+import { pruefeUnsicherheitTypen } from '../utils/uncertainty.js'; // Auftrag 12
 
 const MUSTER_UNSICHER_SPALTE = /^(.+)_unsicher$/;
 
@@ -151,7 +152,19 @@ function istLeereZeile(rohzeile, spaltennamen) {
   });
 }
 
-// Lädt eine CSV-Datei und liefert { records, schema, errors } (Abschnitt 6).
+// Auftrag 12: Vokabular der Unsicherheitstypen (data/unsicherheit_typen.csv, data/unsicherheit_auspraegungen.csv), einmal
+// je Ordner geladen. Fehlt es, entfällt nur die Vokabularprüfung (das Format wird weiter geprüft).
+const vokabularCache = new Map();
+function ladeVokabular(ordner) {
+  if (!vokabularCache.has(ordner)) {
+    const spalte = (datei, name) => ladeCSV(ordner + datei).then(({ records }) => new Set(records.map((r) => String(r[name] ?? '').trim().toLowerCase()).filter(Boolean)));
+    vokabularCache.set(ordner, Promise.all([spalte('unsicherheit_typen.csv', 'typ_id'), spalte('unsicherheit_auspraegungen.csv', 'auspraegung_id')])
+      .then(([typen, auspraegungen]) => ({ typen, auspraegungen })).catch(() => null));
+  }
+  return vokabularCache.get(ordner);
+}
+
+// Lädt eine CSV-Datei und liefert { records, schema, errors, warnungen } (Abschnitt 6; `warnungen` seit Auftrag 12, additiv).
 // Jeder Datensatz trägt zusätzlich `_quelle` = Dateiname (Nachbesserung 3, Punkt 3).
 export async function ladeCSV(pfad) {
   let antwort;
@@ -197,8 +210,21 @@ export async function ladeCSV(pfad) {
     });
   });
 
+  // Auftrag 12: Spalte `unsicherheit_typ` prüfen – unbekannte Typen/Ausprägungen und falsches Format als `errors`,
+  // Typ ohne Markierung bzw. Markierung ohne Typ als `warnungen`. Der Lader ändert dabei nichts an den Datensätzen.
+  const warnungen = [];
+  if ((spaltennamen || []).includes('unsicherheit_typ')) {
+    const ordner = String(pfad).includes('/') ? String(pfad).slice(0, String(pfad).lastIndexOf('/') + 1) : '';
+    const vokabular = await ladeVokabular(ordner);
+    records.forEach((datensatz, i) => {
+      const { fehler, warnungen: w } = pruefeUnsicherheitTypen(datensatz, vokabular);
+      fehler.forEach((grund) => errors.push({ zeile: i + 2, spalte: 'unsicherheit_typ', grund }));
+      w.forEach((grund) => warnungen.push({ zeile: i + 2, spalte: 'unsicherheit_typ', grund }));
+    });
+  }
+
   const schema = leiteSchemaAb(rohdaten, spaltennamen);
   haltePruefungFest(pfad, spaltennamen || [], records.length);
 
-  return { records, schema, errors };
+  return { records, schema, errors, warnungen };
 }

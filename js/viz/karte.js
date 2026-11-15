@@ -226,6 +226,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis, loeseOrteAuf } from '../utils/urkundenOrte.js';
+import { hatOrtsbezug } from '../utils/ortsart.js'; // Auftrag 11
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
 import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
@@ -360,7 +361,7 @@ async function ladeUnsichereOrteDaten(records) {
   const signaturZuRecord = new Map(records.filter((r) => r.signatur).map((r) => [r.signatur, r]));
   const alleSignaturenAbsteigend = Array.from(signaturZuRecord.keys()).sort((a, b) => b.length - a.length);
 
-  const unsichereOrteRecords = orteRecords.filter((r) => r.orte_unsicher);
+  const unsichereOrteRecords = orteRecords.filter((r) => r.orte_unsicher && hatOrtsbezug(r)); // Auftrag 11
   const voelligUnklar = [];
   const kartiert = [];
 

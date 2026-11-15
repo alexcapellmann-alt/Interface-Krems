@@ -31,6 +31,7 @@ import { ladeKartenDarstellung, ausschnittAus, sichtfenster } from '../utils/kar
 import { ermittleBildUrls } from '../utils/bilder.js';
 import { ladeGecachteCSV } from '../core/datenCache.js';
 import { alsText } from '../utils/textwert.js';
+import { orteWieImRegest } from '../utils/ortsart.js'; // Auftrag 11
 import { istUnvollstaendig, unvollstaendigText } from '../utils/vollstaendigkeit.js';
 import {
   baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenDetail, schliesseSidebar as schliesseSidebarModul
@@ -881,7 +882,7 @@ function zeigeTipp(t) {
   titel.textContent = t.signatur;
   const meta = document.createElement('div');
   meta.className = 'bw-tm';
-  meta.textContent = [t.datum, liste(t.record.orte).join(', ')].filter(Boolean).join(' · ');
+  meta.textContent = [t.datum, liste(orteWieImRegest(t.record)).join(', ')].filter(Boolean).join(' · ');
   const regest = document.createElement('div');
   regest.className = 'bw-tr';
   const text = alsText(t.record.regest);
@@ -936,7 +937,7 @@ function tastatur(e) {
   e.preventDefault();
   I.aktiv = sichtbar[k];
   const t = I.aktiv;
-  I.dom.ansage.textContent = `${t.signatur}, ${t.datum}${liste(t.record.orte).length ? `, ${liste(t.record.orte).join(', ')}` : ''}. ${k + 1} von ${sichtbar.length}.`;
+  I.dom.ansage.textContent = `${t.signatur}, ${t.datum}${liste(orteWieImRegest(t.record)).length ? `, ${liste(orteWieImRegest(t.record)).join(', ')}` : ''}. ${k + 1} von ${sichtbar.length}.`;
   draw();
   if (t.sx < 0 || t.sx > I.W - I.view.s || t.sy < 0 || t.sy > I.H - I.view.s) {
     I.view.ox += I.W / 2 - t.sx; I.view.oy += I.H / 2 - t.sy; I.userZoomed = true; draw();

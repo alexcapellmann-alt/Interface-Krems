@@ -90,6 +90,21 @@ Dieses Dokument beschreibt die konkreten Spaltenstrukturen aller Datentabellen d
 
 **Technischer Hinweis (Abweichung vom Lazy Loading):** Damit leere Bereiche gar nicht erst in der Navigation erscheinen, lädt das Interface nach dem ersten Bildaufbau im Hintergrund die Dateien, die über das Ausblenden entscheiden. Das betrifft `bestandsverzeichnis`, `urkunden`, `buergerbuch`, `verlassenschaftsinventare`, `personenliste`, `familien`, `fuehrungen`, `literatur` und `ueber` (`rollen` entfällt seit 2026-10-27). Jede Datei wird dabei höchstens einmal angefragt. `ansichten.csv` wird schon vor dem ersten Bildaufbau geladen, gleichzeitig mit `archiv.csv` (kein zusätzlicher Ladeschritt), weil Navigation und Galerie die Namen sofort brauchen. Die Ansichten selbst (Code und Darstellung) laden weiterhin erst beim Öffnen. Die Liste der Pflicht- und Schlüsselspalten steht technisch in `js/config/datenAnforderungen.js`.
 
+**Unsicherheitstypen: Spalte `unsicherheit_typ` (seit 15.11.2026, Auftrag 12, PROJEKTLOG 94).** In allen Dateien mit
+`unsicherheit_anmerkung` (urkunden, buergerbuch, familien, verlassenschaftsinventare, orte, bestandsverzeichnis, personenliste)
+steht am Ende die Spalte `unsicherheit_typ`. Schreibweise wie bei der Anmerkung: `<feldname>: <typ>/<auspraegung>`, mehrere
+Einträge mit `|`, z. B. `datum: zeitlich/strittig|orte: geographisch/mehrdeutig`. Der Feldname wird ohne Rücksicht auf
+Groß- und Kleinschreibung verglichen und am ersten Doppelpunkt getrennt, Typ und Ausprägung am ersten Schrägstrich. Typ =
+wo die Unsicherheit liegt, Ausprägung = wie sie beschaffen ist. Erlaubt sind nur die Werte aus `unsicherheit_typen.csv`
+und `unsicherheit_auspraegungen.csv` (13.9); im Code stehen keine Typnamen. Die Spalte ist additiv: bestehende Spalten und
+Werte (`<feld>_unsicher`, `unsicherheit_anmerkung`) behalten ihre Bedeutung. Parser: `leseUnsicherheitTypen()`,
+`typFuerFeld()`, `typenDesDatensatzes()` in `js/utils/uncertainty.js`. Prüfung (DataLoader und Datenformat-Test): unbekannter
+Typ, unbekannte Ausprägung oder falsches Format = Fehler in `errors`; Typ ohne gesetzte `<feld>_unsicher`-Markierung (nur
+wo es diese Spalte gibt) und Markierung ohne Typ = Eintrag in `warnungen` (neues, zusätzliches Rückgabefeld des DataLoaders).
+Bekannte Warnungen: `orte.csv` (`orte_unsicher` gilt für den ganzen Ort, fehlt nur die Lage, steht der Typ bei `lat`/`lon`;
+Herkunftsnamen haben keinen Typ) und `bestandsverzeichnis.csv` (`daten_unsicher` gilt für den ganzen Bestand). Die
+Anzeige nach Typen folgt in Auftrag 13. Was wie befüllt ist, steht in PROJEKTLOG 94.
+
 **Format von `unsicherheit_anmerkung` (seit 15.11.2026, PROJEKTLOG 80):** Jeder Eintrag lautet `<feldname>: <Erklärung>`, `<feldname>` ist eine echte Spalte derselben Tabelle (Schreibung wie im Kopf, Abgleich ohne Groß-/Kleinschreibung). Mehrere Einträge werden mit Pipe `|` getrennt (z. B. `orte: Marquartsurfar (…)|datum: Nur ungefähre Datierung …`); der DataLoader zerlegt sie der allgemeinen Pipe-Konvention folgend in eine Liste. Der Tooltip eines markierten Feldes zeigt nur die Einträge mit dessen Namen (`filtereErklaerungFuerFeld()`, `js/utils/uncertainty.js`); Anzeigen der ganzen Anmerkung übersetzen den Feldnamen in eine lesbare Bezeichnung (`lesbareAnmerkung()`, ebenda – die einzige Stelle der Übersetzung, ein unbekannter Feldname bleibt roh stehen). Ausnahme: Anmerkungen, die mehrere Felder oder den ganzen Datensatz betreffen (z. B. „Doppelt erfasst als …“, „Bestandsumfang sowie Zeitraum …“), bleiben Freitext ohne Feldnamen; sie werden immer ganz gezeigt. Hinweis: Eine feldspezifische Anzeige erreicht eine Erklärung nur, wenn es zu dem Feld eine Spalte `<feldname>_unsicher` gibt und sie in der Zeile `ja` ist (fehlt z. B. für `personen_id` und `Wirtschaftssektor` in `buergerbuch.csv`).
 
 **Wichtiger Hinweis zum Dateiformat:** Die Quelldateien werden als Excel (.xlsx) gepflegt (Arbeits-/Erfassungsformat). Vor dem Einsatz im Interface werden sie als CSV (UTF-8, Semikolon-getrennt) exportiert und in `data/` abgelegt – der `dataLoader.js` liest ausschließlich CSV. Pipe-Zeichen innerhalb von Zellen sind beim Export unproblematisch, da sie sich vom Spalten-Trennzeichen (Semikolon) unterscheiden; Zellen mit zufälligen Semikolons im Freitext werden von Excel automatisch in Anführungszeichen gesetzt und von `d3.csvParse()` korrekt gelesen.
@@ -113,7 +128,8 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 | `personen` | Liste (Pipe-getrennt) | **Pflicht** (Adjazenzmatrix, Arc-Diagramm, Personennetzwerk der Urkunden) | |
 | `personen_id` | Text/Liste | **Pflicht** (Personennetzwerk der Urkunden, seit Auftrag G1) | Verweis auf `personenliste.csv` (siehe Tabelle 8) |
 | `personen_unsicher` | ja/nein | – | |
-| `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | Farben: Die 16 Krems-Kategorien haben feste Farben; jede andere Kategorie bekommt automatisch eine Farbe (Abschnitt 14, „Farben der Kategorien“) |
+| `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | Farben: Die 16 Krems-Kategorien haben feste Farben; jede andere Kategorie bekommt automatisch eine Farbe (Abschnitt 14, „Farben der Kategorien“). Herkunft: Die Kategorien folgen den Namen des Dokumentationsprofils nach Becker (wie `bkk_kategorie` der Bestände) und wurden automatisch zugeordnet und stichprobenartig geprüft (Angabe des Autors, `methodenhinweise.csv`). Sie beschreiben den Inhalt; ein Geistlicher als Grundherr oder Zeuge macht eine Urkunde nicht zu „Religion“. |
+| `ausstellungsort` | Text | nein | seit 15.11.2026 (Auftrag 12): Ausstellungsort aus dem Anfang des Regests („Datum, Ort“), Abkürzungen und alte Schreibweisen auf die Namen der Ortsliste abgebildet (z. B. „Wr. Neustadt“ → Wiener Neustadt); Feldlager als Text („Im Feld bei Gent“). Leer = im Regest nicht angegeben. `orte` bleibt unverändert. |
 | `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 – Stand vor der Dublettenbereinigung am 2026-09-30 – automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
 | `unsicherheit_anmerkung` | Text | nein | für Hover-Tooltip |
 | `bilder` | Liste (Pipe-getrennt) | nein | **neu (Auftrag "Urkundenfotos über die Spalte `bilder`", 2026-09-30):** die tatsächlichen Dateinamen der Fotos zu dieser Urkunde, ohne Pfad - der vollständige Bildpfad ergibt sich aus `fotos/thumbs/<foto_ordner>/<Dateiname>`. Letzte Spalte der Tabelle, direkt nach `foto_ordner` eingefügt. Löst das bisherige, separat per Kommandozeilenskript erzeugte JSON-Manifest ab (siehe PROJEKTLOG) - Foto-Zuordnung ist damit ohne Programmierkenntnisse direkt in der Tabelle pflegbar. |
@@ -151,6 +167,7 @@ Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht;
 | `zeitraum_von` / `zeitraum_bis` | Zahl (Jahr) | **Pflicht** (Gantt-Diagramm) | |
 | `zeitraum_text` | Text | nein | |
 | `bkk_kategorie` | Text | empfohlen | Oberkategorie nach Becker |
+| `fehlende_jahrgaenge` | Liste (Pipe-getrennt) | nein | seit 15.11.2026 (Auftrag 12): fehlende Jahrgänge laut Bestandsbeschreibung, Schreibweise `1519-1526|1656-1662`; leer bei Beständen ohne Angabe. Bei drei Beständen steht nur eine Erklärung in der Anmerkung (Liste ohne Angabe, Überlieferungslücken ohne Jahre, fehlende Blätter). |
 | `bkk_unterkategorie` | Text | nein | |
 | `daten_unsicher` | ja/nein | – | ersetzt die frühere, verworfene Buchstaben-Codierung (A/B1/B2/D/F/G) |
 | `unsicherheit_anmerkung` | Text | nein | erklärt die Art der Unsicherheit, für Hover-Tooltip |
@@ -213,9 +230,9 @@ Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht;
 | `Name` | Text | empfohlen | |
 | `Beruf/Funktion/Stand` | Text | nein | Originaltext |
 | `Beruf` | Text | nein | bereinigt |
-| `Ort (Schaetzung)` | Text | nein | |
-| `Geschlecht (Schaetzung)` | Text | nein | |
-| `Vermoegensgruppe` | Text (A–E, S) | nein | |
+| `Ort (Schaetzung)` | Text | nein | Krems, Stein oder `unklar`. Seit 15.11.2026 für Masko, Rabrath, Wolfin und Gindlin nach Dietrichs Text ergänzt (Krems, mit Seitenangabe in PROJEKTLOG 93); Järitschin (Wienerin mit Haus in Krems) bleibt `unklar`. |
+| `Geschlecht (Schaetzung)` | Text | nein | Nach dem Namen geschätzt. Das ist eine **Projektentscheidung**, nicht Dietrichs Aussage: Dietrich zählt Frauen und Männer, begründet ein „geschätzt“ aber nirgends. |
+| `Vermoegensgruppe` | Text (A–E, S) | nein | A bis E nach Dietrich. `S` = Sonderfall, den Dietrich als „nicht repräsentativ“ ausnimmt (auswärtiges oder nicht taxiertes Vermögen, Zweitinventar, gemeinsames Inventar eines Ehepaars; Dietrich, gedruckte S. 30, 32, 34). `A*` steht einmal: beim ersten der zwei Inventare der Anna Catharina Schönthanin (1692, Gruppe A; 1693 Gruppe B). Ein Sternchen erklärt Dietrich nicht; auch die Sternchen an Namen bleiben unerklärt. |
 | `Realvermoegen_fl` | Zahl | **Pflicht** (Parallelkoordinaten) | |
 | `Gesamtvermoegen_fl` | Zahl | **Pflicht** (Parallelkoordinaten) | |
 | `Anteil SchzG an Aktiva (%)` | Zahl | **Pflicht** (Parallelkoordinaten, Darstellung „Forderungs-/Schuldenprofil“) – aus dem Code abgeleitet, nicht gemessen | Forderungen |
@@ -271,6 +288,9 @@ Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht;
 | `haeufigkeit` | Zahl | nein | |
 | `orte_unsicher` | ja/nein | – | |
 | `unsicherheit_anmerkung` | Text | nein | |
+| `ortsart` | Text | nein | seit 15.11.2026 (Auftrag 11, PROJEKTLOG 93). Was der Eintrag meint: `Siedlung`, `Burg/Herrschaft` (nur ohne Siedlungsbezug), `Institution` (Kloster, Stift), `Flur/Gewässer` (Ried, Flurname, Bach, Anhöhe), `Herkunftsname` (nur Namensbestandteil einer Person, kein Ort gemeint oder keiner nachweisbar), `unklar`. **Leer = Siedlung** (nicht einzeln geprüft; geprüft sind die 45 Einträge der Vorerhebung). Regel: Gibt es einen nachweisbaren Ort dieses Namens, bleibt es `Siedlung`, auch wenn das Regest ihn nur im Namen einer Person nennt (z. B. Seisenegg, Weitenegg). Wirkung: Einträge mit `Herkunftsname` bleiben in `orte.csv` und in der Spalte `orte` der Urkunden; Karten, Ortsliste, Ortswolke und Kategoriefluss überspringen sie (zentral in `js/utils/ortsart.js`, angewandt in `js/core/app.js` beim Laden). Kacheln und Detailansichten zeigen die Orte wie im Regest. |
+
+**Herkunft der Koordinaten:** Die Koordinaten kamen fertig mit dem ersten Stand ins Repository (Commit `d247bb2`, 22.09.2026); wie sie erzeugt wurden, ist nicht mehr nachweisbar. Am 15.11.2026 wurden zehn Koordinaten entfernt, die vermutlich auf einen gleichnamigen anderen Ort zeigten (Fladnitzbach, Hall, Kollmitz, Lindberg, Plank, Säusenstein, Thaya, Wagram, Weißenstein, Hasendorf); die Orte stehen seither unter „ohne Koordinaten“ (Vorgabe des Autors: ein fehlender Punkt ist besser als ein falscher). Neue Koordinaten nur nach Angabe des Autors oder aus einer benannten, prüfbaren Quelle.
 
 **Wichtige offene Frage:** Mit `orte_id` gibt es jetzt einen echten Schlüssel – Masterprompt Abschnitt 8 beschreibt aktuell aber noch eine rein namensbasierte Referenzierung zwischen Tabellen ("Andere Tabellen referenzieren Orte nur über den Ortsnamen"). Zu klären: Sollen `urkunden.orte` / `buergerbuch.Ort` künftig auf `orte_id` statt auf den Namen verweisen? Das wäre robuster (Namensänderungen/Schreibvarianten würden Verknüpfungen nicht mehr brechen), aber eine Änderung an bestehenden, bereits genutzten Feldern.
 
@@ -743,6 +763,27 @@ Gezählt werden Personen: Neubürger mit dem Sektor ihrer frühesten Aufnahme mi
 **Verhalten bei fehlender Datei:** Ohne Stationsdatei gibt es nur die Folgen Tor (Knopf: `tour_formname` aus `archiv.csv`) → „Nach Geschlecht ordnen“, ohne Text. Ohne Schichten-Datei (oder ohne Zeile mit `anteil_prozent`) entfallen die drei Vermögens-Folien; ohne Zeile `ohne_buergerrecht` entfällt `vermoegenslos`; ohne Sektoren-Datei entfällt `berufe`.
 
 ---
+
+### 13.9 unsicherheit_typen.csv und unsicherheit_auspraegungen.csv – Vokabular der Unsicherheitstypen (neu, 15.11.2026)
+
+| Datei | Spalten | Inhalt |
+|---|---|---|
+| `unsicherheit_typen.csv` | `typ_id`, `anzeigename`, `erklaerung`, `windhager_bezug`, `reihenfolge` | 8 Typen: zeitlich, geographisch, zuordnung, identifikation, beziehung, attribut, objekt, herkunft |
+| `unsicherheit_auspraegungen.csv` | `auspraegung_id`, `anzeigename`, `erklaerung`, `reihenfolge` | 4 Ausprägungen: ungenau, strittig, fehlend, mehrdeutig |
+
+Grundlage der Typen: Windhager, Salisu, Mayr (2019), Informatics 6(3), Abb. 2 (Temporal, Geographic, Set-typed, Relational,
+Attribute, Object, Provenance Uncertainty). **`identifikation` ist eine eigene Ergänzung dieses Projekts** und kommt bei
+Windhager nicht vor: die Zuordnung einer Nennung zu einer bestimmten Person. `mehrdeutig` wird nur bei zeitlich,
+geographisch und identifikation verwendet; `strittig` nur, wo verschiedene Quellen nachweislich abweichen.
+
+### 13.10 Weitere neue Dateien (15.11.2026, Auftrag 12)
+
+| Datei | Spalten | Inhalt |
+|---|---|---|
+| `datumsabweichungen.csv` | `signatur`, `datum_kuehnel`, `datum_wilhelm`, `quelle` | 31 dokumentierte Datumsabweichungen zwischen den Regestfassungen (aus der Arbeitskopie `urkunden_merged.csv`, ohne Regesttexte und ohne Einschätzungen). `quelle` verweist auf `literatur.csv` (`kuehnel1960`, `wilhelm1915`); bei 6 Urkunden ist die verglichene Fassung das Regest im Interface (Monasterium), nicht Kühnel. Die Urkunden tragen `datum: zeitlich/strittig`. |
+| `soziale_gruppe_regeln.csv` | `reihenfolge`, `gruppe`, `regelart`, `begriff`, `anwendung` | Die Regeln, nach denen `soziale_gruppe` in `personenliste.csv` vergeben wurde (bis 27.10.2026 im Code, aus der Git-Geschichte rekonstruiert). Wird nicht angewandt, nur zur Nachvollziehbarkeit. |
+| `methodenhinweise.csv` | `id`, `geltungsbereich`, `text`, `quelle` | Hinweise zur Methode, die nicht einzelne Datensätze markieren (soziale Gruppe, Kategorien, geschätztes Geschlecht, Gewinnung von Orten und Personen, Bürgschaften, Netzwerkkanten, Einzelstücke, Eltern im Stammbaum, Ausstellungsort, fehlender Beruf, Standardgruppe Bürgertum). Anzeige folgt in Auftrag 13. |
+| `luecken_hinweise.csv` | `bezug`, `text`, `link`, `quelle` | Hinweise, wo Fehlendes liegen könnte; vorbefüllt nur aus dem Bestandsverzeichnis (13 Verweise und ein Eintrag „Zerstörtes Steiner Archiv“). Weitere Einträge trägt das Archiv selbst ein. |
 
 ## 14. Neues Archiv einrichten (Anleitung, Stand Auftrag C1, 2026-10-03)
 

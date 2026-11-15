@@ -97,6 +97,7 @@ import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3,
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { urkundeBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
+import { orteWieImRegest } from '../utils/ortsart.js'; // Auftrag 11
 
 // Auftrag "Geteilter Info-Button", Punkt 3 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
@@ -152,7 +153,7 @@ function ermittleAlleKategorien() {
 // bei jedem Tastendruck nur noch ein einfacher Teilstring-Vergleich pro
 // Record nötig ist, kein erneutes Array-Joinen/Lowercasing.
 function baueDurchsuchbarenText(record) {
-  const felder = [record.signatur, record.regest, record.orte, record.personen, record.kategorien];
+  const felder = [record.signatur, record.regest, orteWieImRegest(record), record.personen, record.kategorien]; // Auftrag 11
   return felder
     .map((wert) => (Array.isArray(wert) ? wert.join(' ') : wert))
     .filter(Boolean)
@@ -509,7 +510,7 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   karte.appendChild(titel);
   karte.appendChild(baueDatumFeld(record, container, zeigeUnsicherheit));
 
-  const orteFeld = baueListenFeld('Orte', record.orte, 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
+  const orteFeld = baueListenFeld('Orte', orteWieImRegest(record), 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
   if (orteFeld) karte.appendChild(orteFeld);
 
   // AUFTRAG "Teil 2i": die vormalige, hier gebaute "Personen"-Zeile

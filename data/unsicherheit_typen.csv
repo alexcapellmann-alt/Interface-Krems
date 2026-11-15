@@ -1,0 +1,9 @@
+﻿typ_id;anzeigename;erklaerung;windhager_bezug;reihenfolge
+zeitlich;Datierung;Das Datum ist ungenau, strittig, mehrdeutig oder fehlt.;Temporal Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);1
+geographisch;Ortsangabe;Der Ort ist ungenau, mehrdeutig, strittig oder fehlt.;Geographic Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);2
+zuordnung;Zuordnung zu Gruppen;Die Einordnung in eine Gruppe oder Kategorie ist unsicher oder fehlt.;Set-typed Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);3
+identifikation;Wer ist gemeint?;Es ist unklar, ob eine Nennung eine bestimmte Person meint.;eigene Ergänzung (nicht bei Windhager, Salisu, Mayr 2019);4
+beziehung;Beziehung;Es ist unklar oder strittig, ob eine Verbindung besteht.;Relational Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);5
+attribut;Einzelangabe;Eine Angabe wie Beruf oder Umfang ist unsicher oder fehlt.;Attribute Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);6
+objekt;Überlieferung;Stücke fehlen oder sind nicht erhalten.;Object Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);7
+herkunft;Herkunft;Die Geschichte eines Bestands ist nur vermutet.;Provenance Uncertainty (Windhager, Salisu, Mayr 2019, Abb. 2);8

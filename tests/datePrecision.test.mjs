@@ -1,7 +1,7 @@
 // Datierungsgenauigkeit: alle Beispiele der Mustertabelle aus Masterprompt §12 und die Randfälle aus Nachbesserung 7.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { leiteDatumsPraezisionAb, datumsHinweis } from '../js/utils/datePrecision.js';
+import { leiteDatumsPraezisionAb, datumsHinweis, normalisiereDatumsText } from '../js/utils/datePrecision.js';
 
 test('Mustertabelle Masterprompt §12', () => {
   assert.equal(leiteDatumsPraezisionAb('1347 III 12'), 'exact');
@@ -30,4 +30,14 @@ test('unmöglicher Tag oder Monat ergibt das Jahr und einen Vermerk', () => {
 
 test('Formen außerhalb der Tabelle bleiben year (Tabelle: „alles andere“)', () => {
   for (const t of ['15. Jh.', 'Ende 15. Jh.', '1450/51', '13.3.1347']) assert.equal(leiteDatumsPraezisionAb(t), 'year', t);
+});
+
+test('fehlendes Leerzeichen zwischen Jahr, Monat und Tag wird toleriert (Auftrag 11)', () => {
+  for (const [t, n] of [['1490III 27', '1490 III 27'], ['1464 II17', '1464 II 17'], ['1485 VI13', '1485 VI 13'], ['1508VII 18', '1508 VII 18'], ['1519III19', '1519 III 19']]) {
+    assert.equal(normalisiereDatumsText(t), n, t);
+    assert.equal(leiteDatumsPraezisionAb(t), 'exact', t);
+  }
+  assert.equal(leiteDatumsPraezisionAb('1347VIII'), 'month');
+  assert.notEqual(datumsHinweis('1347XIII1'), '');
+  for (const t of ['1347', '15. Jh.', '1450/51', 'um 1400']) assert.equal(normalisiereDatumsText(t), t, t);
 });

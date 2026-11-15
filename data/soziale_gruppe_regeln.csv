@@ -1,0 +1,71 @@
+﻿reihenfolge;gruppe;regelart;begriff;anwendung
+1;dynastie;id;(alle ids in familien.csv);id der Person steht im Habsburger-Stammbaum
+2;klerus;klerus;Bischof;ganzes Wort im Namen
+2;klerus;klerus;Erzbischof;ganzes Wort im Namen
+2;klerus;klerus;Abt;ganzes Wort im Namen
+2;klerus;klerus;Äbtissin;ganzes Wort im Namen
+2;klerus;klerus;Dechant;ganzes Wort im Namen
+2;klerus;klerus;Propst;ganzes Wort im Namen
+2;klerus;klerus;Pfarrer;ganzes Wort im Namen
+2;klerus;klerus;Kaplan;ganzes Wort im Namen
+2;klerus;klerus;Kanoniker;ganzes Wort im Namen
+2;klerus;klerus;Domherr;ganzes Wort im Namen
+2;klerus;klerus;Prior;ganzes Wort im Namen
+2;klerus;klerus;Priorin;ganzes Wort im Namen
+2;klerus;klerus;Guardian;ganzes Wort im Namen
+2;klerus;klerus;Kardinal;ganzes Wort im Namen
+2;klerus;klerus;Weihbischof;ganzes Wort im Namen
+2;klerus;klerus;Offizial;ganzes Wort im Namen
+2;klerus;klerus;Vikar;ganzes Wort im Namen
+2;klerus;klerus;Chorherr;ganzes Wort im Namen
+2;klerus;klerus;Stiftsherr;ganzes Wort im Namen
+2;klerus;klerus;Pater;ganzes Wort im Namen
+2;klerus;klerus;Frater;ganzes Wort im Namen
+2;klerus;klerus;Konventual;ganzes Wort im Namen
+2;klerus;klerus;Mönch;ganzes Wort im Namen
+2;klerus;klerus;Nonne;ganzes Wort im Namen
+3;adel;adel_titel;Herzog;ganzes Wort im Namen
+3;adel;adel_titel;Herzogin;ganzes Wort im Namen
+3;adel;adel_titel;Graf;ganzes Wort im Namen
+3;adel;adel_titel;Gräfin;ganzes Wort im Namen
+3;adel;adel_titel;Ritter;ganzes Wort im Namen
+3;adel;adel_titel;Freiherr;ganzes Wort im Namen
+3;adel;adel_titel;Freifrau;ganzes Wort im Namen
+3;adel;adel_titel;Markgraf;ganzes Wort im Namen
+3;adel;adel_titel;Markgräfin;ganzes Wort im Namen
+3;adel;adel_titel;Fürst;ganzes Wort im Namen
+3;adel;adel_titel;Fürstin;ganzes Wort im Namen
+3;adel;adel_titel;Erzherzog;ganzes Wort im Namen
+3;adel;adel_titel;Erzherzogin;ganzes Wort im Namen
+3;adel;adel_titel;Baron;ganzes Wort im Namen
+3;adel;adel_titel;Junker;ganzes Wort im Namen
+3;adel;adel_titel;Landgraf;ganzes Wort im Namen
+3;adel;adel_titel;Pfalzgraf;ganzes Wort im Namen
+3;adel;adel_titel;Burggraf;ganzes Wort im Namen
+3;adel;adel_titel;Edler;ganzes Wort im Namen
+3;adel;adel_titel;Edle;ganzes Wort im Namen
+3;adel;adel_familie;Wallsee;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Eytzing|Eytzingen|Eyzing;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Grafenegg;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Puchhaim|Puchheim|Buchhaim;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Maissau;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Roggendorf;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Hardegg;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Zelking;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Volkenstorf|Volkensdorf|Volkensdorff|Volkerstorff|Volkestorf;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Sternberg;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Cunstat;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Podiebrad;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Starhemberg|Starchenberger;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Schaunberg;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Chuenring;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Liechtenstein;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Eberstorff;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Brandis;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Zedwitz;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Pottendorf|Potendorf;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Dachsperg|Dachsberg;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Rechberg;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Plankenstein;Teil des Namens (Schreibweisen mit |)
+3;adel;adel_familie;Welz;Teil des Namens (Schreibweisen mit |)
+4;buerger;standard;;kein Treffer in den Regeln 1–3

@@ -40,9 +40,17 @@ function pruefeMonatUndTag(text) {
   return Number.isInteger(tag) && tag >= 1 && tag <= TAGE_JE_MONAT[monat - 1];
 }
 
+// Nachbesserung 11 (Auftrag 11, B3): fehlendes Leerzeichen zwischen Jahr, römischem Monat und Tag tolerieren
+// („1490III 27“, „1464 II17“, „1485 VI13“ → „1490 III 27“ usw.); andere Formen bleiben unverändert.
+export function normalisiereDatumsText(datumsText) {
+  const text = (datumsText || '').trim();
+  const m = text.match(/^(\d{3,4})\s*([IVXLCM]+)(?:\s*(\d{1,2}))?$/i);
+  return m ? [m[1], m[2], m[3]].filter(Boolean).join(' ') : text;
+}
+
 // Rückgabewerte: 'exact' | 'month' | 'approx' | 'year' | 'undatiert'
 export function leiteDatumsPraezisionAb(datumsText) {
-  const text = (datumsText || '').trim();
+  const text = normalisiereDatumsText(datumsText);
   if (text === '' || MUSTER_UNDATIERT.test(text)) return 'undatiert';
   if (MUSTER_UNGEFAEHR.test(text)) return 'approx';
   if (MUSTER_EXAKT.test(text)) return pruefeMonatUndTag(text) ? 'exact' : 'year';
@@ -52,7 +60,7 @@ export function leiteDatumsPraezisionAb(datumsText) {
 
 // Vermerk zur Anzeige, wenn die Angabe wie ein genaues Datum aussieht, Monat oder Tag aber unmöglich sind; sonst ''.
 export function datumsHinweis(datumsText) {
-  const text = (datumsText || '').trim();
+  const text = normalisiereDatumsText(datumsText);
   if ((MUSTER_EXAKT.test(text) || MUSTER_MONAT.test(text)) && !pruefeMonatUndTag(text)) return 'Tages- oder Monatsangabe ungültig, nur das Jahr ausgewertet';
   return '';
 }

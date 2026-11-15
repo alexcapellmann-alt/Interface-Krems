@@ -17,7 +17,7 @@ const { ladeCSV } = await import('../js/core/dataLoader.js');
 const ergebnis = await ladeCSV('data/__test.csv');
 
 test('liefert records, schema und errors', () => {
-  assert.deepEqual(Object.keys(ergebnis), ['records', 'schema', 'errors']);
+  assert.deepEqual(Object.keys(ergebnis), ['records', 'schema', 'errors', 'warnungen']); // `warnungen` seit Auftrag 12 (additiv)
 });
 
 test('BOM entfernt, Spaltennamen unverändert, unbekannte Spalte bleibt erhalten', () => {

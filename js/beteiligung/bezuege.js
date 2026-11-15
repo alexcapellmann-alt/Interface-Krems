@@ -2,6 +2,7 @@
 // Partizipations-Modul: EINE Beschreibung je Datensatztyp, worauf sich ein Vorschlag bezieht (Typ,
 // Kennung, Titel, wählbare Felder mit aktuellem Wert) - von allen Sidebars und den Regesten-Kacheln
 // gemeinsam genutzt, damit überall dieselben Angaben beim Archiv ankommen.
+import { orteWieImRegest } from '../utils/ortsart.js'; // Auftrag 11
 
 const text = (w) => (Array.isArray(w) ? w.join('; ') : String(w ?? '')).trim();
 
@@ -10,7 +11,7 @@ export function urkundeBezug(r) {
     typ: 'urkunde', id: text(r.signatur), titel: [text(r.signatur), text(r.datum)].filter(Boolean).join(', '),
     felder: [
       { name: 'datum', label: 'Datum', wert: r.datum }, { name: 'regest', label: 'Regest', wert: r.regest },
-      { name: 'orte', label: 'Orte', wert: r.orte }, { name: 'personen', label: 'Personen', wert: r.personen },
+      { name: 'orte', label: 'Orte', wert: orteWieImRegest(r) }, // Auftrag 11: wie im Regest { name: 'personen', label: 'Personen', wert: r.personen },
       { name: 'kategorien', label: 'Kategorien', wert: r.kategorien }
     ]
   };

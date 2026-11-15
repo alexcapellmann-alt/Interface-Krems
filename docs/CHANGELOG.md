@@ -7,6 +7,31 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-15 (241) – Unsicherheitstypen: Schema und Inhalte (Auftrag 12)
+
+- Neu `data/unsicherheit_typen.csv` (8 Typen nach Windhager, `identifikation` als eigene Ergänzung), `data/unsicherheit_auspraegungen.csv` (4), `data/datumsabweichungen.csv` (31), `data/soziale_gruppe_regeln.csv`, `data/methodenhinweise.csv` (11), `data/luecken_hinweise.csv` (14).
+- Neue Spalte `unsicherheit_typ` in sieben Dateien (3457 Datensätze befüllt); neue Spalten `ausstellungsort` (urkunden, 496 Werte) und `fehlende_jahrgaenge` (bestandsverzeichnis, 28).
+- `js/utils/uncertainty.js`: Parser und Prüfung der Typen; `js/core/dataLoader.js`: Prüfung beim Laden, neues Rückgabefeld `warnungen` (additiv). Neu `tests/unsicherheitTyp.test.mjs`.
+- Anmerkungen ergänzt, wo noch keine bestand (190), Markierungen gesetzt (43); 5 Folgefehler-Anmerkungen aus Auftrag 11 berichtigt. Oberfläche unverändert (Auftrag 13).
+- σ-Verschiebung: Urkunden 191 → 215 (`datum_unsicher` 47 → 77), Orte 92 → 94, Inventare 4 → 11, Bestand 21 → 53; Bürgerbuch, Personenliste, Familien unverändert. Tests 47 (12 neu). Einzelheiten: PROJEKTLOG 94.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (240) – Nachbesserung 11: Datenbereinigung Orte, Datumsangaben, Anmerkungen (Auftrag 11)
+
+- `data/orte.csv`: neue Spalte `ortsart` (44 Einträge geprüft, leer = Siedlung); 10 vermutlich falsche Koordinaten geleert (als unsicher markiert); Schrattental in Schrattenthal zusammengeführt.
+- Neu `js/utils/ortsart.js`; `js/core/app.js` nimmt Namen ohne Ortsbezug (`Herkunftsname`) zentral aus den Ortslisten; `urkundenOrte.js`, `karte.js` ebenso; Kachel, Seitenleiste, Bilderwand-Beschriftung und Beteiligung zeigen die Orte wie im Regest.
+- `data/urkunden.csv`: 6 Datumsangaben mit fehlendem Leerzeichen berichtigt, StaAKr-0357 auf Schrattenthal; `js/utils/datePrecision.js` toleriert fehlende Leerzeichen.
+- `data/familien.csv`: 17 ungenaue Lebensdaten markiert, Eleonore von Portugal nicht mehr markiert; `data/buergerbuch.csv`: 2 Monatsnamen, 11 Anmerkungen „Erstmalig vorstellig“; `data/verlassenschaftsinventare.csv`: 4 Orte nach Dietrich.
+- `docs/SCHEMA.md`: `ortsart`, Herkunft der Koordinaten, `S`/`A*`, Geschlecht als Projektentscheidung, Herkunft der Kategorien.
+- Vorher/Nachher: Ortsliste 257 → 254, Kartenpunkte 235 → 224, unsichere Orte 86 → 90 (ohne Koordinaten 22 → 30), Verbindungskarte 179 → 170, σ Urkunden 190 → 191, markierte Stammbaum-Personen 19 → 29; Tests 34 → 35. Einzelheiten: PROJEKTLOG 93.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-11-15 (239) – Nachbesserung 9: Stammbaum auf dem Laptop, Folie 1 der Willkommenstour
 
 - `js/utils/bildschirmHinweis.js`: neu `istDarstellungsbereichZuKlein()` (Breite des Darstellungsbereichs und Fensterhöhe, Grenzwerte unverändert 900 × 500); `js/viz/familienbaum.js` prüft damit statt mit der Resthöhe unter der Oberkante.
