@@ -35,6 +35,11 @@ const nichtAngeboten = { bereiche: new Set(), ansichten: new Set() };
 // Einleitung eines Bereichs (Spalte `beschreibung` der Bereichszeile, Absätze mit `|`), z. B. über den
 // Kacheln der Bestand-Seite (Wunsch des Autors, 2026-10-27). Platzhalter wie {n_bestaende_punkt} löst app.js auf.
 const einleitungen = new Map();
+// Nachbesserung 4, Punkt 4: Bereichszeilen, deren Bereich die Registry nicht kennt (Datenbestand ohne Visualisierung)
+const unbekannteBereiche = new Map();
+export function unbekannteBereichszeilen() {
+  return [...unbekannteBereiche.entries()].map(([id, name]) => ({ id, name }));
+}
 export function bereichsEinleitung(bereichId) {
   return einleitungen.get(bereichId) || [];
 }
@@ -65,8 +70,15 @@ function sortiereAnOrt(liste, reihenfolgeVon) {
   liste.splice(0, liste.length, ...sortiert);
 }
 
+// Nachbesserung 7, Punkt 2 (Befund 3.2): ansichten.csv fehlt, ist leer, hat nur die Kopfzeile oder keine Spalte `bereich`
+// (z. B. falsches Trennzeichen): dann gelten die Standardtexte - und die Übersichtsseiten sagen das.
+let ansichtenUnbrauchbar = false;
+export function ansichtenNichtLesbar() { return ansichtenUnbrauchbar; }
+export const ANSICHTEN_NICHT_LESBAR_TEXT = 'Die Datei ansichten.csv konnte nicht gelesen werden (leer, ohne Spalte „bereich“ oder falsch gespeichert). Es werden deshalb die Standardnamen und -texte der Ansichten gezeigt; die Einleitungstexte fehlen.';
+
 export function wendeAnsichtenKonfigurationAn(zeilen) {
-  if (!Array.isArray(zeilen) || zeilen.length === 0 || !('bereich' in zeilen[0])) return;
+  ansichtenUnbrauchbar = !Array.isArray(zeilen) || zeilen.length === 0 || !('bereich' in zeilen[0]);
+  if (ansichtenUnbrauchbar) return;
 
   const bereiche = new Map(ARCHIVALIENTYPEN.map((typ) => [typ.typ, typ]));
   bereiche.set('bestand', { typ: 'bestand', ansichten: BESTAND_ANSICHTEN });
@@ -85,6 +97,7 @@ export function wendeAnsichtenKonfigurationAn(zeilen) {
     }
     const bereich = bereiche.get(bereichId);
     if (!bereich) {
+      if (bereichId && !ansichtId) unbekannteBereiche.set(bereichId, alsText(zeile.name) || bereichId); // Nachbesserung 4, Punkt 4
       if (bereichId) console.warn(`ansichten.csv: unbekannter Bereich "${bereichId}" - Zeile wird ignoriert.`);
       return;
     }

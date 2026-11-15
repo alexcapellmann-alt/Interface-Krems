@@ -241,6 +241,8 @@ import {
 import { OHNE_KATEGORIE_FARBE } from '../utils/kategorieFarben.js';
 import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
+import { markiereSvg } from '../utils/vollstaendigkeit.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
 import {
@@ -465,6 +467,7 @@ function wireZoom({ svgAuswahl, xSkalaBasis, achseGruppe, punkteAuswahl, breite,
   return zoomVerhalten;
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneDotPlot() {
   const { container, plotBereich, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -634,6 +637,8 @@ function zeichneDotPlot() {
     .attr('stroke', (d) => (istUnsicher(d, zeigeUnsicherheit) ? '#c0392b' : 'none'))
     .attr('stroke-width', (d) => (istUnsicher(d, zeigeUnsicherheit) ? 2 : 0))
     .attr('stroke-dasharray', (d) => (istUnsicher(d, zeigeUnsicherheit) ? '3,2' : null));
+  markiereSvg(punkte, (d) => d.record); // Nachbesserung 3, Punkt 3
+  markiereHell(punkte, (d) => istUnsicher(d, zeigeUnsicherheit)); // Nachbesserung 3, Punkt 4
   wireTooltip(punkte, container);
   // Punkt 5 (siehe Dateikopf-Kommentar), dasselbe Klick-/Enter-Leerzeichen-
   // Toggle-Muster wie ganttDiagramm.js' waehleBestand() - hier direkt auf

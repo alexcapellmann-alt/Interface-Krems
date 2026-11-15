@@ -32,7 +32,9 @@ function fuegeStyleEinmaligEin(container) {
       width: max-content; max-width: min(360px, 90vw); max-height: min(420px, 70vh); overflow-y: auto;
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
       box-shadow: var(--shadow); padding: var(--space-3); font-size: var(--fs-sm); color: var(--text); }
-    .info-button-popover:focus { outline: none; }
+    .info-button-popover:focus:not(:focus-visible) { outline: none; }
+    /* Nachbesserung 6, Punkt 6: das Fenster ist per Tab erreichbar - dann mit sichtbarem Fokusrahmen */
+    .info-button-popover:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     .info-button-popover p { margin: 0 0 var(--space-2) 0; }
     .info-button-popover p:last-child { margin-bottom: 0; }
   `;
@@ -78,7 +80,9 @@ export function erzeugeInfoButton(container, { text, ariaLabel = 'Erklärung zu 
   popover.className = 'info-button-popover';
   popover.setAttribute('role', 'dialog');
   popover.setAttribute('aria-label', ariaLabel);
-  popover.setAttribute('tabindex', '-1');
+  // Nachbesserung 6, Punkt 6 (scrollable-region-focusable): 0 statt -1 - lange Infotexte scrollen; das Fenster muss
+  // dafür auch per Tab erreichbar sein, nicht nur per Skript (Öffnen setzt den Fokus weiterhin hierher).
+  popover.setAttribute('tabindex', '0');
   popover.hidden = true;
   (text || '').split('\n\n').forEach((absatz) => {
     const p = document.createElement('p');

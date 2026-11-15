@@ -1,275 +1,29 @@
 // js/viz/sankey.js
-// AUFTRAG "Sankey konsolidieren, Beschriftung vergrößern, Layout-Fixes" -
-// Vorab-Check-Ergebnis (siehe Selbstauskunft im damaligen Chat): es GAB
-// tatsächlich noch eine eigenständige, separat unter Urkunden registrierte
-// "alte" Sankey-Ansicht in genau dieser Datei (drei Stufen: Jahrhundert ->
-// Kategorie -> Datierungspräzision) NEBEN der neueren Kategorien-Orte-
-// Darstellung (vormals `kategorienOrteSankey.js`) - beide waren gleichzeitig
-// im Urkunden-Menü sichtbar. Die alte Drei-Stufen-Ansicht ist entfernt, die
-// Kategorien-Orte-Darstellung läuft seither hier unter dem konsolidierten
-// Namen/Registry-Eintrag "Sankey" (siehe archivalienRegistry.js).
+// Sankey der Urkunden: Kategorie (links, erste Kategorie je Urkunde, ersteKategorie()) → Ort (rechts).
+// Modul-Interface siehe Abschnitt 5. Kein d3-sankey (nicht im freigegebenen Stack), Bänder als Bezier-Flächen von Hand.
 //
-// Modul-Interface siehe Abschnitt 5. Kein d3-sankey (nicht im freigegebenen
-// Stack, siehe alluvial.js) - Bezier-Ribbons von Hand gezeichnet.
+// Zählbasis: Bandbreite = Zahl der Urkunden je Kategorie-Ort-Paar (je Urkunde ein Set von Orten, keine Doppelzählung
+// innerhalb eines Paars). Balkenhöhe, Tooltip und Kategorie-Bündelung verwenden dieselbe Summe (summeAnzahl()); sie kann
+// über der Zahl eindeutiger Urkunden liegen, weil eine Urkunde mehrere Orte nennen kann – nur so füllen die Bänder den
+// Balken. Die Orts-Bündelung zählt dagegen Urkunden je Ortsname (ermittleOrtRohZaehlung(), vor jeder Bündelung).
 //
-// Soll-Zustand (Auftrag "Bipartiter Graph → Urkunden (Sankey)...", wörtlich):
-// 16 Urkunden-Kategorien links, häufigste 20-25 Orte rechts (Rest unter
-// "Andere Orte"), Bandbreite = Anzahl verbindender Urkunden, Farbe nach
-// CAT_COLORS, Klick zeigt betroffene Urkunden in der Sidebar. (Seit AUFTRAG
-// "Sankey – Zählbasis vereinheitlichen, Bündelung korrigieren, Interaktion
-// umbauen", PUNKT 5 weiter unten: Klick hebt stattdessen die Verbindungen
-// des Knotens hervor, öffnet keine Sidebar mehr - js/utils/sidebar.js wird
-// von diesem Modul nicht mehr genutzt.)
+// Bündelung: Kategorien unter KATEGORIE_BUENDELUNG_SCHWELLE und Orte unter ORT_BUENDELUNG_SCHWELLE fallen unter
+// „Andere Kategorien“ bzw. „Andere Orte“; deren Tooltip nennt die Bestandteile (höchstens BUENDEL_TOOLTIP_MAX_ZEILEN).
+// Urkunden ohne Kategorie oder ohne Ort erscheinen als eigene Knoten „(ohne Kategorie)“/„(kein Ort)“ (Abschnitt 12:
+// nicht stillschweigend weglassen); sie sind gestrichelt markiert und nur bei eingeschaltetem Unsicherheitsknopf zu
+// sehen. Die Ortsauswahl zählt immer über alle Urkunden, damit der Knopf nur die Sichtbarkeit ändert, nicht das Layout.
 //
-// Zwei zusätzliche, nicht ausdrücklich genannte, aber aus Abschnitt 12 ("nie
-// stillschweigend ausblenden") gebotene Sonderfälle, beide live geprüft:
-// - 14 von 1069 Urkunden haben KEINE Kategorie (ersteKategorie() liefert
-//   dafür bereits die etablierte "(ohne Kategorie)") - erscheint als eigener
-//   Knoten links, nicht stillschweigend weggelassen.
-// - 30 von 1069 Urkunden haben KEIN Ort-Feld - bekommen denselben
-//   Sonderknoten "(kein Ort)" rechts, analog zur "Andere Orte"-Sammelspalte.
-// (Seit AUFTRAG "Sankey – Label-Bug, Kategorien-Bündelung, Unsicherheiten-
-// Toggle", siehe PUNKT 3 weiter unten: beide Knoten sind per Default
-// ausgeblendet, über den app-weiten Unsicherheiten-Button aber jederzeit
-// explizit einblendbar - kein Widerspruch zu "nie stillschweigend", da klar
-// beschriftet und opt-in statt kommentarlos weggelassen.)
+// Beschriftung: Knotenbeschriftungen sitzen auf der Knotenmitte; ordneLabelsAn() (PAVA) verschiebt nur kollidierende
+// Beschriftungen, ab LABEL_LEITLINIE_SCHWELLE px Versatz mit Führungslinie. Kürzung nach verfügbarer Pixelbreite
+// (js/utils/beschriftung.js), der volle Name steht im Tooltip. Kategorien haben mehr Platz (RAND_KATEGORIE) und behalten
+// immer LABEL_SCHRIFTGROESSE; nur die Ortsspalte wird bei Platzmangel kleiner. Bänder ab 12 px Breite tragen am Ende
+// ihren Kategorienamen, damit die Farbe nicht das einzige Merkmal ist (WCAG 1.4.1).
 //
-// (Ursprünglich TOP_ORTE_ANZAHL=20, eine feste Anzahl - seit AUFTRAG
-// "Sankey – Zählbasis vereinheitlichen, Bündelung korrigieren, Interaktion
-// umbauen", PUNKT 4 weiter unten: ersetzt durch ORT_BUENDELUNG_SCHWELLE,
-// dieselbe schwellenwertbasierte Bündelung wie bei den Kategorien.)
-//
-// Bandbreite = Anzahl EINDEUTIGER Urkunden je Kategorie-Ort-Paar (nicht
-// Ortsnennungen): eine Urkunde, die z.B. mehrere Orte nennt, die alle unter
-// "Andere Orte" fallen, zählt für dieses eine Kategorie-Ort-Paar trotzdem
-// nur EINMAL (siehe ermittleOrtBuckets() - pro Urkunde ein Set, keine Liste).
-//
-// AUFTRAG "Überarbeite die Beschriftungen und die Klickinteraktion des
-// Sankey-Diagramms" - zwei größere Umbauten:
-//
-// PUNKT 1 (Beschriftung): bisher bekamen Knoten unterhalb einer
-// Mindesthöhe GAR KEIN Label (Auftrag des VORIGEN Schritts hatte das
-// explizit als gleichwertige Alternative zur Kollisionsvermeidung
-// zugelassen) - das ist jetzt ERSETZT durch eine echte Kollisionsvermeidung,
-// analog zu bumpChart.js' Endbeschriftungs-Fix, aber hier für ALLE Knoten
-// beider Spalten statt nur einiger weniger: ausgangspunkt jedes Labels ist
-// die Knotenmitte (`pos.top + pos.hoehe/2`), ordneLabelsAn() verschiebt bei
-// Unterschreiten des Mindestabstands zuerst abwärts, dann (falls das
-// unterste Label dadurch über den verfügbaren Bereich hinausragen würde)
-// rückwärts wieder aufwärts (Zwei-Pass-Ausgleich, hält alle Labels
-// innerhalb der Spalte, nicht nur untereinander abstandsgleich). Bei
-// tatsächlicher Verschiebung >LABEL_LEITLINIE_SCHWELLE Pixel verbindet eine
-// dünne, gestrichelte Führungslinie das Label mit der echten Knotenmitte -
-// exakt dieselbe "Zustand + Führungslinie bei Bedarf"-Idee wie bei
-// bumpChart.js, hier auf eine ganze Spalte statt einzelner Ausreißer
-// angewendet.
-//
-// Kürzung jetzt über js/utils/beschriftung.js' ermittleBeschriftungstext()
-// (bereits für Treemap/Sunburst/Icicle/Circle-Packing etabliert) statt der
-// vorherigen festen Zeichenzahl - kennt die TATSÄCHLICH verfügbare
-// Pixelbreite (aus dem jeweiligen äußeren Beschriftungsbereich RAND_KATEGORIE/
-// RAND_ORT abgeleitet) und der aktuellen Schriftgröße, nicht eine geschätzte
-// Zeichenanzahl. Der volle Name bleibt immer im Tooltip erreichbar
-// (tooltipTextFn, unverändert).
-//
-// Priorität Kategorie vor Ort (Auftrag, wörtlich: "Kategorien sollen nach
-// Möglichkeit vollständig beschriftet werden. Ortslabels dürfen bei
-// Platzmangel priorisiert [= zuerst zurückgestellt/gekürzt] werden."):
-// RAND_KATEGORIE (180px) ist bewusst deutlich großzügiger als RAND_ORT
-// (110px) bemessen - bei 16 Kategorien passen die allermeisten Namen bei
-// 13px Schrift vollständig hinein (live geprüft), bei den bis zu 22
-// Ort-Knoten wird häufiger gekürzt. Schriftgrößen-Reduktion (13→11px) ist
-// AUSSCHLIESSLICH für die Ort-Spalte vorgesehen und wird nur ausgelöst, wenn
-// die Ort-Spalte bei voller Schriftgröße rechnerisch nicht in `hoehePlot`
-// passen würde (siehe zeichneSankey()) - die Kategorie-Spalte bleibt IMMER
-// bei 13px, wie vom Auftrag verlangt.
-//
-// PUNKT 2 (Klick-Fixierung): bisher öffnete ein Klick auf ein Band die
-// Urkunden-Sidebar (wie ein Knotenklick) UND es gab keine per Klick
-// dauerhafte Hervorhebung - beides jetzt geändert. Ein zentraler
-// Auswahl-Zustand (`instanz.auswahl`, siehe aktualisiereHighlight()) wird
-// beim Klick auf ein Band gesetzt/umgeschaltet/gelöscht (siehe unten) und
-// hebt sowohl das Band als auch seine beiden Endknoten hervor, alle anderen
-// Bänder/Knoten/Labels blenden ab. `instanz.hover` bleibt die bereits
-// bestehende TEMPORÄRE Hervorhebung (Knoten-Hover) - aktualisiereHighlight()
-// liest beide aus einer gemeinsamen `aktiv = auswahl || hover`-Variable
-// (Auftrag, wörtlich: "Link- und Knotenauswahl denselben zentralen
-// Auswahlzustand verwenden") - solange `auswahl` gesetzt ist, wird `hover`
-// dabei ignoriert (Auftrag: "Hover ... wirkt weiterhin nur temporär,
-// solange keine Auswahl fixiert ist").
-//
-// Knotenklick bleibt bewusst UNVERÄNDERT (Auftrag, wörtlich zu prüfen): er
-// öffnet weiterhin nur die Urkunden-Sidebar, berührt `instanz.auswahl`
-// nicht - ein bereits fixiertes Band bleibt beim Klick auf einen Knoten
-// deshalb sichtbar hervorgehoben (bewusste, minimale Kopplung statt eines
-// nicht beauftragten Nebeneffekts).
-//
-// Band-Klick ruft `event.stopPropagation()` auf (Auftrag: "Verhindere
-// gegebenenfalls die Weitergabe des Klickereignisses") und öffnet KEINE
-// Sidebar mehr. Klick auf die freie Fläche (unsichtbares Hintergrund-Rect,
-// unterste Ebene der SVG) oder die Escape-Taste (App-weiter
-// document-Listener, in destroy() wieder entfernt) setzen `auswahl` auf
-// `null` zurück. `auswahl` wird bewusst NICHT bei jedem Redraw
-// zurückgesetzt (anders als `hover`) und über Kategorie/Ort-NAMEN
-// referenziert statt über Objektreferenzen - bleibt dadurch auch über einen
-// Unsicherheiten-Umschalter/Resize hinweg gültig, obwohl `baueSankeyDaten()`
-// bei jedem Redraw neue Link-Objekte erzeugt.
-//
-// AUFTRAG "Sankey – Label-Bug, Kategorien-Bündelung, Unsicherheiten-Toggle" -
-// drei Punkte:
-//
-// PUNKT 1 (Label-Bug, ROOT CAUSE): live mit getBBox()/Attributauslesung
-// nachgestellt (siehe CHANGELOG für die vollständigen Zahlen). Ursache war
-// NICHT die vermutete "alte Knotenhöhen"-Berechnung (positionen/Labels
-// nutzten bereits dieselbe, aktuelle `positionen`-Map, siehe
-// zeichneLabelSpalte()), sondern ein Fehlverhalten von ordneLabelsAn()
-// selbst, in ZWEI Teilen:
-// (a) Der reine Vorwärts-/Rückwärts-Kollisionsausgleich erzwingt ab der
-//     ERSTEN Kollision einen durchgehenden minAbstand-Abstand bis zum
-//     Spaltenende - bei einer s tark ungleich verteilten Spalte (hier: 16
-//     Kategorien, deren Knotenhöhen von 137px bis 0,3px reichen, die
-//     unteren 10+ auf engstem Raum gedrängt) wuchs die dadurch erzwungene
-//     GESAMTSPANNE (516px) weit über die eigentlich benötigte natürliche
-//     Spanne (413px) hinaus und überschritt den verfügbaren Bereich - was
-//     die "Rettung" (b) auslöste.
-// (b) Diese Rettung verteilte bislang bei Bedarf ALLE Label der Spalte
-//     gleichmäßig über die GESAMTE verfügbare Höhe - auch die oberen,
-//     längst unkritischen Label (z.B. "Politik", "Rechtswesen"), deren
-//     Positionen dadurch komplett von ihrer echten Knotenmitte losgelöst
-//     wurden (live gemessen: bis zu 235px Versatz).
-// Fix: ordneLabelsAn() nutzt jetzt PAVA (Pool Adjacent Violators Algorithm,
-// siehe Kommentar dort) statt der reinen Vorwärts-/Rückwärts-Verschiebung -
-// verschiebt dadurch NUR die tatsächlich kollidierenden Label zu einem
-// gemeinsamen Mittelwert, alle übrigen bleiben exakt auf ihrer Knotenmitte.
-// Der abschließende Randausgleich verschiebt die Spalte außerdem nur noch
-// MINIMAL (nur so weit wie nötig, um oben/unten in den verfügbaren Bereich
-// zu passen) statt sie unconditional auf den oberen Rand zu verankern - auch
-// das war Teil des Versatzes (siehe ordneLabelsAn()-Kommentar).
-//
-// PUNKT 2 (Andere-Kategorien-Bündelung): Kategorien mit einer
-// GESAMT-Nennungshäufigkeit unter KATEGORIE_BUENDELUNG_SCHWELLE (10) werden
-// zu einem Knoten "Andere Kategorien" zusammengefasst - siehe
-// ermittleKategorienGesamtHaeufigkeit() für die genaue Zählbasis (bewusst
-// NICHT dieselbe wie die Erst-Kategorie-Zählung, die die eigentlichen
-// Sankey-Knoten bestimmt - live geprüft: nur die Gesamt-Nennungshäufigkeit
-// ergibt exakt die im Auftrag genannten Zahlen, u.a. "Gesundheit" bei 11).
-// Tooltip auf "Andere Kategorien" listet die enthaltenen (Erst-)Kategorien
-// mit ihrer jeweiligen Urkundenzahl (siehe buendelBestandteile in
-// baueSankeyDaten()). Abweichung vom Auftrag, transparent: die dort
-// genannte "Privatvermögen" kommt in urkunden.csv KEIN einziges Mal als
-// ERSTE Kategorie einer Urkunde vor (nur einmal als zweitgenannte, neben
-// "Grund und Boden") - unter der seit "Bipartiter Graph -> Urkunden"
-// etablierten Regel "eine Urkunde -> ihre jeweils erste Kategorie" (siehe
-// Dateikopf-Kommentar oben) existiert dafür daher gar kein eigener
-// Sankey-Knoten, der gebündelt werden könnte - siehe Selbstauskunft im Chat.
-//
-// PUNKT 3 (Unsicherheiten-Toggle für "(ohne Kategorie)"/"(kein Ort)"):
-// beide Sonderknoten (samt ihrer Links) werden nur noch gezeichnet, wenn
-// `options.showUncertainty` (app-weiter Unsicherheiten-Button, siehe
-// unsicherheitsButton.js) aktiv ist - siehe Filterung am Ende von
-// baueSankeyDaten(). "Andere Orte"/TOP_ORTE_ANZAHL bleiben davon unberührt
-// (Auswahl der Top-Orte zählt weiterhin über ALLE Urkunden, unabhängig vom
-// Toggle) - verhindert, dass sich beim Umschalten die ORT-AUSWAHL selbst
-// ändert, nicht nur deren Sichtbarkeit (Auftrag: "layoutstabil").
-//
-// AUFTRAG "Sankey – Zählbasis vereinheitlichen, Bündelung korrigieren,
-// Interaktion umbauen" - fünf Punkte:
-//
-// PUNKT 0 (Zählbasis, ROOT-CAUSE-BEFUND): live gemessen (siehe CHANGELOG)
-// gab es tatsächlich ZWEI abweichende Zählmethoden, nicht nur die im
-// Auftrag vermutete "erste vs. alle Kategorien"-Frage: (a) die Balkenhöhe/
-// Bandbreite (kategorieSummen/ortSummen, unverändert `summeAnzahl(links,
-// 'von'|'nach', ...)`); (b) der bisherige Tooltip-Wert
-// (urkundenNachKategorie/-OrtBucket.length, eindeutige Urkunden je
-// Erst-Kategorie); (c) die BISHERIGE Bündelungsschwelle aus dem Vorgänger-
-// Auftrag (ermittleKategorienGesamtHaeufigkeit() - Nennungshäufigkeit über
-// ALLE Kategorien einer Urkunde, nicht nur die erste). (a) und (b) sind
-// beide bereits auf `ersteKategorie()` aufgebaut ("wie in den meisten
-// anderen Urkunden-Modulen") und unterscheiden sich NUR in der Aggregation:
-// (b) zählt eindeutige Urkunden, (a) summiert die Bandbreiten ALLER
-// ausgehenden Kategorie-Ort-Verbindungen - strukturell verschieden, weil
-// eine Urkunde MEHRERE Top-Orte nennen kann und dann für JEDES ihrer
-// Kategorie-Ort-Paare zählt (siehe Dateikopf-Kommentar oben, "Bandbreite ="
-// bereits so dokumentiert). Live geprüft: für "Gesundheit" (7) und
-// "Wirtschaft" (1) macht das KEINEN Unterschied (keine Mehrfach-Ortsnennung
-// in diesen Kategorien), für große Kategorien wie "Politik" schon (331
-// eindeutige Urkunden vs. 417 Bandbreiten-Summe, +86 durch Mehrfachnennung).
-// Diese Summe ist außerdem strukturell notwendig für die Balkenhöhe (die
-// gestapelten Bänder MÜSSEN exakt die Knotenhöhe ausfüllen) - sie kann daher
-// NICHT durch die kleinere "eindeutige Urkunden"-Zahl ersetzt werden, ohne
-// Bänder über den Balken hinausragen zu lassen. Gewählte EINHEITLICHE
-// Zählbasis: genau diese Bandbreiten-Summe (`summeAnzahl()`) - jetzt für
-// Balkenhöhe, Tooltip UND Bündelungsschwelle gleichermaßen verwendet (siehe
-// baueSankeyDaten()); die abweichende GESAMT-Nennungshäufigkeit aus dem
-// Vorgänger-Auftrag entfällt ersatzlos.
-//
-// PUNKT 1 (Andere-Kategorien-Schwelle neu): mit der jetzt einheitlichen
-// Bandbreiten-Summe liegt "Gesundheit" (7) weiterhin, "Bildung und
-// Erziehung" DIESMAL NICHT (12, wegen Mehrfach-Ortsnennungen über der
-// Schwelle) unter KATEGORIE_BUENDELUNG_SCHWELLE (10) - anders als im
-// Vorgänger-Auftrag, der "Bildung und Erziehung" fälschlich bündelte. Neu
-// gebündelt: Gesundheit(7), Kultur(6), Grund und Boden(4), "Verkehr, Ver-
-// und Entsorgung"(1), Medien(1), Wirtschaft(1) - 6 Kategorien, live
-// verifiziert.
-//
-// PUNKT 2 (Mindest-Klickfläche): zeichneKnotenSpalte() zeichnet pro Knoten
-// zwei Rechtecke - das sichtbare (farbige, `pointer-events:none`) und ein
-// unsichtbares, mindestens MIN_KLICKFLAECHE_HOEHE hohes "Hit"-Rechteck
-// darüber (spätere Geschwister-Ebene), mittig um die echte Knotenposition
-// zentriert - trägt alle Interaktions-Attribute/Handler. Reiner
-// Robustheitsfix (Auftrag, wörtlich "unabhängig von der visuellen
-// Balkendicke"), unabhängig davon, ob nach Punkt 1/4 überhaupt noch sehr
-// dünne Knoten vorkommen.
-//
-// PUNKT 3 (Unsicherheits-Kennzeichnung korrigiert): die gestrichelte
-// rote Randmarkierung hing bisher an `d.unsicherAnzahl` (Datierungs-
-// Unsicherheit einzelner Urkunden, ein VÖLLIG ANDERES Feld) und erschien
-// dadurch an vielen Bändern, nicht nur an "(ohne Kategorie)"/"(kein Ort)".
-// Jetzt hängt sie ausschließlich an `d.von === OHNE_KATEGORIE || d.nach ===
-// KEIN_ORT` (siehe zeichneVerbindungsEbene()) - die `davon N mit unsicherer
-// Datierung`-Zeile im Band-Tooltip (weiterhin `unsicherAnzahl`-basiert)
-// bleibt davon unberührt, das ist eine separate, bewusst unveränderte
-// Information.
-//
-// PUNKT 4 (Orte-Schwelle + Label-Fix): die PAVA-Korrektur aus dem
-// Vorgänger-Auftrag (ordneLabelsAn()) war TATSÄCHLICH bereits spaltenneutral
-// und lief schon für die Ort-Spalte (zeichneLabelSpalte() wird für beide
-// Spalten aufgerufen) - der im Screenshot sichtbare Versatz kam nicht von
-// einer fehlenden Anwendung, sondern von der GRUNDVERSCHIEDENEN Verteilung:
-// die feste "Top 20"-Regel ließ bis zu 22 Orte mit glatt abfallenden,
-// eng aneinanderliegenden Häufigkeiten übrig (keine großen Lücken wie bei
-// den Kategorien) - PAVA musste dadurch fast die gesamte Spalte zu einem
-// Cluster poolen. TOP_ORTE_ANZAHL entfällt zugunsten von
-// ORT_BUENDELUNG_SCHWELLE (15, analog zu Punkt 1) - von 256 tatsächlich
-// vorkommenden Orten bleiben dadurch nur noch 13 einzeln sichtbar (Wien 297
-// bis Dürnstein 15), alle übrigen 243 unter "Andere Orte" - eine ähnlich
-// klar getrennte, wenigen-große-Knoten-Verteilung wie bei den Kategorien,
-// wodurch PAVA jetzt auch hier fast überall 0px Versatz erreicht (live
-// verifiziert). "Andere Orte"-Tooltip zeigt aus Platzgründen nur die
-// häufigsten BUENDEL_TOOLTIP_MAX_ZEILEN (15) Bestandteile plus eine
-// "… und N weitere"-Zeile (243 einzelne Namen wären ein unlesbar langer
-// Tooltip) - Auftrag nennt keine explizite Obergrenze, diese Kappung ist
-// eine eigene, transparent dokumentierte Entscheidung.
-//
-// PUNKT 5 (Klick auf Balken fixiert Hervorhebung statt Sidebar): Knotenklick
-// verhält sich jetzt wie Knoten-Hover (siehe aktualisiereHighlight(),
-// unverändert - `aktiv.typ==='kategorie'|'ort'` hebt nur die zugehörigen
-// Bänder hervor, dimmt keine anderen Knoten/Labels, exakt wie bisher beim
-// Hover), fixiert diesen Zustand aber in `instanz.auswahl` (dieselbe
-// Klick-Fixierungs-Infrastruktur wie Punkt 2 des Vorgänger-Auftrags für
-// Bänder - schalteKnotenAuswahl() ist das Knoten-Äquivalent zu
-// schalteLinkAuswahl()). Erneuter Klick auf denselben Knoten, Klick auf die
-// freie Fläche oder Escape setzen zurück (bereits bestehende, typ-neutrale
-// Logik, unverändert). Die Urkunden-Sidebar (js/utils/sidebar.js) wird
-// dadurch von KEINER Interaktion in diesem Modul mehr erreicht (Bänder
-// öffneten sie schon seit dem Vorgänger-Auftrag nicht mehr) - ihre
-// gesamte Verdrahtung (baueSidebarGeruest()/zeigeUrkundenSidebar()/
-// fuegeSidebarStyleEin()) wurde daher hier entfernt (sidebar.js selbst
-// bleibt unverändert, wird weiterhin von fünf anderen Bestand-Modulen
-// genutzt). Ebenso entfernt: die reinen Urkunden-Listen
-// (urkundenNachKategorie/urkundenNachOrtBucket) und `link.eintraege` -
-// wurden ausschließlich für die jetzt entfernte Sidebar-Anzeige befüllt,
-// nirgends sonst gelesen (siehe CHANGELOG).
+// Bedienung: Hover hebt vorübergehend hervor; Klick, Enter oder Leertaste auf einem Band oder Knoten fixiert die Hervorhebung in
+// `instanz.auswahl` (über Namen, damit sie Umschalten und Größenänderung übersteht). Zweiter Klick, Klick auf die freie
+// Fläche oder Esc heben sie auf. Jeder Knoten hat eine unsichtbare Klickfläche von mindestens MIN_KLICKFLAECHE_HOEHE px.
+// Das Modul öffnet keine Seitenleiste.
+// Entstehung, Messwerte und frühere Fassungen: docs/PROJEKTLOG.md und docs/CHANGELOG.md.
 
 import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
@@ -277,38 +31,37 @@ import { ersteKategorie, ermittleKategorienSortiertNachHaeufigkeit } from '../ut
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { ermittleVerfuegbareBreite, ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { EIGENES_ABDUNKELN_ATTR } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 const ANDERE_ORTE = 'Andere Orte';
 const KEIN_ORT = '(kein Ort)';
 const OHNE_KATEGORIE = '(ohne Kategorie)';
 
-// Punkt 0 (siehe Dateikopf-Kommentar) - EINHEITLICHE Zählbasis: Balkenhöhe,
+// Siehe Dateikopf - EINHEITLICHE Zählbasis: Balkenhöhe,
 // Tooltip und Bündelungsschwelle verwenden ausschließlich `summeAnzahl()`
 // (Bandbreiten-Summe über die - ggf. mehreren - ausgehenden/eingehenden
 // Kategorie-Ort-Verbindungen), keine zweite, abweichende Zählmethode mehr.
 const KATEGORIE_BUENDELUNG_SCHWELLE = 10;
 const ANDERE_KATEGORIEN = 'Andere Kategorien';
-// Punkt 4 (siehe Dateikopf-Kommentar) - ersetzt die frühere feste
-// "Top 20"-Regel (TOP_ORTE_ANZAHL) durch dieselbe schwellenwertbasierte
-// Bündelung wie bei den Kategorien.
+// Dieselbe schwellenwertbasierte Bündelung wie bei den Kategorien.
 // 2026-10-28 (Wunsch des Autors): 15 -> 17, damit Rehberg bei Krems (16) und Dürnstein (15) unter „Andere Orte“
 // fallen; einzeln bleiben die 11 Orte ab 18 Verbindungen (Wien bis Graz).
 const ORT_BUENDELUNG_SCHWELLE = 17;
-// Punkt 4 (siehe Dateikopf-Kommentar) - Obergrenze für die Bestandteile-
+// Siehe Dateikopf - Obergrenze für die Bestandteile-
 // Liste im "Andere Orte"-Tooltip (bis zu 243 einzelne Ortsnamen wären
 // unlesbar) - eigene, transparent dokumentierte Entscheidung, siehe
 // formatiereBuendelTooltip().
 const BUENDEL_TOOLTIP_MAX_ZEILEN = 15;
 
-// Punkt 1 (siehe Dateikopf-Kommentar): asymmetrische äußere
+// Siehe Dateikopf: asymmetrische äußere
 // Beschriftungsbereiche - Kategorien (links) großzügiger als Orte (rechts).
 const RAND_KATEGORIE = 180;
 const RAND_ORT = 110;
 const KNOTEN_BREITE = 14;
 const KNOTEN_ABSTAND = 3;
 const NEUTRALE_KNOTEN_FARBE = '#888888';
-// Punkt 2 (siehe Dateikopf-Kommentar) - Mindest-Klick-/Hover-Fläche je
+// Siehe Dateikopf - Mindest-Klick-/Hover-Fläche je
 // Knoten, unabhängig von seiner visuellen Balkendicke.
 const MIN_KLICKFLAECHE_HOEHE = 10;
 
@@ -320,7 +73,7 @@ const ABGEBLENDETE_OPAZITAET = 0.06;
 const KNOTEN_ABGEBLENDETE_OPAZITAET = 0.15;
 const LABEL_ABGEBLENDETE_OPAZITAET = 0.2;
 
-// Punkt 1 (siehe Dateikopf-Kommentar).
+// Siehe Dateikopf.
 const LABEL_SCHRIFTGROESSE = 13;
 const LABEL_SCHRIFTGROESSE_ORT_REDUZIERT = 11;
 const LABEL_PUFFER = 8; // Abstand Knotenkante -> Label-Textanfang
@@ -346,7 +99,7 @@ function ermittleOrtBuckets(record, ortBuendelSet) {
   return [...new Set(orteListe.map((ort) => (ortBuendelSet.has(ort) ? ANDERE_ORTE : ort)))];
 }
 
-// Punkt 4 (siehe Dateikopf-Kommentar) - rohe Nennungshäufigkeit je Ortsname
+// Siehe Dateikopf - rohe Nennungshäufigkeit je Ortsname
 // (ein Set pro Urkunde, Mehrfachnennung desselben Ortsnamens in einer
 // Urkunde zählt nur einmal) - unabhängig von jeder Bündelung, Grundlage für
 // ORT_BUENDELUNG_SCHWELLE weiter unten.
@@ -363,7 +116,7 @@ function summeAnzahl(links, feld, wert) {
   return links.filter((l) => l[feld] === wert).reduce((s, l) => s + l.anzahl, 0);
 }
 
-// Punkt 0 (siehe Dateikopf-Kommentar) - baut EINE Verbindungsliste
+// Siehe Dateikopf - baut EINE Verbindungsliste
 // (Erst-Kategorie x finaler Ort-Bucket, noch OHNE Kategorie-Bündelung) aus
 // den rohen Records. summeAnzahl() darauf angewendet liefert exakt dieselbe
 // Bandbreiten-Summe, die später (nach Kategorie-Bündelung) auch die
@@ -382,7 +135,7 @@ function baueRoheLinks(records, ortBuendelSet) {
   return Array.from(links.values());
 }
 
-// Punkt 1/4 (siehe Dateikopf-Kommentar) - Bestandteile-Liste eines
+// Siehe Dateikopf - Bestandteile-Liste eines
 // Sammelknotens für dessen Tooltip: häufigste zuerst, ab
 // BUENDEL_TOOLTIP_MAX_ZEILEN eine zusammenfassende "… und N weitere"-Zeile
 // statt (bei "Andere Orte") bis zu 243 einzelner Namen.
@@ -396,9 +149,9 @@ function formatiereBuendelTooltip(label, gesamt, bestandteile) {
 
 // Baut Kategorien-/Ort-Namenslisten und die Links dazwischen (samt
 // unsicherAnzahl aus record.orte_unsicher). `zeigeUnsicherheit` steuert
-// Punkt 3 (siehe Dateikopf-Kommentar): ist er falsch, werden
+// Siehe Dateikopf: ist er falsch, werden
 // "(ohne Kategorie)"/"(kein Ort)" (samt ihrer Links) am Ende herausgefiltert.
-// Punkt 5 (siehe Dateikopf-Kommentar): keine Urkunden-Listen mehr (weder
+// Siehe Dateikopf: keine Urkunden-Listen mehr (weder
 // urkundenNachKategorie/-OrtBucket noch link.eintraege) - wurden nur für die
 // jetzt entfernte Sidebar-Anzeige befüllt, Balkenhöhe/Tooltip kommen
 // stattdessen aus derselben Bandbreiten-Summe wie die Stapelung.
@@ -410,7 +163,7 @@ function baueSankeyDaten(records, { zeigeUnsicherheit }) {
 
   // Punkt 0/1: einheitliche Bandbreiten-Summe je ROHER (noch ungebündelter)
   // Erst-Kategorie, exakt via summeAnzahl() - Grundlage der Bündelungs-
-  // schwelle, siehe Dateikopf-Kommentar für die Gesundheit/Wirtschaft/
+  // schwelle, siehe PROJEKTLOG/CHANGELOG für die Gesundheit/Wirtschaft/
   // Bildung-und-Erziehung-Befunde.
   const kategorienRoh = ermittleKategorienSortiertNachHaeufigkeit(records.map((record) => ({ record })));
   const roheLinks = baueRoheLinks(records, ortBuendelSet);
@@ -505,7 +258,7 @@ function zeichneVerbindungsEbene(svg, links, positionenVon, positionenNach, xVon
     cursorNach.set(link.nach, link.y1Bottom);
   });
 
-  // Punkt 3 (siehe Dateikopf-Kommentar, ROOT-CAUSE-FIX): die gestrichelte
+  // Siehe Dateikopf: die gestrichelte
   // Randmarkierung hing bisher an `unsicherAnzahl` (Datierungs-Unsicherheit
   // einzelner Urkunden - ein GANZ ANDERES Feld) und erschien dadurch an
   // vielen Bändern. Jetzt ausschließlich an den beiden Unsicherheits-Knoten
@@ -532,6 +285,20 @@ function zeichneVerbindungsEbene(svg, links, positionenVon, positionenNach, xVon
       zeigeTooltip(zeilen.join('\n'), this, container);
     })
     .on('mouseleave blur', () => versteckeTooltip());
+
+  // Nachbesserung 6, Punkt 14 (Befund 6.11): Farbe nicht als einziges Merkmal - jedes Band, das breit genug ist, trägt
+  // am Ende vor dem Ort den Namen seiner Kategorie (dunkle Schrift mit hellem Rand, auf jeder Bandfarbe lesbar).
+  // Schmalere Bänder bleiben über Tooltip und Fokus zuordenbar. Für Hilfsmittel verborgen: das Band selbst nennt beides.
+  const MIN_BANDBREITE_BESCHRIFTUNG = 12;
+  svg.append('g').attr('class', 'sankey-band-beschriftung').attr('aria-hidden', 'true').style('pointer-events', 'none')
+    .selectAll('text')
+    .data(links.filter((d) => d.y1Bottom - d.y1Top >= MIN_BANDBREITE_BESCHRIFTUNG))
+    .join('text')
+    .attr('x', xNach - 6).attr('y', (d) => (d.y1Top + d.y1Bottom) / 2).attr('dy', '0.35em')
+    .attr('text-anchor', 'end').attr('font-size', 11)
+    .attr('fill', '#1a1a1a').attr('stroke', '#ffffff').attr('stroke-width', 3).attr('stroke-opacity', 0.85)
+    .style('paint-order', 'stroke')
+    .text((d) => d.von);
 
   return pfade;
 }
@@ -769,6 +536,7 @@ function aktualisiereHighlight() {
   });
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneSankey() {
   const { container, plotBereich, verbindungenZaehler, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -800,13 +568,14 @@ function zeichneSankey() {
   const xLinks = RAND_KATEGORIE;
   const xRechts = breite - RAND_ORT - KNOTEN_BREITE;
 
-  // Punkt 1 (siehe Dateikopf-Kommentar): Ort-Schriftgröße nur reduzieren,
+  // Siehe Dateikopf: Ort-Schriftgröße nur reduzieren,
   // wenn die Spalte bei voller Größe rechnerisch nicht hineinpassen würde -
   // die Kategorie-Spalte bleibt IMMER bei LABEL_SCHRIFTGROESSE.
   const benoetigteHoeheOrtStandard = orte.length * (LABEL_SCHRIFTGROESSE + 4);
   const ortSchriftgroesse = benoetigteHoeheOrtStandard > hoehePlot ? LABEL_SCHRIFTGROESSE_ORT_REDUZIERT : LABEL_SCHRIFTGROESSE;
 
   const svg = d3.select(plotBereich).append('svg')
+    .attr(EIGENES_ABDUNKELN_ATTR, '') // Nachbesserung 3, Punkt 4: Sankey dunkelt selbst ab (Bänder/Knoten), keine zweite Abdunkelung
     .attr('width', breite).attr('height', hoehePlot)
     .attr('viewBox', `0 0 ${breite} ${hoehePlot}`)
     .attr('role', 'group') // AUFTRAG D, Punkt 2 (axe nested-interactive): enthält bedienbare Elemente; aria-label bleibt
@@ -819,7 +588,7 @@ function zeichneSankey() {
     'Gestrichelter roter Rand kennzeichnet Bänder zu "(ohne Kategorie)"/"(kein Ort)".'
   );
 
-  // Punkt 2 (siehe Dateikopf-Kommentar): unsichtbares Hintergrund-Rect als
+  // Siehe Dateikopf: unsichtbares Hintergrund-Rect als
   // UNTERSTE Ebene - Klick auf die freie Fläche setzt eine fixierte Auswahl
   // zurück. Bänder/Knoten liegen als eigene, spätere Geschwister-Elemente
   // darüber - ein Klick DIREKT auf ein Band/einen Knoten erreicht diesen
@@ -835,7 +604,7 @@ function zeichneSankey() {
   );
   instanz.pfadeAuswahl = pfade;
 
-  // Punkt 2 (siehe Dateikopf-Kommentar): Klick fixiert/löst die Auswahl
+  // Siehe Dateikopf: Klick fixiert/löst die Auswahl
   // dieses EINEN Bandes um - über von/nach (nicht Objektreferenz) verglichen,
   // damit die Auswahl auch nach einem Redraw (neue Link-Objekte) gültig
   // bleibt. KEINE Sidebar mehr (das war vorher wie bei Knoten verdrahtet).
@@ -854,7 +623,7 @@ function zeichneSankey() {
       schalteLinkAuswahl(d);
     });
 
-  // Punkt 5 (siehe Dateikopf-Kommentar): Knotenklick fixiert jetzt dieselbe
+  // Siehe Dateikopf: Knotenklick fixiert jetzt dieselbe
   // Hervorhebung wie Knoten-Hover (aktualisiereHighlight() kennt
   // `aktiv.typ==='kategorie'|'ort'` bereits identisch für beide Quellen,
   // siehe dort) - Knoten-Äquivalent zu schalteLinkAuswahl() oben. KEINE
@@ -864,7 +633,7 @@ function zeichneSankey() {
     instanz.auswahl = schonAusgewaehlt ? null : { typ, name };
     aktualisiereHighlight();
   }
-  // Punkt 0 (siehe Dateikopf-Kommentar): Tooltip nutzt jetzt dieselbe
+  // Siehe Dateikopf: Tooltip nutzt jetzt dieselbe
   // Bandbreiten-Summe (kategorieSummen/ortSummen) wie die Balkenhöhe, keine
   // zweite Zählmethode mehr. Sammelknoten-Tooltip siehe
   // formatiereBuendelTooltip().
@@ -905,7 +674,7 @@ function zeichneSankey() {
   aktualisiereHighlight();
 }
 
-// Punkt 2 (siehe Dateikopf-Kommentar): Escape setzt eine fixierte Auswahl
+// Siehe Dateikopf: Escape setzt eine fixierte Auswahl
 // zurück - app-weiter document-Listener (analog zu infoButton.js' Muster),
 // in destroy() wieder entfernt.
 function handleEscape(event) {

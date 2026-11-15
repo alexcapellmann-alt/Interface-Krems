@@ -4,19 +4,18 @@
 // Hash-basierte Navigation, z.B.:
 //   #bestand
 //   #visualisierungen/urkunden
-//   #visualisierungen/urkunden/karte
-//   #visualisierungen/urkunden/karte?entity_typ=ort&entity_wert=Stein
+//   #visualisierungen/orte/karte
+//   #visualisierungen/orte/ortsliste?datensatz=ort:Stein
 //   #fuehrungen/ns-zeit
 //
-// Der Router liest/schreibt ausschließlich über die state.js-Funktionen
-// (Zugriffsregel Abschnitt 7) – nie direkt am internen Zustandsobjekt.
-
-import {
-  setAktiverTab,
-  setAktiveAnsicht,
-  setFilterEntity,
-  clearFilterEntity
-} from './state.js';
+// Nachbesserung 2, Punkt 4 (2026-11-15, Prüfung 14.11.2026, Befund 2.2; Entscheidung des Autors): Der Router
+// kennt state.js nicht mehr. Er zerlegt nur die Adresse und meldet jede Route an einen Rückruf, den app.js beim
+// Start übergibt; app.js trägt die Route in state.js ein. So sind router.js, state.js und dataLoader.js
+// voneinander unabhängig (Masterprompt Abschnitt 13.9).
+//
+// Nachbesserung 1 (2026-11-15, Prüfung 14.11.2026, Befund 8.2): Die im Masterprompt Abschnitt 7/8 geplanten
+// Entity-Parameter der Adresse und der zugehörige Entity-Filter im Zustand wurden nie von einer Ansicht
+// ausgewertet und sind entfernt. Kontext wird ausschließlich über ?datensatz=<typ>:<id> übergeben (js/utils/datensatzAufruf.js).
 
 // Zerlegt einen Hash-String in Pfadsegmente und Filter-Parameter.
 // Rein lesende Funktion, verändert nichts am Zustand – dadurch für sich
@@ -30,8 +29,6 @@ export function parseHash(hash) {
   return {
     tab: segmente[0] || null,
     segmente: segmente.slice(1),
-    entityTyp: params.get('entity_typ'),
-    entityWert: params.get('entity_wert'),
     // AUFTRAG "Führungen, Teil 2b": Datensatzaufruf (Stufe 2, siehe
     // js/utils/datensatzAufruf.js), Format "<typ>:<id>" - bewusst NICHT über
     // state.js gespiegelt (nur diese Route soll die Quelle sein, siehe
@@ -45,45 +42,24 @@ export function parseHash(hash) {
   };
 }
 
-// Baut aus Pfadsegmenten und optionalem Entity-Filter einen Hash-String.
-export function baueHash(segmente, entityFilter) {
-  let hash = '#' + segmente.filter(Boolean).join('/');
-  if (entityFilter && entityFilter.typ && entityFilter.wert) {
-    const params = new URLSearchParams({
-      entity_typ: entityFilter.typ,
-      entity_wert: entityFilter.wert
-    });
-    hash += '?' + params.toString();
-  }
-  return hash;
+// Baut aus Pfadsegmenten einen Hash-String.
+export function baueHash(segmente) {
+  return '#' + segmente.filter(Boolean).join('/');
 }
 
-function wendeRouteAufZustandAn(route) {
-  setAktiverTab(route.tab);
-  const letztesSegment = route.segmente[route.segmente.length - 1] || null;
-  setAktiveAnsicht(letztesSegment);
-
-  if (route.entityTyp && route.entityWert) {
-    setFilterEntity(route.entityTyp, route.entityWert);
-  } else {
-    clearFilterEntity();
-  }
-}
-
-// Startet den Router: übernimmt die aktuelle URL in den Zustand und reagiert
-// danach auf jede Hash-Änderung. Jeder Navigationsschritt über navigiereZu()
-// bzw. direkte Hash-Änderungen erzeugt automatisch einen Browser-History-Eintrag
-// (Standardverhalten von location.hash, siehe Abschnitt 8).
-export function starteRouter() {
+// Startet den Router: meldet die aktuelle URL an beiRoute(route) und danach jede Hash-Änderung. Jeder
+// Navigationsschritt über navigiereZu() bzw. direkte Hash-Änderungen erzeugt automatisch einen
+// Browser-History-Eintrag (Standardverhalten von location.hash, siehe Abschnitt 8).
+export function starteRouter(beiRoute) {
   window.addEventListener('hashchange', () => {
-    wendeRouteAufZustandAn(parseHash(location.hash));
+    beiRoute(parseHash(location.hash));
   });
-  wendeRouteAufZustandAn(parseHash(location.hash || '#bestand'));
+  beiRoute(parseHash(location.hash || '#bestand'));
 }
 
 // Navigiert zu einer neuen Route. segmente z.B. ['visualisierungen', 'urkunden', 'karte'].
-export function navigiereZu(segmente, entityFilter) {
-  location.hash = baueHash(segmente, entityFilter);
+export function navigiereZu(segmente) {
+  location.hash = baueHash(segmente);
 }
 
 export function aktuelleRoute() {

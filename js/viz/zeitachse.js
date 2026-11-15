@@ -123,7 +123,10 @@ import {
   fuegeBildschirmHinweisStyleEin
 } from '../utils/bildschirmHinweis.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { rechneSchrittweise } from '../utils/kraefteLayout.js';
+import { markiereSvg } from '../utils/vollstaendigkeit.js';
 
 // Auftrag "Geteilter Info-Button", Punkt 2 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
@@ -331,8 +334,11 @@ function ermittleZoomSkalenExtent(breite) {
 // die Höhe über zielHoehe hinaus, damit nichts gestaucht/überlappt wird).
 // forceX/forceY/forceCollide selbst, ihre Stärken und die Tick-Zahl bleiben
 // unverändert - das ist weiterhin derselbe, bereits bestätigte Algorithmus.
-function berechneBeeswarm(mitJahr, xSkalaBasis, zielHoehe) {
-  if (mitJahr.length === 0) return { knoten: [], hoehe: Math.max(MIN_PLOT_HOEHE, zielHoehe) };
+// Nachbesserung 2, Punkt 2 (2026-11-15): Die SIM_TICKS Schritte laufen nicht mehr in einer Schleife am Stück,
+// sondern über rechneSchrittweise() (js/utils/kraefteLayout.js); erzeugeBeeswarm() baut die angehaltene
+// Simulation, schliesseBeeswarmAb() übernimmt den bisherigen Rest. Ergebnis je sichtbarer Menge, Breite und
+// Höhe zwischengespeichert (schwarmFuer() unten).
+function erzeugeBeeswarm(mitJahr, xSkalaBasis, zielHoehe) {
 
   const mitteAnker = zielHoehe / 2;
   const knoten = mitJahr.map((eintrag) => ({
@@ -346,8 +352,10 @@ function berechneBeeswarm(mitJahr, xSkalaBasis, zielHoehe) {
     .force('y', d3.forceY(mitteAnker).strength(FORCEY_STAERKE))
     .force('collide', d3.forceCollide(COLLIDE_ABSTAND))
     .stop();
-  for (let i = 0; i < SIM_TICKS; i += 1) simulation.tick();
+  return { knoten, simulation };
+}
 
+function schliesseBeeswarmAb(knoten, xSkalaBasis, zielHoehe) {
   const [yMin, yMax] = d3.extent(knoten, (d) => d.y);
   const natuerlicheHoehe = (yMax - yMin) + 2 * PLOT_PADDING_Y;
 
@@ -366,6 +374,27 @@ function berechneBeeswarm(mitJahr, xSkalaBasis, zielHoehe) {
 
   const hoehe = Math.max(MIN_PLOT_HOEHE, zielHoehe, natuerlicheHoehe);
   return { knoten, hoehe };
+}
+
+// Zwischengespeicherter Schwarm oder Start der schrittweisen Berechnung (danach zeichneZeitachse() erneut).
+function schwarmFuer(mitJahr, xSkalaBasis, zielHoehe, breite) {
+  if (mitJahr.length === 0) return { knoten: [], hoehe: Math.max(MIN_PLOT_HOEHE, zielHoehe) };
+  const schluessel = `${Math.round(breite)}|${Math.round(zielHoehe)}|${mitJahr.map((d) => d.record.signatur).join(',')}`;
+  if (instanz.schwarm?.schluessel === schluessel) return instanz.schwarm.ergebnis;
+  if (instanz.schwarmBerechnung?.schluessel !== schluessel) {
+    instanz.schwarmBerechnung?.lauf.abbrechen();
+    const { knoten, simulation } = erzeugeBeeswarm(mitJahr, xSkalaBasis, zielHoehe);
+    const lauf = rechneSchrittweise(simulation, SIM_TICKS);
+    const berechnung = { schluessel, lauf };
+    instanz.schwarmBerechnung = berechnung;
+    lauf.fertig.then((ok) => {
+      if (!ok || !instanz || instanz.schwarmBerechnung !== berechnung) return;
+      instanz.schwarmBerechnung = null;
+      instanz.schwarm = { schluessel, ergebnis: schliesseBeeswarmAb(knoten, xSkalaBasis, zielHoehe) };
+      zeichneZeitachse();
+    });
+  }
+  return null;
 }
 
 // Punkt 4: exakt das in ganttDiagramm.js etablierte Muster (rescaleX() auf
@@ -643,6 +672,7 @@ function fuegeStyleEin(container) {
   container.appendChild(style);
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneZeitachse() {
   const { wurzel, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -729,7 +759,16 @@ function zeichneZeitachse() {
   // ermittleVerfuegbareHoehe() - reserveUnten: RAND.unten reproduziert exakt
   // dieselbe Formel wie zuvor (Regressionsschutz, Akzeptanzkriterium Punkt 1).
   const verfuegbareHoehe = ermittleVerfuegbareHoehe(plotBereich, { reserveUnten: RAND.unten });
-  const { knoten, hoehe: hoehePlot } = berechneBeeswarm(mitJahr, xSkalaBasis, verfuegbareHoehe);
+  const schwarm = schwarmFuer(mitJahr, xSkalaBasis, verfuegbareHoehe, breite);
+  if (!schwarm) {
+    const warte = document.createElement('p');
+    warte.className = 'zeitachse-berechnung';
+    warte.setAttribute('role', 'status');
+    warte.textContent = 'Die Zeitachse wird berechnet …';
+    plotBereich.appendChild(warte);
+    return;
+  }
+  const { knoten, hoehe: hoehePlot } = schwarm;
 
   const svg = d3.select(plotBereich).append('svg').attr('width', breite);
 
@@ -814,6 +853,8 @@ function zeichneZeitachse() {
     .attr('opacity', (d) => (
       instanz.ausgewaehltesRecord && d.record !== instanz.ausgewaehltesRecord ? HERVORHEBUNG_DIM_OPAZITAET : 1
     ));
+  markiereSvg(punkte, (d) => d.record); // Nachbesserung 3, Punkt 3
+  markiereHell(punkte, (d) => zeigeUnsicherheit && istRecordUnsicher(d.record)); // Nachbesserung 3, Punkt 4
   wireInteraktion(punkte, instanz.container);
   instanz.punkteAuswahl = punkte;
 
@@ -942,6 +983,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
+  instanz.schwarmBerechnung?.lauf.abbrechen();
   document.removeEventListener('click', behandleDokumentKlick);
   document.removeEventListener('keydown', behandleDokumentTaste);
   instanz.infoButton?.destroy();

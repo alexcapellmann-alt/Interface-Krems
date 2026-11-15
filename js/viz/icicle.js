@@ -1,7 +1,7 @@
 // js/viz/icicle.js
-// Icicle-Diagramm des Gesamtbestands, immer horizontal (Masterprompt Abschnitt
-// 13: Wert kodiert sich in der BREITE, nicht in der Höhe - die Höhe kodiert nur
-// die Tiefe/Zeile). Modul-Interface siehe Abschnitt 5. Gleiche Datengrundlage
+// Icicle-Diagramm des Gesamtbestands, immer vertikal (Masterprompt Abschnitt
+// 13: Ebenen untereinander, der Wert kodiert sich in der BREITE, nicht in der Höhe - die Höhe kodiert nur
+// die Tiefe/Zeile; Kommentar berichtigt in Nachbesserung 2, Punkt 9, 2026-11-15). Modul-Interface siehe Abschnitt 5. Gleiche Datengrundlage
 // wie treemap.js/sunburst.js, siehe js/utils/bestandsHierarchie.js.
 //
 // Auf denselben funktionalen/gestalterischen Stand wie treemap.js/sunburst.js
@@ -306,6 +306,7 @@ function waehleBestand(datenKnoten) {
   oeffneSidebarModul(instanz.sidebar, datenKnoten.record, { kategorieName, kategorieFarbe });
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneIcicle() {
   const { svgBereich, hierarchieDaten, options, aktuelleKategorieDaten } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;

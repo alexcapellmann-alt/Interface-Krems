@@ -2321,7 +2321,7 @@ leonnhart_griess;Leonnhart Griess;Bürgerbuch;1;1556;1556;0;;BB-0669;;buerger;Ba
 leonnhart_zerer;Leonnhart Zerer;Bürgerbuch;1;1549;1549;0;;BB-0324;;buerger;;
 leopold_1373;Leopold;Urkunden;1;1373;1373;0;StaAKr-0045;;;buerger;;
 leopold_1795;Leopold;Urkunden;1;1795;1795;0;StaAKr-0898;;;buerger;;
-leopold_behaim;Leopold Behaim;Urkunden;1;1539;1539;0;StaAKr-0771;;;buerger;;"Möglicherweise identisch mit der Bürgerbuch-Person ""leopold_behaim_bb1551"" (dort 1551 registriert, 12 Jahre Abstand): gleicher Name, ""Bürger zu Krems"" in beiden Quellen, kein Widerspruch feststellbar, aber auch kein eindeutiger Beleg. Nicht zusammengeführt."
+leopold_behaim;Leopold Behaim;Urkunden;1;1539;1539;0;StaAKr-0771;;;buerger;;"personen_id: Möglicherweise identisch mit der Bürgerbuch-Person ""leopold_behaim_bb1551"" (dort 1551 registriert, 12 Jahre Abstand): gleicher Name, ""Bürger zu Krems"" in beiden Quellen, kein Widerspruch feststellbar, aber auch kein eindeutiger Beleg. Nicht zusammengeführt."
 leopold_behaim_bb1551;Leopold Behaim;Bürgerbuch;1;1551;1551;0;;BB-0398;;buerger;Binder;
 leopold_drescher;Leopold Drescher;Urkunden;1;1535;1535;0;StaAKr-0738b;;;buerger;;
 leopold_erndorffer;Leopoldt Arndorffer|Leopoldt Erndorffer;Bürgerbuch;2;1589;1589;0;;BB-2142|BB-2187;;buerger;Messerschmied;
@@ -2963,7 +2963,7 @@ paul_holnhueber;Paul Holnhueber;Bürgerbuch;1;1584;1584;0;;BB-2021;;buerger;;
 paul_kampp_von_lengenfeld;Paul Kampp von Lengenfeld;Urkunden;1;1511;1511;0;StaAKr-0579;;;buerger;;
 paul_kochel;Paul Köchel;Bürgerbuch;1;1578;1578;0;;BB-1756;;buerger;;
 paul_kraudt;Paul Kraudt|Paul Kraut;Bürgerbuch;2;1574;1575;1;;BB-1487|BB-1574;;buerger;Schneider;
-paul_krautwurm;Paul Krautwurm|Paul der Krautwurm;Urkunden;6;1359;1382;23;StaAKr-0033|StaAKr-0034|StaAKr-0037|StaAKr-0040|StaAKr-0042|StaAKr-0053;;;buerger;;Die Nennung von 1382 (StaAKr-0053) wird trotz eines Abstands von sechzehn Jahren zur vorherigen Nennung (1366) als dieselbe Person gewertet.
+paul_krautwurm;Paul Krautwurm|Paul der Krautwurm;Urkunden;6;1359;1382;23;StaAKr-0033|StaAKr-0034|StaAKr-0037|StaAKr-0040|StaAKr-0042|StaAKr-0053;;;buerger;;personen_id: Die Nennung von 1382 (StaAKr-0053) wird trotz eines Abstands von sechzehn Jahren zur vorherigen Nennung (1366) als dieselbe Person gewertet.
 paul_lauber;Paull Lauber;Bürgerbuch;1;1587;1587;0;;BB-2079;;buerger;Bäcker;
 paul_leittner;Paull Leittner;Bürgerbuch;1;1582;1582;0;;BB-1934;;buerger;;
 paul_lucas;Paul Lucas;Bürgerbuch;1;1551;1551;0;;BB-0428;;buerger;Ziegler;
@@ -3439,7 +3439,7 @@ stephan_mayrhoffer;Steffan Mayrhoffer;Bürgerbuch;1;1597;1597;0;;BB-2323;;buerge
 stephan_mitterndoerffer;Stephan Mitterndörffer;Urkunden;1;1448;1448;0;StaAKr-0298;;;buerger;;
 stephan_nagl;Steffan Nagl;Bürgerbuch;2;1548;1548;0;;BB-0251|BB-0264;;buerger;;
 stephan_pranntmair;Stephan Pranntmair;Bürgerbuch;1;1556;1556;0;;BB-0663;;buerger;Zimmermann;
-stephan_pranntner;Stephan Pranntner;Urkunden;1;1548;1548;0;StaAKr-0799;;;buerger;;"Möglicherweise identisch mit der Bürgerbuch-Person ""stephan_pranntner_bb1544"" (dort 1544 registriert, 4 Jahre Abstand): gleicher Name, ""Bürger zu Krems"" in beiden Quellen, kein Widerspruch feststellbar, aber auch kein eindeutiger Beleg. Nicht zusammengeführt."
+stephan_pranntner;Stephan Pranntner;Urkunden;1;1548;1548;0;StaAKr-0799;;;buerger;;"personen_id: Möglicherweise identisch mit der Bürgerbuch-Person ""stephan_pranntner_bb1544"" (dort 1544 registriert, 4 Jahre Abstand): gleicher Name, ""Bürger zu Krems"" in beiden Quellen, kein Widerspruch feststellbar, aber auch kein eindeutiger Beleg. Nicht zusammengeführt."
 stephan_pranntner_bb1544;Steffan Pranntner;Bürgerbuch;1;1544;1544;0;;BB-0148;;buerger;Kürschner;
 stephan_puxpaemb;Steffan Puxpämb;Bürgerbuch;1;1596;1596;0;;BB-2267;;buerger;Schiffmann;
 stephan_rachofer;Stephan Rachofer;Bürgerbuch;1;1582;1582;0;;BB-1917;;buerger;;

@@ -13,6 +13,7 @@
 
 import { CAT_COLORS } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
+import { lesbareAnmerkung } from '../utils/uncertainty.js';
 
 let instanz = null; // { container, records, options } – ein aktiver Bubble Chart pro Modul-Ladung
 
@@ -25,8 +26,7 @@ function baueTooltip(record) {
     `${record.quelle || 'unbekannte Quelle'}, ${Number(record.anzahl_nennungen) || 0} Nennung(en)`
   ];
   if (record.unsicherheit_anmerkung) {
-    const anmerkung = Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung.join(' | ') : record.unsicherheit_anmerkung;
-    zeilen.push(anmerkung);
+    zeilen.push(lesbareAnmerkung(record.unsicherheit_anmerkung));
   }
   return zeilen.join('\n');
 }

@@ -301,6 +301,7 @@ function baueIconListe(eintraege, onAktivieren) {
 // gesamte Kette längst verlassen hat.
 const KARENZZEIT_MS = 120;
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Baustein-Fabrik (Masterprompt §5): die inneren Handler teilen Zustand über die Closure; einzeln stünden sie ohne diesen Zusammenhang.
 export function erzeugeFlyoutPanel(ausloeser, { klasse, rendereInhalt, schliesstBeiWegbewegen = false }) {
   let offen = false;
   let schliessTimer = null;

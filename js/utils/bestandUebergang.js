@@ -118,6 +118,7 @@ const sanft = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 // Übergang abspielen: `vorher` aus erfasseFormen(), `container` mit der neu gezeichneten Ansicht.
 // Gibt ein Promise zurück, das nach dem Ende (oder sofort, ohne Animation) erfüllt ist.
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): ordnet alte und neue Formen einander zu und spielt den Übergang ab; Zuordnung und Animation teilen dieselben Messwerte.
 export function spieleUebergang(vorher, container) {
   return new Promise((fertig) => {
     if (!vorher?.size || !container || ohneAnimation()) { fertig(); return; }

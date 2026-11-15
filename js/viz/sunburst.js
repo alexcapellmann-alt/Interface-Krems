@@ -71,6 +71,8 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
+import { istUnvollstaendig, UNVOLLSTAENDIG_KLASSE } from '../utils/vollstaendigkeit.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
@@ -559,6 +561,7 @@ function zeichneZentrum(svg, container, gesamtAnzahl) {
   wireTooltip(gruppe, () => `Zurück zu allen Kategorien (aktuell: ${name})`, container);
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneSunburst() {
   const { svgBereich, hierarchieDaten, options, aktuelleKategorieDaten } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -691,6 +694,7 @@ function zeichneSunburst() {
   // Änderung am Fokus-Indikator) - die bestehende CSS-Regel .sunburst-
   // segment:focus{outline:none} (siehe fuegeStyleEin()) greift dadurch
   // unverändert für alle drei Ringe.
+  // Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet einen Ring mit allen Segmenten; Farbe, Rand, Beschriftung, Tooltip und Klickverhalten hängen vom selben Ring- und Kategoriekontext ab.
   ringe.forEach(({ knoten, art, klick }) => {
     const segmente = svg.selectAll(`g.sunburst-segment-${art}`)
       .data(knoten)
@@ -703,6 +707,7 @@ function zeichneSunburst() {
       // dort ebenfalls ohne tabindex/role im nicht-interaktiven Zustand).
       .attr('tabindex', klick === 'inert' ? null : 0);
 
+    // Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet ein Segment mit Farbe, Rand, Beschriftung, Tooltip und Klickverhalten aus demselben Segmentkontext.
     segmente.each(function jedesSegment(d) {
       const gruppe = d3.select(this);
       const kategorieDaten = inKategorieAnsicht ? aktuelleKategorieDaten : kategorieDatenVonKnoten(d);
@@ -741,6 +746,7 @@ function zeichneSunburst() {
       const textFarbe = passendeTextfarbe(farbe);
       const ruheZustand = () => randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie, blatt: !d.children });
       const stil = ruheZustand();
+      markiereHellElement(gruppe.node(), !d.children && zeigeUnsicherheit && d.data.record?.daten_unsicher); // Nachbesserung 3, Punkt 4
 
       const pfad = gruppe.append('path')
         .attr('class', 'sunburst-pfad')
@@ -748,7 +754,8 @@ function zeichneSunburst() {
         .attr('fill', farbe)
         .attr('stroke', stil.stroke)
         .attr('stroke-width', stil.breite)
-        .attr('stroke-dasharray', stil.dasharray);
+        .attr('stroke-dasharray', stil.dasharray)
+        .classed(UNVOLLSTAENDIG_KLASSE, !d.children && istUnvollstaendig(d.data.record)); // Nachbesserung 3, Punkt 3
 
       if (ohneKategorie) {
         gruppe.append('path').attr('d', bogen(d)).attr('fill', 'url(#sunburst-ohne-kategorie-muster)').attr('pointer-events', 'none');
@@ -793,7 +800,7 @@ function zeichneSunburst() {
           });
       } else if (klick === 'zoomen') {
         gruppe.style('cursor', 'zoom-in').attr('role', 'button')
-          .attr('aria-label', `Kategorie ${kategorieName} öffnen`)
+          .attr('aria-label', d.data.name === kategorieName ? `Kategorie ${kategorieName} öffnen` : `${d.data.name}: Kategorie ${kategorieName} öffnen`) // Nachbesserung 6, Punkt 15: Name enthält den sichtbaren Text
           .on('click', () => wechsleZuKategorie(kategorieDaten))
           .on('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); wechsleZuKategorie(kategorieDaten); }

@@ -283,6 +283,7 @@ function istTastaturZielGesperrt(target) {
   return Boolean(target.closest('.unsicherheit-hinweis-panel, .fuehrung-beleg-scroll, .fuehrung-erzaehltext'));
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Einstieg des Moduls (Modul-Interface, Masterprompt §13): baut Gerüst, Instanz und Ereignisse in fester Reihenfolge auf; die Schritte hängen voneinander ab.
 export function render(container, fuehrung, initialeNr) {
   container.innerHTML = '';
   fuegeSidebarStyleEin(container);

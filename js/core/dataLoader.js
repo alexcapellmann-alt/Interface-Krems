@@ -11,6 +11,10 @@
 // Spaltennamen einzelner Tabellen (die stehen in docs/SCHEMA.md) und
 // gruppiert/aggregiert/verrechnet nichts vor (Abschnitt 6).
 
+// Nachbesserung 7, Punkt 1: kleines Blattmodul ohne eigene Importe (verlängert die Importkette beim Start nur um eine
+// winzige Datei; die Ansichts-Prüfung datenAnforderungen.js bleibt wie in PROJEKTLOG 57 begründet außen vor)
+import { fehlendeMindestfelder } from '../utils/vollstaendigkeit.js';
+
 const MUSTER_UNSICHER_SPALTE = /^(.+)_unsicher$/;
 
 // AUFTRAG B2 (Prüfbericht Punkt 3): Spaltenprüfung beim Laden. Der Loader
@@ -148,6 +152,7 @@ function istLeereZeile(rohzeile, spaltennamen) {
 }
 
 // Lädt eine CSV-Datei und liefert { records, schema, errors } (Abschnitt 6).
+// Jeder Datensatz trägt zusätzlich `_quelle` = Dateiname (Nachbesserung 3, Punkt 3).
 export async function ladeCSV(pfad) {
   let antwort;
   try {
@@ -173,13 +178,23 @@ export async function ladeCSV(pfad) {
 
   const records = [];
   const errors = [];
+  const quellname = String(pfad).split(/[\/]/).pop().split('?')[0];
 
   rohdaten.forEach((rohzeile, index) => {
     if (istLeereZeile(rohzeile, spaltennamen)) {
       errors.push({ zeile: index + 2, grund: 'Zeile ist vollständig leer', rohzeile });
       return;
     }
-    records.push(leiteDatensatzAb(rohzeile, spaltennamen));
+    const datensatz = leiteDatensatzAb(rohzeile, spaltennamen);
+    // Nachbesserung 3, Punkt 3: nur der Dateiname, generisch (keine Spaltenkenntnis, kein Import); welche
+    // Felder Mindestfelder sind, weiß js/utils/vollstaendigkeit.js.
+    datensatz._quelle = quellname;
+    records.push(datensatz);
+    // Nachbesserung 7, Punkt 1 (Befund 3.1, Masterprompt §6): Zeilen mit leerem Mindestfeld (ID/Signatur, Bezeichnung;
+    // js/utils/vollstaendigkeit.js) zusätzlich in `errors` - mit Zeile, Spalte und Grund. Die Zeile bleibt in `records`.
+    fehlendeMindestfelder(datensatz).forEach((spalte) => {
+      errors.push({ zeile: index + 2, spalte, grund: `Pflichtwert fehlt: ${spalte}`, rohzeile });
+    });
   });
 
   const schema = leiteSchemaAb(rohdaten, spaltennamen);

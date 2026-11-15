@@ -227,10 +227,14 @@
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis, loeseOrteAuf } from '../utils/urkundenOrte.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
+import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenDetail, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 import { parseJahr } from '../utils/urkundenZeit.js';
 import { ladeCSV } from '../core/dataLoader.js';
 import { kartenStartpunkt, infotextFuerModul } from '../core/archivKonfiguration.js';
+import { lesbareAnmerkung } from '../utils/uncertainty.js';
+import { markiereElement, mitUnvollstaendigHinweis } from '../utils/vollstaendigkeit.js';
 import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js'; // Partizipations-Modul (2026-10-27)
 
 // Punkt 5 (Vorschlag, siehe Selbstauskunft im Chat - noch nicht freigegeben):
@@ -279,7 +283,7 @@ function baueOrtsAggregation(records, ortsVerzeichnis) {
     const { aufgeloest } = loeseOrteAuf(record, ortsVerzeichnis);
     aufgeloest.forEach((ort) => {
       if (!aggregation.has(ort.name)) {
-        aggregation.set(ort.name, { name: ort.name, lat: ort.lat, lon: ort.lon, anzahl: 0, eintraege: [] });
+        aggregation.set(ort.name, { name: ort.name, lat: ort.lat, lon: ort.lon, ortRecord: ort.ortRecord, anzahl: 0, eintraege: [] });
       }
       const eintrag = aggregation.get(ort.name);
       eintrag.anzahl += 1;
@@ -369,6 +373,7 @@ async function ladeUnsichereOrteDaten(records) {
     const eintrag = {
       id: r.orte_id || r.orte,
       name: r.orte,
+      ortRecord: r,
       anmerkung: r.unsicherheit_anmerkung || '(keine Anmerkung hinterlegt)',
       urkunden: Array.from(new Set([...ausAnmerkung, ...ausOrtsname])),
       lat: hatKoordinaten ? lat : null,
@@ -391,14 +396,14 @@ function baueOrtAbschnitt(ort) {
   const block = document.createElement('div');
   block.className = 'karte-sidebar-ort';
 
-  const titel = document.createElement('h5');
+  const titel = document.createElement('h4'); // Nachbesserung 6, Punkt 7: h4 unter dem h3 des Abschnitts (vorher h5)
   titel.className = 'karte-sidebar-ort-titel';
   titel.textContent = ort.name;
   block.appendChild(titel);
 
   const anmerkung = document.createElement('p');
   anmerkung.className = 'karte-sidebar-ort-anmerkung';
-  anmerkung.textContent = ort.anmerkung;
+  anmerkung.textContent = lesbareAnmerkung(ort.anmerkung);
   block.appendChild(anmerkung);
 
   // Partizipations-Modul (2026-10-27): Vorschlag zu diesem Ort (z. B. Identifizierung, Koordinaten)
@@ -449,7 +454,7 @@ function baueOrtAbschnitt(ort) {
 function baueOrteAbschnittsListe(titelText, orte) {
   const abschnitt = document.createElement('section');
   abschnitt.className = 'karte-sidebar-abschnitt';
-  const titel = document.createElement('h4');
+  const titel = document.createElement('h3'); // Nachbesserung 6, Punkt 7 (heading-order): h3 statt h4 direkt unter dem h2 der Seitenleiste
   titel.className = 'karte-sidebar-abschnitt-titel';
   titel.textContent = `${titelText} (${orte.length})`;
   abschnitt.appendChild(titel);
@@ -506,7 +511,7 @@ function fuegeStyleEin(container) {
     .karte-regler-label { font-size: var(--fs-sm); color: var(--text-muted); }
     .karte-regler-hinweis { font-size: var(--fs-sm); color: var(--text-muted); font-style: italic; }
     .karte-regler-anzeige { font-size: var(--fs-sm); font-weight: 600; min-width: 100px; }
-    .karte-slider-wrapper { position: relative; width: 320px; height: 24px; }
+    .karte-slider-wrapper { position: relative; width: min(320px, 100%); height: 24px; } /* Nachbesserung 6, Punkt 16: bei schmalen Fenstern nicht breiter als der Platz */
     .karte-slider { position: absolute; top: 0; left: 0; width: 100%; height: 24px; margin: 0; background: none;
       pointer-events: none; -webkit-appearance: none; appearance: none; }
     .karte-slider::-webkit-slider-runnable-track { height: 4px; background: var(--border); border-radius: 2px; }
@@ -530,7 +535,7 @@ function fuegeStyleEin(container) {
     .karte-sidebar-ort { margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border);
       outline: 3px solid transparent; outline-offset: 3px; border-radius: var(--radius);
       transition: background-color .5s ease, outline-color .5s ease; }
-    .karte-sidebar-ort-titel { margin: 0 0 4px 0; font-size: var(--fs-sm); }
+    .karte-sidebar-ort-titel { margin: 0 0 4px 0; font-size: var(--fs-sm); font-family: var(--font-ui); line-height: normal; font-weight: 700; }
     .karte-sidebar-ort-anmerkung { margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--text-muted); font-style: italic; }
     .karte-sidebar-ort-keine-urkunde { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); }
     .karte-sidebar-urkunden-liste { list-style: none; margin: 0; padding: 0; font-size: var(--fs-sm); display: flex; flex-direction: column; gap: 4px; }
@@ -572,6 +577,7 @@ function fuegeStyleEin(container) {
 // "Anwenden"-Button - jedes 'input'-Ereignis plant über planeLiveUpdate()
 // eine entprellte aktualisiereMarker()-Aktualisierung. `deaktiviert`
 // (Punkt 4): true während `options.showUncertainty` aktiv ist.
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): baut Zeitregler, Abspiel-Taste und Anzeige mit ihren Ereignissen; alle bedienen denselben Zeitraum-Zustand.
 function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
   const reglerGruppe = document.createElement('div');
   reglerGruppe.className = deaktiviert ? 'karte-regler-gruppe deaktiviert' : 'karte-regler-gruppe';
@@ -716,6 +722,13 @@ function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
   return reglerGruppe;
 }
 
+// Nachbesserung 6, Punkt 12: Leaflet legt für die Marker ein eigenes SVG an (ohne Rolle, Namen, Beschreibung). Es
+// enthält die fokussierbaren Ortspunkte, daher Rolle `group`; Name aus dem Info-Knopf-Text, Beschreibung aus dem Info-Text.
+function beschreibeKartenebene() {
+  const ebene = instanz?.karte?.getPanes?.().overlayPane?.querySelector('svg');
+  if (ebene) beschreibeSvgAusInfotext(ebene, 'karte', { rolle: 'group', titel: 'Karte der Orte mit Urkunden' });
+}
+
 function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
   instanz.markerLayer.clearLayers();
   orteListe.forEach((ortsEintrag) => {
@@ -745,9 +758,11 @@ function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
     const element = marker.getElement();
     if (element) {
       element.setAttribute('tabindex', '0');
-      const tooltipText = istUnsicherModus
+      const tooltipText = mitUnvollstaendigHinweis(ortsEintrag.ortRecord, istUnsicherModus
         ? [ortsEintrag.name, `${ortsEintrag.urkunden.length} unsichere Urkunde(n)`].join('\n')
-        : baueMarkerTooltip(ortsEintrag);
+        : baueMarkerTooltip(ortsEintrag));
+      markiereElement(element, ortsEintrag.ortRecord); // Nachbesserung 3, Punkt 3
+      markiereHellElement(element, istUnsicherModus); // Nachbesserung 3, Punkt 4: im Modus zeigt die Karte nur unsichere Orte
       element.addEventListener('mouseenter', () => zeigeTooltip(tooltipText, element, instanz.mapDiv));
       element.addEventListener('focus', () => zeigeTooltip(tooltipText, element, instanz.mapDiv));
       element.addEventListener('mouseleave', () => versteckeTooltip());
@@ -774,6 +789,7 @@ function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
 // aufgerufen.
 function aktualisiereMarker() {
   const { options } = instanz;
+  queueMicrotask(beschreibeKartenebene); // Nachbesserung 6, Punkt 12: Beschreibung aus dem Info-Text
   const zeigeUnsicherheit = options.showUncertainty;
 
   if (zeigeUnsicherheit) {
@@ -837,7 +853,10 @@ async function zeichneKarte() {
 
   const start = kartenStartpunkt();
   // zoomSnap 0.25 (2026-10-28): die Startansicht (alle Orte um Krems) passt in Viertelstufen enger als in ganzen
-  const karte = L.map(mapDiv, { zoomSnap: 0.25 });
+  // Nachbesserung 2, Punkt 3 (2026-11-15): ohne Zwischenbilder bei prefers-reduced-motion: reduce, wie
+  // js/utils/statischeKarte.js (Prüfung 14.11.2026, Befund 6.9).
+  const ohneBewegung = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const karte = L.map(mapDiv, { zoomSnap: 0.25, ...(ohneBewegung ? { zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false, inertia: false } : {}) });
   if (start) karte.setView(start.zentrum, start.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'

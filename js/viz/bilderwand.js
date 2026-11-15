@@ -9,9 +9,9 @@
 //   Filter: Kategorien, Personen (je eine durchsuchbare Wortwolke der 40 häufigsten).
 //   Innerhalb eines Filters ODER (nur Orte: Mehrfachauswahl), zwischen Filtern UND.
 // - Mit aktivem Filter teilen sich die Säulen: passende Urkunden oben, übrige gedämpft unten.
-// - Hintergrund: Karte Niederösterreichs und der Umgebung (Grenzen, Flüsse, Seen;
-//   vendor/karten/niederoesterreich.json) mit den
-//   Orten aus orte.csv als Punkten; Mouseover über einen Begriff hebt die betroffenen Orte hervor.
+// - Hintergrund: Grundkarte der Region (Grenzen, Flüsse, Seen; Pfad aus data/archiv.csv, `bilderwand_karte_pfad`,
+//   Ausschnitt aus der Begleitdatei <karte>.darstellung.json) mit den Orten aus orte.csv als Punkten;
+//   Mouseover über einen Begriff hebt die betroffenen Orte hervor. Ohne Karte bleibt nur die Wand.
 // - Mausrad oder +/− zoomt, Ziehen verschiebt, Klick öffnet die Urkunde in der Sidebar.
 //
 // Bilder: ein vorab erzeugtes Sprite-Sheet (fotos/sprites, eine Anfrage statt rund 1 000) füllt die
@@ -25,10 +25,13 @@
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { toggleUnsicherheitModus, getZustand } from '../core/state.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
-import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { infotextFuerModul, konfigurationswert } from '../core/archivKonfiguration.js';
+import { erzeugeHinweisBalken } from '../utils/hinweisBalken.js';
+import { ladeKartenDarstellung, ausschnittAus, sichtfenster } from '../utils/kartenDarstellung.js'; // Nachbesserung 5
 import { ermittleBildUrls } from '../utils/bilder.js';
 import { ladeGecachteCSV } from '../core/datenCache.js';
 import { alsText } from '../utils/textwert.js';
+import { istUnvollstaendig, unvollstaendigText } from '../utils/vollstaendigkeit.js';
 import {
   baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenDetail, schliesseSidebar as schliesseSidebarModul
 } from '../utils/sidebar.js';
@@ -42,26 +45,30 @@ const BAND_PX = 24;          // Band für die Zeitachse
 const TOP_PX = 16, PAD_X = 24;
 const WOLKE_MIN = 5;         // Orte ab so vielen Nennungen stehen in der schrägen Wolke
 const WOLKE_WINKEL = 38;
+const ORT_MIN_HOEHE = 25; // Nachbesserung 6: Mindestabstand der schrägen Ortsnamen senkrecht zur Schrift (Klickfläche 24 px)
 const TOP_N = 40;            // Einträge je Filterwolke
 const MIP_W = [3, 6, 12, 24, 48]; // Zellbreiten der Atlas-Stufen in Pixeln
 const LADE_PARALLEL = 6;
-const SPRITE_BILD = 'fotos/sprites/urkunden.jpg';
-const SPRITE_MANIFEST = 'fotos/sprites/urkunden.json';
+// Nachbesserung 4, Punkt 3: Fotoindex (Sprite-Manifest) und Grundkarte aus data/archiv.csv (`bilderwand_fotoindex_pfad`,
+// `bilderwand_karte_pfad`); das Sprite-Bild liegt neben dem Index (Eintrag `bild` im Index, sonst derselbe Name mit .jpg).
+// Leerer Eintrag: kein Abruf. Fehlt der Fotoindex, erscheint ein Hinweis statt grauer Kacheln ohne Erklärung.
+const pfadAus = (schluessel) => String(konfigurationswert(schluessel) || '').trim();
 const DAUER = 750;
 const FARBE = {
   buehne: '#17222c', papier: '#ebe3cf', text: '#d9d4c7', gedaempft: '#9a978f', linie: '#3a4550',
   akzent: '#f2d48a', flaeche: '#6f6a5f', unsicher: '#e0675a', karte: '#9a978f',
+  // Nachbesserung 3, Punkt 3: unvollständiger Datensatz - Bernstein in der hellen Bühnen-Variante (wie die
+  // Prüfregel-Markierung der Führungen auf dunkler Bühne), durchgezogen; die Unsicherheit bleibt rot-gestrichelt
+  unvollstaendig: '#ffb86b',
   kreis: '#b8964f' // Ortskreise der Karte, etwas dunkler als `akzent` (Wunsch des Autors, 2026-10-28)
 };
 const SCHRIFT = "'Inter', system-ui, sans-serif";
 // Grundkarte Niederösterreich und Umgebung (Natural Earth, erzeugt mit
 // Interface-Krems-Testserver\karte_niederoesterreich.py): [Ebene, Linienbreite in px, Deckkraft] -
 // zurückhaltend wie der Stadtplan des Theaterzettel-Prototyps
-const KARTE_PFAD = 'vendor/karten/niederoesterreich.json';
 const KARTE_EBENEN = [['laender', 0.8, 0.10], ['fluesse', 0.8, 0.11], ['seen', 0.8, 0.12], ['grenzen', 1.2, 0.16], ['fluesse_gross', 2.6, 0.17]];
-// Ausschnitt (Grad): Niederösterreich mit unmittelbarer Umgebung (Wien, Südböhmen/-mähren, Westslowakei,
-// Burgenland, Oberösterreich, Steiermark); weiter entfernte Orte liegen außerhalb des Bildes
-const KARTE_FOKUS = { W: 14.0, E: 17.4, S: 47.25, N: 49.15 };
+// Ausschnitt: „bilderwand“ in der Begleitdatei der Karte (Nachbesserung 5, js/utils/kartenDarstellung.js); ohne sie der ganze
+// Bereich der Kartendatei, ohne Karte die Ausdehnung aller Orte mit Urkunden
 
 const ICONS = {
   ort: '<path d="M8 15s5-5 5-9A5 5 0 0 0 3 6c0 4 5 9 5 9z"/><circle cx="8" cy="6" r="1.8"/>',
@@ -118,7 +125,7 @@ function bereiteDatenVor(records) {
     return {
       i, record: r, signatur: alsText(r.signatur), datum: alsText(r.datum), sort: alsText(r.datum_normiert) || alsText(r.jahr),
       m: Number.isFinite(jahr) ? (Math.floor(jahr / JAHRZEHNT) * JAHRZEHNT - start) / JAHRZEHNT : saeulen,
-      bild: ermittleBildUrls(r)[0] || null, unsicher: istRecordUnsicher(r),
+      bild: ermittleBildUrls(r)[0] || null, unsicher: istRecordUnsicher(r), unvollstaendig: istUnvollstaendig(r),
       f: Object.fromEntries(facetten.map((f) => [f.key, f.z[i]])),
       x: 0, y: 0, d: 0, tx: 0, ty: 0, td: 0, fx: 0, fy: 0, fd: 0, sx: 0, sy: 0, farbe: FARBE.flaeche
     };
@@ -161,6 +168,22 @@ function clearAll() {
   I.userZoomed = false;
   update();
 }
+// Der Infotext nennt die Orte der Wolke ({bw_wolke}, ab {bw_ab} Nennungen). Seit der Mindest-Klickfläche (Nachbesserung 6)
+// passen je nach Fensterbreite weniger Orte hinein; die Zahlen kommen deshalb aus den tatsächlich gezeigten Orten und
+// werden bei geänderter Breite neu eingesetzt (nur wenn sich etwas ändert; ein offener Info-Text bleibt sonst stehen).
+function aktualisiereInfotext() {
+  const sichtbar = I.wolkeSichtbar || [];
+  const ab = sichtbar.length ? Math.min(...sichtbar.map((j) => I.wolkeNennungen[j])) : WOLKE_MIN;
+  const schluessel = `${sichtbar.length}/${ab}`;
+  if (schluessel === I.infoSchluessel) return;
+  I.infoSchluessel = schluessel;
+  const anfrage = (I.infoAnfrage = (I.infoAnfrage || 0) + 1);
+  infotextFuerModul('bilderwand', { bw_wolke: sichtbar.length, bw_ab: ab, bw_alle: I.wolke.length, bw_min: WOLKE_MIN }).then((cfg) => {
+    if (!I || !cfg || anfrage !== I.infoAnfrage || !I.dom.info.isConnected) return;
+    I.infoButton?.destroy();
+    I.infoButton = erzeugeInfoButton(I.dom.info, cfg);
+  });
+}
 function update() { syncBands(); refresh(); messeFlaeche(); layout(false); }
 function setHover(h) {
   I.hoverTerm = h;
@@ -174,6 +197,7 @@ function buildCloud() {
   const f = facette('ort');
   const n = new Int32Array(f.terms.length);
   I.tiles.forEach((t) => t.f.ort.forEach((j) => n[j]++));
+  I.wolkeNennungen = n;
   I.wolke = [...f.terms.keys()].filter((j) => n[j] >= WOLKE_MIN).sort((a, b) => n[b] - n[a] || f.terms[a].localeCompare(f.terms[b], 'de'));
   I.wolke.forEach((j) => {
     const b = document.createElement('button');
@@ -195,7 +219,11 @@ function refresh() {
   // Schmale Fenster: nur so viele Orte, wie schräg nebeneinander passen
   const sinW = Math.sin(WOLKE_WINKEL * Math.PI / 180);
   const platz = Math.max(0, I.dom.kopf.clientWidth - PAD_X - Math.min(150, I.dom.kopf.clientWidth * 0.3));
-  const passen = Math.max(5, Math.floor(platz / (10 * 1.15 / sinW)));
+  // Nachbesserung 6, Punkt 3 (target-size): jede schräge Beschriftung braucht senkrecht zur Schrift mindestens
+  // ORT_MIN_HOEHE Platz (sonst überdecken sich die Klickflächen), also waagrecht ORT_MIN_HOEHE / sin(Winkel)
+  let passen = Math.max(5, Math.floor(platz / (ORT_MIN_HOEHE / sinW)));
+  // nicht mitten in einer Gruppe gleich häufiger Orte abschneiden: sonst stimmt „ab {bw_ab} Nennungen“ im Infotext nicht
+  while (passen > 1 && passen < I.wolke.length && I.wolkeNennungen[I.wolke[passen - 1]] === I.wolkeNennungen[I.wolke[passen]]) passen -= 1;
   I.wolkeSichtbar = I.wolke.slice(0, passen);
   I.wolke.forEach((j, k) => { I.wolkeEl.get(j).hidden = k >= passen; });
   const max = Math.max(1, ...I.wolkeSichtbar.map((j) => c[j]));
@@ -205,6 +233,8 @@ function refresh() {
     const el = I.wolkeEl.get(j);
     el.classList.toggle('an', sel.has(j));
     el.classList.toggle('leer', c[j] === 0 && !sel.has(j));
+    // Nachbesserung 6 (Regressionstest axe, target-size): ein Ort ohne Treffer würde auf 0 Urkunden filtern - inaktiv
+    el.disabled = c[j] === 0 && !sel.has(j);
     el.setAttribute('aria-pressed', String(sel.has(j)));
     el.setAttribute('aria-label', `${f.terms[j]}, ${mitZahl(c[j], 'Urkunde', 'Urkunden')}`);
     el.title = `${f.terms[j]}: ${mitZahl(c[j], 'Urkunde', 'Urkunden')}`;
@@ -217,7 +247,7 @@ function refresh() {
   const endgroesse = new Map(I.wolkeSichtbar.map((j) => [j, Math.max(9, groesse.get(j) * faktor)]));
   // Schräge Beschriftungen brauchen waagrecht etwa Zeilenhöhe / sin(Winkel): Abstand je nach Größe,
   // auf die verfügbare Breite gestreckt.
-  const schritte = I.wolkeSichtbar.map((j) => endgroesse.get(j) * 1.15 / sin);
+  const schritte = I.wolkeSichtbar.map((j) => Math.max(endgroesse.get(j) * 1.15, ORT_MIN_HOEHE) / sin);
   const summe = schritte.slice(0, -1).reduce((x, y) => x + y, 0) || 1;
   const breite = platz;
   let links = PAD_X;
@@ -413,15 +443,26 @@ function baueAtlanten() {
 
 // Vorab erzeugtes Sprite-Sheet (Interface-Krems-Testserver\sprites_urkunden.py): ein Bild statt rund
 // 1 000 Anfragen. Eine Zelle gilt nur, wenn ihr Dateiname noch zum ersten Foto in urkunden.csv passt.
+function zeigeFotoindexHinweis(pfad) {
+  if (!I || I.wurzel.querySelector('.bw-fotoindex-hinweis')) return;
+  const balken = erzeugeHinweisBalken([pfad
+    ? `Für dieses Archiv liegt noch kein Fotoindex vor (${pfad}, Eintrag bilderwand_fotoindex_pfad in archiv.csv). Die Kacheln zeigen deshalb nur Vorschaubilder, die einzeln vorliegen; die übrigen bleiben grau.`
+    : 'Für dieses Archiv liegt noch kein Fotoindex vor (Eintrag bilderwand_fotoindex_pfad in archiv.csv ist leer). Die Kacheln zeigen deshalb nur Vorschaubilder, die einzeln vorliegen; die übrigen bleiben grau.']);
+  balken.classList.add('bw-fotoindex-hinweis');
+  I.wurzel.querySelector('.bw-buehne').before(balken);
+}
+
 async function ladeSpriteSheet() {
+  const indexPfad = pfadAus('bilderwand_fotoindex_pfad');
+  if (!indexPfad) { zeigeFotoindexHinweis(''); return; }
   let manifest;
   try {
-    const antwort = await fetch(SPRITE_MANIFEST);
-    if (!antwort.ok) return;
+    const antwort = await fetch(indexPfad);
+    if (!antwort.ok) { zeigeFotoindexHinweis(indexPfad); return; }
     manifest = await antwort.json();
-  } catch { return; }
+  } catch { zeigeFotoindexHinweis(indexPfad); return; }
   const bild = new Image();
-  bild.src = SPRITE_BILD;
+  bild.src = manifest.bild ? new URL(manifest.bild, new URL(indexPfad, location.href)).href : indexPfad.replace(/\.json$/i, '.jpg');
   try { await bild.decode(); } catch { return; }
   if (!I) return;
   zeichneSpriteInAtlanten(bild, manifest);
@@ -533,9 +574,19 @@ function hiBild(t) {
 // ---- Karte im Hintergrund ----------------------------------------------------------------------------
 
 async function ladeKarte() {
-  const [orte, grund] = await Promise.all([
+  const kartenPfad = pfadAus('bilderwand_karte_pfad');
+  const [orte, grund, darstellung] = await Promise.all([
     ladeGecachteCSV('data/orte.csv').catch(() => []),
-    fetch(KARTE_PFAD).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    (() => { // Nachbesserung 4, Punkt 3
+      const pfad = pfadAus('bilderwand_karte_pfad');
+      if (!pfad) return Promise.resolve(null);
+      return fetch(pfad).then((r) => {
+        if (r.ok) return r.json();
+        console.warn(`Grundkarte der Bilderwand nicht gefunden: ${pfad} (Eintrag bilderwand_karte_pfad in data/archiv.csv). Die Bilderwand erscheint ohne Karte.`);
+        return null;
+      }).catch(() => null);
+    })(),
+    ladeKartenDarstellung(kartenPfad)
   ]);
   if (!I) return;
   const zahl = (v) => parseFloat(String(alsText(v)).replace(',', '.'));
@@ -547,15 +598,21 @@ async function ladeKarte() {
     if (j !== undefined && Number.isFinite(lat) && Number.isFinite(lon)) punkte.set(j, { lat, lon });
   });
   if (!punkte.size && !grund) return;
-  // Fester Ausschnitt Niederösterreich (KARTE_FOKUS) bestimmt Maßstab und Lage; gezeichnet wird der
+  // Der Ausschnitt (siehe oben) bestimmt Maßstab und Lage; gezeichnet wird der
   // ganze Kartenbereich, damit die Karte die Fläche in jeder Breite füllt (wie der Stadtplan im
   // Theaterzettel-Prototyp).
-  const lat0 = grund?.lat0 ?? (KARTE_FOKUS.S + KARTE_FOKUS.N) / 2;
+  const ausschnitt = grund ? ausschnittAus(darstellung, 'bilderwand') : null;
+  // ohne Karte: Ausdehnung aller Orte als Ausschnitt
+  const alle = [...punkte.values()];
+  const orteAusschnitt = alle.length ? { W: Math.min(...alle.map((p) => p.lon)), E: Math.max(...alle.map((p) => p.lon)), S: Math.min(...alle.map((p) => p.lat)), N: Math.max(...alle.map((p) => p.lat)) } : null;
+  const lat0 = grund?.lat0 ?? (orteAusschnitt ? (orteAusschnitt.S + orteAusschnitt.N) / 2 : 0);
   const k = Math.cos(lat0 * Math.PI / 180);
   const xy = (p) => [p.lon * k, -p.lat];
+  const fenster = sichtfenster({ lat0, faktor: 1, bereich: grund?.bereich }, ausschnitt || (grund ? null : orteAusschnitt));
+  if (!fenster) return;
   I.karte = {
     punkte, xy,
-    x0: KARTE_FOKUS.W * k, x1: KARTE_FOKUS.E * k, y0: -KARTE_FOKUS.N, y1: -KARTE_FOKUS.S,
+    x0: fenster.x0, x1: fenster.x1, y0: fenster.y0, y1: fenster.y1,
     ebenen: grund ? Object.fromEntries(Object.entries(grund.ebenen).map(([n, d]) => [n, new Path2D(d)])) : null,
     nachweis: grund?.nachweis || ''
   };
@@ -753,6 +810,11 @@ function draw() {
       ctx.strokeStyle = FARBE.unsicher; ctx.lineWidth = Math.max(1, Math.min(2, cw / 12));
       ctx.setLineDash([3, 2]); ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1); ctx.setLineDash([]);
     }
+    if (t.unvollstaendig) { // immer, nicht nur im Unsicherheitsmodus (Masterprompt §12)
+      ctx.globalAlpha = Math.max(alpha, 0.6);
+      ctx.strokeStyle = FARBE.unvollstaendig; ctx.lineWidth = Math.max(1.5, Math.min(3, cw / 8));
+      ctx.strokeRect(x + 1, y + 1, Math.max(cw - 2, 1), Math.max(ch - 2, 1));
+    }
   }
   ctx.globalAlpha = 1;
   for (const t of [I.hoverTile, I.aktiv, I.ausgewaehlt]) {
@@ -825,6 +887,12 @@ function zeigeTipp(t) {
   const text = alsText(t.record.regest);
   regest.textContent = text.length > 180 ? `${text.slice(0, 177)} …` : text;
   tip.append(titel, meta, regest);
+  if (t.unvollstaendig) {
+    const u = document.createElement('div');
+    u.className = 'bw-tu bw-tu-unvollstaendig';
+    u.textContent = unvollstaendigText(t.record);
+    tip.appendChild(u);
+  }
   if (I.options.showUncertainty && t.unsicher) {
     const u = document.createElement('div');
     u.className = 'bw-tu';
@@ -929,10 +997,11 @@ function fuegeStyleEin(container) {
     .bw-wolke { position: absolute; inset: 0; }
     .bw-ort { position: absolute; bottom: 10px; transform-origin: 0 100%; transform: rotate(-${WOLKE_WINKEL}deg); white-space: nowrap;
       cursor: pointer; background: none; border: 0; padding: 1px 6px; margin: 0; color: ${FARBE.papier}; font: inherit; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; transition: color .2s, opacity .2s; }
+      text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; transition: color .2s, opacity .2s;
+      min-height: 24px; } /* Nachbesserung 6, Punkt 3 (target-size): auch kleine Ortsnamen mindestens 24 px hoch */
     .bw-ort:hover, .bw-ort:focus-visible { color: ${FARBE.akzent}; outline: none; }
     .bw-ort:focus-visible { text-decoration: underline; }
-    .bw-ort.leer { opacity: .4; }
+    .bw-ort.leer { opacity: .6; } /* Nachbesserung 6, Punkt 4 (color-contrast): .4 ergab rund 3:1, .6 rund 5:1 auf der Bühne */
     .bw-ort.an { background: ${FARBE.papier}; color: ${FARBE.buehne}; }
     .bw-ort.an::after { content: " ×"; font-weight: 400; }
     .bw-schalter-leiste { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 20px;
@@ -964,7 +1033,7 @@ function fuegeStyleEin(container) {
     .bw-bzu { margin-left: auto; background: none; border: 0; color: ${FARBE.text}; font-size: 20px; cursor: pointer; line-height: 1; min-width: 32px; min-height: 32px; }
     .bw-begriffe { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 2px; margin-top: 3px; max-height: 30vh; overflow-y: auto; }
     .bw-begriff { background: none; border: 0; color: ${FARBE.papier}; font: inherit; font-weight: 700; cursor: pointer; padding: 0 5px;
-      border-radius: 2px; line-height: 1.35; white-space: nowrap; }
+      border-radius: 2px; line-height: 1.35; white-space: nowrap; min-height: 24px; } /* Nachbesserung 6, Punkt 3 (target-size) */
     .bw-begriff:hover { color: ${FARBE.akzent}; }
     .bw-begriff.an { background: ${FARBE.papier}; color: ${FARBE.buehne}; }
     .bw-begriff.an::after { content: " ×"; font-weight: 400; }
@@ -980,7 +1049,10 @@ function fuegeStyleEin(container) {
     .bw-tm { color: #4d493f; margin-top: 2px; }
     .bw-tr { margin-top: 6px; line-height: 1.35; }
     .bw-tu { margin-top: 6px; color: #a0291c; font-weight: 600; }
+    .bw-tu-unvollstaendig { color: #b45309; border-left: 3px solid #b45309; padding-left: 6px; }
     .bw-info-anker { position: absolute; top: 8px; right: 12px; z-index: 6; }
+    /* Nachbesserung 6, Punkt 13 (Befund 6.4): Fokusrahmen in der hellen Akzentfarbe statt Dunkelblau auf dunkler Bühne */
+    .bw-info-anker .info-button:focus-visible { outline-color: ${FARBE.akzent}; }
     .bw-unsicher { position: absolute; top: 10px; left: 12px; z-index: 6; background: rgba(23,34,44,.75); border: 1px solid #5d6873;
       color: ${FARBE.text}; border-radius: 3px; min-height: 32px; padding: 3px 10px; font: inherit; font-size: var(--fs-sm); cursor: pointer; }
     .bw-unsicher:hover { border-color: ${FARBE.gedaempft}; }
@@ -1067,15 +1139,13 @@ export function render(container, data, options = {}) {
   refresh();
   baueAtlanten();
   ladeKarte();
-  infotextFuerModul('bilderwand', { bw_wolke: I.wolke.length, bw_ab: WOLKE_MIN }).then((cfg) => {
-    if (!I || !cfg || !dom.info.isConnected) return;
-    I.infoButton = erzeugeInfoButton(dom.info, cfg);
-  });
+  aktualisiereInfotext();
   I.beobachter = new ResizeObserver(() => {
     if (!I) return;
     const r = dom.cv.getBoundingClientRect();
     if (Math.abs(r.width - I.W) < 1 && Math.abs(r.height - I.H) < 1) return;
     refresh(); messeFlaeche(); layout(!I.userZoomed);
+    aktualisiereInfotext();
   });
   I.beobachter.observe(dom.cv);
 }

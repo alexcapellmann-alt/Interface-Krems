@@ -153,6 +153,7 @@ function aktualisiereHervorhebung() {
     .attr('font-weight', (d) => (d.sektor === aktiv ? 700 : 400));
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneBumpChart() {
   const { container, wurzel, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;

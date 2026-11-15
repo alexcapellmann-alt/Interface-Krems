@@ -39,6 +39,7 @@
 // derselben Kachel auftreten.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
+import { istUnvollstaendig, UNVOLLSTAENDIG_KLASSE } from '../utils/vollstaendigkeit.js';
 import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE, nurUnsichereBestaende, zeigeKeineUnsicherenBestaende } from '../utils/bestandsHierarchie.js';
 import {
   passendeTextfarbe,
@@ -53,6 +54,7 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
@@ -511,11 +513,13 @@ function zeichneEineKachel(gruppe, knoten, kategorieName, zeigeUnsicherheit) {
   const farbe = farbeFuerBestandsKachel(knoten, kategorieName);
   const textFarbe = passendeTextfarbe(farbe);
   const istUnsicher = zeigeUnsicherheit && knoten.data.record.daten_unsicher;
+  markiereHellElement(gruppe.node(), istUnsicher); // Nachbesserung 3, Punkt 4
   const istAusgewaehlt = instanz.ausgewaehlterName === knoten.data.name;
   const ohneKategorie = kategorieName === OHNE_KATEGORIE;
 
   gruppe.append('rect')
     .attr('class', 'bestand-rand')
+    .classed(UNVOLLSTAENDIG_KLASSE, istUnvollstaendig(knoten.data.record)) // Nachbesserung 3, Punkt 3
     .attr('width', breite).attr('height', hoehe)
     .attr('fill', farbe)
     .attr('rx', 3)

@@ -123,7 +123,7 @@ function fuegeStyleEin(container) {
     .ueber-block-h2 { margin-top: var(--space-5); }
     .ueber-block-h3 { margin-top: var(--space-4); font-size: var(--fs-md); }
     .ueber-block p { margin: 0 0 var(--space-3) 0; }
-    .ueber-sigma { color: var(--fuehrung-unsicher, #8a6d1f); font-weight: 700; }
+    .ueber-sigma { color: #7a5f17; font-weight: 700; } /* Nachbesserung 6, Punkt 4: 4,49:1 → rund 5,5:1 auf dem Seitengrund */
     .ueber-kontaktblock address { font-style: normal; }
     .ueber-kontaktblock a { color: var(--accent); }
   `;

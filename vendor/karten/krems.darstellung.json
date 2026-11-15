@@ -1,0 +1,44 @@
+{
+ "beschreibung": "Darstellung zur Kartendatei krems.json (gleicher Name, Endung .darstellung.json): benannte Ausschnitte in Grad (W, E, S, N) und Beschriftungen je Ausschnitt. Genutzt von js/utils/hintergrundKarte.js (Ausschnitt „hintergrund“) und js/fuehrungen/fuehrungenZeitleiste.js („zeitleiste“). Siehe docs/SCHEMA.md.",
+ "ausschnitte": {
+  "hintergrund": {
+   "W": 15.552,
+   "E": 15.642,
+   "S": 48.386,
+   "N": 48.426,
+   "beschriftungen": [
+    {
+     "text": "KREMS",
+     "lat": 48.4115,
+     "lon": 15.605,
+     "groesse": 11
+    },
+    {
+     "text": "STEIN",
+     "lat": 48.4035,
+     "lon": 15.5835,
+     "groesse": 9
+    },
+    {
+     "text": "MAUTERN",
+     "lat": 48.3925,
+     "lon": 15.577,
+     "groesse": 8
+    },
+    {
+     "text": "Donau",
+     "lat": 48.3978,
+     "lon": 15.605,
+     "groesse": 8,
+     "wasser": true
+    }
+   ]
+  },
+  "zeitleiste": {
+   "W": 15.572,
+   "E": 15.632,
+   "S": 48.398,
+   "N": 48.424
+  }
+ }
+}

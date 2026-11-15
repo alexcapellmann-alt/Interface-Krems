@@ -460,6 +460,8 @@ import { ladeOrtsVerzeichnis } from '../utils/urkundenOrte.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
 import { baueStatischeKarte, projiziere, erzeugeUeberlagerungsSvg } from '../utils/statischeKarte.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 // Wiederverwendung statt Neuimplementierung (unverändert seit dem
@@ -635,6 +637,7 @@ function fuegeStyleEin(container) {
   container.appendChild(style);
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 async function zeichneFlowMap() {
   const { container, urkundenRecords, familienRecords, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -760,7 +763,8 @@ async function zeichneFlowMap() {
 
   const svgUeberlagerung = erzeugeUeberlagerungsSvg(plotWrapper, breite, hoehe, {
     ariaLabel: 'Karte: Orte als Tortendiagramme der sozialen Gruppen'
-  }).attr('role', 'group'); // AUFTRAG D, Punkt 2 (nested-interactive): bedienbare Orts-Knoten; Verbindungskarte bleibt role=img
+  }).attr('role', 'group'); // AUFTRAG D, Punkt 2 (nested-interactive): bedienbare Orts-Knoten (seit Nachbesserung 6 auch die Verbindungskarte)
+  beschreibeSvgAusInfotext(svgUeberlagerung.node(), 'bipartiteFlowMap'); // Nachbesserung 6, Punkt 12: Beschreibung aus dem Info-Text
 
   // Ein Cluster (<g>) pro Ort, per `transform: translate(...)` an dessen
   // Kartenposition verankert - alle Kreiselemente sind relativ zum
@@ -805,7 +809,8 @@ async function zeichneFlowMap() {
         .attr('d', arcGen)
         .attr('fill', (d) => farbeFuerGruppe(d.data.gruppe))
         .attr('stroke', (d) => (zeigeUnsicherheit && d.data.unsicherAnzahl > 0 ? '#c0392b' : '#fff'))
-        .attr('stroke-width', (d) => (zeigeUnsicherheit && d.data.unsicherAnzahl > 0 ? 1.5 : 0.5));
+        .attr('stroke-width', (d) => (zeigeUnsicherheit && d.data.unsicherAnzahl > 0 ? 1.5 : 0.5))
+        .call((a) => markiereHell(a, (d) => zeigeUnsicherheit && d.data.unsicherAnzahl > 0)); // Nachbesserung 3, Punkt 4
     } else {
       g.append('circle')
         .attr('class', 'ort-neutral')

@@ -228,7 +228,7 @@
   padding-bottom: var(--space-2);
   margin: 0;
 }
-.startseite-kachel p { color: var(--text-muted); margin: 0; font-size: var(--fs-sm); line-height: 1.6; }
+.startseite-kachel p { color: var(--text-muted); margin: 0; font-size: var(--fs-md); line-height: 1.6; } /* Nachbesserung 6, Punkt 9: Fließtext mindestens 16 px (Masterprompt §10) */
 .startseite-kachel-cta {
   margin-top: auto;
   align-self: flex-start;
@@ -304,7 +304,7 @@
   margin: var(--space-5) 0 0 0;
   padding-top: var(--space-4);
   border-top: 1px solid rgba(255, 255, 255, .15);
-  font-size: 12px;
+  font-size: var(--fs-md); /* Nachbesserung 6, Punkt 9: Fließtext mindestens 16 px (Masterprompt §10) */
   /* AUFTRAG D, Punkt 3: 50 % -> 70 % Weiß (3,61:1 -> 5,43:1 auf #2c4a6e) */
   color: rgba(255, 255, 255, .7);
   text-align: center;

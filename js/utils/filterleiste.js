@@ -35,10 +35,12 @@ function fuegeStyleEin(container) {
        wachsen (flex-grow), falls mehr Platz verfügbar ist - das Kategorie-Feld
        bleibt dabei bewusst auf seiner Eigenbreite (flex-grow: 0), damit nur
        das Suchfeld zusätzlichen Platz beansprucht, nicht auch das Dropdown. */
-    .filterleiste input[type="search"] { min-width: 440px; }
-    .filterleiste-suche-label { flex: 1 1 440px; }
+    /* Nachbesserung 6, Punkt 16: höchstens so breit wie der verfügbare Platz (bei 320 px sonst waagrechtes Scrollen) */
+    .filterleiste input[type="search"] { min-width: min(440px, 100%); }
+    .filterleiste-suche-label { flex: 1 1 min(440px, 100%); min-width: 0; }
     .filterleiste-suche-label input[type="search"] { width: 100%; }
     .filterleiste-kategorie-label { flex: 0 0 auto; }
+    @media (max-width: 600px) { .filterleiste { min-width: 0; flex: 1 1 100%; } .filterleiste label { flex-wrap: wrap; min-width: 0; max-width: 100%; } .filterleiste input[type="search"] { min-width: 0; flex: 1 1 auto; } .filterleiste select { min-width: 0; max-width: 100%; } }
   `;
   container.appendChild(style);
 }

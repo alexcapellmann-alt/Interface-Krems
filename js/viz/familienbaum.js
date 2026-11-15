@@ -334,8 +334,11 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
+import { markiereSvg, mitUnvollstaendigHinweis, fehlendeMindestfelder, UNVOLLSTAENDIG_TEXT } from '../utils/vollstaendigkeit.js';
+import { erzeugeHinweisBalken } from '../utils/hinweisBalken.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul, konfigurationswert, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareHoehe, ermittleVerfuegbareBreite } from '../utils/viewportGroesse.js';
 import {
@@ -802,6 +805,7 @@ function baueBalken(id, person, x) {
 // erst NACH der globalen Überlappungsauflösung (loeseUeberlappungGlobal,
 // dazwischen), damit Linien-Endpunkte garantiert dieselbe (ggf. verschobene)
 // X-Position verwenden wie die gezeichneten Boxen.
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): leitet aus Layout und Daten das gesamte Zeichenmodell (Kästen, Linien, Ehesymbole) ab; die Teile verweisen gegenseitig aufeinander.
 function baueRenderModell(wurzeln, byId) {
   const ankerIds = new Set();
   wurzeln.forEach((wurzelKnoten) => wurzelKnoten.each((d) => ankerIds.add(d.data.id)));
@@ -923,6 +927,7 @@ function ermittleRegierungszeit(person) {
   return { yTop: jahrZuY(von), yBottom: jahrZuY(bis) };
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
   const zoomInhalt = svg.append('g').attr('class', 'familienbaum-zoom-inhalt');
 
@@ -957,6 +962,7 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
     .attr('transform', (d) => `translate(${d.x},0)`);
 
   const unsicher = (d) => zeigeUnsicherheit && istPersonUnsicher(d.person);
+  markiereHell(knotenGruppen, unsicher); // Nachbesserung 3, Punkt 4
   const istEigenesRecht = (d) => ['kaiser', 'koenig'].includes(d.person.hrr_status);
   const istDurchHeirat = (d) => ['kaiserin_heirat', 'koenigin_heirat'].includes(d.person.hrr_status);
   const kastenBreite = instanz.kastenBreite;
@@ -979,7 +985,8 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
     .attr('fill', (d) => (istDurchHeirat(d) ? HEIRAT_FARBE : farbeFuerFamilie(d.person.familie)))
     .attr('stroke', (d) => (unsicher(d) ? '#c0392b' : '#ffffff'))
     .attr('stroke-width', (d) => (unsicher(d) ? 2 : 1))
-    .attr('stroke-dasharray', (d) => (unsicher(d) ? '4,3' : null));
+    .attr('stroke-dasharray', (d) => (unsicher(d) ? '4,3' : null))
+    .call((a) => markiereSvg(a, (d) => d.person)); // Nachbesserung 3, Punkt 3
 
   // Regierungs-Overlay: nur für die 17 Personen mit herrschaft_von/bis -
   // deckt ausschließlich den Regierungsabschnitt in Gold ab (siehe
@@ -1075,7 +1082,7 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
       const lebensdaten = [d.person.geburtsdatum, d.person.sterbedatum].filter(Boolean).join(' – ');
       const zeilen = [d.person.name, d.person.titel || d.person.familie, lebensdaten];
       if (unsicher(d)) zeilen.push(baueUnsicherTooltip(d.person));
-      zeigeTooltip(zeilen.filter(Boolean).join('\n'), this, container);
+      zeigeTooltip(mitUnvollstaendigHinweis(d.person, zeilen.filter(Boolean).join('\n')), this, container); // Nachbesserung 3, Punkt 3
       instanz.hoverFokusId = d.id;
       aktualisiereHervorhebung();
     })
@@ -1534,6 +1541,7 @@ function zeichneFamilienbaum() {
 
 // --- Modul-Interface (Abschnitt 5) ---------------------------------------
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Einstieg des Moduls (Modul-Interface, Masterprompt §13): baut Gerüst, Instanz und Ereignisse in fester Reihenfolge auf; die Schritte hängen voneinander ab.
 export function render(container, data, options = {}) {
   if (instanz) destroy();
 
@@ -1584,6 +1592,14 @@ export function render(container, data, options = {}) {
   wurzel.className = 'familienbaum-wurzel';
   container.appendChild(wurzel);
   instanz.wurzel = wurzel;
+
+  // Nachbesserung 3, Punkt 3: Eine Person ohne `id` lässt sich im Baum nicht verorten (Verknüpfungen laufen über die
+  // id) - nicht still weglassen (Masterprompt §12), sondern benennen.
+  const ohneId = datensaetze.filter((r) => fehlendeMindestfelder(r).includes('id'));
+  if (ohneId.length) {
+    const namen = ohneId.map((r) => String(r.name || '').trim() || '(ohne Namen)').join(', ');
+    wurzel.appendChild(erzeugeHinweisBalken([`${UNVOLLSTAENDIG_TEXT}: ${ohneId.length === 1 ? 'Eine Person' : `${ohneId.length} Personen`} in familien.csv ohne id, im Stammbaum nicht darstellbar: ${namen}.`]));
+  }
 
   // KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 3: Diagnose per
   // Debug-Instrumentierung (siehe Selbstauskunft im Chat) - KEIN DPI-/

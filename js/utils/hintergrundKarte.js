@@ -1,23 +1,20 @@
 // js/utils/hintergrundKarte.js
-// Zurückhaltender Stadtplan von Krems und Stein als Seitenhintergrund (Wunsch des Autors, 2026-10-27) auf der
-// Startseite und den Übersichtsseiten, seit 2026-10-28 (Wunsch des Autors) auf allen Seiten, auch in den
-// einzelnen Visualisierungen. Ausnahme: die Zeitleiste der Führungen zeichnet denselben Stadtplan selbst.
+// Zurückhaltender Stadtplan des Archivorts als Seitenhintergrund auf allen Seiten. Ausnahme: die Zeitleiste der
+// Führungen zeichnet denselben Stadtplan selbst.
 //
-// Datengrundlage wie die Zeitleiste der Führungen: vendor/karten/krems.json (OpenStreetMap, ODbL,
-// erzeugt mit Interface-Krems-Testserver\karte_krems.py). Die Pfade werden EINMAL zu einem SVG
-// gebaut und als Hintergrundbild (Blob-URL) gesetzt; die Seite schaltet nur noch eine Klasse am <body>.
-// Fehlt die Datei, bleibt der Hintergrund schlicht einfarbig.
+// Der Pfad kommt aus data/archiv.csv (`hintergrundkarte_pfad`), Ausschnitt und Beschriftungen aus der Begleitdatei
+// <karte>.darstellung.json (js/utils/kartenDarstellung.js). Die Pfade werden EINMAL zu einem SVG gebaut und als
+// Hintergrundbild (Blob-URL) gesetzt; die Seite schaltet nur noch eine Klasse am <body>.
+// Leerer Eintrag = bewusst ohne Karte (kein Abruf); fehlt die Datei, nennt die Konsole den Eintrag statt eines
+// stillen 404, und der Hintergrund bleibt einfarbig.
 
-const KARTE_PFAD = 'vendor/karten/krems.json';
-// Ausschnitt (Grad): Krems, Stein und gegenüber Mautern mit der Donau dazwischen
-const FOKUS = { W: 15.552, E: 15.642, S: 48.386, N: 48.426 };
-// Ortsnamen, dezent in die Karte geschrieben (Lage der Ortskerne, Grad)
-const BESCHRIFTUNGEN = [
-  { text: 'KREMS', lat: 48.4115, lon: 15.6050, groesse: 11 },
-  { text: 'STEIN', lat: 48.4035, lon: 15.5835, groesse: 9 },
-  { text: 'MAUTERN', lat: 48.3925, lon: 15.5770, groesse: 8 },
-  { text: 'Donau', lat: 48.3978, lon: 15.6050, groesse: 8, wasser: true }
-];
+import { konfigurationswert } from '../core/archivKonfiguration.js';
+import { ladeKartenDarstellung, ausschnittAus, sichtfenster } from './kartenDarstellung.js';
+
+export function hintergrundkartenPfad() { return String(konfigurationswert('hintergrundkarte_pfad') || '').trim(); }
+// Nachbesserung 5: Ausschnitt und Ortsnamen (Text, Lage, Größe, `wasser` für Gewässer) stehen in der Begleitdatei der Karte
+// (Ausschnitt „hintergrund“, js/utils/kartenDarstellung.js); ohne sie der ganze Kartenbereich ohne Namen.
+const AUSSCHNITT_NAME = 'hintergrund';
 // Zwei Fassungen: `hell` für helle Seiten (dunkle Linien), `dunkel` für die dunkle Bühne der
 // Führungsstationen (helle Linien, wie in der Bilderwand). [Ebene, Linienbreite px, Farbe, Deckkraft]
 const FASSUNGEN = {
@@ -34,20 +31,23 @@ const FASSUNGEN = {
 };
 
 let ladeVersprechen = null;
+const maskiere = (t) => String(t).replace(/[&<>"]/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[z]));
 
-function baueSvgUrl(grund, fassung) {
+function baueSvgUrl(grund, fassung, ausschnitt) {
   const { ebenen, name, wasserName } = FASSUNGEN[fassung];
-  const k = Math.cos(grund.lat0 * Math.PI / 180) * grund.faktor;
-  const x0 = FOKUS.W * k, x1 = FOKUS.E * k, y0 = -FOKUS.N * grund.faktor, y1 = -FOKUS.S * grund.faktor;
+  const fenster = sichtfenster(grund, ausschnitt);
+  if (!fenster) return null;
+  const { k, x0, x1, y0, y1 } = fenster;
   const pfade = ebenen.filter(([ebene]) => grund.ebenen[ebene])
     .map(([ebene, breite, farbe, deckkraft]) => `<path d="${grund.ebenen[ebene]}" stroke="${farbe}" stroke-opacity="${deckkraft}" stroke-width="${breite}" vector-effect="non-scaling-stroke"/>`)
     .join('');
-  const namen = BESCHRIFTUNGEN.map((b) => {
+  const namen = (ausschnitt?.beschriftungen || []).map((b) => {
     const x = b.lon * k, y = -b.lat * grund.faktor;
+    const groesse = Number.isFinite(b.groesse) ? b.groesse : 9;
     const stil = b.wasser
       ? `fill="${wasserName[0]}" fill-opacity="${wasserName[1]}" font-style="italic" letter-spacing="1"`
-      : `fill="${name[0]}" fill-opacity="${name[1]}" letter-spacing="${b.groesse * 0.35}"`;
-    return `<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${b.groesse}" text-anchor="middle" ${stil}>${b.text}</text>`;
+      : `fill="${name[0]}" fill-opacity="${name[1]}" letter-spacing="${groesse * 0.35}"`;
+    return `<text x="${x}" y="${y}" font-family="Georgia, 'Times New Roman', serif" font-size="${groesse}" text-anchor="middle" ${stil}>${maskiere(b.text)}</text>`;
   }).join('');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" preserveAspectRatio="xMidYMid slice">`
     + `<g fill="none" stroke-linecap="round" stroke-linejoin="round">${pfade}</g>${namen}</svg>`;
@@ -56,12 +56,20 @@ function baueSvgUrl(grund, fassung) {
 
 function ladeKarte() {
   if (!ladeVersprechen) {
-    ladeVersprechen = fetch(KARTE_PFAD)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((grund) => {
+    const pfad = hintergrundkartenPfad();
+    ladeVersprechen = !pfad ? Promise.resolve(null) : fetch(pfad)
+      .then((r) => {
+        if (r.ok) return r.json();
+        console.warn(`Hintergrundkarte nicht gefunden: ${pfad} (Eintrag hintergrundkarte_pfad in data/archiv.csv). Die Seiten erscheinen ohne Kartenhintergrund.`);
+        return null;
+      })
+      .then(async (grund) => {
         if (!grund) return null;
-        document.body.style.setProperty('--hintergrundkarte', `url("${baueSvgUrl(grund, 'hell')}")`);
-        document.body.style.setProperty('--hintergrundkarte-dunkel', `url("${baueSvgUrl(grund, 'dunkel')}")`);
+        const ausschnitt = ausschnittAus(await ladeKartenDarstellung(pfad), AUSSCHNITT_NAME);
+        const hell = baueSvgUrl(grund, 'hell', ausschnitt), dunkel = baueSvgUrl(grund, 'dunkel', ausschnitt);
+        if (!hell) return null;
+        document.body.style.setProperty('--hintergrundkarte', `url("${hell}")`);
+        document.body.style.setProperty('--hintergrundkarte-dunkel', `url("${dunkel}")`);
         return true;
       })
       .catch(() => null);

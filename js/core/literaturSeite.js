@@ -159,7 +159,7 @@ function fuegeStyleEin(container) {
     .literatur-recherche-karte { background: var(--surface); border: 1px solid var(--border);
       border-radius: calc(var(--radius) * 1.5); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
     .literatur-recherche-karte h4 { margin: 0; font-size: var(--fs-md); }
-    .literatur-recherche-karte p { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.6; }
+    .literatur-recherche-karte p { margin: 0; color: var(--text-muted); font-size: var(--fs-md); line-height: 1.6; }
     .literatur-recherche-karte a { align-self: flex-start; font-weight: 600; }
 
     /* Punkt 2: Kategorien-Sprungmarken + Sortierung, dieselbe max-width wie
@@ -191,7 +191,7 @@ function fuegeStyleEin(container) {
     .literatur-zitation { margin: 0 0 var(--space-2) 0; line-height: 1.6; }
     .literatur-kurzbeschreibung { margin: 0 0 var(--space-2) 0; color: var(--text-muted); font-size: var(--fs-sm); }
     .literatur-meta { margin: 0 0 var(--space-1) 0; font-size: var(--fs-sm); display: flex; flex-wrap: wrap; gap: var(--space-3); }
-    .literatur-verwendet { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); }
+    .literatur-verwendet { margin: 0; font-size: var(--fs-md); color: var(--text-muted); } /* Nachbesserung 6, Punkt 9: Fließtext mindestens 16 px (Masterprompt §10) */
     .literatur-verwendet a { color: var(--accent); }
     /* Punkt 6: kurzes, wieder verschwindendes Hervorheben bei Deep-Link-
        Aufruf - dieselbe Übergangs-Konvention (kein rAF-Zwang, reine
@@ -353,6 +353,12 @@ function baueKategorienNav(gruppen, listeContainer) {
       // z.B. ganttDiagramm.js' wireZoom()-Kommentar zu d3 .transition()).
       // Ohne behavior (= 'auto') springt die Ansicht sofort und garantiert.
       ziel?.scrollIntoView({ block: 'start' });
+      // Nachbesserung 6, Punkt 18: Fokus mitnehmen - sonst bleibt er auf dem Knopf, und die nächste Tab-Taste führt
+      // wieder durch die Rubrikleiste statt in die gewählte Rubrik
+      if (ziel) {
+        if (!ziel.hasAttribute('tabindex')) ziel.setAttribute('tabindex', '-1');
+        ziel.focus({ preventScroll: true });
+      }
     });
     nav.appendChild(btn);
   });

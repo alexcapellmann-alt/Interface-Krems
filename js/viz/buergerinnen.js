@@ -1,40 +1,27 @@
 // js/viz/buergerinnen.js
-// „Bürgerinnen?“ (Wunsch des Autors, 2026-10-28): Das Bürgerbuch von Krems (1535–1625) nennt 2 655 Personen -
-// Neubürger und ihre Bürgen -, aber keine einzige Frau. Die Ansicht zeigt dieses Fehlen: ein Punktfeld mit
-// einem Punkt je Person (zusammen bilden sie das Steiner Tor); ein Klick auf „Nach Geschlecht ordnen“ lässt die Punkte in zwei Spalten fließen,
-// links „Männer“, rechts „Frauen“. Die rechte Spalte bleibt leer - als gestrichelter Rahmen in derselben
-// Größe, damit sichtbar wird, dass hier Platz wäre. Ein Satz darunter verhindert den Fehlschluss, es habe
-// keine Frauen gegeben, und verweist auf die Führung „Frauen im Archiv“.
+// Willkommenstour „Bürgerinnen?“ (Führung mit eigenem Modul, siehe ANSICHTS_FUEHRUNGEN): eine Folge von Folien, in der
+// dieselben Punkte immer neue Formen bilden. Ein Punkt ist je nach Folie ein Bestand des Archivs, eine Urkunde, eine Person
+// aus dem Bürgerbuch oder ein Anteil der Bürgerschaft.
 //
-// Personen: aufgenommene Personen (`personen_id`) und Bürgen (`buergen_id`) aus buergerbuch.csv, je Person
-// ein Punkt (eindeutige Kennung). Das Bürgerbuch hat keine Spalte zum Geschlecht; dass keine Frau darin
-// vorkommt, hat der Autor am Quelltext geprüft. Trägt ein Datensatz künftig `geschlecht` = w/weiblich,
-// erscheint die Person rechts - die Ansicht behauptet die Null also nicht, sie zählt sie.
-// Klick auf einen Punkt (seit 2026-10-28, Wunsch des Autors) öffnet dieselbe Sidebar wie die Personenliste:
-// alle Quelleneinträge der Person (Bürgerbuch als Neubürger oder Bürge, dazu Urkunden und Inventare aus der
-// Personenliste). Klick auf eine freie Stelle oder auf „Nach Geschlecht ordnen“/„Wieder mischen“ schließt sie.
-// Nach dem Ordnen steht zwischen den beiden Spalten eine kurze Erklärung (2026-10-28): was das Bürgerbuch ist und
-// warum keine Frau darin steht; auf schmalen Bildschirmen steht sie unter den Spalten.
+// Ablauf: Archiv-Folien (Bestände als Form, Kategorien, Zeiträume, das Bürgerbuch als Klickziel) → Bürgerbuch (Personen
+// als aufgeschlagenes Buch, Berufe, Schreibweisen) → Geschlecht (die leere Frauen-Seite zeigt ein Fehlen, keine Null)
+// → Vermögen (Schichten, Münzen, Vermögenslose) → Habsburger, Klerus, Reformation, Behauptung, Weinzoll → Verlust-Kapitel
+// mit Urkunden und Karte → Mitmachen. Welche Folien es gibt und ihre Texte, Knöpfe, Überschriften und
+// Bildschirmleser-Texte stehen in data/buergerinnen_stationen.csv; Schichten, Sektoren, Weinausfuhr, Zeitleiste,
+// Archiv-Zuordnung und Kartenlinien in den übrigen data/buergerinnen_*.csv (docs/SCHEMA.md 13.8). Archivspezifische
+// Namen (Formname, Überzeile, Hauptort) und der Umriss der Form kommen aus data/archiv.csv bzw. vendor/formen/.
+// Fehlt eine Datei, entfallen nur die betroffenen Folien; ein Hinweisbalken nennt das.
 //
-// Folien (Wunsch des Autors, 2026-10-28): immer nur ein sprechender Weiter-Knopf mit hüpfendem Pfeil nach unten und
-// ein Zurück-Knopf. Folge: Steiner Tor → Nach Geschlecht ordnen → die leere Frauen-Spalte füllt sich mit ebenso vielen
-// symbolischen Punkten wie Männer (Folie `frauen`, Punkte ohne Person, kein Klick) → Männer und Frauen vereinen sich
-// zu Haushalten: aus den Männern werden drei Säulen der
-// Bürgerschaft nach Schicht (links Kleinhändler und Hauer, rechts reiche Handelsleute), daneben links ein kurzer
-// Text → Goldmünzen regnen in die schon reservierten Felder unter den Säulen (Gesamtvermögen je Schicht), Text kommt
-// dazu → links neben dem Text steigt Punkt für Punkt die Säule der Inwohner und Hilfskräfte ohne Bürgerrecht auf
-// (mindestens so viele, ohne Münzen) → Stadt und Kirche (Folie `klerus`, Beginn der Reformations-Erzählung): rechts
-// formen alle blauen und violetten Punkte wieder das Steiner Tor, die Münzen eine kleine goldene Kirche; der Text
-// bleibt an seinem Platz → Reformation (Folie `reformation`): die Punkte des Tors wandern links neben den Text und
-// bilden ein blau-lila Kreuz, die Kirche bleibt stehen. In den drei Vermögens-Folien steht ein Punkt für einen Anteil der
-// Bürgerschaft, nicht für eine bestimmte Person (kein Klick, Tooltip nennt die Schicht). Knöpfe, Texte und Münzwert
-// stehen in data/buergerinnen_stationen.csv, Anteile und Gulden-Spannen in data/buergerinnen_schichten.csv (siehe
-// docs/SCHEMA.md 13.8); Vermögen einer Schicht = Haushalte × Mittelwert.
+// Warum Punkte statt Diagramme: Die Tour soll zeigen, dass jede Zahl aus einzelnen Einträgen besteht. Deshalb bleibt
+// jede Person anklickbar (dieselbe Seitenleiste wie die Personenliste), und Übergänge bewegen dieselben Punkte, statt
+// neue zu zeichnen. Unter reduzierter Bewegung springen die Punkte direkt in ihre Endlage.
+// Entstehung und frühere Fassungen: docs/PROJEKTLOG.md.
 // Modul-Interface siehe Abschnitt 5.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
-import { infotextFuerModul } from '../core/archivKonfiguration.js';
+import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
+import { infotextFuerModul, konfigurationswert, ladeArchivKonfiguration, kartenStartpunkt } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareHoehe } from '../utils/viewportGroesse.js';
 import { teileNachJahr } from '../utils/buergerbuchZeit.js';
 import { alsText } from '../utils/textwert.js';
@@ -46,6 +33,8 @@ import {
 } from './personenliste.js';
 import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
 import { ladeCSV } from '../core/dataLoader.js';
+import { rechneSchrittweise } from '../utils/kraefteLayout.js';
+import { erzeugeHinweisBalken } from '../utils/hinweisBalken.js';
 
 const FARBE = '#2c4a6e';          // Tintenblau der Seite
 const RAHMEN = '#9a9081';         // warmes Grau für leere Rahmen und die Säule ohne Bürgerrecht
@@ -138,6 +127,8 @@ const STATIONEN_DATEI = 'data/buergerinnen_stationen.csv';
 const SCHICHTEN_DATEI = 'data/buergerinnen_schichten.csv';
 const SEKTOREN_DATEI = 'data/buergerinnen_sektoren.csv';
 const WEIN_DATEI = 'data/buergerinnen_weinexport.csv';
+const ZEITLEISTE_DATEI = 'data/buergerinnen_zeitleiste.csv';
+const KARTENLINIEN_DATEI = 'data/buergerinnen_kartenlinien.csv'; // Nachbesserung 5: Flusslinien der Tourkarte // Nachbesserung 4, Punkt 1: Folie `khlesl`, vorher fest im Code
 const ARCHIV_DATEI = 'data/buergerinnen_archiv.csv';      // welcher Bestand das Bürgerbuch ist, ergänzte Bestände
 const BESTAND_DATEI = 'data/bestandsverzeichnis.csv';
 const URKUNDEN_DATEI = 'data/urkunden.csv';
@@ -165,19 +156,8 @@ const FAMILIEN_DATEI = 'data/familien.csv'; // Folie `habsburger`: Lebensdaten f
 // ein kleiner Stammbaum der Habsburger um 1600 (Zeilen von oben; Kinder unter ihrem Vater, ids aus familien.csv) bzw.
 // eine Zeitleiste der Eingriffe Melchior Khlesls in Krems, je Eintrag mit der Quelle, aus der wir davon wissen
 const STAMMBAUM = [['ferdinand_i'], ['maximilian_ii', 'karl_ii_innerroesterreich'], ['rudolf_ii', 'matthias_i', 'ferdinand_ii']];
-const KHLESL = [
-  { jahr: '1581', was: 'Der Kremser Rat gratuliert Khlesl', quelle: 'Schreiben des Rates', seite: 'stadt' },
-  { jahr: '1582', was: 'Khlesls Plan für Krems und Stein', quelle: 'Schreiben Khlesls', seite: 'macht' },
-  { jahr: '1584', was: 'Prediger und Lehrer müssen gehen', quelle: 'Bericht eines Protestanten', seite: 'evangelisch' },
-  { jahr: '1589', was: 'Aufstand vor dem Rathaus', quelle: 'Urteil des Gerichts von 1593', seite: 'macht' },
-  { jahr: '1593', was: 'Die Stadt verliert ihre Rechte', quelle: 'Urteil des kaiserlichen Gerichts', seite: 'macht' },
-  { jahr: '1594', was: '25 evangelische Bürger vorgeladen', quelle: 'Ratsprotokoll', seite: 'stadt' },
-  { jahr: '1615', was: 'Kaiser Matthias gibt die Rechte zurück', quelle: 'Brief des Kaisers', seite: 'macht' }
-];
-// Lauf der Donau zur Orientierung (Länge, Breite; vereinfacht über Ulm, Regensburg, Passau, Linz, Melk, Krems, Tulln,
-// Wien, Pressburg, Komárom, Esztergom, Budapest)
-const DONAU = [[9.99, 48.40], [12.10, 49.02], [13.46, 48.57], [14.29, 48.31], [15.33, 48.23], [15.61, 48.41], [16.05, 48.33],
-  [16.37, 48.21], [17.11, 48.14], [18.12, 47.76], [18.74, 47.79], [19.04, 47.50]];
+// Nachbesserung 4, Punkt 1: die Zeitleiste der Folie `khlesl` steht in data/buergerinnen_zeitleiste.csv (instanz.zeitleiste)
+// Nachbesserung 5: Flusslinien der Tourkarte (Orientierung) stehen in data/buergerinnen_kartenlinien.csv (instanz.kartenlinien)
 const ORT_HOECHSTENS = 40;         // so viele Urkunden je Ort zeigt die Karte höchstens (Wien und Krems haben viel mehr)
 const UNSICHER_HELL = '#d9897a';   // Folie `verarbeitung`: Urkunden mit unsicher zugeordnetem Ort
 const HERVOR = '#b4541f';
@@ -205,9 +185,13 @@ const TEILE = {
 };
 const PERSONEN_STATIONEN = ['tor', 'berufe', 'buergerbuch', 'schreibweisen', 'geschlecht', 'frauen'];
 const TOR_STATIONEN = ['tor', 'buergerbuch']; // das ganze aufgeschlagene Buch (auf `buergerbuch` mit Text links daneben)
+// Nachbesserung 4, Punkt 1: archivspezifische Namen aus data/archiv.csv statt aus dem Code (Rückfall neutral)
+function formname() { return String(konfigurationswert('tour_formname') || '').trim() || 'Tor'; }
+function buergerbuchTitel() { return String(konfigurationswert('tour_buergerbuch_titel') || '').trim() || 'Bürgerbuch'; }
+function hauptort() { return String(konfigurationswert('hauptort') || '').trim(); }
 // ohne Stationsdatei: Tor und Geschlecht ohne Text
 const STANDARD_STATIONEN = [
-  { id: 'tor', knopf: 'Steiner Tor', unterzeile: '', muenze: null, anhaengen: false, absaetze: [] },
+  { id: 'tor', knopf: formname(), unterzeile: '', muenze: null, anhaengen: false, absaetze: [] },
   { id: 'geschlecht', knopf: 'Nach Geschlecht ordnen', unterzeile: '', muenze: null, anhaengen: false, absaetze: [] }
 ];
 
@@ -301,33 +285,43 @@ function mische(liste) {
 // das Steiner Tor, nachgezeichnet nach einer Umrisszeichnung des Autors (Koordinaten in deren Bildpunkten): unten
 // der Torturm mit Torbogen, darüber der achteckige Aufsatz mit Glockenhelm, Laterne, Zwiebel, Kugel und Spitze;
 // links und rechts die beiden Rundtürme mit hohen Kegeldächern und Dachgauben. Torbogen und Rundbogenfenster sind ausgespart.
-const TOR = { x0: 40, y0: 35, breite: 955, hoehe: 1390 };
-const TOR_FLAECHEN = [
-  'M350,792 L450,750 L622,746 L712,778 V1400 H350 Z',                                         // Torturm
-  'M398,762 V560 L384,522 C420,494 455,470 470,456 L440,452 L428,404 C450,370 460,330 535,305 '
-    + 'C610,330 620,370 642,404 L630,452 L600,456 C620,470 655,492 690,508 L680,560 V762 Z',  // Aufsatz und Glockenhelm
-  'M492,306 V220 H580 V306 Z',                                                               // Laterne
-  'M500,216 C490,190 505,160 536,138 C567,160 582,190 572,216 Z',                            // Zwiebel
-  'M528,140 H544 V105 H528 Z', 'M519,93 A16,16 0 1 0 551,93 A16,16 0 1 0 519,93 Z',          // Hals, Kugel
-  'M531,79 H541 V40 H531 Z',                                                                 // Spitze
-  'M45,1085 H352 V1405 H45 Z',                                                               // linker Rundturm
-  'M50,1086 C120,1000 170,800 214,640 C250,800 300,1000 348,1083 Z', 'M206,665 L214,620 L222,665 Z',
-  'M80,1070 V988 L75,988 L110,915 L142,988 L138,988 V1070 Z',                                // Gaube links außen
-  'M708,1068 H990 V1410 H708 Z',                                                             // rechter Rundturm
-  'M712,1066 C760,1000 790,800 815,585 C840,800 920,980 988,1056 Z', 'M807,610 L815,570 L823,610 Z'
-];
-const TOR_AUSSPARUNGEN = [
-  'M436,1405 V1262 C470,1212 595,1212 625,1262 V1405 Z',                                     // Torbogen
-  'M505,682 V600 A21.5,21.5 0 0 1 548,600 V682 Z'                                            // Rundbogenfenster
-  // die kleinen Fenster der Vorlage entfallen: bei 2 655 Punkten wären sie nur Kerben im Umriss
-];
+// Nachbesserung 4, Punkt 1: die Umrisszeichnung (Pfaddaten) steht in einer Datei, deren Pfad archiv.csv nennt
+// (`tour_form_pfad`, hier vendor/formen/tor.json). Fehlt der Eintrag oder die Datei, bilden die Punkte eine einfache,
+// neutrale Torform (Giebel mit Torbogen) im selben Rahmen; bei fehlender Datei erscheint ein Hinweis (ladeStationsdaten()).
+const TOR_STANDARD = {
+  rahmen: { x0: 40, y0: 35, breite: 955, hoehe: 1390 },
+  achse: 517.5,
+  flaechen: ['M120,1425 V560 L517.5,140 L915,560 V1425 Z'],
+  aussparungen: ['M400,1425 V1190 A117.5,117.5 0 0 1 635,1190 V1425 Z']
+};
+async function ladeTorVorlage() {
+  await ladeArchivKonfiguration();
+  const pfad = String(konfigurationswert('tour_form_pfad') || '').trim();
+  if (!pfad) return { ...TOR_STANDARD, fehlt: null };
+  try {
+    const antwort = await fetch(pfad);
+    if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`);
+    const f = await antwort.json();
+    const r = f.rahmen || {};
+    const gueltig = [r.x0, r.y0, r.breite, r.hoehe, f.achse].every(Number.isFinite) && Array.isArray(f.flaechen) && f.flaechen.length;
+    if (!gueltig) throw new Error('Rahmen, Achse oder Flächen fehlen');
+    return { rahmen: r, achse: f.achse, flaechen: f.flaechen, aussparungen: Array.isArray(f.aussparungen) ? f.aussparungen : [], fehlt: null };
+  } catch (fehler) {
+    console.warn(`Umriss der Willkommenstour (${pfad}) nicht ladbar, einfache Torform:`, fehler.message);
+    return { ...TOR_STANDARD, fehlt: pfad };
+  }
+}
+const TOR_VORLAGE = await ladeTorVorlage();
+const TOR = TOR_VORLAGE.rahmen;
+const TOR_FLAECHEN = TOR_VORLAGE.flaechen;
+const TOR_AUSSPARUNGEN = TOR_VORLAGE.aussparungen;
 
 // Punkte des Tors (2026-10-29, symmetrisch und geradlinig auf Wunsch des Autors; vorher eine Randreihe und ein
 // versetztes Gitter): ein rechtwinkliges Gitter, dessen Spalten spiegelbildlich um die Mittelachse des Turms liegen.
 // Ein Platz zählt nur, wenn er und sein Spiegelbild in der Form liegen. Der Abstand wird so gesucht, dass mindestens
 // n Plätze entstehen; überzählige fallen in der untersten Reihe außen weg (paarweise, so bleibt das Bild
 // symmetrisch, und Spitze, Helm und Kegeldächer bleiben erhalten).
-const TOR_ACHSE = 533; // Mittelachse (Spitze, Torbogen) in den Koordinaten der Umrisszeichnung
+const TOR_ACHSE = TOR_VORLAGE.achse; // Mittelachse (Spitze, Torbogen) in den Koordinaten der Umrisszeichnung
 const torPunkteCache = new Map(); // je Punktzahl
 function torPunkte(n) {
   if (torPunkteCache.has(n)) return torPunkteCache.get(n).punkte;
@@ -591,6 +585,7 @@ function bereiteStationenAuf(records) {
     anhaengen: alsText(r.text_anhaengen).trim() === 'ja',
     ueberzeile: alsText(r.ueberzeile).trim(),
     titel: alsText(r.titel).trim(),
+    beschreibung: alsText(r.beschreibung).trim(), // Nachbesserung 4, Punkt 1: Bildschirmleser-Text der Bühne
     ...trenneZiele((Array.isArray(r.text) ? r.text : [alsText(r.text)]).map((t) => String(t).trim()).filter(Boolean)),
     jahre: (Array.isArray(r.jahreszahlen) ? r.jahreszahlen : [alsText(r.jahreszahlen)]).map((t) => String(t).trim()).filter(Boolean)
   })).filter((s) => BEKANNTE_STATIONEN.includes(s.id));
@@ -728,6 +723,7 @@ function bereiteArchivAuf(bestand, urkunden, konfig) {
 // er im „Tor mit Löchern“: dazwischen hohle Ringe für Verlorenes, die Folie für Folie herausfallen (VERLUST_STATIONEN);
 // auf `urkunden` bricht die Urkundenreihe in ihre Urkunden auf, auf `mitmachen` füllen goldene Punkte die Löcher.
 // Text und Bild stehen als Paar in der Mitte der Bühne, der Text wechselt die Seite; schmal: Text unter der Bühne.
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): berechnet die Lage aller Archiv-Folien (Tor, Treemap, Zeitbalken, Verlust, Urkunden) aus denselben Maßen; die Varianten sind Zweige eines Falls und teilen alle Zwischenwerte.
 function layoutArchiv(station, b) {
   const A = instanz.archiv;
   const h = instanz.basisHoehe;
@@ -934,7 +930,14 @@ function bereiteKarteAuf(orte, A) {
   });
   const genutzt = [...new Set(A.items[A.urk].urkundenListe.filter((u) => u.ort).map((u) => u.ort))];
   if (!genutzt.length) return null;
+  // Nachbesserung 4, Punkt 1: Mittelpunkt = Hauptort (archiv.csv `hauptort`) mit seinen Koordinaten aus orte.csv; sonst der
+  // Kartenstartpunkt aus archiv.csv, sonst die Mitte der genutzten Orte
+  const haupt = ortVon.get(hauptort());
+  const start = kartenStartpunkt();
+  const mitte = haupt && haupt.lat !== null && haupt.lon !== null ? [haupt.lon, haupt.lat]
+    : start ? [start.zentrum[1], start.zentrum[0]] : [d3.mean(genutzt, (o) => o.lon), d3.mean(genutzt, (o) => o.lat)];
   return {
+    mitte, hauptort: haupt ? haupt.name : '',
     orte: orte.length,
     unsicher: orte.filter((o) => istUnsicher(o.orte_unsicher)).length,
     ohne: A.items[A.urk].urkundenListe.filter((u) => u.ohneKoordinaten).length,
@@ -950,9 +953,9 @@ function bereiteKarteAuf(orte, A) {
 function karteUrkunden(station, vis, beschriftungen, start) {
   const K = instanz.karte, A = instanz.archiv;
   const liste = A.items[A.urk].urkundenListe;
-  const KREMS = [15.61, 48.41], HOCH = 0.42;
-  const kx = Math.cos((KREMS[1] * Math.PI) / 180);
-  const km = ([lon, lat]) => [(lon - KREMS[0]) * 111.3 * kx, (KREMS[1] - lat) * 111.3]; // Osten, Süden positiv
+  const MITTE = K.mitte, HOCH = 0.42; // Nachbesserung 4, Punkt 1
+  const kx = Math.cos((MITTE[1] * Math.PI) / 180);
+  const km = ([lon, lat]) => [(lon - MITTE[0]) * 111.3 * kx, (MITTE[1] - lat) * 111.3]; // Osten, Süden positiv
   const randUnten = 46;
   // Maßstab aus den nächsten 90 % der Orte; fernere (etwa Rom, Flandern) stehen in ihrer Richtung am äußeren Kreis
   const verzerrt = ([x, y]) => { const d = Math.hypot(x, y); const f = d > 0 ? d ** HOCH / d : 0; return [x * f, y * f]; };
@@ -1000,20 +1003,23 @@ function karteUrkunden(station, vis, beschriftungen, start) {
       deckkraft.push(0);
     }
   });
-  const donau = DONAU.map(proj).filter(([x]) => x >= vis.x - 2 && x <= vis.x + vis.b + 2);
-  beschriftungen.push({ art: 'linie', punkte: donau, text: 'Donau', textAn: proj([14.29, 48.31]) });
+  (instanz.kartenlinien || []).forEach((linie) => { // Nachbesserung 5: aus buergerinnen_kartenlinien.csv
+    const punkte = linie.punkte.map(proj).filter(([x]) => x >= vis.x - 2 && x <= vis.x + vis.b + 2);
+    beschriftungen.push({ art: 'linie', punkte, text: linie.name, textAn: proj(linie.beschriftungAn || linie.punkte[0]) });
+  });
   // auf `verarbeitung` sind die Urkunden mit unsicher zugeordnetem Ort hellrot (farbe), dazu der Rand unten
   if (verarbeitung && K.ohne) beschriftungen.push({ art: 'ohneZeit', x: vis.x, y: unten, breite: schmal ? vis.b : null, text: `${zahl(K.ohne)} Urkunden mit nicht sicher identifizierten Orten fehlen auf der Karte` });
   // Krems und die häufigsten Orte (ohne Überlappung)
   const beschriftet = [];
   const kaesten = [];
-  [...zaehler].sort((a, c) => (c[0].name === 'Krems') - (a[0].name === 'Krems') || c[1] - a[1]).forEach(([ort, n]) => {
-    if (ort.name !== 'Krems' && (n < 12 || beschriftet.length >= 7)) return;
+  const istHaupt = (o) => Boolean(K.hauptort) && o.name === K.hauptort; // Nachbesserung 4, Punkt 1
+  [...zaehler].sort((a, c) => istHaupt(c[0]) - istHaupt(a[0]) || c[1] - a[1]).forEach(([ort, n]) => {
+    if (!istHaupt(ort) && (n < 12 || beschriftet.length >= 7)) return;
     const [x, y] = proj([ort.lon, ort.lat]);
     if (schmal) {
       // Krems links neben seinem Haufen (Wien liegt östlich), die übrigen rechts; weggelassen wird nur, was sich mit
       // einer anderen Beschriftung tatsächlich überlappt
-      const haupt = ort.name === 'Krems';
+      const haupt = istHaupt(ort);
       const rr = z * Math.sqrt(Math.min(n, hoechstens)) * 0.62 + 4;
       const w = ort.name.length * (haupt ? 7.4 : 6.2);
       const kx = haupt ? x - rr - w : x + rr;
@@ -1026,7 +1032,7 @@ function karteUrkunden(station, vis, beschriftungen, start) {
     }
     if (beschriftet.some(([bx, by]) => Math.abs(bx - x) < 70 && Math.abs(by - y) < 18)) return;
     beschriftet.push([x, y]);
-    beschriftungen.push({ art: 'ort', x: x + z * Math.sqrt(Math.min(n, ORT_HOECHSTENS)) * 0.62 + 5, y: y + 4, haupt: ort.name === 'Krems', text: ort.name });
+    beschriftungen.push({ art: 'ort', x: x + z * Math.sqrt(Math.min(n, ORT_HOECHSTENS)) * 0.62 + 5, y: y + 4, haupt: istHaupt(ort), text: ort.name });
   });
   return { r, start, pos, deckkraft, farbe, mitte: oy, benoetigt: unten + (schmal ? 26 : 12) + Math.ceil(fach / 60) * z + 16 };
 }
@@ -1047,7 +1053,10 @@ const escapeHtml = (t) => String(t).replace(/[&<>"]/g, (z) => ({ '&': '&amp;', '
 const txt = (w) => String(alsText(w)).trim(); // auch Zahlen und Wahrheitswerte (der Loader wandelt `*_unsicher` um)
 const istJa = (w) => w === true || txt(w).toLowerCase() === 'ja';
 
+const mitPlatzhaltern = (t) => t.replace(/\{(\w+)(?::([\w-]+))?\}/g, (treffer, name, id) => platzhalterWert(name, id) ?? treffer);
+function zeitleisteText() { return (instanz.zeitleiste || []).map((e) => `${e.jahr} ${e.was}, laut ${e.quelle}`).join('; '); }
 function platzhalterWert(name, id) {
+  if (name === 'zeitleiste') return zeitleisteText(); // Nachbesserung 4, Punkt 1
   if (name === 'muenze') return zahl(instanz.muenzeGulden);
   if (name === 'personen') return zahl(instanz.personen.length);
   const F = instanz.familien;
@@ -1479,6 +1488,7 @@ function layoutVermoegen(b, station) {
 function zeichne(animiert) {
   const { svg, punkte } = instanz;
   const L = berechneLayout();
+  bereiteNetzVor(); // Nachbesserung 2, Punkt 2: Netzlage der Folie `habsburger` im Voraus schrittweise rechnen
   instanz.vorigesLayout = instanz.layout;
   instanz.layout = L;
   instanz.letzteBreite = L.b; // eigene Neuzeichnung: die Breitenüberwachung soll sie nicht noch einmal auslösen
@@ -1592,6 +1602,9 @@ function blaettere(L, vorwaerts, farbeVon, deckVon) {
 // Personen auf den Archiv-Folien: im Punkt des Bürgerbuchs zusammengezogen und verborgen. Weiter zum Buch brechen sie
 // aus diesem Punkt hervor; zurück ziehen sie sich wieder hinein und verschwinden.
 function zeigePersonen(L, mitAnimation) {
+  // Nachbesserung 2, Punkt 8 (2026-11-15): ohne Personen (leeres oder unbrauchbares Bürgerbuch) gibt es keine
+  // Punkte; vorher warf die folgende Zeile hier eine Ausnahme, die Bühne blieb verborgen und die Tour stand still.
+  if (!instanz.punkte.node()) { instanz.personenSichtbar = false; return false; }
   const gruppe = instanz.punkte.node().parentNode;
   const sichtbar = L.art !== 'archiv';
   const war = instanz.personenSichtbar;
@@ -2162,6 +2175,7 @@ function lageVon(name, knoten) {
 // höchstens STAFFELUNG ms Verzögerung; Punkte, die schon am Ziel stehen, bleiben unberührt.
 function bewegePunkte(ziele, mitAnimation, zielFarbe, danach = null) {
   const knoten = instanz.punkte.nodes();
+  if (!knoten.length) return; // Nachbesserung 2, Punkt 8: ohne Personen nichts zu bewegen
   const farbeVon = knoten[0].getAttribute('fill') || FARBE;
   if (!mitAnimation) {
     beendeBewegung('personen', { schreiben: false });
@@ -2480,10 +2494,36 @@ function bereiteNetzAuf(urkunden, personenliste) {
 
 // Lage des Netzwerks in einem Rechteck: Scheibengröße nach Zahl der Nennungen (Fläche), Anordnung mit einem
 // Kräftelayout, das immer gleich ausgeht (feste Startlage, feste Zahl von Schritten); je Breite und Höhe einmal
+// Nachbesserung 2, Punkt 2 (2026-11-15): Die 320 Schritte laufen nicht mehr in einer Schleife am Stück, sondern
+// über rechneSchrittweise() (js/utils/kraefteLayout.js), angestoßen schon beim ersten Zeichnen der Tour
+// (bereiteNetzVor()), also lange bevor die Folie `habsburger` erreicht ist. Dieselben Schritte, dieselbe
+// Endlage. Ist die Lage beim Erreichen der Folie (oder nach einer Größenänderung) noch nicht fertig, gilt kurz
+// die Startlage der Simulation; nach dem Ende wird neu gezeichnet.
 function netzLayout(R, N) {
-  const netz = instanz.netz;
   const schluessel = `${Math.round(R.b)}|${Math.round(R.h)}|${N}`;
   if (instanz.netzLage?.schluessel === schluessel) return instanz.netzLage;
+  if (instanz.netzBerechnung?.schluessel !== schluessel) {
+    instanz.netzBerechnung?.lauf.abbrechen();
+    const vorbereitet = erzeugeNetzSimulation(R, N);
+    const lauf = rechneSchrittweise(vorbereitet.sim, 320);
+    const berechnung = { schluessel, lauf };
+    instanz.netzBerechnung = berechnung;
+    lauf.fertig.then((ok) => {
+      if (!ok || !instanz || instanz.netzBerechnung !== berechnung) return;
+      instanz.netzBerechnung = null;
+      instanz.netzLage = schliesseNetzAb(vorbereitet, R, schluessel);
+      if (instanz.station === 'habsburger') zeichne(false);
+    });
+  }
+  return schliesseNetzAb(erzeugeNetzSimulation(R, N), R, schluessel);
+}
+
+function bereiteNetzVor() {
+  if (instanz?.netz) berechneLayout('habsburger');
+}
+
+function erzeugeNetzSimulation(R, N) {
+  const netz = instanz.netz;
   const summe = d3.sum(netz.knoten, (k) => k.n);
   // Punkte je Knoten nach Fläche; Zelle so, dass die Scheiben zusammen knapp ein Viertel der Fläche füllen
   let start = 0;
@@ -2505,7 +2545,11 @@ function netzLayout(R, N) {
     .force('x', d3.forceX(cx).strength(0.07))
     .force('y', d3.forceY(cy).strength(0.1))
     .stop();
-  for (let i = 0; i < 320; i += 1) sim.tick();
+  return { knoten, links, nachId, zelle, cx, cy, sim };
+}
+
+function schliesseNetzAb({ knoten, links, nachId, cx, cy, zelle: zelleStart }, R, schluessel) {
+  let zelle = zelleStart;
   // ins Rechteck einpassen (Lage und Größe gemeinsam verkleinern, falls nötig)
   const x0 = d3.min(knoten, (k) => k.x - k.r), x1 = d3.max(knoten, (k) => k.x + k.r);
   const y0 = d3.min(knoten, (k) => k.y - k.r), y1 = d3.max(knoten, (k) => k.y + k.r - 0) + 16; // Platz für Namen
@@ -2517,7 +2561,6 @@ function netzLayout(R, N) {
     schluessel, knoten, zelle,
     kanten: links.map((l) => ({ a: nachId.get(l.source.id ?? l.source), c: nachId.get(l.target.id ?? l.target), n: l.n }))
   };
-  instanz.netzLage = lage;
   return lage;
 }
 
@@ -2952,14 +2995,15 @@ const ZEICHNER = {
   // Folie `khlesl`: Zeitleiste der Eingriffe in Krems, je Eintrag die Quelle, aus der wir davon wissen (Perspektive)
   khlesl(g, L, neu) {
     const B = L.bild;
-    if (!B) return;
-    const schritt = Math.min(64, (B.h - 20) / KHLESL.length);
-    const oben = B.y + (B.h - schritt * KHLESL.length) / 2 + 10;
+    const Z = instanz.zeitleiste || []; // Nachbesserung 4, Punkt 1: aus buergerinnen_zeitleiste.csv
+    if (!B || !Z.length) return;
+    const schritt = Math.min(64, (B.h - 20) / Z.length);
+    const oben = B.y + (B.h - schritt * Z.length) / 2 + 10;
     const x = B.x + 50;
-    g.append('line').attr('x1', x).attr('x2', x).attr('y1', oben - 6).attr('y2', oben + schritt * (KHLESL.length - 1) + 6)
+    g.append('line').attr('x1', x).attr('x2', x).attr('y1', oben - 6).attr('y2', oben + schritt * (Z.length - 1) + 6)
       .attr('stroke', RAHMEN).attr('stroke-width', 1.2);
     const farbe = { macht: FARBE, stadt: '#7a7a7a', evangelisch: VERLUST_ROT };
-    KHLESL.forEach((e, k) => {
+    Z.forEach((e, k) => {
       const y = oben + k * schritt;
       g.append('circle').attr('cx', x).attr('cy', y).attr('r', 5).attr('fill', farbe[e.seite]);
       g.append('text').attr('class', 'bgi-wert').style('text-anchor', 'end').attr('x', x - 12).attr('y', y + 4).text(e.jahr);
@@ -3298,17 +3342,20 @@ function markiereAuswahl() {
 
 function stationsBeschriftung() {
   const { station, layout: L, schichten, personen } = instanz;
+  // Nachbesserung 4, Punkt 1: eigener Text aus der Stationsdatei (Spalte `beschreibung`, Platzhalter wie im Text) geht vor
+  const eigene = instanz.stationen?.[instanz.stationIndex]?.beschreibung;
+  if (eigene && instanz.stationen[instanz.stationIndex].id === station) return mitPlatzhaltern(eigene);
   if (ARCHIV_STATIONEN.includes(station) && instanz.archiv) {
     const A = instanz.archiv;
-    if (station === 'archiv') return `${zahl(A.items.length)} Bestände des Stadtarchivs Krems als Punkte, zusammen das Steiner Tor`;
+    if (station === 'archiv') return `${zahl(A.items.length)} Bestände als Punkte, zusammen das ${formname()}`;
     if (station === 'kategorien') return `Bestände nach Kategorie: ${A.kategorien.map((k) => `${k.name} ${zahl(k.anzahl)}`).join(', ')}`;
     if (station === 'zeitraeume') return `Zeitraum jedes Bestands als Balken; ${zahl(A.ohneZeit)} Bestände ohne Zeitangabe`;
     if (station === 'urkunden' && A.urk >= 0) return `Die ${zahl(A.items[A.urk].jahre.length)} Urkunden einzeln, in Säulen je Jahrzehnt`;
-    if (VERLUST_STATIONEN.includes(station)) return 'Steiner Tor aus den Beständen, dazwischen Ringe für verlorene Bestände; ein Teil der Ringe fällt heraus';
-    if (station === 'orte') return 'Karte: die Urkunden an den Orten, die sie nennen, entlang der Donau und weit darüber hinaus';
+    if (VERLUST_STATIONEN.includes(station)) return `${formname()} aus den Beständen, dazwischen Ringe für verlorene Bestände; ein Teil der Ringe fällt heraus`;
+    if (station === 'orte') return 'Karte: die Urkunden an den Orten, die sie nennen';
     if (station === 'verarbeitung') return 'Karte: unscharfe Höfe um unsicher zugeordnete Orte, unten die Urkunden, deren Orte keine Koordinaten haben';
-    if (station === 'mitmachen') return 'Steiner Tor mit Lücken; goldene Punkte für Beiträge füllen sie nach und nach';
-    return 'Steiner Tor aus den Beständen; der Punkt des Bürgerbuchs leuchtet und öffnet das Bürgerbuch';
+    if (station === 'mitmachen') return `${formname()} mit Lücken; goldene Punkte für Beiträge füllen sie nach und nach`;
+    return `${formname()} aus den Beständen; der Punkt des Bürgerbuchs leuchtet und öffnet das Bürgerbuch`;
   }
   if (station === 'berufe' && instanz.berufe) {
     const B = instanz.berufe;
@@ -3317,14 +3364,14 @@ function stationsBeschriftung() {
   }
   if (station === 'schreibweisen') return `${zahl(personen.filter((p) => p.schreibweisen.length > 1).length)} Personen im Buch hervorgehoben, die in mehreren Schreibweisen überliefert sind`;
   if (station === 'geschlecht') return `${zahl(L.maenner.length)} Männer und ${zahl(L.frauen.length)} Frauen im Bürgerbuch`;
-  if (station === 'klerus') return 'Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden links wieder das Steiner Tor, rechts neben dem Text eine kleine Kirche mit Kreuz aus den Münzen';
+  if (station === 'klerus') return `Stadt und Kirche: Bürger, Frauen sowie Inwohner und Hilfskräfte bilden links wieder das ${formname()}, rechts neben dem Text eine kleine Kirche mit Kreuz aus den Münzen`;
   if (station === 'weinzoll' && instanz.wein) {
     const W = instanz.wein;
     return `Weinausfuhr über die Passauer Maut: ${zahl(W.vorher.eimer)} Eimer ${W.vorher.jahr}, ${zahl(W.nachher.eimer)} Eimer ${W.nachher.jahr}. `
       + `Alle Punkte füllen bordeauxrot eine Weinflasche; die oberen ${prozent(100 - (W.nachher.eimer / W.vorher.eimer) * 100)} Prozent sinken hinab und verblassen, die Flasche leert sich`;
   }
   if (station === 'habsburger') return 'Alle Menschen der Stadt als namenlose Menge, daneben ein kleiner Stammbaum der Habsburger um 1600 mit Geburts- und Todestag';
-  if (station === 'khlesl') return `Zeitleiste der Eingriffe Melchior Khlesls in Krems: ${KHLESL.map((e) => `${e.jahr} ${e.was}, laut ${e.quelle}`).join('; ')}`;
+  if (station === 'khlesl') return `Zeitleiste: ${zeitleisteText()}`;
   if (station === 'reformation') return 'Kreuz und kleine Kirche: Die Punkte wandern immer wieder zwischen beiden hin und her, weil niemand weiß, wie viele katholisch waren';
   if (station === 'behauptung') return 'Aufgeschlagenes Buch: links das Schreiben des Rates von 1615, rechts das Ratsprotokoll vom 14. August 1607 mit einem leeren Rahmen, wo der Beschluss stehen müsste';
   if (station === 'frauen') return `${zahl(L.maenner.length)} Männer im Bürgerbuch, daneben ebenso viele symbolische Punkte für die Frauen, die es nicht nennt`;
@@ -3360,7 +3407,7 @@ function setzeKopf() {
   // je Folie aus der Stationsdatei (Spalten `ueberzeile`, `titel`, Platzhalter wie im Text); sonst wie bisher
   const s = instanz.stationen[instanz.stationIndex];
   const mitWerten = (t) => t.replace(/\{(\w+)(?::([\w-]+))?\}/g, (treffer, name, id) => platzhalterWert(name, id) ?? treffer);
-  kopf.querySelector('.bgi-ueberzeile').textContent = s?.ueberzeile ? mitWerten(s.ueberzeile) : (imArchiv ? 'Stadtarchiv Krems' : instanz.kopfUeberzeile);
+  kopf.querySelector('.bgi-ueberzeile').textContent = s?.ueberzeile ? mitWerten(s.ueberzeile) : (imArchiv ? konfigurationswert('archiv_kurzname') : instanz.kopfUeberzeile);
   kopf.querySelector('.bgi-zahl').textContent = s?.titel ? mitWerten(s.titel)
     : (imArchiv ? `${zahl(archiv.items.length)} Bestände` : `${zahl(instanz.personen.length)} Personen`);
   instanz.unterzeile.textContent = mitWerten(s?.unterzeile || STANDARD_UNTERZEILE);
@@ -3445,8 +3492,38 @@ function baueArchivpunkte() {
   instanz.archivPuls = archivEbene.append('circle').attr('class', 'bgi-puls').attr('display', 'none');
 }
 
+// Nachbesserung 8, Punkt 1: aus ladeStationsdaten() ausgelagert (dort sonst über 100 Zeilen) - Zeitleiste der Folie `khlesl`
+// und Flusslinien der Tourkarte aus ihren Begleitdateien
+function bereiteZeitleisteUndLinienAuf(zeitleiste, kartenlinien) {
+  instanz.zeitleiste = (zeitleiste || []).map((r) => ({ jahr: txt(r.jahr), was: txt(r.ereignis), quelle: txt(r.quelle), seite: txt(r.seite) }))
+    .filter((e) => e.jahr && e.was);
+  // Nachbesserung 5: Flusslinien (Punkte in Dateireihenfolge je `linie`; Beschriftung am Punkt mit `beschriftung` = ja)
+  const linien = new Map();
+  (kartenlinien || []).forEach((r) => {
+    const name = txt(r.linie), lon = Number(txt(r.lon).replace(',', '.')), lat = Number(txt(r.lat).replace(',', '.'));
+    if (!name || !Number.isFinite(lon) || !Number.isFinite(lat)) return;
+    if (!linien.has(name)) linien.set(name, { name, punkte: [], beschriftungAn: null });
+    linien.get(name).punkte.push([lon, lat]);
+    if (txt(r.beschriftung) === 'ja') linien.get(name).beschriftungAn = [lon, lat];
+  });
+  instanz.kartenlinien = [...linien.values()].filter((l) => l.punkte.length >= 2);
+  if (!kartenlinien) console.warn(`${KARTENLINIEN_DATEI} nicht gefunden: Die Karte der Tour erscheint ohne Flusslinien.`);
+}
+
+// Nachbesserung 8, Punkt 1: aus ladeStationsdaten() ausgelagert - Hinweis, wenn geplante Archiv-Folien entfallen
+function meldeFehlendeArchivFolien(stationen) {
+  // Nachbesserung 7, Punkt 2 (Befund 3.2): die Stationsdatei sieht Archiv-Folien vor, aber buergerinnen_archiv.csv (oder das
+  // Bestandsverzeichnis) ist unbrauchbar - die Folien entfallen nicht mehr ohne Hinweis
+  const archivFolienGeplant = (stationen || []).map((r) => alsText(r.station).trim()).filter((id) => ARCHIV_STATIONEN.includes(id));
+  const archivFolienFehlen = archivFolienGeplant.filter((id) => !instanz.stationen.some((st) => st.id === id));
+  if (archivFolienFehlen.length && !(instanz.archiv?.items?.length && instanz.archiv.bb >= 0) && instanz.personen.length) {
+    const alle = archivFolienFehlen.length === archivFolienGeplant.length;
+    instanz.kopf.before(erzeugeHinweisBalken([`${alle ? 'Die Folien zum Archiv entfallen' : `${archivFolienFehlen.length} von ${archivFolienGeplant.length} Folien zum Archiv entfallen`}: buergerinnen_archiv.csv oder das Bestandsverzeichnis konnte nicht gelesen werden oder enthält keinen verwertbaren Eintrag.${alle ? ' Die Tour beginnt deshalb beim Bürgerbuch.' : ''}`]));
+  }
+}
+
 async function ladeStationsdaten() {
-  const [stationen, schichten, sektoren, weinexport, rohBuergerbuch, archivKonfig, bestand, urkunden, orte, familien] = await Promise.all([
+  const [stationen, schichten, sektoren, weinexport, rohBuergerbuch, archivKonfig, bestand, urkunden, orte, familien, zeitleiste, kartenlinien] = await Promise.all([
     ladeCSV(STATIONEN_DATEI).then((r) => r.records).catch(() => null),
     ladeCSV(SCHICHTEN_DATEI).then((r) => r.records).catch(() => null),
     ladeCSV(SEKTOREN_DATEI).then((r) => r.records).catch(() => null),
@@ -3456,9 +3533,15 @@ async function ladeStationsdaten() {
     instanz.daten?.bestandsverzeichnis || ladeCSV(BESTAND_DATEI).then((r) => r.records).catch(() => null),
     instanz.daten?.urkunden || ladeCSV(URKUNDEN_DATEI).then((r) => r.records).catch(() => null),
     instanz.daten?.orte || ladeCSV(ORTE_DATEI).then((r) => r.records).catch(() => null),
-    instanz.daten?.familien || ladeCSV(FAMILIEN_DATEI).then((r) => r.records).catch(() => null)
+    instanz.daten?.familien || ladeCSV(FAMILIEN_DATEI).then((r) => r.records).catch(() => null),
+    ladeCSV(ZEITLEISTE_DATEI).then((r) => r.records).catch(() => null), // Nachbesserung 4, Punkt 1
+    ladeCSV(KARTENLINIEN_DATEI).then((r) => r.records).catch(() => null) // Nachbesserung 5
   ]);
   if (!instanz) return;
+  bereiteZeitleisteUndLinienAuf(zeitleiste, kartenlinien);
+  if (TOR_VORLAGE.fehlt && instanz.kopf?.isConnected) {
+    instanz.kopf.before(erzeugeHinweisBalken([`Die Umrissdatei der Tour (${TOR_VORLAGE.fehlt}, Eintrag tour_form_pfad in archiv.csv) fehlt oder ist unlesbar. Die Punkte bilden deshalb eine einfache Torform.`]));
+  }
   if (sektoren) ergaenzeSektoren(instanz.personen, instanz.buergerbuch, rohBuergerbuch);
   instanz.schichten = bereiteSchichtenAuf(schichten, instanz.personen.length);
   const weinZeilen = (weinexport || []).map((r) => ({ jahr: zahlWert(r.jahr), eimer: zahlWert(r.eimer) }))
@@ -3485,7 +3568,18 @@ async function ladeStationsdaten() {
     .filter((s) => s.id !== 'weinzoll' || (instanz.wein && instanz.schichten))
     .filter((s) => !VERMOEGEN_STATIONEN.includes(s.id) || instanz.schichten)
     .filter((s) => s.id !== 'vermoegenslos' || instanz.schichten?.ohne)
-    .filter((s) => s.id !== 'habsburger' || STAMMBAUM.flat().every((id) => instanz.familien?.has(id)));
+    .filter((s) => s.id !== 'habsburger' || STAMMBAUM.flat().every((id) => instanz.familien?.has(id)))
+    // Nachbesserung 2, Punkt 8 (2026-11-15, Prüfung 14.11.2026, Befund 3.2): ohne Personen aus dem Bürgerbuch nur die
+    // Archiv-Folien (ohne `klick`, der ins Bürgerbuch führt); darüber ein Hinweis statt eines stillen Leerzustands.
+    .filter((s) => instanz.personen.length > 0 || (ARCHIV_STATIONEN.includes(s.id) && s.id !== 'klick'));
+  meldeFehlendeArchivFolien(stationen);
+  if (!instanz.personen.length) {
+    const texte = [instanz.stationen.length
+      ? 'Für den Teil der Tour zum Bürgerbuch liegen keine Daten vor: buergerbuch.csv enthält keine verwertbaren Einträge. Die Tour zeigt deshalb nur die Folien zum Archiv.'
+      : 'Für diese Tour liegen keine Daten vor: buergerbuch.csv enthält keine verwertbaren Einträge, und die Folien zum Archiv lassen sich ohne Bestandsverzeichnis nicht zeigen.'];
+    instanz.kopf.before(erzeugeHinweisBalken(texte));
+    if (!instanz.stationen.length) return;
+  }
   instanz.muenzeGulden = instanz.stationen.find((s) => s.muenze)?.muenze || STANDARD_MUENZE;
   if (instanz.schichten) {
     // Zuordnung Punkt → Schicht und Platz in der Säule (nach der gemischten Reihenfolge, also ohne Bezug zur Person)
@@ -3527,6 +3621,7 @@ async function ladeStationsdaten() {
   }
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Einstieg des Moduls (Modul-Interface, Masterprompt §13): baut Gerüst, Instanz und Ereignisse in fester Reihenfolge auf; die Schritte hängen voneinander ab.
 export function render(container, data, options = {}) {
   if (instanz) destroy();
   container.innerHTML = '';
@@ -3542,9 +3637,10 @@ export function render(container, data, options = {}) {
   werkzeugleiste.className = 'bgi-werkzeugleiste';
   const kopf = document.createElement('div');
   kopf.className = 'bgi-kopf';
-  kopf.innerHTML = `<div class="bgi-ueberzeile">Bürgerbuch Krems${spanne ? `, ${spanne[0]} bis ${spanne[1]}` : ''}</div>
+  kopf.innerHTML = `<div class="bgi-ueberzeile"></div>
     <p class="bgi-zahl">${zahl(personen.length)} Personen</p>
     <div class="bgi-unterzeile">${STANDARD_UNTERZEILE}</div>`;
+  kopf.querySelector('.bgi-ueberzeile').textContent = `${buergerbuchTitel()}${spanne ? `, ${spanne[0]} bis ${spanne[1]}` : ''}`; // Nachbesserung 4, Punkt 1
   const steuerung = document.createElement('div');
   steuerung.className = 'bgi-steuerung';
   steuerung.innerHTML = `<span class="bgi-foliennummer" aria-hidden="true"></span><button type="button" class="bgi-zurueck" hidden>Zurück</button>
@@ -3567,7 +3663,8 @@ export function render(container, data, options = {}) {
   buehne.style.height = `${hoehe}px`;
 
   const svg = d3.select(buehne).append('svg').attr('role', 'img')
-    .attr('aria-label', `${zahl(personen.length)} Personen im Bürgerbuch, als Steiner Tor`);
+    .call((s) => beschreibeSvgAusInfotext(s.node(), 'buergerinnen')) // Nachbesserung 6, Punkt 12: Beschreibung aus dem Info-Text
+    .attr('aria-label', `${zahl(personen.length)} Personen im Bürgerbuch, als ${formname()}`);
   const ebeneSpalten = svg.append('g');
   const ebeneMuenzen = svg.append('g');
   const ebeneGraue = svg.append('g');
@@ -3659,7 +3756,7 @@ export function render(container, data, options = {}) {
   instanz = {
     container, wurzel, buehne, personen, buergerbuch, berufe: null, torPlatz: null, wein: null, weinZeit: null,
     archiv: null, archivEbene, archivAktiv: false, personenSichtbar: true, daten: data, kopf,
-    kopfUeberzeile: `Bürgerbuch Krems${spanne ? `, ${spanne[0]} bis ${spanne[1]}` : ''}`, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
+    kopfUeberzeile: `${buergerbuchTitel()}${spanne ? `, ${spanne[0]} bis ${spanne[1]}` : ''}`, station: 'tor', stationIndex: 0, stationen: STANDARD_STATIONEN, schichten: null,
     zuordnung: null, muenzeGulden: STANDARD_MUENZE, svg, punkte, graue: null, graueSichtbar: false, frauenPunkte, frauenSichtbar: false, leinwand, bewegungen: new Map(),
     personenGruppe, frauenGruppe, graueGruppe: null, muenzGruppen: new Set(), zeichenAnfrage: null, zeichnenBis: 0, bildNr: 0, ebeneSpalten, ebeneMuenzen,
     ebeneGraue, teileVorher: new Set(), weiterKnopf: steuerung.querySelector('.bgi-weiter'), zurueckKnopf: steuerung.querySelector('.bgi-zurueck'), foliennummer: steuerung.querySelector('.bgi-foliennummer'),
@@ -3704,6 +3801,7 @@ export function resize() {
 
 export function destroy() {
   if (!instanz) return;
+  instanz.netzBerechnung?.lauf.abbrechen();
   instanz.beobachter?.disconnect();
   instanz.archivGeister?.interrupt('geist');
   instanz.archivBeitraege?.interrupt('beitrag');

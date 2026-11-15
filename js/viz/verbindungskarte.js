@@ -112,6 +112,9 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis } from '../utils/urkundenOrte.js';
 import { baueStatischeKarte, projiziere, erzeugeUeberlagerungsSvg } from '../utils/statischeKarte.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
+import { markiereSvg, mitUnvollstaendigHinweis } from '../utils/vollstaendigkeit.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 
@@ -216,6 +219,7 @@ function fuegeStyleEin(container) {
   container.appendChild(style);
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 async function zeichneVerbindungskarte() {
   const { container, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -257,6 +261,7 @@ async function zeichneVerbindungskarte() {
   const svgUeberlagerung = erzeugeUeberlagerungsSvg(mapDiv, breite, hoehe, {
     ariaLabel: 'Verbindungskarte: gemeinsam genannte Orte in Urkunden'
   });
+  beschreibeSvgAusInfotext(svgUeberlagerung.node(), 'verbindungskarte'); // Nachbesserung 6, Punkt 12: Beschreibung aus dem Info-Text
 
   // Seit 2026-10-28 (Wunsch des Autors) nach dem Prinzip der Karte hinter der Bilderwand: in Ruhe nur die Orte
   // (Kreisgröße = Zahl der Urkunden, zurückhaltend), keine Linien. Zeigt man auf einen Ort (oder fokussiert
@@ -285,7 +290,18 @@ async function zeichneVerbindungskarte() {
 
   const boegenGruppe = svgUeberlagerung.append('g').attr('class', 'verbindungskarte-boegen');
   const ortsGruppe = svgUeberlagerung.append('g').style('pointer-events', 'auto');
+  // Nachbesserung 6, Punkt 1: Ebene für die Kopie des aktiven Ortes (statt raise(), siehe zeichneHervorhebung())
+  const obenaufGruppe = svgUeberlagerung.append('g').attr('aria-hidden', 'true').style('pointer-events', 'none');
   const namenGruppe = svgUeberlagerung.append('g').attr('class', 'verbindungskarte-namen').attr('pointer-events', 'none');
+  function zeichneObenauf() {
+    obenaufGruppe.selectAll('*').remove();
+    const aktiv = fokus || fixiert;
+    const original = aktiv ? ortsKnoten.filter((o) => o.name === aktiv).node() : null;
+    if (!original) return;
+    const kopie = original.cloneNode(false);
+    ['tabindex', 'role', 'aria-label', 'aria-describedby', 'data-unvollstaendig'].forEach((a) => kopie.removeAttribute(a));
+    obenaufGruppe.node().appendChild(kopie);
+  }
 
   const ortsKnoten = ortsGruppe
     .selectAll('circle.orts-knoten')
@@ -295,7 +311,8 @@ async function zeichneVerbindungskarte() {
     .attr('tabindex', 0)
     .attr('role', 'button')
     .attr('aria-label', (o) => `${o.name}: ${(ortRecordsMap.get(o.name) || []).length} Urkunden, gemeinsam genannt mit ${(verbindungenJeOrt.get(o.name) || []).length} Orten`)
-    .attr('r', radius);
+    .attr('r', radius)
+    .call((a) => markiereSvg(a, (o) => o.ortRecord)); // Nachbesserung 3, Punkt 3
 
   let fokus = null; // Name des hervorgehobenen Ortes (Zeigen/Tastatur)
   let fixiert = null; // per Klick festgehaltener Ort
@@ -320,7 +337,11 @@ async function zeichneVerbindungskarte() {
       .classed('ist-aktiv', (o) => o.name === aktiv)
       .classed('ist-verbunden', (o) => verbunden.has(o.name))
       .classed('tritt-zurueck', (o) => Boolean(aktiv) && o.name !== aktiv && !verbunden.has(o.name));
-    if (aktiv) ortsKnoten.filter((o) => o.name === aktiv).raise();
+    // Nachbesserung 6, Punkt 1 (Befund 6.3), Ursache der fehlenden Tastaturbedienung: Hier stand raise(). Es hängte den
+    // aktiven Kreis im DOM ans Ende und nahm ihm damit den Fokus, den er gerade bekommen hatte (focus() wirkungslos, per
+    // Tab kein Ort erreichbar). Jetzt bleibt die Reihenfolge im DOM (= Tab-Reihenfolge) unverändert; obenauf liegt eine
+    // nicht fokussierbare, für Hilfsmittel verborgene Kopie des aktiven Kreises.
+    zeichneObenauf();
 
     const boegen = aktiv ? [...verbunden.values()] : [];
     const pfade = boegenGruppe.selectAll('path.verbindung').data(boegen, (p) => `${p.a}|${p.b}`).join('path')
@@ -328,7 +349,8 @@ async function zeichneVerbindungskarte() {
       .attr('d', bogenPfad)
       .attr('stroke-width', breiteBogen)
       .attr('stroke-opacity', deckkraftBogen)
-      .attr('stroke-dasharray', (p) => (zeigeUnsicherheit && p.unsicherAnzahl > 0 ? '4,3' : null));
+      .attr('stroke-dasharray', (p) => (zeigeUnsicherheit && p.unsicherAnzahl > 0 ? '4,3' : null))
+      .call((a) => markiereHell(a, (p) => zeigeUnsicherheit && p.unsicherAnzahl > 0)); // Nachbesserung 3, Punkt 4
     pfade.selectAll('title').remove();
     pfade.append('title').text(baueVerbindungTooltip);
 
@@ -346,12 +368,13 @@ async function zeichneVerbindungskarte() {
     namenGruppe.selectAll('text')
       .attr('x', (name) => pos(name).x + radius({ name }) + 7)
       .attr('y', (name) => pos(name).y + 4);
+    zeichneObenauf(); // Nachbesserung 6, Punkt 1: Kopie folgt der Kartenbewegung
   }
 
   const zeigeOrtTooltip = (element, o) => {
     const anzahlUrkunden = (ortRecordsMap.get(o.name) || []).length;
     const anzahlOrte = (verbindungenJeOrt.get(o.name) || []).length;
-    zeigeTooltip(`${o.name}\n${anzahlUrkunden} Urkunde(n), gemeinsam genannt mit ${anzahlOrte} Ort(en)`, element, mapDiv);
+    zeigeTooltip(mitUnvollstaendigHinweis(o.ortRecord, `${o.name}\n${anzahlUrkunden} Urkunde(n), gemeinsam genannt mit ${anzahlOrte} Ort(en)`), element, mapDiv);
   };
   ortsKnoten.each(function verdrahte(o) {
     const element = this;

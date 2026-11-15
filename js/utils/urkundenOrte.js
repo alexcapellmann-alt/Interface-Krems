@@ -33,7 +33,8 @@ export function ladeOrtsVerzeichnis() {
           lon,
           orteId: record.orte_id,
           haeufigkeit: record.haeufigkeit,
-          orteUnsicher: record.orte_unsicher
+          orteUnsicher: record.orte_unsicher,
+          ortRecord: record // Nachbesserung 3, Punkt 3: für die Kennzeichnung unvollständiger Orte
         });
       });
       return verzeichnis;

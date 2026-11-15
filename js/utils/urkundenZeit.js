@@ -10,6 +10,7 @@
 // Datei, siehe dortiger Dateikopf-Kommentar.)
 
 import { zeigeTooltip, versteckeTooltip } from './tooltip.js';
+import { mitUnvollstaendigHinweis } from './vollstaendigkeit.js';
 
 const ROEMISCH_ZU_MONAT = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
 const KACHELGROESSE_UNBEKANNT = 14;
@@ -155,11 +156,11 @@ export function gruppiereNachJahrhundertUndKategorie(records, kategorien) {
 }
 
 export function baueUrkundenTooltipText(record) {
-  const zeilen = [record.signatur, record.datum || '(kein Datum)', ersteKategorie(record)];
+  const zeilen = [record.signatur || '(ohne Signatur)', record.datum || '(kein Datum)', ersteKategorie(record)];
   if (record.datum_unsicher) {
     zeilen.push('Achtung: Datierung unsicher');
   }
-  return zeilen.join('\n');
+  return mitUnvollstaendigHinweis(record, zeilen.join('\n')); // Nachbesserung 3, Punkt 3
 }
 
 // Rendert eine sichtbar markierte Sammelfläche für Urkunden, die sich in der

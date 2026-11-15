@@ -14,6 +14,12 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-11-15 – `unsicherheit_anmerkung` in fünf Tabellen auf das Format `<feldname>: <Erklärung>` gebracht
+
+Nur der Vorspann geändert, Erklärungstexte wörtlich; 578 Einträge in 553 Datensätzen (`urkunden.csv` 174,
+`buergerbuch.csv` 290, `orte.csv` 84, `personenliste.csv` 3, `bestandsverzeichnis.csv` 2). Einzelheiten, Ausnahmen und
+Prüfung: chronologischer Eintrag 80.
+
 ### 2026-10-27 – StaAKr-0337: Familiennamen nicht mehr als Personen, Komma im Regest, Pezinok ergänzt (Hinweis des Autors)
 
 | Datei | Zeile | Spalte | vorher | nachher |
@@ -252,6 +258,607 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   (296) stimmte schon VOR der Entfernung nicht mit einer Neuberechnung aus
   `urkunden.csv` überein (298, Abweichung 2) und wird deshalb laut Auftrag
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
+
+---
+
+## 2026-11-15 (90) – Nachbesserung 6, Punkt 17: einfache Sprache umgesetzt, Sachkorrektur „67 Inventare“
+
+Grundlage: Vorschlagsliste aus Nachbesserung 6, Punkt 17 (`Nachbesserung_2026-11-15/a6/VORSCHLAEGE_EINFACHE_SPRACHE.md`),
+durchgesehen und entschieden vom Autor (15.11.2026): 28 Zeilen übernommen, 4 nach Prüfung im Code übernommen, 12 mit
+neuem Wortlaut, Nr. 43 verworfen; dazu Begriffe aus Teil B. Geändert sind nur `data/infotexte.csv` (24 Texte) und
+`data/ansichten.csv` (Einleitungen Erkundung, Bestand, Personen); Code unverändert.
+
+- **Vorgehen:** Ersetzung Satz für Satz auf dem Rohtext der CSV (keine Neuserialisierung), jede Ersetzung musste genau
+  einmal treffen. Platzhalter in `{…}` wörtlich erhalten (je Text verglichen), Links und Zwischenüberschriften in der
+  Erkundung unverändert, Absatzzahl je Text unverändert. Kein neuer Text enthält ein Semikolon, einen senkrechten Strich
+  oder ein gerades Anführungszeichen; die Zahl der Semikolons sank in acht Texten (sie stehen dort in Anführungszeichen
+  und sind für die CSV unschädlich, aber im Satz schwer lesbar). Skript: `tools/a6_sprache_umsetzen.py` (enthält jede
+  Ersetzung mit Original und neuem Text); Kontrolle über `git diff -- data/infotexte.csv data/ansichten.csv`.
+- **Sätze über 20 Wörter** (Methode der Vorschlagsliste): **44 → 6**. Die sechs übrigen haben 21–23 Wörter (Doppelpunkt-
+  Sätze in Karte, Personenliste, Bilderwand-Hinweis, zwei in der Erkundung, Baum).
+- **Bedienverhalten im Code geprüft (Nr. 4, 24, 30, 33):** Rangdiagramm (Klick hält fest, zweiter Klick löst, freie Fläche
+  setzt zurück), Kategoriefluss (zweiter Klick, freie Fläche, Esc), Verbindungskarte (zweiter Klick, freie Karte),
+  Wortwolke (zweiter Klick schließt die Liste) – stimmt jeweils.
+- **Abweichungen zwischen Vorschlag und Code, gemeldet und so gelöst:**
+  - Nr. 10 (Karte): Beim Abspielen bleibt der Anfang des Zeitraums fest, nur das Ende rückt vor (`karte.js`, `spieleAb()`);
+    die Karte füllt sich also wirklich nach und nach. Der Regler wählt einen Zeitraum in Jahrzehnt-Schritten, nicht ein
+    einzelnes Jahrzehnt. Text deshalb: „Mit dem Zeitregler wählen Sie einen Zeitraum in Schritten von einem Jahrzehnt.
+    Die Taste ▶ lässt das Ende des Zeitraums Jahrzehnt für Jahrzehnt vorrücken, die Karte füllt sich nach und nach mit
+    Orten.“ Außerdem „deren Lage unsicher ist“ → „deren Identifizierung unsicher ist“ (Wortlaut des Originals; Lage und
+    Identifizierung sind nicht dasselbe).
+  - Nr. 18 (Personenliste): Das Beispiel „der Ältere“ entfernt der Code nicht (er entfernt Titel/Ämter, „von/zu“ mit
+    Folgewort, Artikel, „-sohn/-tochter“). Beispiel gestrichen, „Heuristik“ durch „nach festen Regeln geschätzt“ ersetzt.
+  - Nr. 25 (Streamgraph): „im gewählten Jahr“ → „im Jahr unter dem Mauszeiger“ (Original; es gibt keine Jahreswahl).
+  - Nr. 39 (Bilderwand): „lassen sich aber in der Ortswolke als Filter wählen“ ergänzt um „sofern sie dort stehen“ –
+    passt so zum neuen Hinweis, dass Orte außerhalb der Wolke nicht wählbar sind.
+  - Nr. 2: Der folgende Satz begann mit „Sie ist keine belegte …“ und hätte sich auf die Liste bezogen; „Sie“ →
+    „Die Zuordnung“.
+  - Nr. 40: „Andere verkauften Häuser …“ hätte andere Personen behauptet; jetzt „Sie erzählen auch, wer Häuser
+    verkaufte, …“ (eigener Fehler im Vorschlag).
+  - Nr. 11: Fachname „(Spearman-Rangkorrelation)“ in Klammern behalten (Regel Teil B); „je Person“ → „aus den
+    Verlassenschaftsinventaren“ (eine Zeile ist ein Inventar, siehe unten); Abkürzungen SchzG/SchvG bleiben genannt,
+    weil die Achsen sie verwenden. Hinweis „(Begriffe: siehe B.)“ aus der Liste entfernt.
+  - Nr. 15: SchzG/SchvG in Klammern hinter die ausgeschriebenen Begriffe, aus demselben Grund.
+- **Begriffe (Teil B):** „Heuristik“ in allen drei Texten ersetzt (Nr. 2, 6, 18). „Regest“ beim ersten Vorkommen erklärt:
+  Wortwolke („Regesten (Kurzfassungen der Urkunden)“), Erkundung (ebenso); Kachelraster und Urkunden-Einleitung erklären
+  es schon. „Bestand“ einmal in der Bestand-Einleitung erklärt, mit dem Wortlaut der Willkommenstour („eine Gruppe von
+  Büchern, Akten oder Rechnungen, die zusammengehören“). „BKK-Dokumentationsprofil“ im Baum ersetzt: „gruppiert nach
+  Themen. Diese Kategorien folgen der Gliederung der Bundeskonferenz der Kommunalarchive (BKK).“ Fachnamen einmal in
+  Klammern: Bump Chart, Marimekko, Trellis, Spearman-Rangkorrelation. Icicle, Korrelation, Skala, Laufmeter in den übrigen
+  Texten unverändert (Laufmeter nur in Nr. 8 als „Meter Regallänge“ umschrieben).
+- **Sachkorrektur Nr. 12:** „67 Personen“ → „67 Inventare“. `verlassenschaftsinventare.csv` hat 68 Inventare, 67 mit
+  Realvermögen (Grundlage der Matrix, N = 67), aber nur 66 verschiedene Personen (zwei Zweitinventarisierungen). Übrige
+  Nennungen geprüft: `fuehrungen.csv` (zweimal „68 Inventare“/„68 Verlassenschaftsinventare“) und ein Kommentar in
+  `belegDarstellung.js` („alle 68 Inventare“) stimmen; „67 Personen“ kam sonst nirgends vor.
+- **Prüfung:** Bilderwand bei 1920, 1366 und 375 px: axe 0 Verstöße geladen und mit offenem Info-Text, Infotext gleich
+  gezeigten Orten (41/5, 27/7, 5/31), 0 Konsolenfehler, 0 Platzhalter-Reste. Platzhalter in Bestand (315 Bestände),
+  Personen (2.791 Aufnahmen), Kategoriefluss (17 Nennungen) eingesetzt. axe gesamt 31 Ansichten, 124 Zustände:
+  0 Verstöße. Sitzungsbedienung 39 Ansichten, 0 Fehler. Tests 29/29.
+
+---
+
+## 2026-11-15 (89) – Nachbesserung 8: Wartbarkeit und Testbestand
+
+Grundlage: Auftrag 8 (Befunde 1.7, 2.4, K9 aus Prüfteil 1). Entscheidung des Autors (15.11.2026): Funktionslänge per
+Vermerk, wo die Funktion fachlich zusammenhängt, sonst Zerlegung; Tests ins Repository (`tests/`, `node --test`, kein
+`package.json`). Nachweise: `Nachbesserung_2026-11-15/a8/`, Messskript `tools/a8_funktionen.mjs`.
+
+- **Funktionslänge (1.7).** Messung wie Prüfteil 1, 1.7 (Syntaxbaum mit acorn, Zeilen von `function` bis zur
+  schließenden Klammer). Zerlegt: `ladeStationsdaten()` in `buergerinnen.js` (Aufbereitung von Zeitleiste und
+  Kartenlinien sowie die Meldung entfallener Archiv-Folien als eigene Funktionen, Verhalten unverändert; geprüft mit
+  der Matrix aus Auftrag 7 und der Sitzungsbedienung). Alle übrigen Funktionen über 100 Zeilen bekommen einen
+  Vermerk `// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): …` mit dem Grund (meist:
+  Zeichenfunktion in einem Durchgang, deren Schritte viele lokale Größen teilen; Baustein-Fabriken mit gemeinsamem
+  Zustand in der Closure; Ablaufsteuerungen). **Funktionen über 100 Zeilen ohne Begründung: 30 → 0** (jetzt 31
+  Funktionen über 100 Zeilen, alle mit Vermerk).
+- **Testbestand (K9).** Neu `tests/` mit 29 Tests in fünf Dateien (DataLoader, Datierung samt Randfällen aus
+  Auftrag 7, Unsicherheits-Erklärungen, vier Ebenen der Bestandshierarchie, Format aller `unsicherheit_anmerkung`-
+  Einträge mit der Ausnahmeliste aus PROJEKTLOG 80). Läuft ohne Installation und ohne Netzwerk; d3 wird aus `vendor/`
+  geladen, `fetch` durch Dateizugriff ersetzt. Aufruf `node --test "tests/*.test.mjs"` (Node 24 nimmt `tests/` nicht als
+  Ordner an, daher das Muster). Ergebnis: 29 bestanden, 0 fehlgeschlagen. Anleitung und Liste der externen Prüfungen:
+  `docs/PRUEFUNGEN.md`. Ein README gibt es im Repository nicht; die Anleitung steht deshalb nur in `docs/`.
+- **Kommentare (2.4).** Köpfe von `buergerinnen.js` (beschrieb noch die alte Zwei-Spalten-Ansicht) und
+  `archivalienRegistry.js` (rund 137 Zeilen Auftragsverlauf) neu: Was die Datei tut und warum so; der Verlauf steht
+  hier im PROJEKTLOG. Stichprobe von zehn Dateien wie im Prüfbericht (dort genannte Dateien und die Dateien der
+  Befunde 1.10 und 4.1): Widersprüche zu Code oder Masterprompt **5 → 0**. Berichtigt außerdem: `sankey.js` (272
+  Zeilen Verlauf, nannte die Orte-Schwelle 15 statt 17 und einen Knotenklick, der die Seitenleiste öffnet; Kopf jetzt
+  27 Zeilen), `bilderwand.js`, `hintergrundKarte.js`, `fuehrungenZeitleiste.js` (nannten feste Kartenpfade, die seit
+  Auftrag 4/5 aus `archiv.csv` und der Begleitdatei kommen). Protokoll: `a8/kommentar_stichprobe.md`. Weitere Dateiköpfe
+  geben noch Auftragsverlauf wieder, ohne dem Code zu widersprechen (längste: `bipartiteFlowMap.js`, `familienbaum.js`,
+  `dotPlot.js`, `karte.js`); ihre Kürzung wäre ein eigener Auftrag.
+- **Nach Durchsicht (15.11.2026):** Der neue Kopf von `sankey.js` sagte, auch die Orts-Bündelung verwende die
+  Bandbreiten-Summe; tatsächlich zählt sie Urkunden je Ortsname (`ermittleOrtRohZaehlung()`). Berichtigt.
+- **Regressionstest:** Sitzungsbedienung über alle Module (`t2_sitzung.mjs`): 39 Ansichten, 0 Fehler; Tests im
+  Repository 29/29.
+
+---
+
+## 2026-11-15 (88) – Nachbesserung 7: Rückmeldung bei Datenproblemen und Datierungs-Randfälle
+
+Grundlage: Auftrag 7 (Befunde 3.1, 3.2, 3.6 aus Prüfteil 2). Entscheidung des Autors zu 3.6 (15.11.2026): beides ändern –
+unmögliche Tage und Monate ergeben das Jahr mit Vermerk, „o. D.“ und „undatiert“ ergeben `undatiert`. Die Mustertabelle
+in Masterprompt §12 bleibt unverändert. Nachweise: `Nachbesserung_2026-11-15/a7/`.
+
+- **`errors` vollständig (3.1).** `dataLoader.js` meldet je fehlendem Pflichtwert einen Eintrag `{zeile, spalte, grund:
+  'Pflichtwert fehlt: …', rohzeile}`; Pflichtwerte sind die Mindestfelder aus `js/utils/vollstaendigkeit.js` (Masterprompt
+  §12), für Dateien ohne eigene Festlegung die Kennspalte. Der Datensatz bleibt in `records`, der Lader aggregiert weiter
+  nichts. Testdatei aus Prüfteil 2 (BOM, Pipe-Felder, Zeile ohne Signatur, unbekannte Spalte): die Zeile ohne Signatur steht
+  jetzt in `errors` (vorher nicht); alle übrigen Vertragspunkte unverändert (`a7/lader.json`, Test
+  `tests/dataLoader.test.mjs`).
+- **Stiller Rückfall sichtbar (3.2).** Ist `ansichten.csv` vorhanden, aber unbrauchbar, zeigen Startseite, Galerie und
+  Erkundung einen Balken: „Die Datei ansichten.csv konnte nicht gelesen werden … Es werden deshalb die Standardnamen und
+  -texte der Ansichten gezeigt; die Einleitungstexte fehlen.“ Entfallen in der Willkommenstour Archiv-Folien, nennt ein
+  Balken „N von M Folien zum Archiv entfallen …“ bzw. „Die Folien zum Archiv entfallen … Die Tour beginnt deshalb beim
+  Bürgerbuch.“
+- **Datierung (3.6).** `datePrecision.js`: `1347 III 32` und `1347 XIII 1` ergeben `year` statt `exact`; `datumsHinweis()`
+  liefert den Vermerk „Tages- oder Monatsangabe ungültig, nur das Jahr ausgewertet“, die Regesten-Kachel zeigt ihn.
+  `o. D.`, `o.D.`, `undatiert`, `ohne Datum`, `nicht überliefert` ergeben `undatiert`. `15. Jh.`, `1450/51`, `13.3.1347`
+  bleiben `year` (Tabelle: „alles andere“). 21 von 21 Prüffällen wie entschieden, alle Beispiele der Mustertabelle
+  unverändert richtig. In `urkunden.csv` kommt keiner der Randfälle vor; sichtbar ändert sich mit den Originaldaten nichts.
+- **Regressionstest (Matrix beschädigter Daten, Prüfteil 2, 3.2, vollständig wiederholt):** 680 Ladevorgänge, 8 Fälle.
+  Abstürze **0 → 0**, „leer ohne Hinweis“ **3 → 0**, „stabil, stark abweichend“ ohne Hinweis **12 → 0**. Die vier
+  verbleibenden Einträge „stabil, abweichend“ sind die Tourfälle mit dem neuen Balken (bei Nachprüfung als
+  „Fehlermeldung“ eingestuft). Rückbau der Datenkopie: `diff`-Exit 0 (`a7/regression/voll_zusammenfassung.txt`).
+- `docs/SCHEMA.md`: Verhalten von `errors`, die zwei neuen Hinweise, Datierungs-Randfälle; die bisher genannte Grenze
+  „unlesbarer Datumswert ohne Hinweis“ ist für unmögliche Tage und Monate aufgehoben.
+
+---
+
+## 2026-11-15 (87) – Nachbesserung 6: Zugänglichkeit (Prüfteil 4)
+
+Grundlage: Auftrag 6 (Befunde 6.1–6.18). Keine Konformitätsbehauptung; Ziele sind die Akzeptanzkriterien des
+Prüfkatalogs. Die im Masterprompt vermerkten Abweichungen (fünf Kategorienfarben unter 3:1, Wortwolke, Zeitachse und
+Marimekko in Graustufen) bestehen weiter. Messmethoden wie im Prüfbericht; Nachweise: `Nachbesserung_2026-11-15/a6/`.
+
+**Tastatur, Rollen, Struktur (Punkte 1, 2, 5, 6, 7, 8, 18)**
+- Verbindungskarte (1, 2): Ursache war `raise()` beim Hover – D3 hängt den Knoten neu ins DOM, der Fokus geht dabei
+  verloren, und der nächste Tab beginnt von vorn. Jetzt zeichnet `zeichneObenauf()` eine für Hilfsmittel verborgene
+  Kopie in eine eigene Gruppe; die Originale bleiben an ihrem Platz. Per Tab erreichbar **38 % → 179 von 179**, Enter
+  und Leertaste lösen aus. Das Overlay hat die Rolle `group` statt `img` (`nested-interactive` 5 → 0 Zustände).
+- Seitenleisten (5): Listen ohne `li` und `li` mit Rolle durch `div` ersetzt (`list`, `aria-allowed-role` → 0).
+- Info-Texte (6): Das Popover ist fokussierbar (`tabindex 0`, sichtbarer Fokusrahmen); `scrollable-region-focusable` → 0.
+- Überschriften (7): `h4` nach `h2` in Personenliste, Ortsliste und Karte zu `h3` (Klasse
+  `bestand-sidebar-zwischentitel` bzw. Ortstitel `h4` unter neuer `h3`); je Seite weiter genau eine `h1`.
+- Tooltip (8, 11): `#geteilter-tooltip` hängt in `#app-content` (Landmark `main`) und wird bei Neuaufbau wieder
+  eingehängt; Positionierung und `aria-describedby` unverändert. Rand-Clamping am Schnitt von Ansicht und Fenster.
+  Proben (erstes, letztes, randnächstes Element): Strahl, Stammbaum, Urkundennetzwerk, Verbindungskarte je 3 von 3
+  (`tooltip_proben_final.json`). Die Bestand-Übersicht hat keine Elemente mit Tooltip (nur Kacheln und Suche); die
+  Fehlprobe im Prüfbericht betraf also kein Tooltip-Element.
+- Literaturseite (18): Die Rubrikknöpfe sprangen schon vorher, aber ohne DOM-Änderung (darum „keine Reaktion“ in der
+  Messung); jetzt setzen sie zusätzlich den Fokus auf die Rubrik. Ausgelöst laut Tastaturlauf 1 von 8 → 8 von 8
+  (`literatur_knoepfe.json`).
+
+**Kontrast, Klickflächen, Schrift (Punkte 3, 4, 9, 13)**
+- Kontrast (4): Deckkraft der Galerie-Beschreibung entfernt; leere Orte der Bilderwand (0 Urkunden) sind `disabled` und
+  blass (fallen damit aus der Kontrastregel, wie WCAG für inaktive Bedienelemente vorsieht); Zahl der Führungsfelder in
+  voller Farbe auf dunklem Grund; `.ueber-sigma` dunkler. Die `incomplete`-Texte über Karte und SVG am Element gemessen:
+  227 Texte, 225 bestehen; die 2 übrigen (Startseite, „Willkommen …“, „Neu hier? …“) sind Messfehler – der gemessene
+  Kasten liegt unter dem Bild der Bühne, auf dem der weiße Text tatsächlich steht (`kontrast_incomplete.json`).
+  Eigene Fehler während der Arbeit, behoben: Abdunkeln der Tabellenköpfe im Unsicherheitsmodus (Kontrast), Legende und
+  Namensspalte auf dunklem Grund.
+- Klickflächen (3): Zeilenabstand im Strahl 3 → 8 px (jede Zeile 24 px); Filterknöpfe der Bilderwand mindestens 24 px
+  hoch; in der schrägen Ortswolke Mindestabstand 25 px. **Folge:** In die Ortswolke passen weniger Orte. Gezeigt von 41
+  Orten (ab 5 Nennungen): bei 1920 px 41 → 41, bei 1366 px 41 → 27, bei 1024 px 41 → 19, bei 768 px 31 → 13, bei 375 px
+  12 → 5 (`tools/a6_ortswolke_zahl.mjs`). Die übrigen Orte lassen sich in der Bilderwand **nicht** wählen: Es gibt keine
+  Ortssuche (der Schalter „Alle Orte“ entfiel am 26.10.2026 auf Wunsch des Autors). Die frühere Angabe hier, sie seien
+  „über die Suche weiter erreichbar“, war falsch (berichtigt nach Durchsicht, 15.11.2026). Der Infotext nannte zudem
+  unverändert „41 häufigste Orte (ab 5 Nennungen)“; er setzt jetzt die gezeigte Zahl und die tatsächliche Untergrenze
+  ein und folgt der Fensterbreite. Damit „ab … Nennungen“ stimmt, schneidet die Wolke nicht mehr mitten in einer Gruppe
+  gleich häufiger Orte ab (kostet bei 1366 und 1024 px je einen Ort). Entscheidung des Autors (15.11.2026): nur ein
+  Hinweis im Info-Text, sonst keine Änderung. `data/infotexte.csv` (Zeile `bilderwand`) um zwei Sätze ergänzt: „Wie viele
+  Orte dort Platz haben, hängt von der Fensterbreite ab: In einem breiten Fenster sind es alle {bw_alle} Orte ab {bw_min}
+  Nennungen. Orte, die nicht in der Wolke stehen, lassen sich hier nicht als Filter wählen.“ Die Platzhalter setzt
+  `bilderwand.js` ein (kein Semikolon, kein senkrechter Strich im neuen Text). Geprüft bei 1920, 1366 und 375 px und nach
+  Verkleinern von 1366 auf 1024 px: Text und gezeigte Orte stimmen überein, 0 Konsolenfehler
+  (`tools/a6_ortswolke_infotext.mjs`).
+- Schrift (9): zehn Regeln auf `--fs-md`; Fließtextabsätze unter 16 px **1577 → 0** (`schrift_nachher.json`); Überlauf
+  und abgeschnittene Texte per Screenshot geprüft.
+- Info-Knopf der Bilderwand (13): Fokusrahmen in der hellen Akzentfarbe, gemessen **1,78 : 1 → 11,19 : 1**
+  (`info_fokus_bilderwand.png`).
+
+**Bildschirmleser (Punkte 10, 12, 15)**
+- Live-Regionen (10): neu `js/utils/liveAnsage.js` (höflich, 700 ms Verzögerung, nur bei geändertem Text) in Regesten,
+  Personenliste, Ortsliste und Bestandssuche; die Region ändert sich nach Eingabe in allen vier Ansichten.
+- SVG-Beschreibungen (12): neu `js/utils/svgBeschreibung.js`, `<desc>` aus dem ersten Absatz des Info-Texts (keine
+  Literale im Code) in Strahl (Achse), Urkundennetzwerk, Verbindungskarte, Karte Soziale Gruppen, Willkommenstour und der
+  Leaflet-Ebene der Karte (Rolle, Name, Beschreibung). Diagramme ohne vollständige Angaben **6 → 0**.
+- Zugängliche Namen (15): Der sichtbare Text steht am Anfang des Namens (Personen- und Ortsliste: Zusatz in einem
+  unsichtbaren `span` statt `aria-label`; Blätterknöpfe „Zurück zur vorherigen Seite“/„Weiter zur nächsten Seite“; Sonne
+  und Strahl). `label-content-name-mismatch` **277 → 0** Elemente; Lighthouse-Zugänglichkeit 1,0 in **28 → 31 von 31**
+  Ansichten.
+
+**Farbe, schmale Fenster, Sprache (Punkte 14, 16, 17)**
+- Kategoriefluss (14): Bänder ab 12 px Breite tragen am Ende den Kategorienamen; im Graustufenbild zuordenbar
+  (`sankey_grau_vorher.jpg`, `sankey_grau_nachher.jpg`).
+- Schmale Fenster (16): Inhalt darf schrumpfen (`min-width: 0`), Filterleiste, Darstellungsgruppe und Zeitregler brechen
+  um. Waagrechtes Scrollen bei 320 px **9 → 2** Ansichten. Ausnahmen: Personenliste (`table.pl-tabelle`, 6 Spalten: Name,
+  Weitere Schreibweisen, Quelle, Nennungen, Erste und Letzte Nennung; 658 px breit) und Ortsliste (`table.ol-tabelle`,
+  5 Spalten: Ort, Quellen, Nennungen, Erste und Letzte Nennung; 548 px). Beides sind echte Datentabellen mit
+  Spaltenköpfen (`th`, sortierbar); ihr Sinn liegt im Vergleich über Zeile und Spalte, deshalb gilt die Ausnahme nach
+  WCAG 1.4.10 für zweidimensionalen Inhalt (Datentabellen werden im WCAG-Verständnisdokument ausdrücklich genannt). Alles
+  andere auf diesen Seiten bricht um; zu breit ist nur die Tabelle. Einschränkung: Gescrollt wird derzeit die ganze Seite,
+  nicht nur die Tabelle in einem eigenen Rahmen. Das ist die schwächere Variante: WCAG 1.4.10 meint bei Tabellen das
+  zweidimensionale Scrollen innerhalb der Tabelle. Einstufung deshalb „Ausnahme für Datentabellen, mit Einschränkung“,
+  nicht „erfüllt“ (Entscheidung des Autors: nur dokumentieren). Spätere kleine Verbesserung: ein scrollbarer Rahmen um
+  die Tabelle (`tabindex="0"`, beschrifteter Bereich); dabei bleiben die Spaltenköpfe beim senkrechten Scrollen nicht
+  mehr oben stehen. Strahl und Karten lassen die Seite nicht mehr waagrecht scrollen;
+  sie werden in der Ansicht selbst verschoben und gezoomt. Gekürzte Namen sind über Tooltip oder Seitenleiste vollständig erreichbar (`schmal_vorher/`,
+  `schmal_nachher/`).
+- Einfache Sprache (17): nur Vorschlagsliste, keine Textänderung: 45 Sätze über 20 Wörter mit kürzerer Fassung, dazu
+  Erklärungen der Fachbegriffe (`VORSCHLAEGE_EINFACHE_SPRACHE.md`) – zur Durchsicht durch den Autor.
+
+**Regressionstest (Schlusslauf, 15.11.2026, 17:28–17:42):** axe 31 Ansichten, 124 Zustände: **Verstöße 0** (vorher 8
+Regeln). `incomplete` weiter: `color-contrast` (Text über Karte/SVG, siehe oben gemessen) und `aria-prohibited-attr` 2
+(bestanden schon vor der Prüfung, nicht Teil des Auftrags). Lighthouse 31 von 31 bei 1,0. Tastaturlauf: keine Falle;
+die gemeldeten Anteile unter 100 % zeigen eine Grenze der Messmethode, keinen Mangel der Seiten – der Lauf vergleicht `nth-child`-Pfade, die sich verschieben,
+wenn nach dem Erfassen ein Element eingefügt wird, und er zählt die zwei Kontaktlinks im zugeklappten Impressum mit.
+Nachprüfung über Elementmarken (`tools/a8_tab_identitaet.mjs`): alle Bedienelemente erreicht außer diesen zwei Links,
+wie vorgesehen. Beide Messungen (Anteil erreicht, Prüfbericht → Schlusslauf → Nachprüfung):
+
+| Ansicht | Pfad-Messung (`t4_tastatur.mjs`) vorher | nachher | Elementmarken (`a8_tab_identitaet.mjs`) | Grund der Abweichung |
+|---|---|---|---|---|
+| Startseite | 100 % (26/26) | 93 % (27/28) | 6/8, fehlend: 2 Impressum-Links | zugeklapptes Impressum |
+| Bestand | 100 % (9/9) | 82 % (10/11) | 9/11, ebenso | dto. |
+| Erkundung | 100 % | 87 % | 13/15, ebenso | dto. |
+| Bilderwand | 100 % | 96 % | 52/54, ebenso | dto. |
+| Über | 100 % | 82 % | 9/11, ebenso | dto. |
+| Willkommenstour | 100 % | 80 % | 8/10, ebenso | dto. |
+| Personenliste | 100 % (60 Schritte) | 28 % | 60/60 | Pfadverschiebung |
+| Ortsliste | 100 % (60 Schritte) | 27 % | 60/60 | Pfadverschiebung |
+| Verbindungskarte | 38 % | 100 % | – | behoben (Punkt 1) |
+
+Die übrigen Ansichten zeigen in der Pfad-Messung einen kleineren Rückgang aus demselben Grund (Impressum-Links mitgezählt).
+Zwei Ursachen der niedrigeren Pfad-Werte: (1) Die zwei Kontaktlinks im zugeklappten `details` des Impressums werden mitgezählt (der Lauf hält sie für sichtbar; die
+Startseite hatte bei der Prüfung 26, jetzt 28 Bedienelemente), sind aber per Tab richtigerweise nicht erreichbar, solange
+das Impressum zu ist. (2) Der Lauf erfasst die Bedienelemente als `nth-child`-Pfade, bevor er tabbt; fügt die Seite
+danach ein Element vor der Tabelle ein, passen die Pfade nicht mehr (Personen- und Ortsliste: Tabelle `nth-child(7)` →
+`(8)`), obwohl dieselben Elemente erreicht werden. Die Nachprüfung markiert die Elemente selbst und ist davon nicht
+betroffen. Sitzungsbedienung: 39 Ansichten, **0 Fehler**.
+
+---
+
+## 2026-11-15 (86) – Nachbesserung 5: Kartenausschnitte und Beschriftungen aus dem Code gelöst
+
+Grundlage: Auftrag 5 (Befunde 4.1, 4.2 aus Prüfteil 1, nach Auftrag 4 noch offen). Struktur vom Autor bestätigt
+(15.11.2026): Begleitdatei neben der Karte (`<karte>.darstellung.json`, Pfad abgeleitet, keine neuen `archiv.csv`-
+Einträge); Linien der Tourkarte in einer neuen Datei in `data/`. Nachweise: `Nachbesserung_2026-11-15/a5/`.
+
+- Neu `js/utils/kartenDarstellung.js` (Laden der Begleitdatei, benannter Ausschnitt, Sichtfenster; Rückfall: ganzer
+  Bereich der Kartendatei ohne Beschriftungen, Hinweis in der Konsole). Neu `vendor/karten/krems.darstellung.json`
+  (Ausschnitte `hintergrund` mit den vier Beschriftungen und `zeitleiste`), `vendor/karten/niederoesterreich.darstellung.json`
+  (`bilderwand`), `data/buergerinnen_kartenlinien.csv` (Donaulinie, 12 Punkte); Werte unverändert aus dem Code.
+- `hintergrundKarte.js`, `fuehrungenZeitleiste.js`, `bilderwand.js` (ohne Karte: Ausdehnung aller Orte),
+  `buergerinnen.js` (Linien aus der Datei; Bildschirmleser-Text der Folie `orte` mit Flussnamen in der Spalte
+  `beschreibung` der Stationsdatei, Rückfall ohne Namen).
+- **Vorher/Nachher:** Krems-Literale in `js/` (Syntaxbaum; „KREMS“, „STEIN“, „MAUTERN“, „Donau“, „Niederösterreich“,
+  „Krems“, „Mautern“): **6 → 0** (4 in `hintergrundKarte.js`, 2 in `buergerinnen.js`); dazu drei feste Ausschnitte und die
+  Donaulinie als Zahlen.
+- **Gleiches Bild mit Originaldaten:** Startseite, Bestand, Zeitleiste der Führungen, Bilderwand (mit Ortskreisen) und
+  Regesten pixelgleich; Treemap: 343 Pixel mit höchstens 4 von 255 Farbstufen Unterschied (Kantenglättung der
+  Kartenlinien unter der halbdurchsichtigen Werkzeugleiste, sonst gleich). Willkommenstour: alle 25 Folien gleich dem
+  Stand nach Auftrag 4 (Texte, Beschriftungen samt Lage, Punktlagen).
+- **Zweitarchiv** (neue Kopie, eigene Kartendateien `musterhausen.json`/`musterhausen_umland.json` ohne Begleitdatei,
+  50 Adressen): 0 Seitenfehler, 0 Krems-Begriffe im DOM (nur „Bürgerbuch“ wie bisher, allgemeines Wort); der gezeichnete
+  Hintergrund enthält keinen Text (vorher „KREMS“, „STEIN“, „MAUTERN“, „Donau“) und zeigt den ganzen Kartenbereich. Die
+  51 HTTP-404 sind die absichtlich fehlenden Begleitdateien; die Konsole nennt sie.
+- `docs/SCHEMA.md`: Aufbau der Begleitdatei (13.1), neue Tourdatei, Grenze der Übertragbarkeit auf die Kartengrafik
+  selbst präzisiert (14).
+
+---
+
+## 2026-11-15 (85) – Nachbesserung 4: Übertragbarkeit auf andere Archive (Befunde 1.2, 4.1–4.3)
+
+Grundlage: Auftrag 4. Entscheidungen des Autors (15.11.2026): Zeitleiste in eine neue Datei; Torform als Datei mit
+neutraler Ersatzform; Namen über `archiv.csv` und eine neue Spalte der Stationsdatei; unbekannte Datenbestände über
+`ansichten.csv` und zusätzlich, nur lokal, über die Verzeichnisliste. Nachweise: `Nachbesserung_2026-11-15/a4/`
+(außerhalb des Repositorys).
+
+1. **Krems-Literale in `buergerinnen.js` (Befund 1.2).**
+   - Zeitleiste der Folie `khlesl` → neu `data/buergerinnen_zeitleiste.csv` (Werte unverändert); Umriss des Steiner
+     Tors → `vendor/formen/tor.json` (Pfaddaten Zeichen für Zeichen geprüft), Pfad in `archiv.csv` (`tour_form_pfad`);
+     ohne Datei eine einfache Torform (Giebel mit Torbogen) und ein Hinweisbalken.
+   - Namen über `archiv.csv`: `tour_formname`, `tour_buergerbuch_titel`, `hauptort` (Mittelpunkt und hervorgehobener Ort
+     der Tourkarte, Koordinaten aus `orte.csv`), Überzeile der Archiv-Folien aus `archiv_kurzname`. Bildschirmleser-Texte
+     mit Krems-Bezug in der neuen Spalte `beschreibung` von `buergerinnen_stationen.csv` (`archiv`, `klick`, `khlesl`,
+     `verlust1`–`3`, `mitmachen`; neuer Platzhalter `{zeitleiste}`); die übrigen Texte des Programms nutzen den Formnamen.
+   - Vorher/Nachher (Syntaxbaum, Zeichenketten und Teile von Template-Literalen): **17 → 0** Literale mit „Krems“,
+     „Stein“, „Khlesl“, „Steiner Tor“ (mit dem weiteren Suchmuster dieser Nachbesserung, das auch „Kremser“ und
+     „Stadtarchiv“ einschließt: 19 → 0). Die technische Stations-ID `khlesl` bleibt (Schlüssel der Stationsdatei).
+   - Inhalt mit Originaldaten (25 Folien, reduzierte Bewegung, Texte, Überzeilen, Titel, Bildschirmleser-Texte,
+     Beschriftungen und Punktlagen verglichen): 23 Folien identisch, alle Texte identisch. Auf den beiden Kartenfolien
+     (`orte`, `verarbeitung`) liegt der Mittelpunkt jetzt genau auf Krems (48,4094/15,6057 aus `orte.csv` statt gerundet
+     48,41/15,61): Orte verschieben sich um 1 px, die Beschriftung „Krems“ um etwa 14 px (Verzerrung nahe der Mitte).
+2. **Pfad der Hintergrundkarte (Befund 4.1).** `hintergrundKarte.js` und `fuehrungenZeitleiste.js` lesen
+   `hintergrundkarte_pfad`; leer = kein Abruf, Datei fehlt = Hinweis in der Konsole mit dem Namen des Eintrags.
+   Abnahme: mit `hintergrundkarte_pfad=vendor/karten/testkarte.json` lädt das Interface diese Datei statt `krems.json`.
+3. **Pfade der Bilderwand (Befund 4.1).** `bilderwand_karte_pfad`, `bilderwand_fotoindex_pfad` (Sprite-Bild daneben).
+   Ohne Fotoindex: Hinweisbalken „Für dieses Archiv liegt noch kein Fotoindex vor …“ statt grauer Kacheln ohne
+   Erklärung.
+4. **Unbekannter Datenbestand (Befund 4.3).** Neu `js/core/unbekannteDaten.js` (erst auf der Startseite der Erkundung
+   geladen): Bereichszeilen in `ansichten.csv` ohne Registry-Eintrag und, nur auf localhost, CSV-Dateien aus der
+   Verzeichnisliste von `data/`, die keine Ansicht und keine Konfiguration nutzt. Dezenter Absatz unter der Einleitung.
+   Mit Originaldaten kein Hinweis.
+5. **Beschriftungen der Kartengrafik (Befund 4.2).** Vermerk in SCHEMA.md, Abschnitt 14, „Grenzen der Anpassung“.
+   Korrektur zum Befund: „KREMS“, „STEIN“, „MAUTERN“, „Donau“ sind nicht Teil der Kartendatei, sondern stehen mit dem
+   Kartenausschnitt in `js/utils/hintergrundKarte.js` (`BESCHRIFTUNGEN`, `FOKUS`); auch `fuehrungenZeitleiste.js`,
+   `bilderwand.js` und die Donaulinie der Tour haben feste Ausschnitte. Nicht geändert (Rückfrage an den Autor).
+- `js/core/archivKonfiguration.js`: die neuen Schlüssel in den Ersatzwerten (ohne `archiv.csv` leer, also neutral).
+
+**Regressionstest Zweitarchiv** (neue Kopie mit `t1_zweitarchiv.py` aus dem aktuellen Stand, mit
+`gemeinderatsprotokolle.csv`; 50 Adressen):
+
+| | Prüfteil 1 (vorher) | nachher |
+|---|---:|---:|
+| Seitenfehler | 0 | 0 |
+| Konsolenfehler | 2 | 0 |
+| HTTP-Fehler (404) | 2 (`fotos/sprites/urkunden.json`) | 0 |
+| Abrufe archivspezifischer Dateien außerhalb `data/` | 54 (`krems.json` 50, `niederoesterreich.json` 2, Fotoindex 2) | 0 |
+| sichtbare Hinweise | – | Bilderwand: kein Fotoindex; Erkundung: Gemeinderatsprotokolle ohne Visualisierung |
+
+Dazu Variante mit Pfaden auf fehlende Dateien: Bilderwand zeigt den Hinweis mit Pfad und Eintrag (die 404 des
+Browsers sind damit erklärt), Konsolenhinweis für die fehlende Grundkarte. Originaldaten: keine Hinweise, keine
+Fehler; Sitzungs-Bedienung über 39 Ansichten: 0 Fehler.
+
+---
+
+## 2026-11-15 (84) – Nachbesserung 3: Regressionstest nach Abschluss von Auftrag 3
+
+Matrix beschädigter Daten aus Prüfteil 2 (3.2), reduziert auf die Fälle „Pflichtspalte fehlt“ und „leere Zeilen“ und
+auf die sechs Dateien aus Punkt 1 (`urkunden`, `buergerbuch`, `orte`, `personenliste`, `verlassenschaftsinventare`,
+`bestandsverzeichnis`); Basis die aktuellen Daten, 94 Ladevorgänge über 29 betroffene Ansichten (Skript: Kopie von
+`t2_matrix.mjs`, Nachweise `Nachbesserung_2026-11-15/a3/regression/`).
+
+| Fall | stabil | Hinweisbalken | leer ohne Hinweis | Absturz |
+|---|---:|---:|---:|---:|
+| Pflichtspalte fehlt | 36 (vorher 36) | 11 (vorher 11) | 0 | 0 |
+| leere Zeilen | 47 (vorher 47) | 0 | 0 | 0 |
+
+Ergebnis gleich wie in Prüfteil 2: Die Umformatierung und die neuen Kennzeichnungen erzeugen keine neuen Ladefehler.
+Rückbau der Datenkopie per `diff` geprüft (keine Abweichung).
+
+---
+
+## 2026-11-15 (83) – Nachbesserung 3, Punkt 4: Abdunkeln im Unsicherheitsmodus in allen Ansichten mit Knopf
+
+Grundlage: Auftrag 3, Punkt 4 (Befund 7.4, Masterprompt §11). Nachweise: `Nachbesserung_2026-11-15/a3/p4*/`
+(Messwerte, Screenshots an/aus je Ansicht; außerhalb des Repositorys).
+
+- **Zahl der Ansichten:** Der Prüfbericht nennt 19 Ansichten mit Knopf; seine Messdaten (`k7/7_unsicherheit.json`) und
+  die Nachmessung finden ihn in 17 angebotenen Ansichten (Bürgerbuch und Verlassenschaften sind nicht angeboten,
+  Wortwolke und Willkommenstour haben keinen Knopf). Gemessen und umgesetzt: diese 17.
+- **Gemeinsame Umsetzung statt 17 Einzellösungen:** neu `js/utils/abdunkeln.js`. `js/core/app.js` schaltet am
+  Ansichtscontainer die Klasse `.unsicherheit-abgedunkelt` an genau den vier Stellen um, an denen es
+  `showUncertainty` an das Modul gibt (beim Ansichtswechsel aus). Die Module kennzeichnen nur ihre unsicheren Elemente
+  mit `.unsicher-hell` (Treemap, Sonne, Gantt, Kachelraster, Zeitachse, Dot Plot, Personenliste, Ortsliste,
+  Stammbaum, Urkundennetzwerk, Streamgraph, Chord, Verbindungskarte, Bipartite, Karte). Die Regeln in
+  `css/components.css` dunkeln den Grund der Ansicht ab und blenden alle übrigen Grafikelemente, Achsen und
+  Beschriftungen (Deckkraft 0,28), Kartenkacheln (Helligkeit 0,6), Tabellenköpfe sowie nicht unsichere Zeilen und
+  Kacheln ab. Bedienelemente, Seitenleiste, Legenden, Info-Knopf, Dialoge und die Markierung „Datensatz unvollständig“
+  sind ausgenommen.
+- **Sankey und Bilderwand** dunkeln bereits selbst ab; Sankey trägt `data-eigenes-abdunkeln` (keine doppelte
+  Abdunkelung der Bänder, nur der Grund), die Bilderwand hat einen eigenen Knopf und bleibt unverändert.
+- **Vorher/Nachher** (je Ansicht vor/nach Einschalten; „gedimmt“ = Elemente mit Deckkraft < 0,6 wie in Prüfteil 3,
+  dazu mittlere Helligkeit eines Screenshots der Ansicht): Abdunkel-Effekt messbar in **2 von 17 / 17 von 17**
+  Ansichten. Beispiele nachher: Dot Plot +1.071 gedimmte Elemente, Helligkeit −21; Bipartite +1.018, −41;
+  Urkundennetzwerk +433, −18; Zeitachse +27, −19; Personenliste −4, Ortsliste −3, Kachelraster −7 (dort sind im Modus
+  ohnehin nur unsichere Zeilen/Kacheln zu sehen; abgedunkelt wird der Grund); Treemap/Sonne: Helligkeit gleich, weil
+  im Modus alle gezeigten Bestände unsicher sind, abgedunkelt werden Grund und Kategoriebeschriftungen (+20/+35).
+  Nach dem Wechsel in die nächste Ansicht ist die Abdunkelung in allen 17 aus. Seitenfehler 0.
+
+---
+
+## 2026-11-15 (82) – Nachbesserung 3, Punkt 3: Kennzeichnung „Datensatz unvollständig“ in den Visualisierungen
+
+Grundlage: Auftrag 3, Punkt 3 (Befund 3.4, Masterprompt §12 „Fehlermarkierung“). Nachweise:
+`Nachbesserung_2026-11-15/a3/p3/` (Protokolle, Screenshots), Testdaten `a3/daten_34_neu` (außerhalb des Repositorys).
+
+- **Was als unvollständig gilt (Entscheidung des Autors, 15.11.2026):** ein Datensatz, dem ein Mindestfeld nach
+  Masterprompt §12 fehlt („eindeutige ID/Signatur, Bezeichnung“): Urkunden `signatur`/`regest`, Bestand
+  `kuerzel`/`name`, Bürgerbuch `id`/`Name`, Verlassenschaften `id`/`Name`, Personenliste
+  `personen_id`/`schreibweisen`, Orte `orte_id`/`orte`, Familien `id`/`name`. Andere leere Werte (Urkunde ohne
+  Personen, Ort ohne Koordinaten, Bestand ohne Zeitraum) zählen nicht; dafür gibt es die Bereiche „undatiert“,
+  „ohne Zeitangabe“ usw. Die „Pflicht“-Spalten in SCHEMA.md gelten je Ansicht für die ganze Spalte und wurden
+  bewusst nicht je Datensatz angewandt (sonst rund 2.500 markierte Bürgerbuch-Einträge mit Originaldaten).
+- **Gemeinsame Umsetzung:** neu `js/utils/vollstaendigkeit.js` (Mindestfelder, `istUnvollstaendig()`,
+  `unvollstaendigText()`, `mitUnvollstaendigHinweis()`, `markiereElement()`, `markiereSvg()`). Der DataLoader trägt
+  je Datensatz nur generisch den Dateinamen ein (`_quelle`, kein Import, keine Spaltenkenntnis); geprüft wird bei
+  Bedarf. CSS: Token `--unvollstaendig` (#b45309) in `css/base.css`, Klasse `.datensatz-unvollstaendig` in
+  `css/components.css` – durchgezogener Bernstein-Rahmen (HTML) bzw. Kontur (SVG), deutlich verschieden von der
+  Unsicherheit (rot, gestrichelt). Tooltip/Titel „Datensatz unvollständig (fehlt: <feld>)“.
+- **Gemeinsame Stellen** (wirken in mehreren Ansichten): `bestandsHierarchie.js` (Tooltip aller Bestand-Ansichten),
+  `urkundenZeit.js` (Urkunden-Tooltip von Zeitachse, Dot Plot u. a.), `urkundenOrte.js` (Ortsdatensatz am
+  Ortsverzeichnis), `buergerbuchZeit.js` (Eintrag am Netzknoten).
+- **Module:** Treemap, Sonne, Gantt (Balken und Namensspalte), Kachelraster (Kachel; „(ohne Signatur)“ statt leerer
+  Überschrift), Zeitachse, Dot Plot, Bilderwand (Canvas, helle Bühnenvariante #ffb86b, Hinweis im Vorschaufenster),
+  Karte, Verbindungskarte, Ortsliste, Personenliste, Urkundennetzwerk, Stammbaum, Parallelkoordinaten,
+  Bürgschaftsnetz. Aggregierte Ansichten ohne Einzeldatensatz-Element (Sankey, Wortwolke, Trellis, Bump Chart,
+  Streamgraph, Chord, Bipartite, Korrelationsmatrix, Vermögensschichtung, Marimekko) bleiben ohne Kennzeichnung.
+- **Dabei behoben (nie stillschweigend ausblenden, Masterprompt §12):**
+  - Ortsliste: Orte ohne Namen wurden verworfen; jetzt als „(ohne Ortsnamen)“ sichtbar und gekennzeichnet.
+  - Stammbaum: eine Person ohne `id` fiel ohne Hinweis weg (75 → 74 Kästen); sie lässt sich ohne id nicht verorten,
+    jetzt nennt ein Hinweisbalken sie.
+- **Testdaten:** neue, mit Prüfteil 2 (3.4) vergleichbare Kopie aus den aktuellen Daten (gleicher Plan: je Datei drei
+  Zeilen, 30 Änderungen) plus eine zusätzliche Änderung (`personenliste.csv`, `friedrich_iii`, `schreibweisen` leer),
+  damit das Urkundennetzwerk eine betroffene Person zeigt; im Standardplan ist dort keine gezeigte Person betroffen.
+- **Vorher/Nachher:** Ansichten aus Prüfteil 2 (3.4) mit Kennzeichnung: 0 von 10 / **10 von 10** (Treemap 2,
+  Gantt 4, Karte 1, Ortsliste 2, Stammbaum 1 + Hinweisbalken, Personenliste 2, Urkundennetzwerk 1, Bilderwand
+  Bernstein-Rahmen auf dem Canvas, Kachelraster 2, Zeitachse 2). Mit Originaldaten: 0 Markierungen in allen
+  Ansichten (keine falschen Treffer). Zusätzlich Sonne 2, Dot Plot 2, Verbindungskarte 1, Parallelkoordinaten 1
+  (Bereich Verlassenschaften dafür nur in der Testkopie freigeschaltet); Bürgschaftsnetz 0 (keine betroffene Person
+  im Netz). Seitenfehler 0.
+- Einschränkung: In der Wurzelansicht der Treemap zeigt der Tooltip absichtlich die Kategorie; der Hinweis erscheint im
+  Tooltip des einzelnen Bestands (Kategorieansicht), der Rahmen ist in beiden sichtbar.
+
+---
+
+## 2026-11-15 (81) – Nachbesserung 3, Punkt 2: Tooltip nur mit der Erklärung des Feldes, Feldnamen lesbar
+
+Grundlage: Auftrag 3, Punkt 2 (Befund 7.2). Nachweise: `Nachbesserung_2026-11-15/a3/p2_tooltip*.json` (außerhalb des Repositorys).
+
+1. **Tooltip je Feld.** An `filtereErklaerungFuerFeld()` war keine Änderung nötig; die Wirkung kommt aus Punkt 1 (Format).
+   - Prüfung: im Kachelraster (Urkunden) mit aktivem Unsicherheitsmodus ALLE 115 als unsicher markierten Felder
+     (47 Datum, 68 Orte, in 112 Urkunden) fokussiert und den Tooltip mit dem Erwartungswert aus `urkunden.csv`
+     verglichen, darunter 17 Felder aus Anmerkungen mit mehreren Feldern. Statt einer Stichprobe von 20 wurden alle geprüft.
+   - Vorher/Nachher: feldspezifische Erklärung 0 von 115 / 115 von 115. Vorher zeigten 98 den ganzen Eintrag mit altem
+     Vorspann („Datierung unsicher: …“) über den Rückfall, 17 zusätzlich die Erklärungen der anderen Felder; jetzt 0
+     Rückfälle. Seitenfehler 0.
+   - Kurzprüfung mit dem echten `filtereErklaerungFuerFeld()` (Node) über alle 578 umgeschriebenen Einträge aller Dateien:
+     578 von 578 liefern die Erklärung des Zielfeldes, auch bei klein geschriebener Abfrage (`Datum`, `Beruf`, `Name`).
+   - Personen haben im Kachelraster keinen eigenen Feld-Tooltip (nur die Personenzeile mit Rahmen). Feldspezifische
+     Tooltips gibt es sonst nur im Stammbaum (`familien.csv`, ohne Anmerkungen).
+2. **Lesbare Feldnamen (Wunsch des Autors, 15.11.2026).** Neu in `js/utils/uncertainty.js`: `FELD_BEZEICHNUNGEN`
+   (einzige Stelle der Übersetzung, z. B. `datum` → „Datierung“, `orte` → „Ort“, `personen_id` → „Personenzuordnung“),
+   `feldBezeichnung()` und `lesbareAnmerkung()`; ein unbekannter Feldname bleibt roh stehen. Genutzt in allen Anzeigen
+   der ganzen Anmerkung: `unsicherAbsatz.js` (Sidebar-Hinweis „Angaben unsicher“), `bestandsHierarchie.js`
+   (Bestand-Tooltips), `regestenKachelraster.js` (Klartext der Kachel und Rückfalltexte), `ortsliste.js`, `karte.js`
+   (Sidebar), `personenliste.js`, `bubbleChart.js`. Nicht übersetzt: die Werte für das Vorschlagsformular (`bezuege.js`,
+   `karte.js`), weil dort die Daten selbst gemeint sind.
+   - Nachher: 190 Klartext-Bereiche im Kachelraster und je 20 Tooltips in Ortsliste und Personenliste ohne rohen
+     Feldnamen. Beispiel: „Ort: Marquartsurfar (…) | Datierung: Nur ungefähre Datierung ("um 1230") …“.
+
+---
+
+## 2026-11-15 (80) – Nachbesserung 3, Punkt 1: Format von `unsicherheit_anmerkung` vereinheitlicht
+
+Grundlage: Auftrag 3, Punkt 1 (Befund 7.3, Ursache von 7.2). Vorschau in zwei Fassungen vom Autor durchgesehen und am
+15.11.2026 freigegeben („passt“). Skripte, Vorschau, Ergebnis und Prüfprotokolle: `Nachbesserung_2026-11-15/a3/` und
+`/tools/a3_*` (außerhalb des Repositorys).
+
+- **Dateien:** `urkunden.csv`, `buergerbuch.csv`, `orte.csv`, `personenliste.csv`, `verlassenschaftsinventare.csv`,
+  `bestandsverzeichnis.csv`; `familien.csv` hat die Spalte, aber keinen Eintrag.
+- **Zählung:** 624 durch `|` getrennte Teile (= Prüfbericht). 15 davon sind keine eigenen Einträge, sondern Fortsetzungen
+  einer Signaturliste in `orte.csv` („(Signatur(en): StaAKr-0303|StaAKr-0304).“). Inhaltliche Einträge: 609.
+- **Vorher/Nachher:** im Format `<feldname>: <Erklärung>` mit gültigem Feldnamen 1 von 609 / **579 von 609 (95,1 %)**;
+  auf die 624 Teile bezogen 594 von 624 (95,2 %). Davon 564 über eine feste Zuordnungstabelle und 14 als
+  Einzelentscheidung des Autors. Die Quote ist knapp und hängt an diesen Einzelentscheidungen (ohne sie 565 von 609,
+  92,8 %).
+- **Zuordnungstabelle:** `urkunden`: „Datierung unsicher:“ → `datum` (47), „Ortsidentifikation unsicher:“ → `orte` (68),
+  „Personenidentifikation unsicher:“ → `personen` (72), jeweils Vorspann ersetzt. `orte`: „Ortsidentifikation in … als
+  unsicher …“ → `orte` (81, Feldname vorangestellt), „Ortsidentifikation unsicher:“ → `orte` (1). `buergerbuch`:
+  „personen_id vereinheitlicht/korrigiert“ (128), „Mit BB-… zusammengeführt“ (126), „ID vereinheitlicht/nachträglich
+  korrigiert“ (2), „Möglicherweise identisch …“ (2), „zuordnung_sicher=nein:“ (5) → `personen_id`; „Zuordnung zu
+  Wirtschaftssektor unsicher:“ → `Wirtschaftssektor` (11); „Berufsbezeichnung … im Quellentext“ → `Beruf` (8); „Das Datum
+  in "Erstmalig vorstellig …“ → `Datum` (11). `personenliste`: „Möglicherweise identisch …“ → `personen_id` (2).
+  Regel (Vorgabe des Autors): Das Zielfeld ist eine echte Spalte der Tabelle; eine `_unsicher`-Spalte ist dafür nicht
+  nötig.
+- **Einzelentscheidungen des Autors (14):** `bilder` (urkunden, StAK-UrkSt-0004), `personen_id` (BB-0436, -0440, -1675,
+  -1695, -2349, -2353; personenliste `paul_krautwurm`), `Name` (BB-2413, -2419), `orte` (orte `neunkirchen_noe`,
+  `markt_ascha`), `umfang` (Bestand „Gemeinderechnungen Hollenburg“, „Plakatsammlung“).
+- **Verbleibend unverändert (30):**
+  - 6 Zweitinventarisierungen (4 Verlassenschaften, 2 Personenliste): keine Unsicherheit (Text: „keine unsichere
+    Personenzuordnung“, Flag `nein`). Eine Verschiebung nach `anmerkung` ist eine spätere, eigene Datenänderung des
+    Autors; dann vorher prüfen, ob die Spalte in beiden Dateien existiert und in diesen Zeilen leer ist.
+    Alternativrechnung nur für diesen Fall: 579 von 603 (96,0 %).
+  - 1 Bestand „Robert Streibel“ („Bestandsinhalt nicht überliefert …“): `form_inhalt` ist in SCHEMA.md nicht als
+    Bestandsinhalt beschrieben, daher nicht geraten (Bedingung des Autors).
+  - 23 Einträge zu mehreren Feldern oder zum ganzen Datensatz: 18 im Bestandsverzeichnis („Zeitraum (von/bis) …“,
+    „Bestandsumfang sowie Zeitraum …“, „Bestandsinhalt, -umfang sowie Zeitraum …“), 3 Urkunden (StaAKr-0007,
+    StaAKr-0876: Dublette; StaAKr-0008: weitere Ausfertigung), 2 Orte ohne Koordinaten (`maigen`, `marquartsurfar`:
+    `lat` und `lon`).
+  - Vollständige Liste mit Datei, Zeile und Originaltext: `Nachbesserung_2026-11-15/a3/ERGEBNIS_A3P1.md`.
+- **Gemeldet, nicht geändert:**
+  - Datenwiderspruch: 11 Zeilen in `buergerbuch.csv` mit Anmerkung zum Datum (jetzt `Datum:`), aber leerem
+    `Datum_unsicher`. Ob das Flag gesetzt wird, entscheidet der Autor.
+  - Zielfelder ohne `_unsicher`-Spalte: `buergerbuch` `personen_id` (269), `Wirtschaftssektor` (11), `Name` (2);
+    `personenliste` (gar keine `_unsicher`-Spalte) `personen_id` (3); `urkunden` `bilder` (1); `bestandsverzeichnis`
+    `umfang` (2). Neue Spalten wären eine Schemaänderung (Zustimmung nötig) und sind nicht Teil dieses Auftrags.
+  - Das `|` in den Signaturlisten von `orte.csv` zerlegt der DataLoader in Teile; die Karte findet die Signaturen trotzdem.
+- **Einschränkung (für Kapitel 7):** Eine feldspezifische Anzeige gibt es nur im Kachelraster der Urkunden (und im
+  Stammbaum). Das Verhalten ändert die Umformatierung deshalb nur bei den 187 Urkunden-Einträgen; bei den übrigen
+  Dateien ändert sie die Form. Diesen Befund hat erst die Prüfung sichtbar gemacht.
+- **Prüfung des Schreiblaufs** (Probelauf auf einer Kopie, dann echter Lauf): geändert nur die Zelle
+  `unsicherheit_anmerkung` in 553 Datensätzen (urkunden 174, buergerbuch 290, orte 84, personenliste 3,
+  bestandsverzeichnis 2), keine andere Zelle; BOM, Zeilenenden (auch die LF in mehrzeiligen Zellen des
+  Bestandsverzeichnisses) und Datensatzzahl gleich; Anzahl `|` je Zelle unverändert; die Zerlegung wie im DataLoader am
+  ersten Doppelpunkt liefert für alle 578 umgeschriebenen Einträge den erwarteten Feldnamen in der Schreibung des
+  Tabellenkopfs. `git diff --numstat`: 174/290/84/3/2 Zeilen.
+
+---
+
+## 2026-11-15 (79) – Nachbesserung 2: neun Einzelkorrekturen aus der Prüfung vom 14.11.2026
+
+Grundlage: Prüfberichte `Pruefung_2026-11-14/teil1` bis `teil4`. Nachweise (Skripte, Rohdaten, Screenshots) in
+`Nachbesserung_2026-11-15/a2/` (außerhalb des Repositorys). „Vorher“ = Commit 96a10e7 als unveränderte Kopie.
+
+1. **Listener-Leck der Ansichtenleiste (Befund 1.4).**
+   - Ursache (nicht nur Symptom): `kontext.destroy()` in `erzeugeGalerieFlyoutKontext()` (`js/core/app.js`) baute
+     Ansichtenleiste und Bestandsuche nicht ab; das tat nur `raeumeVizAnsichtAuf()`, die aber nur beim Wechsel
+     Galerie ↔ Ansicht im selben Bereich läuft. Beim Verlassen des Bereichs (`raeumeSeiteAuf()`) blieb der
+     `resize`-Listener der Leiste übrig.
+   - Behebung: `destroy()` ruft jetzt auch `ansichtenLeiste.destroy()` und `bestandSuche.destroy()` auf.
+   - Vorher/Nachher (CDP `DOMDebugger.getEventListeners`, zehnmal Ansicht öffnen und verlassen): `resize`-Listener
+     auf `window` 5 → 6 → 15 (Baum, Zeitachse, Karte) / jetzt 5 → 5 → 5 in allen 9 geprüften Ansichten.
+2. **Force-Simulationen schrittweise (Befunde 1.10, 10.2).**
+   - Neues Hilfsmodul `js/utils/kraefteLayout.js` (`rechneSchrittweise()`): dieselben Schritte wie die frühere
+     Schleife, verteilt auf Animationsbilder in Zeitscheiben von höchstens 8 ms; gezeichnet wird erst die Endlage.
+   - Umgestellt: `urkundenNetzwerk.js` (300 Schritte, Ergebnis je sichtbarer Menge zwischengespeichert),
+     `zeitachse.js` (200 Schritte, je Menge, Breite, Höhe), `buergerinnen.js` (320 Schritte, im Voraus beim ersten
+     Zeichnen der Tour), dazu der Pfad mit reduzierter Bewegung in `personennetzwerk.js`. Bis zum Ende der
+     Berechnung steht kurz „… wird berechnet“.
+   - Vorher/Nachher (Long Tasks beim Öffnen, 5 Läufe): Urkundennetzwerk 324–356 ms / 0; Zeitachse 521–541 ms /
+     0 (einmal 50 ms). Endlage des Urkundennetzwerks identisch (110 Knoten); Netzwerk-Folie der Tour: dieselben
+     25 Namen, Lage bis auf 1 px gleich (Unterschied durch die neue Fußzeile, s. Punkt 6). In `js/viz/` keine
+     Schleife über `simulation.tick()` mehr.
+3. **Reduzierte Bewegung in den Karten (Befund 6.9).**
+   - Ursache: Die 31 Animationsbilder aus Prüfteil 4 stammten von Leaflets Zoom-Animation (die Prüfung klickte den
+     Zoom-Knopf), nicht von den Modulen. `js/utils/statischeKarte.js` (Verbindungskarte, Karte Soziale Gruppen)
+     und `js/viz/karte.js` erzeugen die Karte jetzt bei `prefers-reduced-motion: reduce` ohne Zoom-, Einblend- und
+     Nachgleit-Animation.
+   - Vorher/Nachher (Animationsbilder in 2,5 s nach Klick auf „+“, reduzierte Bewegung): 28–30 / 1 in allen drei
+     Karten; ohne die Einstellung unverändert (27–31).
+4. **Router ohne Abhängigkeit von `state.js` (Befund 2.2; Entscheidung des Autors, 15.11.2026).**
+   - `js/core/router.js` importiert nichts mehr; `starteRouter(beiRoute)` meldet jede Route an einen Rückruf, den
+     `js/core/app.js` übergibt und der `setAktiverTab()`/`setAktiveAnsicht()` aufruft. Verhalten unverändert.
+5. **Esc schließt die Seitenleiste (Befund 6.3).**
+   - `js/utils/sidebar.js`, `verdrahteEscape()`: gilt für jede Seitenleiste aus `baueSidebarGeruest()`, schließt über
+     den ×-Knopf (modulspezifische Schließlogik läuft mit) und gibt den Fokus an das auslösende Element zurück.
+     Listener am Modulbereich, je Modulbereich nur die der aktuellen Seitenleiste (AbortController).
+   - Vorher/Nachher: Esc ließ die Seitenleiste in 5 von 5 geprüften Ansichten offen / jetzt in allen Ansichten mit
+     Seitenleiste geschlossen (Baum, Sonne, Strahl, Zeitachse, Dot Plot, Wortwolke, Personenliste,
+     Urkundennetzwerk, Soziale Gruppen, Ortsliste, Karte, Karte Soziale Gruppen, Bilderwand), Fokus beim Auslöser.
+     Kategoriefluss hat keine Seitenleiste; Stammbaum und Wirtschaftssektoren haben ein eigenes Popover mit Esc.
+   - Beim Regressionstest gefunden und behoben: zunächst blieb in Ansichten, die denselben Modulbereich teilen (die
+     Karten), der Esc-Listener der vorigen Ansicht hängen (2 Seitenfehler); seither 0.
+6. **Impressum in der Fußzeile (Befund 6.17; Text vom Autor freigegeben, 15.11.2026).**
+   - Fußzeile wieder auf jeder Seite, nur mit einem aufklappbaren Abschnitt „Impressum“ (41 px hoch). Inhalt aus
+     `archiv.csv`: Archivname, Adresse, E-Mail, Website und neuer Eintrag `impressum_text`. `footer_text` bleibt
+     ausgeblendet. Das Semikolon des freigegebenen Textes ist durch einen Punkt ersetzt (CSV-Trennzeichen).
+   - Folge: Baum, Zeitachse und Willkommenstour sind 12–39 px höher als das Fenster (kurzes Scrollen).
+7. **Jahrhundert-Angabe (Befund 3.8).** `data/ansichten.csv`, Einleitung Urkunden: „15. und 16. Jahrhundert“ statt
+   „14. und 15.“ (vorher nicht vom Autor geändert, per `git diff` geprüft).
+8. **Willkommenstour ohne Bürgerbuch (Befund 3.2).**
+   - Ursache: Ohne Personen warf `zeigePersonen()` (`buergerinnen.js`) beim ersten Zeichnen eine Ausnahme, die
+     unbemerkt blieb; die Bühne blieb verborgen, der Weiter-Knopf erschien nie. Ebenso `bewegePunkte()`.
+   - Behebung: beide Stellen ohne Punkte abgesichert; ohne Personen zeigt die Tour nur die Archiv-Folien (ohne
+     `klick`) und darüber einen Hinweisbalken.
+   - Vorher/Nachher (nur Kopfzeile in `buergerbuch.csv`): „0 Personen“, kein Hinweis, 1 Folie, kein Weiter /
+     Hinweis, 10 Archiv-Folien durchklickbar, 0 Fehler. Mit Originaldaten vorher und nachher 25 Folien, Texte gleich.
+9. **Icicle-Kommentar (Befund 1.10).** Kopfkommentar „immer vertikal“; kein Verhaltensunterschied.
+
+**Regressionstest:** Sitzungs-Bedienung aus Prüfteil 2 (3.7) über 39 Adressen: 0 Seiten- und Konsolenfehler.
+
+---
+
+## 2026-11-15 (78) – Nachbesserung 1: nie genutzte Entity-Navigation entfernt
+
+Grundlage: Prüfung vom 14.11.2026, Teil 3, Befund 8.2 (Prüfbericht `Pruefung_2026-11-14/teil3/BERICHT.md`).
+
+**Vermerk zur Abweichung vom Masterprompt (verbindlich):** Die im Masterprompt Abschnitt 7/8 geplante
+`entity_typ`/`entity_wert`/`filter.entity`-Navigation wurde nie von einer Visualisierung ausgewertet
+(Prüfung 14.11.2026, Befund 8.2) und mit diesem Auftrag aus dem Code entfernt. Der tatsächlich verwendete
+Mechanismus ist `?datensatz=<typ>:<id>` (Befund 8.3, erfüllt). Der Masterprompt-Wortlaut wird nicht
+nachträglich geändert; diese Notiz ist die verbindliche Dokumentation der Abweichung.
+
+- **Vorher:** `js/core/router.js` las `entity_typ`/`entity_wert` aus der Adresse, schrieb sie über
+  `setFilterEntity()`/`clearFilterEntity()` in `filter.entity` (`js/core/state.js`) und konnte sie in
+  `baueHash()`/`navigiereZu()` wieder in Adressen schreiben. Keine Ansicht las `filter.entity`; kein Aufrufer
+  übergab einen Entity-Filter an `baueHash()`/`navigiereZu()`.
+- **Nachher:** Lese- und Schreibpfad entfernt (`parseHash()`, `baueHash()`, `navigiereZu()`,
+  `wendeRouteAufZustandAn()`), ebenso das Feld `filter.entity` und die beiden Setter in `state.js`.
+  Veraltete Kommentare in `js/viz/regestenKachelraster.js`, die noch vom Entity-Filter als aktivem
+  Mechanismus sprachen, berichtigt. `?datensatz=` unverändert.
+- **Nachweis:**
+  - Textsuche in `js/` nach `entity_typ`, `entity_wert`, `filter.entity`, `setFilterEntity`,
+    `clearFilterEntity`: 0 Treffer.
+  - Stichprobe von 16 Adressen (darunter beide `datensatz=`-Adressen) vor und nach der Änderung:
+    sichtbarer Text, Zahl der Elemente und Fehler identisch (0 von 16 abweichend); zwei Vorher-Läufe
+    waren untereinander identisch. Rohdaten und Screenshots: `Nachbesserung_2026-11-15/a1/`
+    (außerhalb des Repositorys).
+  - Regressionstest Befund 8.3: Klick auf „Tulln“ in den Regesten öffnet
+    `#visualisierungen/orte/ortsliste?datensatz=ort:Tulln` mit Seitenleiste, Klick auf „Heinrich V.“
+    öffnet `#visualisierungen/personen/personenliste?datensatz=person:heinrich_v` mit Seitenleiste;
+    0 Seitenfehler.
+
+---
+
+## 2026-11-15 (77) – Vermerk: Partizipations-Konfiguration in `archiv.csv`
+
+Partizipations-Konfiguration (`beteiligung_endpunkt`, `beteiligung_aktiv`) liegt bewusst in
+`data/archiv.csv`, nicht in `js/config/constants.js` wie im Masterprompt-Wortlaut (Abschnitt 5a)
+beschrieben. Entscheidung bestätigt 14.11.2026: Ablageort bleibt `archiv.csv` (konsistent mit der Regel,
+dass archivarische/institutionsspezifische Konfiguration über CSV läuft, vgl. Abschnitt 2).
+Masterprompt-Wortlaut wird nicht geändert, diese Abweichung gilt ab sofort als dauerhaft akzeptiert.
+Anlass: Prüfung vom 14.11.2026, Teil 3, Befund 5.5.
 
 ---
 

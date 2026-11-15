@@ -145,6 +145,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul, konfigurationswert } from '../core/archivKonfiguration.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 import { ermittlePersonenDerUrkunde } from '../utils/urkundenPersonen.js';
@@ -326,6 +327,7 @@ function oeffneSehnenSidebar(d, recordsProZelle) {
   zeigeUrkundenSidebar(instanz.sidebar, titel, records);
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneChordDiagramm() {
   const { container, chartContainer, urkundenRecords, familienRecords, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -416,6 +418,7 @@ function zeichneChordDiagramm() {
     .attr('stroke', (d) => (zeigeUnsicherheit && unsicherProZelle[d.source.index][d.target.index] ? '#c0392b' : 'var(--surface, #fff)'))
     .attr('stroke-width', (d) => (zeigeUnsicherheit && unsicherProZelle[d.source.index][d.target.index] ? 1.5 : 0.5))
     .attr('stroke-dasharray', (d) => (zeigeUnsicherheit && unsicherProZelle[d.source.index][d.target.index] ? '4,3' : null))
+    .call((a) => markiereHell(a, (d) => zeigeUnsicherheit && unsicherProZelle[d.source.index][d.target.index])) // Nachbesserung 3, Punkt 4
     .attr('aria-label', (d) => `Sehne ${baueSehnenTooltip(d).replace('\n', ', ')}, Details anzeigen`);
   instanz.sehnenAuswahl = sehnenAuswahl;
 

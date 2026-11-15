@@ -61,6 +61,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import {
   teileNachJahr,
@@ -167,6 +168,7 @@ function baueKopfzeile(container, sektoren, farbeFuerSektor, tooltipFuer) {
   return kopfzeile;
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneStreamgraph() {
   const { container, wurzel, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -301,6 +303,7 @@ function zeichneStreamgraph() {
     .data(markerDaten)
     .join('circle')
     .attr('class', 'unsicher-marker')
+    .call((a) => markiereHell(a, () => true)) // Nachbesserung 3, Punkt 4: die Marker SIND die unsicheren Stellen
     .attr('tabindex', 0)
     .attr('cx', (d) => xSkala(d.jahr))
     .attr('cy', (d) => ySkala(d.y))

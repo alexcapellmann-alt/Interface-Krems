@@ -384,6 +384,7 @@ function aktualisiereLegende(maxAnzahl, farbSkala) {
   instanz.legendeMaxElement.textContent = `max. ${maxAnzahl}`;
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): baut alle Bedienelemente der Werkzeugleiste mit ihren Ereignissen; sie greifen auf dieselbe Instanz und denselben Filterzustand zu.
 function baueWerkzeugleiste() {
   const { jahresSpanneVoll, aktiverZeitraum } = instanz;
 

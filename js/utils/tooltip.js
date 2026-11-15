@@ -14,8 +14,18 @@ let aktuellerAnker = null;
 // es bei versteckeTooltip() unsichtbar (opacity 0) und aus dem sichtbaren Bereich
 // herausgeschoben – bleibt aber weiterhin vorlesbar verknüpft, solange aria-describedby
 // gesetzt ist.
+// Nachbesserung 6, Punkt 8 (Befund 6.1, axe `region`): der Tooltip hängt in <main> (Landmark) statt direkt in <body>.
+// position: fixed bleibt (main bildet keinen eigenen Bezugsrahmen), damit auch Lage und aria-describedby unverändert.
+// Leert ein Seitenwechsel <main>, wird das Element beim nächsten Zeigen wieder eingehängt.
+function tooltipEltern() {
+  return document.getElementById('app-content') || document.body;
+}
+
 function holeOderErstelleTooltipElement() {
-  if (tooltipElement) return tooltipElement;
+  if (tooltipElement) {
+    if (!tooltipElement.isConnected) tooltipEltern().appendChild(tooltipElement);
+    return tooltipElement;
+  }
 
   tooltipElement = document.createElement('div');
   tooltipElement.id = TOOLTIP_ID;
@@ -29,15 +39,20 @@ function holeOderErstelleTooltipElement() {
     zIndex: '1000',
     whiteSpace: 'pre-line'
   });
-  document.body.appendChild(tooltipElement);
+  tooltipEltern().appendChild(tooltipElement);
   return tooltipElement;
 }
 
+// Nachbesserung 6, Punkt 11 (Befund 6.7): die Grenzen sind die Schnittmenge aus Container und sichtbarem Fenster - ein
+// Container, der höher oder breiter ist als das Fenster (Strahl, Stammbaum), ließ den Tooltip sonst über den Rand ragen.
 function ermittleGrenzen(containerElement) {
-  if (containerElement) {
-    return containerElement.getBoundingClientRect();
-  }
-  return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
+  const fenster = { left: 0, top: 0, right: document.documentElement.clientWidth || window.innerWidth, bottom: window.innerHeight };
+  if (!containerElement) return fenster;
+  const c = containerElement.getBoundingClientRect();
+  return {
+    left: Math.max(c.left, fenster.left), top: Math.max(c.top, fenster.top),
+    right: Math.min(c.right, fenster.right), bottom: Math.min(c.bottom, fenster.bottom)
+  };
 }
 
 // Positioniert den Tooltip neben ankerElement, mit Rand-Clamping gegen containerElement
@@ -63,6 +78,9 @@ function positioniereTooltip(ankerElement, containerElement) {
   if (y < grenzen.top) {
     y = grenzen.top;
   }
+  // Nachbesserung 6, Punkt 11: auch nach dem Umklappen nie über den Rand (z. B. Anker selbst halb außerhalb)
+  x = Math.max(grenzen.left, Math.min(x, grenzen.right - tooltipRect.width));
+  y = Math.max(grenzen.top, Math.min(y, grenzen.bottom - tooltipRect.height));
 
   tooltipElement.style.left = `${x}px`;
   tooltipElement.style.top = `${y}px`;

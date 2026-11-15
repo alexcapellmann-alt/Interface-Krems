@@ -136,10 +136,11 @@
 // (nach der Pause) gegen den dann aktuellen Stand geprüft.
 
 import { starteRouter, navigiereZu, aktuelleRoute } from './router.js';
-import { getZustand, setUnsicherheitModus } from './state.js';
+import { getZustand, setUnsicherheitModus, setAktiverTab, setAktiveAnsicht } from './state.js';
 import { ladeGecachteCSV } from './datenCache.js';
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
 import { erzeugeUnsicherheitsButton } from './unsicherheitsButton.js';
+import { setzeAbdunkelung } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { erzeugeBestandSuche } from '../utils/bestandSuche.js';
 import { zeigeBestandVorschau } from '../utils/bestandVorschau.js';
 import { erfasseFormen, spieleUebergang } from '../utils/bestandUebergang.js';
@@ -155,8 +156,9 @@ import { erzeugeFlyoutPanel, verankereFlyout, verankereVorschauFlyout, verankere
 import { BESTAND_ANSICHTEN, ARCHIVALIENTYPEN, ANSICHTS_FUEHRUNGEN } from '../config/archivalienRegistry.js';
 import { verarbeiteDatensatzAufruf } from '../utils/datensatzAufruf.js';
 import { initialisiereFortsetzenButton } from '../fuehrungen/fuehrungFortsetzen.js';
-import { ladeArchivKonfiguration, konfigurationswert, ladeSeitenBloecke, ersetzePlatzhalterImText } from './archivKonfiguration.js';
-import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn, istNichtAngeboten, NICHT_ANGEBOTEN_TEXTE, bereichsEinleitung } from './ansichtenKonfiguration.js';
+import { ladeArchivKonfiguration, konfigurationswert, konfigurationsliste, ladeSeitenBloecke, ersetzePlatzhalterImText } from './archivKonfiguration.js';
+import { erzeugeKontaktLink } from '../utils/kontaktLinks.js';
+import { ladeAnsichtenKonfiguration, wendeAnsichtenKonfigurationAn, istNichtAngeboten, NICHT_ANGEBOTEN_TEXTE, bereichsEinleitung, ansichtenNichtLesbar, ANSICHTEN_NICHT_LESBAR_TEXT } from './ansichtenKonfiguration.js';
 import { erzeugeUeberSeite } from './ueberSeite.js';
 import { erzeugeLiteraturSeite } from './literaturSeite.js';
 
@@ -471,6 +473,7 @@ function erzeugeBereichsLeisteFuerTab(aktiverTyp) {
   });
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Ablaufsteuerung des Erkundungs-Tabs (Übersicht, Galerie, Ansicht); die Zweige teilen Kontext und Generationszähler gegen veraltete Ladevorgänge.
 async function renderVisualisierungenTab() {
   const meineGeneration = generation;
   const route = aktuelleRoute();
@@ -489,6 +492,9 @@ async function renderVisualisierungenTab() {
     const titel = document.createElement('h2');
     titel.textContent = TAB_NAMEN.visualisierungen;
     const einleitungsBlock = baueEinleitungsBlock(bereichsEinleitung('erkundung'), titel);
+    if (ansichtenNichtLesbar()) { // Nachbesserung 7, Punkt 2 (Befund 3.2): Hinweis auch auf der Startseite der Erkundung
+      ladePruefModul().then((pm) => { if (meineGeneration === generation && hinweisContainer.isConnected) hinweisContainer.prepend(pm.erzeugeHinweisBalken([ANSICHTEN_NICHT_LESBAR_TEXT])); });
+    }
     if (einleitungsBlock) {
       hinweisContainer.appendChild(einleitungsBlock);
     } else {
@@ -497,6 +503,12 @@ async function renderVisualisierungenTab() {
       hinweis.textContent = 'Bitte oben einen Bereich wählen.';
       hinweisContainer.appendChild(hinweis);
     }
+    // Nachbesserung 4, Punkt 4: Datenbestände ohne Visualisierung dezent nennen (Modul erst hier geladen, nicht beim Start)
+    import('./unbekannteDaten.js').then(async (m) => {
+      const liste = await m.ermittleUnbekannteDatenbestaende();
+      const absatz = m.baueHinweisUnbekannteDaten(liste);
+      if (absatz && meineGeneration === generation && hinweisContainer.isConnected) hinweisContainer.appendChild(absatz);
+    }).catch(() => {});
     aktuellerKontext = { tab: 'visualisierungen', typ: null, hatGalerie: false, destroy: () => bereichsLeiste.destroy() };
     return;
   }
@@ -544,7 +556,10 @@ async function renderVisualisierungenTab() {
   // KORREKTUR (siehe CHANGELOG): resize() statt render(), wie in renderBestandTab()
   // oben - identischer Fehler, identische Behebung.
   const unsicherheitsButton = erzeugeUnsicherheitsButton(unsicherheitsContainer, {
-    onToggle: (aktiv) => kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv })
+    onToggle: (aktiv) => {
+      setzeAbdunkelung(vizContainer, aktiv); // Nachbesserung 3, Punkt 4
+      kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv });
+    }
   });
 
   async function ladeModulUndRender(eintrag) {
@@ -565,6 +580,7 @@ async function renderVisualisierungenTab() {
     // bleibt das Verhalten exakt wie zuvor (records unverändert durchgereicht).
     const datenFuerModul = eintrag.datenSchluessel ? records[eintrag.datenSchluessel] : records;
     // AUFTRAG G1: obergrenze aus ansichten.csv (fehlt sie, gilt die Vorgabe des Moduls)
+    setzeAbdunkelung(vizContainer, getZustand().unsicherheitModusAktiv); // Nachbesserung 3, Punkt 4
     mod.render(vizContainer, datenFuerModul, { showUncertainty: getZustand().unsicherheitModusAktiv, obergrenze: eintrag.obergrenze });
     kontext.ansichtId = eintrag.id;
     kontext.aktuellesVizModul = mod;
@@ -646,6 +662,14 @@ function erzeugeGalerieFlyoutKontext({ tab, typ, hatGalerie, bereich, ausloeser,
     destroy() {
       kontext.aktuellesVizModul?.destroy();
       kontext.aktuellesVizModul = null;
+      // Nachbesserung 2, Punkt 1 (2026-11-15, Prüfung 14.11.2026, Befund 1.4): Beim Verlassen des Bereichs
+      // (raeumeSeiteAuf() -> destroy()) wurden Ansichtenleiste und Bestandsuche nicht abgebaut - nur
+      // raeumeVizAnsichtAuf() tat das, und die läuft nur beim Wechsel Galerie <-> Ansicht im selben Bereich.
+      // Folge war je Besuch ein verwaister window-resize-Listener der Ansichtenleiste.
+      kontext.ansichtenLeiste?.destroy();
+      kontext.ansichtenLeiste = null;
+      kontext.bestandSuche?.destroy();
+      kontext.bestandSuche = null;
       kontext.galerie?.destroy();
       kontext.flyout?.destroy();
       kontext.unsicherheitsButton?.destroy();
@@ -738,6 +762,12 @@ function zeigeGalerie(kontext) {
     galerieContainer.querySelector('.visualisierungs-galerie-titel')
   );
   if (einleitungsBlock) galerieContainer.prepend(einleitungsBlock);
+  // Nachbesserung 7, Punkt 2 (Befund 3.2): statt still fehlender Einleitung ein Hinweis
+  if (ansichtenNichtLesbar()) {
+    ladePruefModul().then((pm) => {
+      if (kontext.galerieContainer === galerieContainer && galerieContainer.isConnected) galerieContainer.prepend(pm.erzeugeHinweisBalken([ANSICHTEN_NICHT_LESBAR_TEXT]));
+    });
+  }
   sichtbareAnsichten.forEach(async (ansicht, index) => {
     if (!mitPlatzhalter(ansicht)) return;
     const text = (await ersetzePlatzhalterImText(ansicht.beschreibung)) ?? ansicht.beschreibungStandard ?? '';
@@ -765,6 +795,7 @@ function stelleVizFlyoutSicher(kontext) {
       // 2026-10-28: in den Bestand-Ansichten filtert der Knopf; die Formen gleiten dabei an ihren neuen Platz
       const formenVorher = kontext.tab === 'bestand'
         ? erfasseFormen(kontext.vizContainer, { bild: kontext.ansichtId !== 'ganttDiagramm' }) : null;
+      setzeAbdunkelung(kontext.vizContainer, aktiv); // Nachbesserung 3, Punkt 4
       kontext.aktuellesVizModul?.resize({ showUncertainty: aktiv });
       if (formenVorher) spieleUebergang(formenVorher, kontext.vizContainer);
     }
@@ -961,6 +992,7 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     // KLEINAUFTRAG "Familienbaum & Personenliste...": siehe identischer
     // Kommentar in renderVisualisierungenTab()'s ladeModulUndRender() oben.
     const datenFuerModul = eintrag.datenSchluessel ? kontext.records[eintrag.datenSchluessel] : kontext.records;
+    setzeAbdunkelung(kontext.vizContainer, false); // Nachbesserung 3, Punkt 4: Modus beim Wechsel aus
     mod.render(kontext.vizContainer, datenFuerModul, { showUncertainty: false, obergrenze: eintrag.obergrenze }); // AUFTRAG G1
     setzeVizHinweisBalken(kontext, pruefung.texte); // AUFTRAG B2: nur bei Problemen in Nebendateien
 
@@ -1071,6 +1103,7 @@ function renderUeberTab() {
 // (Punkt 1, Auftrag wörtlich): `fuehrungenDaten.js`/die fünf Quell-CSVs
 // werden dadurch erst beim ersten Aufruf dieser Funktion geladen, nie beim
 // App-Start.
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Ablaufsteuerung der Führungen (Übersicht, Zeitleiste, Station, Abschluss); die Zweige teilen Kontext und Aufräumlogik.
 async function aktualisiereFuehrungenAnsicht(kontext) {
   const meineGeneration = generation;
   const route = aktuelleRoute();
@@ -1277,14 +1310,40 @@ function verarbeiteResize(meineGeneration) {
   aktuellerKontext.aktuellesVizModul?.resize();
 }
 
+// Nachbesserung 2, Punkt 6 (2026-11-15): Impressum in der Fußzeile aus archiv.csv - Archivname, Adresse, E-Mail,
+// Website (dieselben Links wie auf Startseite und Über-Seite, erzeugeKontaktLink()) und `impressum_text`.
+// Nur Textknoten, kein innerHTML (Werte aus CSV, vgl. Prüfung 14.11.2026, K5).
+function baueImpressum() {
+  const ziel = document.getElementById('app-impressum-inhalt');
+  if (!ziel) return;
+  ziel.textContent = '';
+  const adresse = document.createElement('p');
+  const strasse = konfigurationswert('adresse_strasse');
+  const ort = konfigurationswert('adresse_ort');
+  adresse.append(document.createTextNode(konfigurationswert('archiv_name')));
+  if (strasse || ort) adresse.append(document.createElement('br'), document.createTextNode(`${strasse}${strasse && ort ? ', ' : ''}${ort}`));
+  const links = [];
+  if (konfigurationswert('email')) links.push(erzeugeKontaktLink('email', `mailto:${konfigurationswert('email')}`, konfigurationswert('email')));
+  if (konfigurationswert('website_link')) links.push(erzeugeKontaktLink('website', konfigurationswert('website_link'), konfigurationswert('website') || konfigurationswert('website_link'), { neuesFenster: true }));
+  links.forEach((l) => adresse.append(document.createElement('br'), l));
+  ziel.appendChild(adresse);
+  konfigurationsliste('impressum_text').map((t) => String(t).trim()).filter(Boolean).forEach((t) => {
+    const absatz = document.createElement('p');
+    absatz.textContent = t;
+    ziel.appendChild(absatz);
+  });
+}
+
 function handleRouteChange() {
   const route = aktuelleRoute();
   aktualisiereNavHervorhebung(route.tab);
   aktualisiereSeitenueberschrift(route); // AUFTRAG D, Punkt 1
   // Wunsch des Autors: die Fußzeile (`footer_text`) seit 2026-10-25 nur noch auf der Startseite, seit
   // 2026-10-27 auch dort nicht mehr (die Startseite hat ihre eigene Fußzeile, `footer_hinweis`).
+  // Nachbesserung 2, Punkt 6 (2026-11-15, Prüfung 14.11.2026, Befund 6.17): die Fußzeile ist wieder auf jeder
+  // Seite sichtbar, enthält aber nur das aufklappbare Impressum (footer_text bleibt ausgeblendet, s. index.html).
   const fusszeile = document.querySelector('.app-footer');
-  if (fusszeile) fusszeile.hidden = true;
+  if (fusszeile) fusszeile.hidden = false;
   aktualisiereHintergrundkarte(route); // Stadtplan als Hintergrund der Übersichtsseiten (2026-10-27)
   setzeBestandFlyout(route.tab !== 'bestand');
 
@@ -1454,6 +1513,7 @@ function wendeArchivIdentitaetAn() {
 
   const footerText = document.getElementById('app-footer-text');
   if (footerText) footerText.textContent = konfigurationswert('footer_text');
+  baueImpressum();
 
   const akzentfarbe = konfigurationswert('akzentfarbe');
   if (akzentfarbe) document.documentElement.style.setProperty('--accent', akzentfarbe);
@@ -1563,7 +1623,12 @@ function wendeAusblendungenAn() {
 // betrifft nur den (ohnehin nirgendwo gelesenen) state.js-Wert aktiverTab,
 // nicht das tatsächliche Rendering - siehe dortiger Vertrag, hier bewusst
 // unverändert gelassen (Nicht-Ziel: keine Änderung an router.js).
-starteRouter();
+// Nachbesserung 2, Punkt 4 (2026-11-15): app.js vermittelt zwischen Router und Zustand; router.js importiert
+// state.js nicht mehr (Befund 2.2). Verhalten unverändert: aktiver Tab und letzte Pfadsegment wie bisher.
+starteRouter((route) => {
+  setAktiverTab(route.tab);
+  setAktiveAnsicht(route.segmente[route.segmente.length - 1] || null);
+});
 
 // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: einmalig app-weit verankert (nicht
 // an einen einzelnen Tab-Kontext gebunden), siehe fuehrungFortsetzen.js'

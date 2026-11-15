@@ -159,11 +159,12 @@ export function baueSidebarInhalt(record, { kategorieName, kategorieFarbe, felde
 // trotzdem möglich (z.B. für einen künftigen, hier nicht vorhergesehenen
 // Anwendungsfall), wird aber von keinem aktuellen Modul mehr gebraucht.
 export function baueUrkundenListeInhalt(records, { onEintragKlick } = {}) {
-  const liste = document.createElement('ul');
+  // Nachbesserung 6, Punkt 5 (Befund 6.1, list/aria-allowed-role): Einträge sind Knöpfe (role=button) - als div statt li in div statt ul, denn ein li darf keine Knopfrolle tragen
+  const liste = document.createElement('div');
   liste.className = 'bestand-sidebar-urkunden-liste';
 
   records.forEach((record) => {
-    const item = document.createElement('li');
+    const item = document.createElement('div');
     item.className = 'bestand-sidebar-urkunden-eintrag';
     item.setAttribute('tabindex', '0');
     item.setAttribute('role', 'button');
@@ -563,7 +564,43 @@ export function baueSidebarGeruest(container) {
 
   const sidebarInstanz = { sidebar, titel, koerper, schliessenBtn, zurueckBtn };
   zurueckBtn.addEventListener('click', () => zurueckZurUrkundenListe(sidebarInstanz));
+  verdrahteEscape(container, sidebarInstanz);
   return sidebarInstanz;
+}
+
+// Nachbesserung 2, Punkt 5 (2026-11-15, Prüfung 14.11.2026, Befund 6.3): Esc schließt die offene Seitenleiste,
+// wie bei den Info-Fenstern. Gilt für jede Seitenleiste aus baueSidebarGeruest(), gleich ob ein Modul sie über
+// die Funktionen hier oder selbst öffnet. Geschlossen wird über schliessenBtn.click(), damit die
+// modulspezifische Schließlogik (Auswahl aufheben, Hervorhebung zurücknehmen) genauso läuft wie beim ×-Knopf.
+// Danach kehrt der Fokus zum auslösenden Element zurück (Masterprompt Abschnitt 10): das zuletzt außerhalb der
+// Seitenleiste fokussierte oder angeklickte, fokussierbare Element im selben Modulbereich.
+// Die Listener hängen am Modulbereich (container), nicht an document. Weil mehrere Ansichten nacheinander denselben
+// Modulbereich nutzen können (z. B. die Karten einer Gruppe), ersetzt jede neue Seitenleiste die Listener der
+// vorigen (AbortController je Modulbereich) - kein Listener-Leck (vgl. Befund 1.4), kein Aufruf abgebauter Module.
+const escapeSteuerung = new WeakMap();
+function verdrahteEscape(container, sidebarInstanz) {
+  const { sidebar, schliessenBtn } = sidebarInstanz;
+  escapeSteuerung.get(container)?.abort();
+  const steuerung = new AbortController();
+  escapeSteuerung.set(container, steuerung);
+  const optionen = { signal: steuerung.signal };
+  let ausloeser = null;
+  const merke = (ziel) => {
+    if (!(ziel instanceof Element) || sidebar.contains(ziel)) return;
+    const fokussierbar = ziel.closest('a[href], button, input, select, textarea, [tabindex]');
+    if (fokussierbar && container.contains(fokussierbar)) ausloeser = fokussierbar;
+  };
+  container.addEventListener('focusin', (event) => merke(event.target), optionen);
+  container.addEventListener('pointerdown', (event) => merke(event.target), optionen);
+  container.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !sidebar.isConnected || !sidebar.classList.contains('offen')) return;
+    // Eine offene Lightbox oder ein offenes Info-Fenster schließt Esc zuerst (eigene Behandlung dort)
+    if (document.querySelector('[role="dialog"][aria-modal="true"].offen, [id^="info-popover"]:not([hidden])')) return;
+    event.preventDefault();
+    const ziel = ausloeser;
+    schliessenBtn.click();
+    if (ziel?.isConnected && !sidebar.contains(ziel)) ziel.focus({ preventScroll: true });
+  }, optionen);
 }
 
 export function oeffneSidebar(sidebarInstanz, record, konfiguration) {
@@ -631,7 +668,7 @@ export function fuegeSidebarStyleEin(container) {
     .bestand-sidebar-urkunden-badges { display: flex; flex-wrap: wrap; gap: var(--space-1); }
     /* Auftrag "Sidebar-Liste – Regest-Vorschauzeile & Inline-Detailansicht":
        Punkt 1 (Ein-Zeilen-Vorschau, siehe baueUrkundenListeInhalt()) */
-    .bestand-sidebar-urkunden-regest { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--text-muted);
+    .bestand-sidebar-urkunden-regest { margin: 2px 0 0; font-size: var(--fs-md); color: var(--text-muted);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     /* Punkt 3 (Zurück-Button, siehe baueSidebarGeruest()) - eigene, spezifischere
        Regel überschreibt die generische ".bestand-sidebar-kopf button"-Regel oben

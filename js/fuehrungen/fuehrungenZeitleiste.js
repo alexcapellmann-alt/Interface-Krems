@@ -8,9 +8,8 @@
 //   Ohne verwertbaren `zeitraum` gelten die Jahre der Stationen (`station_zeitraum`); bleibt nichts,
 //   steht die Führung in der Liste „ohne Zeitraum“ unter der Zeitleiste.
 // - Farbe = Themenbereich (Legende darüber), Balken in Zeilen gepackt, Titel im Balken oder daneben.
-// - Hintergrund: heller Stadtplan von Krems, Stein und Mautern (vendor/karten/krems.json, OpenStreetMap,
-//   erzeugt mit Interface-Krems-Testserver\karte_krems.py), zurückhaltend wie der Stadtplan im
-//   Theaterzettel-Prototyp.
+// - Hintergrund: heller Stadtplan des Archivorts (derselbe wie js/utils/hintergrundKarte.js: Pfad aus data/archiv.csv,
+//   `hintergrundkarte_pfad`, Ausschnitt „zeitleiste“ aus der Begleitdatei <karte>.darstellung.json).
 //
 // Zugänglichkeit: Balken sind Links mit Titel, Zeitraum und Themenbereich im Namen, in Zeitfolge per
 // Tab erreichbar; die Kurzbeschreibung erscheint bei Mauszeiger und Tastaturfokus.
@@ -18,10 +17,10 @@
 import { ladeFuehrungenDaten } from './fuehrungenDaten.js';
 import { baueAnsichtWahl } from './fuehrungenAnsichtWahl.js';
 import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js';
+import { hintergrundkartenPfad } from '../utils/hintergrundKarte.js';
+import { ladeKartenDarstellung, ausschnittAus, sichtfenster } from '../utils/kartenDarstellung.js'; // Nachbesserung 5 // Nachbesserung 4, Punkt 2: Pfad aus archiv.csv (hintergrundkarte_pfad)
 
-const KARTE_PFAD = 'vendor/karten/krems.json';
-// Maßstab und Lage: Altstädte von Krems und Stein; gezeichnet wird der ganze Kartenbereich
-const KARTE_FOKUS = { W: 15.572, E: 15.632, S: 48.398, N: 48.424 };
+// Maßstab und Lage: Ausschnitt „zeitleiste“ der Begleitdatei der Karte (Nachbesserung 5); gezeichnet wird der ganze Kartenbereich
 // [Ebene, Linienbreite px, Farbe, Deckkraft]
 const KARTE_EBENEN = [
   ['klein', 0.8, '#6b6358', 0.22], ['bahn', 1.2, '#6b6358', 0.24], ['gross', 1.8, '#6b6358', 0.30],
@@ -79,12 +78,20 @@ export function leseZeitraum(fuehrung) {
 
 async function ladeKarte() {
   let grund = null;
-  try { const r = await fetch(KARTE_PFAD); if (r.ok) grund = await r.json(); } catch { /* ohne Karte */ }
+  const pfad = hintergrundkartenPfad();
+  if (pfad) {
+    try {
+      const r = await fetch(pfad);
+      if (r.ok) grund = await r.json();
+      else console.warn(`Stadtplan der Zeitleiste nicht gefunden: ${pfad} (Eintrag hintergrundkarte_pfad in data/archiv.csv). Die Zeitleiste erscheint ohne Karte.`);
+    } catch { /* ohne Karte */ }
+  }
   if (!I || !grund) return;
-  const k = Math.cos(grund.lat0 * Math.PI / 180) * grund.faktor;
+  const fenster = sichtfenster(grund, ausschnittAus(await ladeKartenDarstellung(pfad), 'zeitleiste'));
+  if (!I || !fenster) return;
   I.karte = {
     ebenen: Object.fromEntries(Object.entries(grund.ebenen).map(([n, d]) => [n, new Path2D(d)])),
-    x0: KARTE_FOKUS.W * k, x1: KARTE_FOKUS.E * k, y0: -KARTE_FOKUS.N * grund.faktor, y1: -KARTE_FOKUS.S * grund.faktor,
+    x0: fenster.x0, x1: fenster.x1, y0: fenster.y0, y1: fenster.y1,
     nachweis: grund.nachweis
   };
   zeichneKarte();

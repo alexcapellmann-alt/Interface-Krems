@@ -1,138 +1,24 @@
 // js/config/archivalienRegistry.js
-// Registriert, welche Archivalientypen/Ansichten es gibt und wo ihr Modul liegt -
-// technische Verzeichnis-Information (Dateipfade, IDs, Labels), keine archivarischen
-// Inhalte im Sinne von Abschnitt 2 (die stehen weiterhin ausschließlich in den
-// data/*.csv-Dateien). Neu eingeführt für die Verdrahtung der drei Bauteile aus
-// Abschnitt 5 (kachelauswahl.js, ansichtWechseln.js) und für Teil C (app.js/Router:
-// modulPfad wird für den dynamischen import() gebraucht, Abschnitt 2 Lazy Loading).
+// Technisches Verzeichnis der Ansichten: welche Bereiche und Ansichten es gibt, welches Modul sie zeichnet und welche
+// Dateien es braucht. Keine archivarischen Inhalte (Masterprompt §2): Namen und Beschreibungen hier sind neutrale
+// Vorgaben; maßgeblich sind data/ansichten.csv (Namen, Texte, Reihenfolge, anbieten) und data/infotexte.csv.
 //
-// Abschnitt 2 "Content-driven, mit Einschränkung": ein Archivalientyp erscheint erst
-// in ARCHIVALIENTYPEN, sobald mindestens eine Visualisierung für ihn existiert.
+// Aufbau
+// - BESTAND_ANSICHTEN: Ansichten des Bereichs Bestand (alle auf bestandsverzeichnis.csv).
+// - ARCHIVALIENTYPEN: Bereiche der Erkundung (`typ` = Bereichs-ID in Adresse und ansichten.csv) mit ihren `ansichten`.
+//   Ein Bereich erscheint nur, wenn es für ihn mindestens ein Modul gibt („content-driven“, Masterprompt §2); ein neuer
+//   Bereichstyp braucht deshalb Programmteile (Datenbestände ohne Modul nennt js/core/unbekannteDaten.js).
+// - ANSICHTS_FUEHRUNGEN: Führungen, die statt Stationen ein eigenes Modul zeigen (Willkommenstour).
 //
-// **Pflegeregel:** neue Einträge dürfen ergänzt werden, wenn ein neues
-// Visualisierungsmodul entsteht; bestehende Einträge nicht ohne Rückfrage ändern
-// (Abschnitt 14, analog zur Pflegeregel für docs/SCHEMA.md).
+// Felder: `id`/`label`/`beschreibung` (Vorgaben), `modulPfad` (dynamischer import(), Lazy Loading),
+// `datenDatei` – ein Pfad oder ein Objekt mehrerer Quellen, die app.js gemeinsam lädt; `datenSchluessel` wählt daraus
+// den Teil, den ein Modul als flache Liste erwartet. `hatGalerie` (Bereich mit Kachel-Galerie),
+// `eigenerUnsicherheitsButton`/`ohneUnsicherheitsButton` (allgemeiner Unsicherheitsknopf ausgeblendet).
+// Welche Spalten eine Ansicht mindestens braucht, steht in js/config/datenAnforderungen.js.
 //
-// AUFTRAG "Neue Kacheln Bürgerbuch/Verlassenschaften/Personen": drei neue
-// Einträge (bürgerbuch/verlassenschaften/personen) ergänzt - bewusst NUR als
-// Gerüst mit einem einzigen Platzhalter-Modul in `ansichten` (js/utils/
-// vizPlatzhalter.js' baueVizPlatzhalterModul(), siehe js/viz/*Platzhalter.js),
-// keine echten Visualisierungsinhalte (Nicht-Ziel des damaligen Auftrags).
-// Dabei gemeldeter, vermuteter Registrierungsfehler: `familienbaum`/
-// `personenliste` standen unter `urkunden`, obwohl beide laut eigenem
-// Dateikopf-Kommentar inhaltlich zu `familien.csv`/`personenliste.csv`
-// gehören - per KLEINAUFTRAG "Familienbaum & Personenliste in die Registry
-// unter 'Personen' umhängen" (siehe CHANGELOG/PROJEKTLOG) jetzt behoben:
-// beide Einträge von `urkunden.ansichten` nach `personen.ansichten`
-// verschoben, unverändert (nur die Zuordnung, nicht `id`/`label`/`modulPfad`).
-//
-// `datenDatei` ist bei den drei neuen Einträgen teils ein Objekt statt eines
-// einzelnen Pfad-Strings (`personen`: zwei gemeinsam benötigte Quellen,
-// "familien.csv und personenliste.csv gemeinsam") - siehe app.js'
-// ladeArchivalienDaten() für die dafür nötige (kleine, abwärtskompatible)
-// Erweiterung der bisherigen Ein-Datei-Ladefunktion.
-//
-// KLEINAUFTRAG-Folge: `familienbaum.js`/`personenliste.js` erwarten laut
-// eigenem, hier NICHT geändertem Code weiterhin ein FLACHES Records-Array
-// ihrer jeweils EIGENEN CSV (nicht das kombinierte `{familien,personenliste}`-
-// Objekt, das `personen.datenDatei` als Ganzes lädt) - der optionale, pro
-// Ansicht-Eintrag gültige Schlüssel `datenSchluessel` sagt app.js'
-// ladeModulUndRender(), welchen Teil des geladenen Objekts es diesem
-// speziellen Modul übergeben soll (siehe dortiger Kommentar). Ohne
-// `datenSchluessel` (alle anderen Einträge app-weit) ändert sich am
-// bisherigen Verhalten nichts.
-//
-// Der bisherige Platzhalter-Eintrag für `personen` entfällt jetzt, da
-// mindestens ein echtes Modul existiert (Abschnitt 2 "Content-driven": ein
-// dauerhaft leerer "Noch nichts hier"-Unterreiter neben zwei funktionierenden
-// Modulen wäre nur verwirrend) - `js/viz/personenPlatzhalter.js` dadurch
-// unreferenziert, gelöscht (siehe CHANGELOG/PROJEKTLOG zur Begründung dieser
-// Wahl gegenüber der Alternative "als dritter, leerer Unterreiter belassen").
-//
-// AUFTRAG "Bürgerbuch – Trellis (Umzug), Bump Chart (Neubau), Bipartiter
-// Graph (Umzug)": dieselbe Content-driven-Logik jetzt für `buergerbuch`
-// angewendet - trellis.js/bipartiterGraph.js sind von `urkunden.ansichten`
-// hierher UMGEZOGEN (siehe jeweiliger Dateikopf-Kommentar dort), bumpChart.js
-// ist neu entstanden. Der bisherige einzige Platzhalter-Eintrag entfällt
-// analog zum Personen-Präzedenzfall - `js/viz/buergerbuchPlatzhalter.js`
-// dadurch unreferenziert, gelöscht.
-//
-// AUFTRAG "Bipartiter Graph → Urkunden (Sankey), Personennetzwerk →
-// Bürgerbuch, plus Trellis/Bump-Chart-Korrekturen": zwei weitere Umzüge,
-// diesmal in ENTGEGENGESETZTER Richtung UND mit inhaltlichem Umbau (nicht nur
-// Registry-Zuordnung wie beim Personen-Umzug oben):
-// - `bipartiterGraph.js` (Bürger-Bürge, seit dem vorigen Auftrag unter
-//   `buergerbuch`) ist komplett entfallen - ersetzt durch das neue, inhaltlich
-//   grundverschiedene `kategorienOrteSankey.js` (Urkunden-Kategorien↔Orte,
-//   keine Personen/Bürgen mehr) unter `urkunden.ansichten` (siehe dortiger
-//   Dateikopf-Kommentar zur Begründung des neuen Dateinamens statt einer
-//   Weiterverwendung von `bipartiterGraph.js`).
-// - `personennetzwerk.js` ist von `urkunden.ansichten` nach
-//   `buergerbuch.ansichten` UMGEZOGEN und zeigt seither Bürgschafts- statt
-//   Ko-Nennungs-Beziehungen (siehe dortiger Dateikopf-Kommentar) - derselbe
-//   Dateiname bleibt zutreffend (weiterhin ein Personennetzwerk, nur mit
-//   anderer Datenquelle), anders als beim Sankey-Fall oben.
-//
-// AUFTRAG "Sankey konsolidieren, Beschriftung vergrößern, Layout-Fixes":
-// Vorab-Check ergab, dass die ALTE, separate Drei-Stufen-Sankey-Ansicht
-// (Jahrhundert->Kategorie->Präzision) tatsächlich noch NEBEN
-// `kategorienOrteSankey` registriert war (beide unter `urkunden.ansichten`
-// sichtbar: "Sankey" und "Kategorien ↔ Orte") - jetzt konsolidiert: der
-// `kategorienOrteSankey`-Eintrag entfällt, `kategorienOrteSankey.js` wurde in
-// `sankey.js` verschoben/umbenannt (ersetzt dessen alten Drei-Stufen-Inhalt
-// vollständig) und läuft jetzt unter dem einzigen verbleibenden Eintrag
-// `sankey`/"Sankey" (siehe dortiger Dateikopf-Kommentar für die volle
-// Herleitung). Genau ein Sankey-Eintrag in der Urkunden-Navigation.
-//
-// AUFTRAG "Navigation – Permanente Bereichs-Leiste & Visualisierungs-Galerie
-// (Pilot: Urkunden)": zwei Erweiterungen.
-// (1) `hatGalerie: true` bei `urkunden` (bislang bei keinem Archivalientyp
-// vorhanden, daher `undefined`/falsy = "nein" bei den übrigen drei) -
-// steuert in app.js, ob ein Bereich die neue Galerie-Übersichtsseite bekommt
-// (Pilot, siehe Punkt 2; deren Einzel-Visualisierungen öffnen seit
-// FOLGEAUFTRAG "Visualisierungs-Tab-Leiste..." als Tabs statt über einen
-// Rückweg-Link, siehe app.js/visualisierungsTabs.js) oder weiterhin
-// automatisch zur Primäransicht + "Ansicht"-Dropdown springt (Bürgerbuch/
-// Verlassenschaften/Personen, unverändert, Nicht-Ziel dieses Auftrags).
-// (2) Jede `urkunden`-Ansicht bekommt ein neues `beschreibung`-Feld (Kachel-
-// Text der Galerie, Punkt 2) - vom Auftraggeber geliefert, VOR Übernahme
-// gegen den tatsächlichen Modul-Code geprüft (Auftrag, wörtlich: "Abweichungen
-// zurückmelden statt unpassend zu übernehmen"). Fünf Texte wurden dabei
-// korrigiert (Marimekko, Alluviales Diagramm, Parallelkoordinaten, Chord-
-// Diagramm, Arc-Diagramm - siehe jeweiliger Kommentar unten und Selbstauskunft
-// im Chat für den vollen Befund je Modul).
-//
-// SELBST GEFUNDENER REGISTRIERUNGSFEHLER (analog zum bereits einmal
-// behobenen Fall "familienbaum/personenliste standen unter urkunden", siehe
-// AUFTRAG "Neue Kacheln..." oben): `bubbleChart.js` erwartet laut eigenem
-// Dateikopf-Kommentar ausdrücklich `personenliste.csv`-Records ("Erwartete
-// `data`: das flache `records`-Array aus dataLoader.js für
-// personenliste.csv"), stand aber unter `urkunden.ansichten` und bekam
-// dadurch `urkunden.csv`-Records - live geprüft: das Feld
-// `anzahl_nennungen`, das die Kreisgröße bestimmt, existiert dort nicht,
-// wird zu `NaN`/`0` und ALLE 1069 Kreise erscheinen dadurch gleich groß
-// (Mindestgröße-Fallback) - die Visualisierung war faktisch unbenutzbar.
-// Mit personenliste.csv (4116 Records, live getestet) ergeben sich dagegen
-// 18 unterschiedliche, sinnvolle Kreisgrößen (Radius 1,9-21,7px). Behoben:
-// `bubbleChart` von `urkunden.ansichten` nach `personen.ansichten`
-// verschoben (mit `datenSchluessel: 'personenliste'`, siehe dortiger
-// Kommentar) - reine Registry-Zuordnung, keine Änderung an bubbleChart.js
-// selbst (Nicht-Ziel dieses Auftrags: "keine Änderung an der Funktionalität
-// einzelner Visualisierungen"). Dadurch zeigt die Urkunden-Galerie 20 statt
-// der in Punkt 0 gemeldeten 21 Kacheln - siehe Selbstauskunft im Chat.
+// Pflegeregel (Masterprompt §14): Einträge für neue Module dürfen ergänzt werden; bestehende nur nach Rückfrage ändern.
+// Entstehung und frühere Fassungen: docs/PROJEKTLOG.md.
 
-// FOLGEAUFTRAG "Visualisierungs-Tab-Leiste als Hover/Klick-Flyout + Galerie-
-// Muster für Bestand", Punkt 2: `beschreibung`-Feld ergänzt (Kachel-Text der
-// neuen Bestand-Galerie, analog zu urkunden.ansichten unten) - laut Auftrag
-// bereits an anderer Stelle als Info-Button-Text etabliert, hier
-// wiederverwendet. VOR Übernahme gegen den tatsächlichen Info-Button-Text
-// jedes Moduls geprüft (Abweichungen zurückmelden statt unpassend
-// übernehmen, wie bei den urkunden-Texten oben): vier von fünf stimmten
-// überein, EIN Treffer korrigiert:
-// - Sunburst: gelieferter Text ("Kategorien innen, Bestände außen") nannte
-//   nur zwei Ringe - sunburst.js' eigener Info-Button-Text sowie ein
-//   dortiger Kommentar ("Rückkehr zur 3-Ebenen-Ansicht") zeigen aber drei
-//   Ringe (Kategorie/Unterkategorie/Bestand). Korrigiert, siehe unten.
 // Führungen, die statt Stationen eine interaktive Ansicht zeigen: fuehrung_id aus fuehrungen.csv → Modul und Daten
 // (app.js' aktualisiereFuehrungenAnsicht()). Wunsch des Autors (2026-10-29): „Bürgerinnen?“ aus dem Bereich Personen
 // in die Führungen („Geschichten über das Archiv“) verlegt; das Modul bekommt dieselben Daten wie bisher unter Personen.

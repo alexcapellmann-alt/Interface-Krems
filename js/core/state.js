@@ -9,8 +9,9 @@ const zustand = {
   aktiverTab: null,
   aktiveAnsicht: null,
   unsicherheitModusAktiv: false,
+  // Nachbesserung 1 (2026-11-15): Entity-Filter entfernt (nie ausgewertet, Prüfung 14.11.2026, Befund 8.2);
+  // Kontext läuft über ?datensatz=<typ>:<id>, siehe router.js.
   filter: {
-    entity: { typ: null, wert: null },
     zeitraum: null,
     suchbegriff: null
   },
@@ -19,9 +20,7 @@ const zustand = {
   // Punkt 4: einmaliger ("one-shot") Übergabekanal für "Klick auf einen
   // Urkunden-Listeneintrag (z.B. Kalender-Heatmap) soll im Regesten-
   // Kachelraster die passende Kachel aufgeklappt/gescrollt zeigen" - bewusst
-  // ein eigenes, von filter.entity getrenntes Feld (nicht wiederverwendet):
-  // filter.entity steht für einen DAUERHAFTEN Kontext-Filter (Person/Ort),
-  // zielSignatur dagegen für eine EINMALIGE Navigationsabsicht, die nach dem
+  // ein eigenes Feld für eine EINMALIGE Navigationsabsicht, die nach dem
   // ersten Konsum durch regestenKachelraster.js sofort wieder gelöscht wird
   // (siehe clearZielSignatur() dort in render()) - sonst würde ein späterer,
   // regulärer Aufruf des Kachelrasters fälschlich erneut aufklappen/scrollen.
@@ -33,10 +32,7 @@ const zustand = {
 export function getZustand() {
   return {
     ...zustand,
-    filter: {
-      ...zustand.filter,
-      entity: { ...zustand.filter.entity }
-    },
+    filter: { ...zustand.filter },
     datenCache: { ...zustand.datenCache }
   };
 }
@@ -55,16 +51,6 @@ export function setUnsicherheitModus(aktiv) {
 
 export function toggleUnsicherheitModus() {
   zustand.unsicherheitModusAktiv = !zustand.unsicherheitModusAktiv;
-}
-
-// Kontext-erhaltender Wechsel (Abschnitt 4.2/7): setzt den entity-Filter,
-// z.B. beim Klick auf eine Person oder einen Ort in einer Visualisierung.
-export function setFilterEntity(typ, wert) {
-  zustand.filter.entity = { typ, wert };
-}
-
-export function clearFilterEntity() {
-  zustand.filter.entity = { typ: null, wert: null };
 }
 
 export function setFilterZeitraum(zeitraum) {

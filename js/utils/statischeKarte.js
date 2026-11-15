@@ -57,7 +57,10 @@ export function erzeugeUeberlagerungsSvg(mapDiv, breite, hoehe, { ariaLabel } = 
     .style('position', 'absolute').style('top', 0).style('left', 0)
     .style('z-index', OVERLAY_Z_INDEX)
     .style('pointer-events', 'none')
-    .attr('role', 'img')
+    // Nachbesserung 6, Punkte 1-2 (Befunde 6.1, 6.3): `group` statt `img` - die Kinder einer Grafik mit Rolle `img`
+    // gelten als reine Darstellung; Chrome ließ die fokussierbaren Ortspunkte deshalb nicht fokussieren (focus()
+    // ohne Wirkung), und axe meldete nested-interactive. Die Beschriftung bleibt.
+    .attr('role', 'group')
     .attr('aria-label', ariaLabel || '');
 }
 
@@ -66,8 +69,15 @@ export function erzeugeUeberlagerungsSvg(mapDiv, breite, hoehe, { ariaLabel } = 
 // Standardwerte (Dragging/Scroll-Zoom/Doppelklick-Zoom/Zoom-Buttons etc. alle
 // aktiv), exakt "Standard-Leaflet-Interaktion, kein Sonderverhalten" (Auftrag
 // wörtlich).
+//
+// Nachbesserung 2, Punkt 3 (2026-11-15, Prüfung 14.11.2026, Befund 6.9): Bei prefers-reduced-motion: reduce
+// springt die Karte ohne Zwischenbilder (Zoom, Einblenden, Nachgleiten nach dem Ziehen); die Interaktionen
+// selbst bleiben unverändert. Ohne diese Einstellung gelten wie bisher Leaflets Standardwerte.
 export function baueStatischeKarte(mapDiv, koordinatenListe) {
-  const karte = L.map(mapDiv);
+  const ohneBewegung = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const karte = L.map(mapDiv, ohneBewegung
+    ? { zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false, inertia: false }
+    : {});
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'

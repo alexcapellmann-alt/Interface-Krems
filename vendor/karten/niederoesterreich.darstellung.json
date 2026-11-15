@@ -1,0 +1,11 @@
+{
+ "beschreibung": "Darstellung zur Kartendatei niederoesterreich.json: Ausschnitt der Bilderwand in Grad (W, E, S, N). Siehe docs/SCHEMA.md.",
+ "ausschnitte": {
+  "bilderwand": {
+   "W": 14.0,
+   "E": 17.4,
+   "S": 47.25,
+   "N": 49.15
+  }
+ }
+}

@@ -12,11 +12,15 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
 import { ortBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { alsText } from '../utils/textwert.js';
+import { lesbareAnmerkung } from '../utils/uncertainty.js';
+import { erzeugeLiveAnsage } from '../utils/liveAnsage.js';
+import { markiereElement, mitUnvollstaendigHinweis, istUnvollstaendig } from '../utils/vollstaendigkeit.js';
 import {
   baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar,
   baueUrkundenListeInhalt, baueUrkundenDetailInhalt
@@ -37,7 +41,9 @@ function baueOrte(orteRecords, urkunden, inventare) {
   const nachName = new Map();
   orteRecords.forEach((r) => {
     const name = alsText(r.orte).trim();
-    if (!name) return;
+    // Nachbesserung 3, Punkt 3: ein Ort ohne Namen ist ein unvollständiger Datensatz - sichtbar und gekennzeichnet
+    // statt still verworfen (Masterprompt §12); eigener Schlüssel, damit er mit keinem benannten Ort zusammenfällt.
+    if (!name) { nachName.set(`ohne-ortsnamen:${alsText(r.orte_id)}`, { name: '(ohne Ortsnamen)', record: r, urkunden: [], inventare: [], jahre: [] }); return; }
     nachName.set(name, { name, record: r, urkunden: [], inventare: [], jahre: [] });
   });
   urkunden.forEach((u) => {
@@ -95,7 +101,7 @@ function fuegeStyleEin(container) {
     .ol-zeile { cursor: pointer; }
     .ol-zeile:hover { background: #f7f7f7; }
     .ol-zeile:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
-    .bestand-sidebar h4 { margin: var(--space-3) 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
+    .bestand-sidebar .bestand-sidebar-zwischentitel { margin: var(--space-3) 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
   `;
   container.appendChild(style);
 }
@@ -175,7 +181,7 @@ function bauePaginierung(seite, gesamtSeiten, seitenTreffer, gesamtTreffer, posi
   const zurueck = document.createElement('button');
   zurueck.type = 'button';
   zurueck.textContent = '← Zurück';
-  zurueck.setAttribute('aria-label', 'Vorherige Seite');
+  zurueck.setAttribute('aria-label', 'Zurück zur vorherigen Seite'); // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): beginnt mit dem sichtbaren Wort
   zurueck.disabled = seite <= 1;
   zurueck.addEventListener('click', () => { instanz.aktuelleSeite = seite - 1; zeichneTabelle(); });
   const status = document.createElement('span');
@@ -183,7 +189,7 @@ function bauePaginierung(seite, gesamtSeiten, seitenTreffer, gesamtTreffer, posi
   const weiter = document.createElement('button');
   weiter.type = 'button';
   weiter.textContent = 'Weiter →';
-  weiter.setAttribute('aria-label', 'Nächste Seite');
+  weiter.setAttribute('aria-label', 'Weiter zur nächsten Seite'); // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): beginnt mit dem sichtbaren Wort
   weiter.disabled = seite >= gesamtSeiten;
   weiter.addEventListener('click', () => { instanz.aktuelleSeite = seite + 1; zeichneTabelle(); });
   leiste.append(zurueck, status, weiter);
@@ -224,12 +230,14 @@ function zeigeOrtListe(sidebarInstanz, ort) {
   const unsicher = baueUnsicherheitAbsatz(ort.record, ['orte_unsicher'], { vorschlag: ortBezug(ort.record) });
   if (unsicher) inhalt.appendChild(unsicher);
   if (ort.urkunden.length) {
-    const h = document.createElement('h4');
+    const h = document.createElement('h3'); // Nachbesserung 6, Punkt 7 (heading-order): h3 statt h4 direkt unter dem h2 der Seitenleiste
+    h.className = 'bestand-sidebar-zwischentitel';
     h.textContent = 'In Urkunden:';
     inhalt.append(h, baueUrkundenListeInhalt(ort.urkunden, { onEintragKlick: (r) => zeigeDetailUrkunde(sidebarInstanz, r, true) }));
   }
   if (ort.inventare.length) {
-    const h = document.createElement('h4');
+    const h = document.createElement('h3'); // Nachbesserung 6, Punkt 7 (heading-order): h3 statt h4 direkt unter dem h2 der Seitenleiste
+    h.className = 'bestand-sidebar-zwischentitel';
     h.textContent = 'In den Verlassenschaftsinventaren:';
     inhalt.append(h, baueInventarListeInhalt(ort.inventare, { onEintragKlick: (r) => zeigeDetailInventar(sidebarInstanz, r, true) }));
   }
@@ -247,12 +255,14 @@ function baueZeile(ort, koerper) {
   const { container, options } = instanz;
   const zeile = koerper.insertRow();
   zeile.className = 'ol-zeile';
+  markiereElement(zeile, ort.record); // Nachbesserung 3, Punkt 3
+  markiereHellElement(zeile, options.showUncertainty && ort.unsicher); // Nachbesserung 3, Punkt 4
   zeile.setAttribute('tabindex', '0');
   zeile.setAttribute('role', 'button');
   const markiert = options.showUncertainty && ort.unsicher;
-  zeile.setAttribute('aria-label', `${ort.name}${markiert ? ', Identifizierung unsicher' : ''}, Quelleneinträge anzeigen`);
-  if (markiert) {
-    const text = ort.anmerkung || 'Identifizierung unsicher';
+  const zusatzFuerHilfsmittel = `${markiert ? ', Identifizierung unsicher' : ''}, Quelleneinträge anzeigen`;
+  if (markiert || istUnvollstaendig(ort.record)) {
+    const text = mitUnvollstaendigHinweis(ort.record, markiert ? (lesbareAnmerkung(ort.anmerkung) || 'Identifizierung unsicher') : '');
     zeile.addEventListener('mouseenter', () => zeigeTooltip(text, zeile, container));
     zeile.addEventListener('focus', () => zeigeTooltip(text, zeile, container));
     zeile.addEventListener('mouseleave', () => versteckeTooltip());
@@ -274,6 +284,12 @@ function baueZeile(ort, koerper) {
     const wert = spalte.wertFn(ort);
     zelle.appendChild(document.createTextNode(wert === null || wert === undefined || wert === '' ? '–' : wert));
   });
+  // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): der Name der Zeile ergibt sich aus ihrem sichtbaren Inhalt;
+  // der Zusatz für Hilfsmittel steht unsichtbar in der letzten Zelle (vorher ein aria-label nur mit dem Namen)
+  const hilfsZusatz = document.createElement('span');
+  hilfsZusatz.className = 'nur-fuer-hilfsmittel';
+  hilfsZusatz.textContent = zusatzFuerHilfsmittel;
+  zeile.lastElementChild?.appendChild(hilfsZusatz);
 }
 
 function zeichneTabelle() {
@@ -297,6 +313,8 @@ function zeichneTabelle() {
   instanz.hinweisElement.textContent = instanz.options.showUncertainty
     ? `${sortiert.length} von ${orte.length} Orten angezeigt (nur Orte mit unsicherer Identifizierung).`
     : `${sortiert.length} von ${orte.length} Orten angezeigt.`;
+  // Nachbesserung 6, Punkt 10: Trefferzahl ansagen (js/utils/liveAnsage.js)
+  if (instanz.ansage) instanz.ansage.ansagen(instanz.hinweisElement.textContent); else { instanz.ansage = erzeugeLiveAnsage(instanz.container); instanz.ansage.merke(instanz.hinweisElement.textContent); }
 }
 
 function zeichneOrtsliste() {
@@ -364,6 +382,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
+  instanz.ansage?.destroy();
   instanz.infoButton?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;

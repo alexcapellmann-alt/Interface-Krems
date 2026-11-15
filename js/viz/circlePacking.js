@@ -270,6 +270,7 @@ function aktualisiereWerkzeugleiste() {
   instanz.titelSpan.textContent = inKategorie ? instanz.aktuelleKategorieDaten.name : '';
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneCirclePacking() {
   const { svgBereich, hierarchieDaten, options, aktuelleKategorieDaten, kategorieFarbSkala } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;

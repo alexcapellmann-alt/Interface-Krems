@@ -43,6 +43,9 @@
 // festen Tiefe - bleibt dadurch korrekt, unabhängig davon, ob/wie/wo die
 // Hierarchie neu verwurzelt wird.
 
+import { lesbareAnmerkung } from './uncertainty.js';
+import { mitUnvollstaendigHinweis } from './vollstaendigkeit.js';
+
 export const OHNE_KATEGORIE = '(ohne Kategorie)';
 const OHNE_UNTERKATEGORIE = '(ohne Unterkategorie)';
 const MINDESTGROESSE = 10;
@@ -186,10 +189,10 @@ export function baueTooltipText(blatt) {
   zeilen.push(`Umfang: ${blatt.data.record.umfang || blatt.data.record.umfang_lfm || 'unbekannt'}`);
   if (blatt.data.record.daten_unsicher) {
     const anmerkung = blatt.data.record.unsicherheit_anmerkung;
-    const anmerkungText = Array.isArray(anmerkung) ? anmerkung.join('; ') : anmerkung;
+    const anmerkungText = lesbareAnmerkung(anmerkung, '; ');
     zeilen.push('Achtung: Angaben unsicher' + (anmerkungText ? ' – ' + anmerkungText : ''));
   }
-  return zeilen.join('\n');
+  return mitUnvollstaendigHinweis(blatt.data.record, zeilen.join('\n')); // Nachbesserung 3, Punkt 3
 }
 
 // Suchfeld der Bestand-Visualisierungen (bestandSuche.js): sucht in der Hierarchie aus

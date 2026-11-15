@@ -43,6 +43,8 @@ import { baueBuergschaftsNetzwerk, baueNamensverzeichnis, baueSektorFarbSkala } 
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { mitTextfeldern } from '../utils/textwert.js';
+import { rechneSchrittweise } from '../utils/kraefteLayout.js';
+import { markiereSvg, mitUnvollstaendigHinweis } from '../utils/vollstaendigkeit.js';
 
 // AUFTRAG B1 (Prüfbericht Punkt 3): "|" macht im Loader jedes Feld zur Liste,
 // auch Freitext - diese Felder werden hier als Text (Liste mit " | ") verarbeitet,
@@ -103,9 +105,10 @@ function zeichneStatisch(svg, knoten, paare, radius, farbeFn, mapDiv, zeigeUnsic
     .attr('tabindex', 0)
     .attr('cx', (d) => d.x).attr('cy', (d) => d.y)
     .attr('r', (d) => radius(d.anzahl))
-    .attr('fill', farbeFn);
+    .attr('fill', farbeFn)
+    .call((a) => markiereSvg(a, (d) => d.eintrag)); // Nachbesserung 3, Punkt 3
   knotenAuswahl
-    .on('mouseenter focus', function (event, d) { zeigeTooltip(`${d.name}\n${d.sektor}\n${d.anzahl} Beziehung(en)`, this, mapDiv); })
+    .on('mouseenter focus', function (event, d) { zeigeTooltip(mitUnvollstaendigHinweis(d.eintrag, `${d.name}\n${d.sektor}\n${d.anzahl} Beziehung(en)`), this, mapDiv); })
     .on('mouseleave blur', () => versteckeTooltip())
     .on('click', (event, d) => waehlePerson(d.id))
     .on('keydown', (event, d) => {
@@ -126,9 +129,10 @@ function starteAnimierteSimulation(svg, knoten, paare, radius, farbeFn, breite, 
     .attr('class', 'person-knoten')
     .attr('tabindex', 0)
     .attr('r', (d) => radius(d.anzahl))
-    .attr('fill', farbeFn);
+    .attr('fill', farbeFn)
+    .call((a) => markiereSvg(a, (d) => d.eintrag)); // Nachbesserung 3, Punkt 3
   knotenAuswahl
-    .on('mouseenter focus', function (event, d) { zeigeTooltip(`${d.name}\n${d.sektor}\n${d.anzahl} Beziehung(en)`, this, mapDiv); })
+    .on('mouseenter focus', function (event, d) { zeigeTooltip(mitUnvollstaendigHinweis(d.eintrag, `${d.name}\n${d.sektor}\n${d.anzahl} Beziehung(en)`), this, mapDiv); })
     .on('mouseleave blur', () => versteckeTooltip())
     .on('click', (event, d) => waehlePerson(d.id))
     .on('keydown', (event, d) => {
@@ -226,6 +230,8 @@ function zeichneNetzwerk() {
   const farbeFuerSektor = instanz.farbeFuerSektor;
 
   if (instanz.simulation) { instanz.simulation.stop(); instanz.simulation = null; }
+  instanz.vorberechnung?.abbrechen();
+  instanz.vorberechnung = null;
   if (instanz.infoButton) instanz.infoButton.destroy();
   wurzel.innerHTML = '';
 
@@ -280,9 +286,16 @@ function zeichneNetzwerk() {
       .force('center', d3.forceCenter(breite / 2, hoehe / 2))
       .force('collide', d3.forceCollide((d) => radius(d.anzahl) + 2))
       .stop();
-    for (let i = 0; i < VORBERECHNUNGS_TICKS; i += 1) simulation.tick();
-    zeichneStatisch(svg, ausschnitt.knoten, ausschnitt.paare, radius, farbeFn, mapDiv, zeigeUnsicherheit);
+    // Nachbesserung 2, Punkt 2 (2026-11-15): Vorberechnung schrittweise statt in einer Schleife am Stück
+    // (js/utils/kraefteLayout.js); gezeichnet wird wie bisher erst die Endlage.
     instanz.simulation = null;
+    const lauf = rechneSchrittweise(simulation, VORBERECHNUNGS_TICKS);
+    instanz.vorberechnung = lauf;
+    lauf.fertig.then((ok) => {
+      if (!ok || !instanz || instanz.vorberechnung !== lauf) return;
+      instanz.vorberechnung = null;
+      zeichneStatisch(svg, ausschnitt.knoten, ausschnitt.paare, radius, farbeFn, mapDiv, zeigeUnsicherheit);
+    });
   } else {
     instanz.simulation = starteAnimierteSimulation(svg, ausschnitt.knoten, ausschnitt.paare, radius, farbeFn, breite, hoehe, mapDiv, zeigeUnsicherheit);
   }
@@ -324,6 +337,7 @@ export function resize(neueOptionen = {}) {
 export function destroy() {
   if (!instanz) return;
   if (instanz.simulation) instanz.simulation.stop();
+  instanz.vorberechnung?.abbrechen();
   if (instanz.infoButton) instanz.infoButton.destroy();
   instanz.container.innerHTML = '';
   instanz = null;

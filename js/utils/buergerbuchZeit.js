@@ -229,7 +229,7 @@ export function baueBuergschaftsNetzwerk(records) {
     if (!knoten.has(id)) {
       const eigenerEintrag = eigenerEintragNachId.get(id);
       const sektor = eigenerEintrag ? ermittleSektor(eigenerEintrag) : WIRTSCHAFTSSEKTOR_NICHT_ANGEGEBEN;
-      knoten.set(id, { id, name, sektor, anzahl: 0 });
+      knoten.set(id, { id, name, sektor, anzahl: 0, eintrag: eigenerEintrag || null }); // eintrag: Nachbesserung 3, Punkt 3
     }
     return knoten.get(id);
   }

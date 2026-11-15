@@ -7,6 +7,150 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-15 (238) – Nachbesserung 6, Punkt 17: einfache Sprache umgesetzt
+
+- `data/infotexte.csv` (24 Texte) und `data/ansichten.csv` (Einleitungen Erkundung, Bestand, Personen): freigegebene Zeilen der Vorschlagsliste umgesetzt; Platzhalter, Links und Absätze unverändert, kein neues Semikolon, kein senkrechter Strich.
+- Sachkorrektur Korrelationsmatrix: „67 Personen“ → „67 Inventare“ (68 Inventare, 67 mit Realvermögen, 66 Personen).
+- Vorher/Nachher: Sätze über 20 Wörter 44 → 6 (21–23 Wörter). Abweichungen zwischen Vorschlag und Code (Karte, Personenliste, Streamgraph, Bilderwand) gemeldet und am Code ausgerichtet. Einzelheiten: PROJEKTLOG 90.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (237) – Nachbesserung 8: Wartbarkeit und Testbestand (Befunde 1.7, 2.4, K9)
+
+- Neu `tests/` (`node --test "tests/*.test.mjs"`, nur Node-Bordmittel, kein `package.json`): DataLoader, Datierung, Unsicherheits-Erklärungen, Bestandshierarchie, Format aller `unsicherheit_anmerkung`-Einträge – 29 Tests, alle bestanden.
+- Neu `docs/PRUEFUNGEN.md`: Aufruf der Tests; welche Prüfungen außerhalb des Repositorys liegen (axe, Lighthouse, Tastatur, Sitzung, Matrix, Zweitarchiv) und wie sie sich wiederholen lassen.
+- `js/viz/buergerinnen.js`: `bereiteZeitleisteUndLinienAuf()` und `meldeFehlendeArchivFolien()` aus `ladeStationsdaten()` herausgelöst; 31 Funktionen über 100 Zeilen in 21 Dateien mit Begründungsvermerk.
+- Kopfkommentare neu (Lösung statt Auftragsverlauf): `buergerinnen.js`, `archivalienRegistry.js`, `sankey.js`; feste Kartenpfade in den Köpfen von `bilderwand.js`, `hintergrundKarte.js`, `fuehrungenZeitleiste.js` berichtigt.
+- Vorher/Nachher: Funktionen über 100 Zeilen ohne Begründung 30 → 0; Tests im Repository 0 → 29; Kommentare im Widerspruch zu Code/Masterprompt in der Stichprobe (10 Dateien) 5 → 0. Einzelheiten: PROJEKTLOG 89.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (236) – Nachbesserung 7: Rückmeldung bei Datenproblemen, Datierungs-Randfälle (Befunde 3.1, 3.2, 3.6)
+
+- `js/core/dataLoader.js`: Zeilen mit fehlendem Pflichtwert stehen mit Zeile, Spalte und Grund in `errors` und bleiben in `records`.
+- `js/utils/vollstaendigkeit.js`: Rückfall auf die Kennspalte für Dateien ohne eigene Mindestfelder.
+- `js/core/ansichtenKonfiguration.js`, `js/core/app.js`: Hinweisbalken, wenn `ansichten.csv` nicht lesbar ist; `js/viz/buergerinnen.js`: Hinweisbalken, wenn Archiv-Folien entfallen.
+- `js/utils/datePrecision.js`: unmögliche Tage/Monate ergeben `year` mit Vermerk (`datumsHinweis()`), „o. D.“/„undatiert“/„ohne Datum“ ergeben `undatiert`; `js/viz/regestenKachelraster.js` zeigt den Vermerk.
+- `docs/SCHEMA.md`: Verhalten von `errors`, Rückfall-Hinweise, Datierungs-Randfälle.
+- Vorher/Nachher (Matrix beschädigter Daten, 680 Ladevorgänge): Abstürze 0 → 0, „leer ohne Hinweis“ 3 → 0, „stark abweichend“ ohne Hinweis 12 → 0; Datierungsfälle 21 von 21 wie entschieden. Einzelheiten: PROJEKTLOG 88.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (235) – Nachbesserung 6: Zugänglichkeit (Befunde 6.1–6.18, Prüfteil 4)
+
+- Tastatur und Rollen: `verbindungskarte.js` (Punkte wieder fokussierbar, Rolle `group`), `statischeKarte.js`, `sidebar.js`, `personenliste.js`, `ortsliste.js`, `karte.js` (gültige Listen, lückenlose Überschriften), `infoButton.js` (scrollbare Info-Texte fokussierbar), `tooltip.js` (innerhalb von `#app-content`, Rand-Clamping), `literaturSeite.js` (Rubrikknöpfe setzen den Fokus).
+- Kontrast, Klickflächen, Schrift: `css/*.css`, `ganttDiagramm.js` (Zeilenabstand), `bilderwand.js` (Filterknöpfe, Fokusrahmen des Info-Knopfs); Fließtext mindestens 16 px.
+- Neu `js/utils/liveAnsage.js` (Trefferzahlen in Regesten, Personenliste, Ortsliste, Bestandssuche); neu `js/utils/svgBeschreibung.js` (`<desc>` aus den Info-Texten) in sechs Ansichten und der Leaflet-Ebene; `sankey.js`: Kategorienamen an den Bändern.
+- Zugängliche Namen enthalten den sichtbaren Text (Strahl, Sonne, Personen- und Ortsliste); schmale Fenster: Regesten, Baum und Sonne ohne waagrechtes Scrollen.
+- Vorschlagsliste einfache Sprache (45 Sätze, keine Textänderung): `Nachbesserung_2026-11-15/a6/VORSCHLAEGE_EINFACHE_SPRACHE.md`.
+- Vorher/Nachher: axe-Regeln mit Verstößen 8 → 0 (124 Zustände); Lighthouse 1,0 in 28 → 31 von 31 Ansichten; Verbindungskarte per Tab 38 % → 179 von 179 Punkten; Fließtext unter 16 px 1577 → 0; SVG ohne Beschreibung 6 → 0; Namen ohne sichtbaren Text 277 → 0; Ansichten mit waagrechtem Scrollen bei 320 px 9 → 2 (Datentabellen von Personen- und Ortsliste: Ausnahme nach WCAG 1.4.10, mit Einschränkung – es scrollt die ganze Seite). Bilderwand (nach Durchsicht): Infotext nennt die tatsächlich gezeigten Orte und weist darauf hin, dass nicht gezeigte Orte hier nicht wählbar sind (`data/infotexte.csv`, `bilderwand.js`). Einzelheiten: PROJEKTLOG 87.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (234) – Nachbesserung 5: Kartenausschnitte und Beschriftungen aus dem Code (Befunde 4.1, 4.2)
+
+- Neu `js/utils/kartenDarstellung.js`, `vendor/karten/krems.darstellung.json`, `vendor/karten/niederoesterreich.darstellung.json`, `data/buergerinnen_kartenlinien.csv`.
+- `js/utils/hintergrundKarte.js`, `js/fuehrungen/fuehrungenZeitleiste.js`, `js/viz/bilderwand.js`, `js/viz/buergerinnen.js`: Ausschnitte, Beschriftungen und Donaulinie aus den Dateien; `data/buergerinnen_stationen.csv`: Bildschirmleser-Text der Folie `orte`.
+- `docs/SCHEMA.md`: Begleitdatei, neue Tourdatei, Grenze der Übertragbarkeit präzisiert.
+- Vorher/Nachher: Krems-Literale in Kartenmodulen 6 → 0; Bild mit Originaldaten gleich (Abweichung: Kantenglättung, max. 4 Farbstufen). Einzelheiten: PROJEKTLOG 86.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (233) – Nachbesserung 4: Übertragbarkeit (Befunde 1.2, 4.1, 4.2, 4.3)
+
+- `js/viz/buergerinnen.js`: keine Krems-Literale mehr (17 → 0); Zeitleiste aus neu `data/buergerinnen_zeitleiste.csv`, Torumriss aus neu `vendor/formen/tor.json`, Namen aus `archiv.csv`, Bildschirmleser-Texte aus der neuen Spalte `beschreibung` in `data/buergerinnen_stationen.csv`.
+- `data/archiv.csv`: neu `hauptort`, `tour_formname`, `tour_buergerbuch_titel`, `tour_form_pfad`, `hintergrundkarte_pfad`, `bilderwand_karte_pfad`, `bilderwand_fotoindex_pfad`; `js/core/archivKonfiguration.js`: Ersatzwerte.
+- `js/utils/hintergrundKarte.js`, `js/fuehrungen/fuehrungenZeitleiste.js`, `js/viz/bilderwand.js`: Kartenpfade und Fotoindex aus `archiv.csv`, Hinweise statt stiller 404.
+- Neu `js/core/unbekannteDaten.js`; `js/core/ansichtenKonfiguration.js`, `js/core/app.js`, `css/components.css`: Hinweis auf Datenbestände ohne Visualisierung.
+- `docs/SCHEMA.md`: neue Felder, neue Datei, Grenze der Übertragbarkeit (Kartengrafiken und -beschriftungen).
+- Vorher/Nachher Zweitarchiv (50 Adressen): Konsolenfehler 2 → 0, 404 2 → 0, Abrufe archivspezifischer Dateien 54 → 0. Einzelheiten: PROJEKTLOG 85.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (232) – Nachbesserung 3, Punkt 4: Abdunkeln im Unsicherheitsmodus (Befund 7.4)
+
+- Neu `js/utils/abdunkeln.js`; `js/core/app.js` schaltet `.unsicherheit-abgedunkelt` am Ansichtscontainer um.
+- `css/components.css`: gemeinsame Regeln (Grund abgedunkelt, nicht unsichere Elemente abgeblendet).
+- 15 Module in `js/viz/` kennzeichnen ihre unsicheren Elemente mit `.unsicher-hell`; `sankey.js` behält seine eigene Abdunkelung.
+- Vorher/Nachher: Abdunkel-Effekt in 2 / 17 von 17 Ansichten mit Knopf. Einzelheiten: PROJEKTLOG 83.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (231) – Nachbesserung 3, Punkt 3: „Datensatz unvollständig“ in den Visualisierungen (Befund 3.4)
+
+- Neu `js/utils/vollstaendigkeit.js` (Mindestfelder nach Masterprompt §12, Prüf- und Markierfunktionen); `js/core/dataLoader.js`: Dateiname je Datensatz (`_quelle`).
+- `css/base.css` (`--unvollstaendig`), `css/components.css` (`.datensatz-unvollstaendig`): Bernstein, durchgezogen.
+- `js/utils/bestandsHierarchie.js`, `urkundenZeit.js`, `urkundenOrte.js`, `buergerbuchZeit.js` und 15 Module in `js/viz/`: Rahmen und Tooltip-Hinweis.
+- `js/viz/ortsliste.js`: Orte ohne Namen sichtbar statt verworfen; `js/viz/familienbaum.js`: Hinweisbalken für Personen ohne id.
+- Vorher/Nachher: 0 / 10 von 10 Testansichten mit Kennzeichnung; Originaldaten 0 Markierungen. Einzelheiten: PROJEKTLOG 82.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (230) – Nachbesserung 3, Punkt 2: Tooltip je Feld, Feldnamen lesbar (Befund 7.2)
+
+- `js/utils/uncertainty.js`: neu `FELD_BEZEICHNUNGEN`, `feldBezeichnung()`, `lesbareAnmerkung()` (einzige Stelle der Übersetzung, Rohname als Rückfall).
+- `js/utils/unsicherAbsatz.js`, `js/utils/bestandsHierarchie.js`, `js/viz/regestenKachelraster.js`, `js/viz/ortsliste.js`, `js/viz/karte.js`, `js/viz/personenliste.js`, `js/viz/bubbleChart.js`: ganze Anmerkung mit lesbarem Feldnamen.
+- Vorher/Nachher: feldspezifischer Tooltip im Kachelraster 0 / 115 von 115 markierten Feldern (17 aus Anmerkungen mit mehreren Feldern). Einzelheiten: PROJEKTLOG 81.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (229) – Nachbesserung 3, Punkt 1: Format von `unsicherheit_anmerkung` (Befund 7.3)
+
+- `data/urkunden.csv`, `data/buergerbuch.csv`, `data/orte.csv`, `data/personenliste.csv`, `data/bestandsverzeichnis.csv`: Vorspann der Anmerkungen auf `<feldname>: <Erklärung>` gebracht (578 Einträge, Text wörtlich), nach Durchsicht und Freigabe durch den Autor.
+- Vorher/Nachher: 1 / 579 von 609 Einträgen im Format (95,1 %; 594 von 624 Pipe-Teilen). 30 bewusst unverändert (u. a. 6 Zweitinventarisierungen und 23 Anmerkungen zu mehreren Feldern oder zum ganzen Datensatz).
+- `docs/SCHEMA.md`: Formatregel neu gefasst (ersetzt „ein Feld unsicher → einfacher Freitext“).
+- Einzelheiten, Ausnahmen, gemeldete Widersprüche: PROJEKTLOG 80.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (228) – Nachbesserung 2: neun Einzelkorrekturen (Befunde 1.4, 1.10, 6.9, 2.2, 6.3, 6.17, 3.8, 3.2)
+
+- `js/core/app.js`: Ansichtenleiste und Bestandsuche werden beim Verlassen des Bereichs abgebaut (Listener-Leck, 1.4); Router-Rückruf trägt die Route in `state.js` ein (2.2); Impressum in der Fußzeile (6.17).
+- Neu `js/utils/kraefteLayout.js`; `urkundenNetzwerk.js`, `zeitachse.js`, `buergerinnen.js`, `personennetzwerk.js`: Kräftelayout schrittweise statt in einer Schleife (1.10, 10.2).
+- `js/utils/statischeKarte.js`, `js/viz/karte.js`: keine Karten-Animation bei reduzierter Bewegung (6.9).
+- `js/core/router.js`: importiert `state.js` nicht mehr (2.2).
+- `js/utils/sidebar.js`: Esc schließt die Seitenleiste, Fokus zurück zum Auslöser (6.3).
+- `index.html`, `css/layout.css`, `js/core/archivKonfiguration.js`, `data/archiv.csv` (neu `impressum_text`), `docs/SCHEMA.md`: Impressum (6.17).
+- `data/ansichten.csv`: „15. und 16. Jahrhundert“ (3.8).
+- `js/viz/buergerinnen.js`: Tour ohne Bürgerbuch mit Hinweis und Archiv-Folien statt stillem Stillstand (3.2).
+- `js/viz/icicle.js`: Kopfkommentar „immer vertikal“ (1.10).
+- Vorher/Nachher je Punkt und Regressionstest: PROJEKTLOG 79.
+
+Kein Commit durch Claude Code.
+
+---
+
+## 2026-11-15 (227) – Nachbesserung 1: nie genutzte Entity-Navigation entfernt
+
+- Nie genutzte `entity_typ`/`entity_wert`-Planung entfernt (Prüfung 14.11.2026, Befund 8.2): `js/core/router.js` (Lesen, Schreiben, Hash-Bau), `js/core/state.js` (`filter.entity`, `setFilterEntity()`, `clearFilterEntity()`). Kontext läuft ausschließlich über `?datensatz=<typ>:<id>` (unverändert).
+- `js/viz/regestenKachelraster.js`: veraltete Kommentare zum Entity-Filter berichtigt (kein Verhaltensunterschied).
+- Masterprompt v4.4 bleibt unverändert; die Abweichung ist im PROJEKTLOG dokumentiert (Einträge 77 und 78).
+- Nachweis: 16 Adressen vorher/nachher identisch, Regressionstest Befund 8.3 bestanden (PROJEKTLOG 78).
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-11-07 (226) – Startseite: „Benutzerordnung“ statt „Benützerordnung“
 
 - `data/startseite.csv`, Zeile `download_2` (Wunsch des Autors): Linktext „Benutzerordnung (PDF)“, so lautet der Titel des Dokuments. Die Adresse der PDF-Datei bleibt unverändert.

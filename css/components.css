@@ -280,7 +280,9 @@
   font: inherit; text-align: left; color: inherit; background: none; border: none; cursor: pointer; }
 .fuehrungen-feld-kopf:focus-visible { outline: 3px solid var(--fuehrung-buehne-akzent); outline-offset: -3px; }
 .fuehrungen-feld-name { margin: 0; font-family: var(--font-heading); font-size: var(--fs-h2); line-height: var(--lh-heading); }
-.fuehrungen-feld-anzahl { font-size: var(--fs-md); color: var(--fuehrung-buehne-text-muted); }
+.fuehrungen-feld-anzahl { font-size: var(--fs-md); color: var(--fuehrung-buehne-text); align-self: flex-start;
+  background: rgba(23, 34, 44, .6); padding: 0 6px; border-radius: 3px; }
+/* Nachbesserung 6, Punkt 4: volle Schrift auf eigener dunkler Fläche - auf Farbfläche über Foto lag sie bei 3,2-4,3:1 */
 .fuehrungen-feld-liste { list-style: none; margin: 0; padding: 0 var(--space-4) var(--space-4); overflow-y: auto;
   flex: 1 1 auto; min-height: 0;
   display: flex; flex-direction: column; gap: var(--space-2); visibility: hidden; opacity: 0; transition: opacity .15s ease; }
@@ -389,7 +391,7 @@
 /* AUFTRAG E, Punkt 2: Beschriftung "Quelle" steht im Seitentext (belegDarstellung.js), nicht mehr per ::before. */
 .fuehrung-beleg-beschriftung { flex: 0 0 auto; display: block; font-size: var(--fs-sm); font-weight: 700;
   color: var(--fuehrung-beleg-text-muted); margin: 0 0 var(--space-2) 0; text-transform: uppercase; letter-spacing: .04em; }
-.fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-sm); color: var(--fuehrung-beleg-text-muted); }
+.fuehrung-beleg-quellenzeile { flex: 0 0 auto; margin: 0 0 var(--space-2) 0; font-size: var(--fs-md); color: var(--fuehrung-beleg-text-muted); }
 .fuehrung-beleg-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .fuehrung-beleg-scroll:focus-visible { outline: 3px solid var(--fuehrung-beleg-fokus); outline-offset: -3px; }
 /* Punkt 1: Urkundenfoto (aus sidebar.js' baueUrkundenDetailInhalt()
@@ -582,7 +584,7 @@
    beide Nutzer (Fuehrungen-Belegbereich UND regestenKachelraster.js' Kachel,
    Auftrag wörtlich "Wiederverwendung derselben Funktion") - beide liegen auf
    hellem Grund, `--accent` passt fuer beide ohne Sonderfall. */
-.genannte-personen { margin: var(--space-3) 0 0 0; font-size: var(--fs-sm); }
+.genannte-personen { margin: var(--space-3) 0 0 0; font-size: var(--fs-md); } /* Nachbesserung 6, Punkt 9: Fließtext mindestens 16 px (Masterprompt §10) */
 .genannte-personen-link { color: var(--accent); font-weight: 600; }
 .genannte-personen-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .genannte-personen-unsicher { color: var(--fuehrung-unsicher); }
@@ -784,7 +786,9 @@
 .darstellung-knopf:hover { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
 .darstellung-knopf[aria-pressed="true"] { background: var(--accent); color: #fff; cursor: default; }
 .darstellung-knopf:focus-visible { outline: 3px solid #e0b429; outline-offset: 2px; position: relative; }
-@media (max-width: 700px) { .ansicht-wechsel-leiste { margin-left: 0; margin-top: var(--space-2); } }
+@media (max-width: 700px) { .ansicht-wechsel-leiste { margin-left: 0; margin-top: var(--space-2); max-width: 100%; }
+  /* Nachbesserung 6, Punkt 16: die Knöpfe der Darstellung brechen bei schmalen Fenstern um */
+  .darstellung-gruppe { flex-wrap: wrap; row-gap: var(--space-1); max-width: 100%; } }
 /* Gedämpfte Kartenkacheln (2026-10-28) für Verbindungskarte und Bipartite Flow Map: Graustufen mit leichtem
    Papierton, damit die feinen Bögen und Bänder darüber lesbar bleiben */
 .verbindungskarte-viz-container .leaflet-container,
@@ -861,3 +865,30 @@ body.unterleisten-eingeklappt .bereichs-leiste-bereich { display: none; }
 
 /* Bestand-Ansichten mit „Unsicherheiten anzeigen“, wenn die gewählte Kategorie keinen unsicheren Bestand hat (2026-10-28) */
 .bestand-keine-unsicheren { margin: var(--space-4); color: var(--text-muted); }
+
+/* Nachbesserung 3, Punkt 3: gemeinsame Kennzeichnung „Datensatz unvollständig“ (js/utils/vollstaendigkeit.js).
+   HTML (Kachel, Tabellenzeile, Listeneintrag): durchgezogener Bernstein-Rahmen innen + heller Grund.
+   SVG (Knoten, Rechtecke, Punkte): Kontur in Bernstein, durchgezogen, stärker als die Unsicherheits-Kontur (rot,
+   gestrichelt); die Regel gewinnt gegen die Präsentationsattribute der Module. */
+.datensatz-unvollstaendig:not(svg *) { outline: 3px solid var(--unvollstaendig); outline-offset: -3px; background-color: var(--unvollstaendig-bg); }
+tr.datensatz-unvollstaendig > td { background-color: var(--unvollstaendig-bg); }
+svg .datensatz-unvollstaendig { stroke: var(--unvollstaendig) !important; stroke-width: 3px !important; stroke-dasharray: none !important; stroke-opacity: 1 !important; }
+
+/* Nachbesserung 3, Punkt 4: „Unsicherheiten anzeigen“ dunkelt den Hintergrund ab, unsichere Elemente bleiben hell
+   (js/utils/abdunkeln.js). Der Ansichtscontainer bekommt .unsicherheit-abgedunkelt (app.js); unsichere Elemente
+   tragen .unsicher-hell (Module). Bedienelemente, Seitenleiste, Legenden, Hinweise und Dialoge sind ausgenommen. */
+.unsicherheit-abgedunkelt { --abgedunkelt-grund: #dedad1; --abgedunkelt-deckkraft: 0.28; background-color: var(--abgedunkelt-grund); transition: background-color .2s; }
+.unsicherheit-abgedunkelt svg:not([data-eigenes-abdunkeln]) :is(rect, circle, ellipse, path, line, polyline, polygon, text, image):not(.unsicher-hell, .unsicher-hell *, .datensatz-unvollstaendig):not(button *, .bestand-sidebar *, .leaflet-control *, [role="dialog"] *, [class*="legende"] *, [class*="werkzeugleiste"] *, [class*="info-button"] *) { opacity: var(--abgedunkelt-deckkraft); }
+.unsicherheit-abgedunkelt .leaflet-tile-pane { filter: brightness(0.6) saturate(0.6); }
+.unsicherheit-abgedunkelt .leaflet-container { background-color: #cfcabf; }
+.unsicherheit-abgedunkelt :is(tbody tr, .regk-karte):not(.unsicher-hell, .datensatz-unvollstaendig):not(.bestand-sidebar *) { opacity: 0.4; }
+/* helle (unsichere) Zeilen behalten den Grund, den sie ohne Modus haben; nur die Umgebung wird dunkler */
+.unsicherheit-abgedunkelt .regk-karte.unsicher-hell { background-color: var(--surface); }
+.unsicherheit-abgedunkelt tr.unsicher-hell > td { background-color: var(--bg); }
+/* Nachbesserung 6 (Regressionstest axe, color-contrast): Tabellenköpfe sind Sortierknöpfe und bleiben unabgedunkelt;
+   Werkzeugleisten und Legenden behalten ihren hellen Grund, weil ihre Schriftfarben für ihn berechnet sind. */
+.unsicherheit-abgedunkelt :is([class*="werkzeugleiste"], [class*="legende"], [class*="namensspalte"]):not(svg *) { background-color: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .unsicherheit-abgedunkelt { transition: none; } }
+
+/* Nachbesserung 4, Punkt 4: dezenter Hinweis auf Datenbestände ohne Visualisierung (Startseite der Erkundung) */
+.hinweis-unbekannte-daten { margin-top: var(--space-3); color: var(--text-muted); font-size: var(--fs-md); border-left: 3px solid var(--border); padding-left: var(--space-2); }

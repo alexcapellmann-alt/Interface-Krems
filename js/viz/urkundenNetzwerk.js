@@ -36,11 +36,15 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { erzeugeHinweisBalken } from '../utils/hinweisBalken.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { baueKoNennungsNetzwerk, ermittlePersonenDerUrkunde, waehlePersonenNachNennungen } from '../utils/urkundenPersonen.js';
 import { baueDatensatzLink } from '../utils/datensatzAufruf.js';
 import { alsText } from '../utils/textwert.js';
+import { rechneSchrittweise } from '../utils/kraefteLayout.js';
+import { markiereSvg, mitUnvollstaendigHinweis } from '../utils/vollstaendigkeit.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, zeigeUrkundenSidebar, schliesseSidebar } from '../utils/sidebar.js';
 
 const STANDARD_OBERGRENZE = 100;
@@ -87,6 +91,7 @@ function bereiteDatenVor(data) {
     const schreibweise = eintrag ? (Array.isArray(eintrag.schreibweisen) ? eintrag.schreibweisen[0] : alsText(eintrag.schreibweisen)) : '';
     k.name = String(schreibweise || '').trim() || k.name;
     k.imVerzeichnis = Boolean(eintrag);
+    k.eintrag = eintrag || null; // Nachbesserung 3, Punkt 3
     k.unsicher = Boolean(eintrag && alsText(eintrag.unsicherheit_anmerkung).trim());
   });
   const nachId = new Map(knoten.map((k) => [k.id, k]));
@@ -126,7 +131,13 @@ function messeNamen(ziel, knoten) {
 }
 
 // Vorab berechnetes Kraftlayout „V5 kompakt“ (Phase 1, PROJEKTLOG Eintrag 66).
-function berechneLayout(knoten, paare, breiten) {
+// Nachbesserung 2, Punkt 2 (2026-11-15): die 300 Schritte laufen nicht mehr in einer Schleife am Stück, sondern
+// über rechneSchrittweise() (js/utils/kraefteLayout.js) verteilt auf mehrere Animationsbilder; dieselben
+// Schritte, dieselbe Endlage. erzeugeLayout() baut die angehaltene Simulation, schliesseLayoutAb() berechnet
+// danach die Ausdehnung. Das Ergebnis wird je sichtbarer Personenmenge zwischengespeichert, damit Neuaufbauten
+// (Unsicherheiten-Knopf, Fenstergröße) es sofort wiederverwenden.
+const LAYOUT_SCHRITTE = 300;
+function erzeugeLayout(knoten, paare, breiten) {
   const punkte = knoten.map((k) => ({ id: k.id, person: k, r: radius(k.anzahl), w: breiten.get(k.id) || 0 }));
   const verbunden = new Set();
   paare.forEach((p) => { verbunden.add(p.a.id); verbunden.add(p.b.id); });
@@ -140,7 +151,10 @@ function berechneLayout(knoten, paare, breiten) {
     .force('x', d3.forceX(0).strength(LAYOUT.zug))
     .force('y', d3.forceY(0).strength(LAYOUT.zug * 1.4))
     .stop();
-  for (let i = 0; i < 300; i += 1) simulation.tick();
+  return { punkte, linien, simulation };
+}
+
+function schliesseLayoutAb({ punkte, linien }) {
   // Ausdehnung aus Kreisen und Namen (Name unter dem Kreis)
   const x0 = d3.min(punkte, (p) => Math.min(p.x - p.r, p.x - p.w / 2)) - LAYOUT.rand;
   const x1 = d3.max(punkte, (p) => Math.max(p.x + p.r, p.x + p.w / 2)) + LAYOUT.rand;
@@ -157,7 +171,7 @@ function waehle(id) {
   zeigeDetail();
   zeigePersonenSidebar();
   // Gewählte Person in den Ausschnitt holen (z. B. Auswahl aus der Partnerliste auf dem Phone).
-  if (instanz.auswahl) zeigeKnotenImAusschnitt(instanz.punktNachId.get(id));
+  if (instanz.auswahl && instanz.punktNachId) zeigeKnotenImAusschnitt(instanz.punktNachId.get(id));
 }
 
 function hebeAuswahlAuf() {
@@ -285,10 +299,40 @@ function fokussiereKnoten(id) {
 
 // --- Netz ---------------------------------------------------------------------
 
+// Liefert das zwischengespeicherte Layout der sichtbaren Menge oder startet seine schrittweise Berechnung und
+// zeichnet nach deren Ende neu (zeichne()). Bis dahin steht ein kurzer Hinweis an der Stelle des Netzes.
+function layoutFuer(ziel) {
+  const { sichtbar } = instanz;
+  const schluessel = sichtbar.knoten.map((k) => k.id).join('|');
+  if (instanz.layout?.schluessel === schluessel) return instanz.layout.ergebnis;
+  if (instanz.layoutBerechnung?.schluessel !== schluessel) {
+    instanz.layoutBerechnung?.lauf.abbrechen();
+    const vorbereitet = erzeugeLayout(sichtbar.knoten, sichtbar.paare, messeNamen(ziel, sichtbar.knoten));
+    const lauf = rechneSchrittweise(vorbereitet.simulation, LAYOUT_SCHRITTE);
+    const berechnung = { schluessel, lauf };
+    instanz.layoutBerechnung = berechnung;
+    lauf.fertig.then((ok) => {
+      if (!ok || !instanz || instanz.layoutBerechnung !== berechnung) return;
+      instanz.layoutBerechnung = null;
+      instanz.layout = { schluessel, ergebnis: schliesseLayoutAb(vorbereitet) };
+      zeichne();
+    });
+  }
+  return null;
+}
+
 function zeichneNetz(ziel) {
-  const { options, sichtbar } = instanz;
-  const breiten = messeNamen(ziel, sichtbar.knoten);
-  const { punkte, linien, grenzen } = berechneLayout(sichtbar.knoten, sichtbar.paare, breiten);
+  const { options } = instanz;
+  const layout = layoutFuer(ziel);
+  if (!layout) {
+    const warte = document.createElement('p');
+    warte.className = 'unetz-berechnung';
+    warte.setAttribute('role', 'status');
+    warte.textContent = 'Das Netz wird berechnet …';
+    ziel.appendChild(warte);
+    return;
+  }
+  const { punkte, linien, grenzen } = layout;
   instanz.punktNachId = new Map(punkte.map((p) => [p.id, p]));
   const layoutBreite = grenzen.x1 - grenzen.x0, layoutHoehe = grenzen.y1 - grenzen.y0;
   const breite = options.width || ziel.clientWidth || instanz.container.clientWidth || 900;
@@ -298,6 +342,7 @@ function zeichneNetz(ziel) {
   const unsicherSichtbar = options.showUncertainty;
   const svg = d3.select(ziel).append('svg')
     .attr('class', 'unetz-svg')
+    .call((s) => beschreibeSvgAusInfotext(s.node(), 'urkundenNetzwerk')) // Nachbesserung 6, Punkt 12: Beschreibung aus dem Info-Text
     .attr('width', breite).attr('height', hoehe)
     .attr('role', 'group')
     .attr('aria-label', `Personennetzwerk der Urkunden: ${mitZahl(punkte.length, 'Person', 'Personen')}, ${mitZahl(linien.length, 'Verbindung', 'Verbindungen')}`);
@@ -320,6 +365,7 @@ function zeichneNetz(ziel) {
     .attr('x1', (d) => d.source.x).attr('y1', (d) => d.source.y)
     .attr('x2', (d) => d.target.x).attr('y2', (d) => d.target.y)
     .attr('stroke-dasharray', (d) => (unsicherSichtbar && d.paar.unsicherAnzahl > 0 ? '4 3' : null))
+    .call((a) => markiereHell(a, (d) => unsicherSichtbar && d.paar.unsicherAnzahl > 0)) // Nachbesserung 3, Punkt 4
     .on('mouseenter', function (e, d) {
       zeigeTooltip(`${d.source.person.name} ↔ ${d.target.person.name}\n${mitZahl(d.paar.anzahl, 'gemeinsame Urkunde', 'gemeinsame Urkunden')}`, this, ziel);
     })
@@ -327,6 +373,7 @@ function zeichneNetz(ziel) {
 
   const knoten = ebene.append('g').selectAll('g').data(punkte).join('g')
     .attr('class', 'unetz-knoten')
+    .classed('unsicher-hell', (d) => Boolean(unsicherSichtbar && d.person.unsicher)) // Nachbesserung 3, Punkt 4
     .attr('transform', (d) => `translate(${d.x},${d.y})`)
     .attr('data-person-id', (d) => d.id)
     .attr('role', 'button')
@@ -335,14 +382,15 @@ function zeichneNetz(ziel) {
     .on('keydown', (e, d) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); waehle(d.id); }
     })
-    .on('focus', function (e, d) { zeigeKnotenImAusschnitt(d); zeigeTooltip(`${d.person.name}\n${mitZahl(d.person.anzahl, 'Nennung', 'Nennungen')}`, this, ziel); })
-    .on('mouseenter', function (e, d) { zeigeTooltip(`${d.person.name}\n${mitZahl(d.person.anzahl, 'Nennung', 'Nennungen')}`, this, ziel); })
+    .on('focus', function (e, d) { zeigeKnotenImAusschnitt(d); zeigeTooltip(mitUnvollstaendigHinweis(d.person.eintrag, `${d.person.name}\n${mitZahl(d.person.anzahl, 'Nennung', 'Nennungen')}`), this, ziel); })
+    .on('mouseenter', function (e, d) { zeigeTooltip(mitUnvollstaendigHinweis(d.person.eintrag, `${d.person.name}\n${mitZahl(d.person.anzahl, 'Nennung', 'Nennungen')}`), this, ziel); })
     .on('mouseleave blur', () => versteckeTooltip());
   knoten.append('circle').attr('class', 'unetz-fokusring').attr('r', (d) => d.r + 4);
   instanz.kreisAuswahl = knoten.append('circle').attr('class', 'unetz-kreis')
     .attr('r', (d) => d.r)
     .attr('fill', FARBE.knoten)
-    .attr('stroke-dasharray', (d) => (unsicherSichtbar && d.person.unsicher ? '3 2' : null));
+    .attr('stroke-dasharray', (d) => (unsicherSichtbar && d.person.unsicher ? '3 2' : null))
+    .call((a) => markiereSvg(a, (d) => d.person.eintrag)); // Nachbesserung 3, Punkt 3: Eintrag der Personenliste
   // Name vollständig unter dem Kreis (keine Kürzung).
   knoten.append('text')
     .attr('class', 'unetz-name')
@@ -399,7 +447,7 @@ function fuegeStyleEin(container) {
     .unetz-fokusring { fill: none; stroke: ${FARBE.rand}; stroke-width: 2.5; stroke-opacity: 0; }
     .unetz-knoten:focus-visible .unetz-fokusring { stroke-opacity: 1; }
     .unetz-svg { display: block; max-width: 100%; background: transparent; cursor: grab; touch-action: none; } /* durchsichtig (2026-10-28): Stadtplan im Hintergrund sichtbar */
-    .unetz-detail { margin-top: var(--space-2); font-size: var(--fs-sm); }
+    .unetz-detail { margin-top: var(--space-2); font-size: var(--fs-md); } /* Nachbesserung 6, Punkt 9: Fließtext mindestens 16 px (Masterprompt §10) */
     .unetz-detail p { margin: 0 0 var(--space-1) 0; }
     .unetz-detail-titel { font-size: var(--fs-h3); margin: 0 0 var(--space-1) 0; }
     .unetz-detail h3 { font-size: var(--fs-sm); margin: var(--space-2) 0 var(--space-1) 0; }
@@ -462,6 +510,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
+  instanz.layoutBerechnung?.lauf.abbrechen();
   versteckeTooltip();
   if (instanz.infoButton) instanz.infoButton.destroy();
   instanz.container.innerHTML = '';

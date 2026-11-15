@@ -8,6 +8,7 @@
 // vor der Auswahl hervorgehoben (`onVorschau(record)`, `onVorschau(null)` hebt das wieder auf). Die
 // Browser-eigene <datalist> meldet kein Überfahren ihrer Einträge.
 
+import { erzeugeLiveAnsage } from './liveAnsage.js';
 const text = (w) => String(w ?? '').trim();
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const anzeige = (r) => `${text(r.kuerzel)} – ${text(r.name)}`;
@@ -18,6 +19,7 @@ let zaehler = 0;
 // liefereRecords(): aktuelle Bestandsliste (wird erst nach dem Laden gesetzt)
 // onTreffer(record): öffnet den Bestand; gibt false zurück, wenn die Ansicht ihn nicht zeigt
 // onVorschau(record | null): hebt den Bestand vorläufig hervor bzw. hebt die Hervorhebung auf
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): Baustein-Fabrik (Masterprompt §5): Eingabe, Vorschlagsliste, Tastatur und Vorschau teilen Zustand über die Closure.
 export function erzeugeBestandSuche(container, { liefereRecords, onTreffer, onVorschau }) {
   zaehler += 1;
   const id = `bestand-suche-${zaehler}`;
@@ -35,6 +37,7 @@ export function erzeugeBestandSuche(container, { liefereRecords, onTreffer, onVo
   const eingabe = wurzel.querySelector('input');
   const liste = wurzel.querySelector('ul');
   const status = wurzel.querySelector('.bestand-suche-status');
+  const ansage = erzeugeLiveAnsage(wurzel); // Nachbesserung 6, Punkt 10: Zahl der Vorschläge ansagen (js/utils/liveAnsage.js)
   let vorschlaege = [];
   let aktiv = -1;
   let vorschauRecord = null;
@@ -109,6 +112,8 @@ export function erzeugeBestandSuche(container, { liefereRecords, onTreffer, onVo
     liste.hidden = !offen;
     eingabe.setAttribute('aria-expanded', String(offen));
     if (!offen) zeigeVorschau(null);
+    // Nachbesserung 6, Punkt 10: Zahl der Vorschläge ansagen (js/utils/liveAnsage.js)
+    ansage.ansagen(text(eingabe.value) ? (vorschlaege.length ? `${vorschlaege.length} ${vorschlaege.length === 1 ? 'Vorschlag' : 'Vorschläge'}` : 'Kein Bestand gefunden.') : '');
   };
 
   liste.addEventListener('mouseleave', () => { markiere(-1); zeigeVorschau(null); });

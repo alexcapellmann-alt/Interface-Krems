@@ -29,6 +29,10 @@
   --accent:       #2c4a6e;
   --accent-hover: color-mix(in srgb, var(--accent) 85%, white);
   --unsicher:     #c0392b;
+  /* Nachbesserung 3, Punkt 3: unvollständiger Datensatz (Masterprompt §12) - Bernstein wie die Prüfregel-Markierung
+     der Führungen (--fuehrung-fehler), durchgezogen statt gestrichelt; klar verschieden von --unsicher. */
+  --unvollstaendig: #b45309;
+  --unvollstaendig-bg: #fff7ed;
 
   /* Typografie */
   --font-ui:      'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

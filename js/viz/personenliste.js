@@ -67,10 +67,14 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { baueUnsicherheitAbsatz } from '../utils/unsicherAbsatz.js';
 import { buergerbuchBezug, inventarBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { lesbareAnmerkung } from '../utils/uncertainty.js';
+import { erzeugeLiveAnsage } from '../utils/liveAnsage.js';
+import { markiereElement, mitUnvollstaendigHinweis, istUnvollstaendig } from '../utils/vollstaendigkeit.js';
 import {
   baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar,
   baueUrkundenListeInhalt, baueUrkundenDetailInhalt
@@ -300,11 +304,12 @@ function baueBuergerbuchDetailInhalt(record) {
 // -signatur/-regest), inhaltlich aber ID+Datum als "Signatur"-Zeile und
 // Beruf als Vorschauzeile (kein Regest-Äquivalent in buergerbuch.csv).
 function baueBuergerbuchListeInhalt(records, { onEintragKlick } = {}) {
-  const liste = document.createElement('ul');
+  // Nachbesserung 6, Punkt 5 (Befund 6.1, list/aria-allowed-role): Einträge sind Knöpfe (role=button) - als div statt li in div statt ul, denn ein li darf keine Knopfrolle tragen
+  const liste = document.createElement('div');
   liste.className = 'bestand-sidebar-urkunden-liste';
 
   records.forEach((record) => {
-    const item = document.createElement('li');
+    const item = document.createElement('div');
     item.className = 'bestand-sidebar-urkunden-eintrag';
     item.setAttribute('tabindex', '0');
     item.setAttribute('role', 'button');
@@ -362,11 +367,12 @@ export function baueInventarDetailInhalt(record) { // seit 2026-10-27 auch von o
 // Kompakte Inventar-Liste, analog zu baueBuergerbuchListeInhalt() - ID+Jahr
 // als Kopfzeile, Beruf/Funktion/Stand als Vorschauzeile.
 export function baueInventarListeInhalt(records, { onEintragKlick } = {}) { // seit 2026-10-27 auch von ortsliste.js genutzt
-  const liste = document.createElement('ul');
+  // Nachbesserung 6, Punkt 5 (Befund 6.1, list/aria-allowed-role): Einträge sind Knöpfe (role=button) - als div statt li in div statt ul, denn ein li darf keine Knopfrolle tragen
+  const liste = document.createElement('div');
   liste.className = 'bestand-sidebar-urkunden-liste';
 
   records.forEach((record) => {
-    const item = document.createElement('li');
+    const item = document.createElement('div');
     item.className = 'bestand-sidebar-urkunden-eintrag';
     item.setAttribute('tabindex', '0');
     item.setAttribute('role', 'button');
@@ -468,7 +474,8 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
   koerper.appendChild(anzahl);
 
   if (urkundenRecords.length > 0) {
-    const ueberschrift = document.createElement('h4');
+    const ueberschrift = document.createElement('h3'); // Nachbesserung 6, Punkt 7 (heading-order): h3 statt h4 direkt unter dem h2 der Seitenleiste
+    ueberschrift.className = 'bestand-sidebar-zwischentitel';
     ueberschrift.textContent = 'In Urkunden:';
     koerper.appendChild(ueberschrift);
     koerper.appendChild(baueUrkundenListeInhalt(urkundenRecords, {
@@ -476,7 +483,8 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
     }));
   }
   if (buergerbuchRecords.length > 0) {
-    const ueberschrift = document.createElement('h4');
+    const ueberschrift = document.createElement('h3'); // Nachbesserung 6, Punkt 7 (heading-order): h3 statt h4 direkt unter dem h2 der Seitenleiste
+    ueberschrift.className = 'bestand-sidebar-zwischentitel';
     ueberschrift.textContent = 'Im Bürgerbuch:';
     koerper.appendChild(ueberschrift);
     koerper.appendChild(baueBuergerbuchListeInhalt(buergerbuchRecords, {
@@ -484,7 +492,8 @@ function zeigeKombinierteListe(sidebarInstanz, personName, urkundenRecords, buer
     }));
   }
   if (inventarRecords.length > 0) {
-    const ueberschrift = document.createElement('h4');
+    const ueberschrift = document.createElement('h3'); // Nachbesserung 6, Punkt 7 (heading-order): h3 statt h4 direkt unter dem h2 der Seitenleiste
+    ueberschrift.className = 'bestand-sidebar-zwischentitel';
     ueberschrift.textContent = 'In den Verlassenschaftsinventaren:';
     koerper.appendChild(ueberschrift);
     koerper.appendChild(baueInventarListeInhalt(inventarRecords, {
@@ -566,7 +575,7 @@ function fuegeStyleEin(container) {
   style.textContent = `
     .pl-werkzeugleiste { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
     .pl-suche { padding: 4px; width: 100%; max-width: 320px; box-sizing: border-box; }
-    .pl-tabelle { border-collapse: collapse; width: 100%; font-size: 13px; }
+    .pl-tabelle { border-collapse: collapse; width: 100%; font-size: var(--fs-md); } /* Nachbesserung 6, Punkt 9: Fließtext mindestens 16 px (Masterprompt §10) */
     .pl-tabelle th, .pl-tabelle td { border-bottom: 1px solid #ddd; padding: 4px 8px; text-align: left; }
     .pl-tabelle th { cursor: pointer; user-select: none; background: #f4f4f4; position: sticky; top: 0; }
     .pl-sortier-pfeil { margin-left: 4px; font-size: 10px; color: #555; }
@@ -589,7 +598,7 @@ function fuegeStyleEin(container) {
     .pl-zeile-klickbar:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
     /* Zwischenüberschriften der kombinierten Liste (siehe
        zeigeKombinierteListe()) - eine Ebene unter dem Sidebar-Titel. */
-    .bestand-sidebar h4 { margin: var(--space-3) 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
+    .bestand-sidebar .bestand-sidebar-zwischentitel { margin: var(--space-3) 0 var(--space-2); font-size: var(--fs-sm); color: var(--text-muted); }
   `;
   container.appendChild(style);
 }
@@ -704,7 +713,7 @@ function bauePaginierung(seite, gesamtSeiten, seitenTreffer, gesamtTreffer, posi
   const zurueckBtn = document.createElement('button');
   zurueckBtn.type = 'button';
   zurueckBtn.textContent = '← Zurück';
-  zurueckBtn.setAttribute('aria-label', 'Vorherige Seite');
+  zurueckBtn.setAttribute('aria-label', 'Zurück zur vorherigen Seite'); // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): beginnt mit dem sichtbaren Wort
   zurueckBtn.disabled = seite <= 1;
   zurueckBtn.addEventListener('click', () => wechsleSeite(seite - 1));
 
@@ -714,7 +723,7 @@ function bauePaginierung(seite, gesamtSeiten, seitenTreffer, gesamtTreffer, posi
   const weiterBtn = document.createElement('button');
   weiterBtn.type = 'button';
   weiterBtn.textContent = 'Weiter →';
-  weiterBtn.setAttribute('aria-label', 'Nächste Seite');
+  weiterBtn.setAttribute('aria-label', 'Weiter zur nächsten Seite'); // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): beginnt mit dem sichtbaren Wort
   weiterBtn.disabled = seite >= gesamtSeiten;
   weiterBtn.addEventListener('click', () => wechsleSeite(seite + 1));
 
@@ -752,7 +761,7 @@ function schreibweisenListe(record) {
 
 function unsicherheitsText(record) {
   const teile = [];
-  const eigene = Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung.join(' | ') : String(record.unsicherheit_anmerkung || '').trim();
+  const eigene = lesbareAnmerkung(record.unsicherheit_anmerkung).trim();
   const namen = schreibweisenListe(record);
   if (namen.length > 1) {
     const zitiert = namen.map((n) => `„${n}“`);
@@ -766,16 +775,16 @@ function unsicherheitsText(record) {
 function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSignatur, buergerbuchNachId, inventareNachId, sidebarInstanz) {
   const zeile = koerper.insertRow();
   zeile.classList.add('pl-zeile-klickbar');
+  markiereElement(zeile, record); // Nachbesserung 3, Punkt 3
+  markiereHellElement(zeile, zeigeUnsicherheit && Boolean(unsicherheitsText(record))); // Nachbesserung 3, Punkt 4
   zeile.setAttribute('tabindex', '0');
   zeile.setAttribute('role', 'button');
   const anzeigeName = SPALTEN.find((s) => s.schluessel === 'name').wertFn(record);
   const unsicherText = unsicherheitsText(record);
   const istUnsicher = zeigeUnsicherheit && Boolean(unsicherText);
-  zeile.setAttribute('aria-label', istUnsicher
-    ? `${anzeigeName}, Angaben unsicher, Quelleneinträge anzeigen`
-    : `${anzeigeName}, Quelleneinträge anzeigen`);
-  if (istUnsicher) {
-    const anmerkung = unsicherText;
+  const zusatzFuerHilfsmittel = istUnsicher ? ', Angaben unsicher, Quelleneinträge anzeigen' : ', Quelleneinträge anzeigen';
+  if (istUnsicher || istUnvollstaendig(record)) {
+    const anmerkung = mitUnvollstaendigHinweis(record, istUnsicher ? unsicherText : '');
     zeile.addEventListener('mouseenter', () => zeigeTooltip(anmerkung, zeile, container));
     zeile.addEventListener('focus', () => zeigeTooltip(anmerkung, zeile, container));
     zeile.addEventListener('mouseleave', () => versteckeTooltip());
@@ -809,6 +818,12 @@ function baueZeile(record, koerper, container, zeigeUnsicherheit, urkundenNachSi
     }
     zelle.appendChild(document.createTextNode(wert === null || wert === undefined || wert === '' ? '–' : wert));
   });
+  // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): der Name der Zeile ergibt sich aus ihrem sichtbaren Inhalt;
+  // der Zusatz für Hilfsmittel steht unsichtbar in der letzten Zelle (vorher ein aria-label nur mit dem Namen)
+  const hilfsZusatz = document.createElement('span');
+  hilfsZusatz.className = 'nur-fuer-hilfsmittel';
+  hilfsZusatz.textContent = zusatzFuerHilfsmittel;
+  zeile.lastElementChild?.appendChild(hilfsZusatz);
 }
 
 function zeichneTabelle() {
@@ -854,6 +869,8 @@ function zeichneTabelle() {
   hinweis.textContent = zeigeUnsicherheit && !instanz.exaktId
     ? `${sortiert.length} von ${records.length} Personen angezeigt (nur Personen mit unsicheren Angaben).`
     : `${sortiert.length} von ${records.length} Personen angezeigt.`;
+  // Nachbesserung 6, Punkt 10: Trefferzahl ansagen (js/utils/liveAnsage.js)
+  if (instanz.ansage) instanz.ansage.ansagen(hinweis.textContent); else { instanz.ansage = erzeugeLiveAnsage(instanz.container); instanz.ansage.merke(hinweis.textContent); }
 }
 
 function zeichnePersonenliste() {
@@ -955,6 +972,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
+  instanz.ansage?.destroy();
   if (instanz.infoButton) instanz.infoButton.destroy();
   instanz.container.innerHTML = '';
   instanz = null;

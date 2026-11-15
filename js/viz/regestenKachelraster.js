@@ -15,9 +15,9 @@
 // DOM hängt), nicht auf das Ermitteln der Dateinamen (das ist jetzt
 // synchron, da schon in `record.bilder` vorhanden).
 //
-// Kontext-erhaltender Wechsel (Abschnitt 4.2/7): Klick auf Person/Ort ruft bereits
-// state.js: setFilterEntity() auf. Die Zielansicht, die diesen Filter ausliest,
-// existiert in dieser Etappe noch nicht.
+// Kontext-erhaltender Wechsel (Abschnitt 4.2/7): Personen- und Ortsnamen sind Links mit
+// ?datensatz=<typ>:<id> zur Personen- bzw. Ortsliste (js/utils/genanntePersonen.js). Der frühere,
+// nie ausgewertete Entity-Filter in state.js ist seit Nachbesserung 1 (2026-11-15) entfernt.
 //
 // KORREKTUR (Auftrag "Korrektur: Mindestgrößen-Platzhalter nicht für
 // Kachelraster", siehe CHANGELOG): der im Folgeauftrag "Geteilte Viewport-
@@ -38,7 +38,7 @@
 // Akkordeon. Zwei Ausnahmen bleiben von diesem Kachel-weiten Klick
 // unberührt (eigenes event.stopPropagation() bzw. Fokus-Ziel-Prüfung, siehe
 // dortige Kommentare): Fotos (öffnen weiterhin nur die Lightbox) und
-// Personen-/Ortsnamen (lösen weiterhin nur setFilterEntity() aus, deren
+// Personen-/Ortsnamen (lösten damals nur den Entity-Filter aus, deren
 // Zielansicht laut Nicht-Ziel weiterhin nicht existiert). Neues Chevron-Icon
 // (baueChevron()) zeigt den Auf-/Zuklapp-Zustand visuell an.
 //
@@ -81,8 +81,10 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
-import { leiteDatumsPraezisionAb } from '../utils/datePrecision.js';
-import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
+import { leiteDatumsPraezisionAb, datumsHinweis } from '../utils/datePrecision.js';
+import { filtereErklaerungFuerFeld, lesbareAnmerkung, feldBezeichnung } from '../utils/uncertainty.js';
+import { markiereElement } from '../utils/vollstaendigkeit.js';
+import { erzeugeLiveAnsage } from '../utils/liveAnsage.js';
 import { getZustand, clearZielSignatur } from '../core/state.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { farbeFuerUrkundenKategorie, alleUrkundenKategorien } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
@@ -91,6 +93,7 @@ import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { oeffneLightbox } from '../utils/lightbox.js';
 import { erzeugeFilterleiste } from '../utils/filterleiste.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { urkundeBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
@@ -175,12 +178,12 @@ function istRecordUnsicher(record) {
 function baueUnsicherheitKlartext(record) {
   const anmerkung = record.unsicherheit_anmerkung;
   const eintraege = anmerkung ? (Array.isArray(anmerkung) ? anmerkung : [anmerkung]).filter(Boolean) : [];
-  if (eintraege.length > 0) return eintraege.join(' | ');
+  if (eintraege.length > 0) return lesbareAnmerkung(eintraege);
 
   const fallback = [];
-  if (record.datum_unsicher) fallback.push('datum: (keine Begründung hinterlegt)');
-  if (record.orte_unsicher) fallback.push('orte: (keine Begründung hinterlegt)');
-  if (record.personen_unsicher) fallback.push('personen: (keine Begründung hinterlegt)');
+  if (record.datum_unsicher) fallback.push(`${feldBezeichnung('datum')}: (keine Begründung hinterlegt)`);
+  if (record.orte_unsicher) fallback.push(`${feldBezeichnung('orte')}: (keine Begründung hinterlegt)`);
+  if (record.personen_unsicher) fallback.push(`${feldBezeichnung('personen')}: (keine Begründung hinterlegt)`);
   return fallback.join(' | ');
 }
 
@@ -197,7 +200,7 @@ function fuegeStyleEin(container) {
        Punkt 2) - Foto/Entity-Buttons setzen ihren eigenen cursor:pointer
        bereits explizit selbst (keine Kollision, gleicher Wert, nur andere
        Aktion dahinter). */
-    .regk-karte { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2); font-size: var(--fs-sm);
+    .regk-karte { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-2); font-size: var(--fs-md);
       background: var(--surface); cursor: pointer; }
     /* Auftrag "Kalender-Legende zurück, Sidebar-Navigation isolieren,
        Expand-Umrandung", Punkt 4: jede aufgeklappte Kachel bekommt eine
@@ -248,10 +251,10 @@ function fuegeStyleEin(container) {
 // Links: event.stopPropagation() verhindert, dass ein Klick (auch der
 // synthetische Klick, den Browser bei Enter/Leertaste auf einem fokussierten
 // <button> selbst auslösen) zusätzlich den neuen Kachel-weiten Klick-Handler
-// erreicht und die Kachel ungewollt mit auf-/zuklappt - setFilterEntity()
+// erreicht und die Kachel ungewollt mit auf-/zuklappt - der damalige Entity-Filter
 // selbst bleibt unverändert (Nicht-Ziel: keine Aktivierung der Links).
 // Seit 2026-10-28 (Wunsch des Autors): Ortsnamen sind Links zur Ortsliste statt Filter-Knöpfe
-// (setFilterEntity()); ein Linkklick klappt die Kachel weiterhin nicht auf/zu.
+// (früherer Entity-Filter, seit Nachbesserung 1 entfernt); ein Linkklick klappt die Kachel weiterhin nicht auf/zu.
 function baueOrtsLinks(werte) {
   const wrapper = document.createElement('span');
   wrapper.appendChild(baueVerlinkteOrte(werte));
@@ -301,6 +304,9 @@ function baueDatumFeld(record, container, zeigeUnsicherheit) {
   const label = PRAEZISIONS_LABEL[praezision];
   const inhalt = document.createElement('span');
   inhalt.textContent = label ? `${datumsText} (${label})` : datumsText;
+  // Nachbesserung 7, Punkt 3: unmöglicher Tag/Monat sichtbar vermerkt (ausgewertet wird nur das Jahr)
+  const hinweis = datumsHinweis(record.datum);
+  if (hinweis) inhalt.textContent += ` – ${hinweis}`;
   const feld = document.createElement('p');
   feld.appendChild(baueFeldMitUnsicherheit(inhalt, zeigeUnsicherheit && record.datum_unsicher, record.unsicherheit_anmerkung, 'datum', container));
   return feld;
@@ -467,11 +473,14 @@ function baueChevron() {
   return chevron;
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): baut eine Regest-Kachel mit allen Feldern in Lesereihenfolge; die Felder teilen Datensatz und Unsicherheitsmodus.
 function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   // AUFTRAG D, Punkt 5 (axe aria-allowed-role): <div> statt <article> - die Rolle
   // "listitem" ist für <article> nicht vorgesehen; Gestaltung hängt an der Klasse.
   const karte = document.createElement('div');
   karte.className = 'regk-karte';
+  markiereElement(karte, record); // Nachbesserung 3, Punkt 3
+  markiereHellElement(karte, zeigeUnsicherheit && istRecordUnsicher(record)); // Nachbesserung 3, Punkt 4
   karte.setAttribute('tabindex', '0');
   karte.setAttribute('aria-label', `Urkunde ${record.signatur}`);
   // Punkt 1: aria-expanded macht den Auf-/Zuklapp-Zustand der Kachel für
@@ -493,7 +502,7 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   }
   const signaturText = document.createElement('span');
   signaturText.className = 'regk-karte-titel-text';
-  signaturText.textContent = record.signatur;
+  signaturText.textContent = record.signatur || '(ohne Signatur)'; // Nachbesserung 3, Punkt 3: sichtbar statt leer
   titel.appendChild(signaturText);
   const chevron = baueChevron();
   titel.appendChild(chevron);
@@ -504,7 +513,7 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   if (orteFeld) karte.appendChild(orteFeld);
 
   // AUFTRAG "Teil 2i": die vormalige, hier gebaute "Personen"-Zeile
-  // (Filter-Buttons über setFilterEntity(), optisch wie Links, aber ohne
+  // (Filter-Buttons über den früheren Entity-Filter, optisch wie Links, aber ohne
   // Navigation zur Personenliste) entfernt - die weiter unten gebaute,
   // tatsächlich verlinkte Zeile (baueGenanntePersonenZeile()) trägt jetzt
   // dieselbe Beschriftung "Personen" und ersetzt sie vollständig, keine
@@ -714,6 +723,9 @@ function zeichneKachelraster() {
   inhaltContainer.innerHTML = '';
 
   const gefilterteRecords = ermittleGefilterteRecords();
+  // Nachbesserung 6, Punkt 10: Trefferzahl ansagen (js/utils/liveAnsage.js)
+  const ansageText = `${gefilterteRecords.length} ${istIrgendeinFilterAktiv() ? 'gefilterte ' : ''}Treffer`;
+  if (instanz.ansage) instanz.ansage.ansagen(ansageText); else { instanz.ansage = erzeugeLiveAnsage(container); instanz.ansage.merke(ansageText); }
   const gesamtSeiten = Math.max(1, Math.ceil(gefilterteRecords.length / SEITENGROESSE));
   // Klemmt eine ungültig gewordene Seitenzahl ab (z.B. Filter aktiviert,
   // vorherige Seite existiert in der gefilterten Treffermenge nicht mehr).
@@ -864,6 +876,7 @@ export function resize(neueOptionen = {}) {
 
 export function destroy() {
   if (!instanz) return;
+  instanz.ansage?.destroy();
   instanz.beobachter.zerstoere();
   instanz.filterleiste.destroy();
   instanz.infoButton?.destroy();

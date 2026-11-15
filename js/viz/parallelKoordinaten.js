@@ -70,6 +70,7 @@ import { farbeFuerVermoegensgruppe, VERMOEGENSGRUPPE_ANZEIGE_REIHENFOLGE } from 
 import { baueSidebarGeruest, oeffneSidebar, schliesseSidebar, fuegeSidebarStyleEin } from '../utils/sidebar.js';
 import { inventarBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { markiereSvg, mitUnvollstaendigHinweis } from '../utils/vollstaendigkeit.js';
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 
 // rechts deutlich größer als bei der Vorfassung (49): die letzte Achse ist
@@ -445,6 +446,7 @@ function zeichneAchsen(svg, xSkala, skalen, achsen, ansichtKey) {
   }
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneParallelKoordinaten() {
   const { chartContainer, records } = instanz;
   const container = chartContainer;
@@ -544,7 +546,8 @@ function zeichneParallelKoordinaten() {
     .attr('aria-label', (d) => `${d['Name'] || 'ohne Name'}, Details anzeigen`)
     .attr('d', (d) => baueLinie(d, xSkala, skalen, achsen))
     .attr('fill', 'none')
-    .attr('stroke', (d) => farbeFuerRecord(d));
+    .attr('stroke', (d) => farbeFuerRecord(d))
+    .call((a) => markiereSvg(a)); // Nachbesserung 3, Punkt 3
 
   instanz.linienAuswahl = linien;
 
@@ -552,7 +555,7 @@ function zeichneParallelKoordinaten() {
     .on('mouseenter focus', (event, d) => {
       instanz.hover = d;
       aktualisiereHighlight();
-      zeigeTooltip(baueTooltipText(d, achsen), event.currentTarget, container);
+      zeigeTooltip(mitUnvollstaendigHinweis(d, baueTooltipText(d, achsen)), event.currentTarget, container);
     })
     .on('mouseleave blur', () => {
       instanz.hover = null;

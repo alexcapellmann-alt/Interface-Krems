@@ -91,6 +91,7 @@ function baueZellenTooltip(zelle, zeigeUnsicherheit) {
   return zeilen.join('\n');
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneSwimlanes() {
   const { container, records, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;

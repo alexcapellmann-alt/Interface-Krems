@@ -50,6 +50,10 @@ const ARCHIV_ERSATZWERTE = {
   karte_zentrum_lon: '',
   karte_zoom: '',
   footer_text: '',
+  impressum_text: '', // Nachbesserung 2, Punkt 6 (2026-11-15): Impressum in der Fußzeile jeder Seite
+  // Nachbesserung 4 (2026-11-15): Pfade und Namen, die vorher fest im Code standen; ohne archiv.csv leer (neutral)
+  hintergrundkarte_pfad: '', bilderwand_karte_pfad: '', bilderwand_fotoindex_pfad: '',
+  hauptort: '', tour_formname: '', tour_buergerbuch_titel: '', tour_form_pfad: '',
   // Partizipations-Modul (2026-10-27): Vorschlagsformular, nur mit `ja` und https-Adresse aktiv
   beteiligung_aktiv: '',
   beteiligung_endpunkt: ''

@@ -38,6 +38,7 @@
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ACHSEN_SCHRIFTGROESSE, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { markiereSvg, markiereElement } from '../utils/vollstaendigkeit.js';
 import { baueBestandsHierarchie, baueTooltipText, kategorieVonKnoten, OHNE_KATEGORIE, parseUmfangLfm } from '../utils/bestandsHierarchie.js';
 import { baueBestandFarbSkala, OHNE_KATEGORIE_FARBE, lesbareTextfarbe } from '../utils/kategorieFarben.js';
 import {
@@ -47,6 +48,8 @@ import {
   fuegeSidebarStyleEin
 } from '../utils/sidebar.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
+import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
+import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
 
@@ -59,7 +62,7 @@ import { erzeugeZoomSteuerung } from '../utils/zoomSteuerung.js';
 
 const NAMENSSPALTE_BREITE = 220;
 const ZEILENHOEHE = 16;        // Balkenhöhe (unverändert aus der Vorversion)
-const ZEILENABSTAND = 3;       // Lücke zwischen Zeilen
+const ZEILENABSTAND = 8;       // Lücke zwischen Zeilen; Nachbesserung 6, Punkt 3 (target-size): 3 → 8, damit jede Zeile 24 px hoch ist
 const ZEILE_GESAMT = ZEILENHOEHE + ZEILENABSTAND;
 const RAND = { links: 12, rechts: 20 };
 const ACHSE_HOEHE = 34;
@@ -267,6 +270,7 @@ function waehleBestand(blatt) {
   oeffneSidebarModul(instanz.sidebar, blatt.data.record, { kategorieName, kategorieFarbe });
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): eine einzige CSS-Vorlage des Moduls (Gestaltung an einem Ort); eine Aufteilung würde zusammengehörige Regeln trennen.
 function fuegeStyleEin(container) {
   const style = document.createElement('style');
   style.textContent = `
@@ -425,6 +429,7 @@ function zeichneBalken(gruppe, mitZeitraum, kategorieFarbSkala, container, zeige
     .style('cursor', 'pointer')
     .attr('transform', (d, i) => `translate(0,${i * ZEILE_GESAMT + ZEILENABSTAND / 2})`);
 
+  markiereHell(zeilen, (d) => istUnsicher(d, zeigeUnsicherheit)); // Nachbesserung 3, Punkt 4
   wireTooltip(zeilen, container);
   // Punkt 1 (Sidebar): dasselbe Klick-/Enter-Leerzeichen-Muster wie
   // circlePacking.js' waehleBestand()-Verdrahtung.
@@ -442,6 +447,7 @@ function zeichneBalken(gruppe, mitZeitraum, kategorieFarbSkala, container, zeige
     // 2026-10-28: keine roten Strichrahmen mehr für unsichere Bestände (der Filter zeigt ohnehin nur sie)
     .attr('stroke', '#ffffff')
     .attr('stroke-width', 1);
+  markiereSvg(balken, (d) => d.data.record); // Nachbesserung 3, Punkt 3
 
   zeilen.filter((d) => istUnsicher(d, zeigeUnsicherheit))
     .append('text')
@@ -476,7 +482,7 @@ function zeichneOhneZeitraumMarker(gruppe, ohneZeitraum, startIndex, kategorieFa
     .attr('class', 'gantt-ohne-zeitraum-marker')
     .attr('tabindex', 0)
     .attr('role', 'button')
-    .attr('aria-label', (d) => `${d.data.name}, kein Zeitraum verzeichnet, Details anzeigen`)
+    .attr('aria-label', (d) => `${d.data.name}, ohne Zeitangabe, Details anzeigen`) // Nachbesserung 6, Punkt 15: Name enthält den sichtbaren Text
     .attr('data-bestand-schluessel', schluesselFuerBlatt)
     .style('cursor', 'pointer')
     .attr('transform', (d, i) => `translate(${RAND.links},${(startIndex + i) * ZEILE_GESAMT + ZEILENABSTAND / 2})`);
@@ -515,7 +521,8 @@ function zeichneOhneZeitraumMarker(gruppe, ohneZeitraum, startIndex, kategorieFa
     .attr('fill', 'none')
     .attr('stroke', (d) => farbeFuerBlatt(d, kategorieFarbSkala))
     .attr('stroke-width', 1.5)
-    .attr('stroke-dasharray', '3,2');
+    .attr('stroke-dasharray', '3,2')
+    .call((a) => markiereSvg(a, (d) => d.data.record)); // Nachbesserung 3, Punkt 3
 
   zeilen.append('text')
     .attr('x', 6).attr('y', ZEILENHOEHE / 2).attr('dy', '0.35em')
@@ -570,6 +577,7 @@ function baueNamensspalte(namensspalte, alleZeilen, container) {
     const zeile = document.createElement('div');
     zeile.className = 'gantt-namensspalte-zeile';
     zeile.dataset.bestandSchluessel = schluesselFuerBlatt(blatt);
+    markiereElement(zeile, blatt.data.record); // Nachbesserung 3, Punkt 3
     const name = document.createElement('span');
     name.className = 'gantt-namensspalte-name';
     name.textContent = blatt.data.name;
@@ -587,7 +595,12 @@ function baueNamensspalte(namensspalte, alleZeilen, container) {
     // wie der Klick auf den Balken
     zeile.tabIndex = 0;
     zeile.setAttribute('role', 'button');
-    zeile.setAttribute('aria-label', `${blatt.data.name}, Details anzeigen`);
+    // Nachbesserung 6, Punkt 15 (label-content-name-mismatch): kein aria-label - der Name ergibt sich aus dem sichtbaren
+    // Inhalt (Name, ggf. „ohne Zeitangabe“); der Zusatz für Hilfsmittel steht unsichtbar dahinter
+    const hilfsZusatz = document.createElement('span');
+    hilfsZusatz.className = 'nur-fuer-hilfsmittel';
+    hilfsZusatz.textContent = ', Details anzeigen';
+    zeile.appendChild(hilfsZusatz);
     zeile.addEventListener('click', () => waehleBestand(blatt));
     zeile.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); waehleBestand(blatt); }
@@ -951,6 +964,7 @@ function baueModusSchalter(ziel) {
   ziel.prepend(gruppe);
 }
 
+// Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneGantt() {
   const { container, wurzel, mitZeitraum, ohneZeitraum, kategorienNamen, kategorieFarbSkala, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -1059,6 +1073,7 @@ function zeichneGantt() {
     .attr('width', zeitbereichBreite).attr('height', ACHSE_HOEHE)
     .attr('role', 'img')
     .attr('aria-label', `Zeitachse von ${jahresSpanne[0]} bis ${jahresSpanne[1]}`);
+  beschreibeSvgAusInfotext(achseSvg.node(), 'ganttDiagramm'); // Nachbesserung 6, Punkt 12: Beschreibung aus dem Info-Text
   // Auftrag "Einheitliche Achsenbeschriftungsgröße app-weit": Schriftgröße
   // per CSS-KLASSE gesetzt, NICHT per .attr('font-size', ...) - d3-axis
   // setzt bei JEDEM .call() (hier: zeichneAchse(), erneut bei JEDEM

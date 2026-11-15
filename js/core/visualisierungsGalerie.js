@@ -62,7 +62,8 @@ function fuegeStyleEin(container) {
     .galerie-vollflaechig .visualisierungs-galerie-icon { color: inherit; opacity: .85; margin-bottom: auto; }
     .galerie-vollflaechig .visualisierungs-galerie-icon svg { width: 96px; height: 66px; }
     .galerie-vollflaechig .visualisierungs-galerie-name { font-family: var(--font-heading); font-size: var(--fs-xl); font-weight: 600; }
-    .galerie-vollflaechig .visualisierungs-galerie-beschreibung { color: inherit; opacity: .9; font-size: var(--fs-md); max-width: 46ch; }
+    /* Nachbesserung 6, Punkt 4 (color-contrast): volle Deckkraft - mit .9 fiel die dunkle Schrift auf der helleren Kachel unter 4,5:1 */
+    .galerie-vollflaechig .visualisierungs-galerie-beschreibung { color: inherit; font-size: var(--fs-md); max-width: 46ch; }
     @media (max-width: 700px) {
       .galerie-vollflaechig .visualisierungs-galerie { grid-template-columns: 1fr; grid-template-rows: none; }
       .galerie-vollflaechig .visualisierungs-galerie > li { grid-column: auto !important; min-height: 160px; }

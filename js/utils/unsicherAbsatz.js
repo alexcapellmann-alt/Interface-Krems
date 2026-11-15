@@ -11,6 +11,7 @@
 // Start eingeklappt) unveraendert aus der urspruenglichen Fuehrungen-Fassung.
 
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { lesbareAnmerkung } from './uncertainty.js';
 import { baueVorschlagFormular, baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 
 function alsText(wert) {
@@ -40,7 +41,7 @@ export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag } = {
   const text = document.createElement('p');
   text.className = 'unsicher-absatz-text';
   text.hidden = true;
-  text.textContent = alsText(record.unsicherheit_anmerkung) || 'Keine weitere Angabe.';
+  text.textContent = lesbareAnmerkung(record.unsicherheit_anmerkung, '; ') || 'Keine weitere Angabe.';
   const form = vorschlag ? baueVorschlagFormular(vorschlag) : null;
   if (form) form.hidden = true;
   btn.addEventListener('click', () => {
