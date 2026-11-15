@@ -22,6 +22,7 @@ Namens), das Muster löst Node selbst auf. Erwartet: alle Tests bestanden (`fail
 | `dataLoader.test.mjs` | `js/core/dataLoader.js`: BOM, Semikolon, Pipe-Listen, Zeilenumbruch in Anführungszeichen, unbekannte Spalte, `errors` (leere Zeile, fehlender Pflichtwert mit Zeile und Spalte; der Datensatz bleibt in `records`) |
 | `datePrecision.test.mjs` | `js/utils/datePrecision.js`: alle Beispiele der Mustertabelle (Masterprompt §12) und die Randfälle aus Nachbesserung 7 (unmögliche Tage und Monate, „o. D.“, „undatiert“) |
 | `uncertainty.test.mjs` | `js/utils/uncertainty.js`: Format `<feld>: <Erklärung>`, `filtereErklaerungFuerFeld()`, lesbare Feldnamen |
+| `bildschirmHinweis.test.mjs` | `js/utils/bildschirmHinweis.js`: Grenze für den Hinweis „größerer Bildschirm“ (900 × 500), gängige Laptop-Fenster, Telefon, Breite 0 |
 | `bestandsHierarchie.test.mjs` | `js/utils/bestandsHierarchie.js`: vier Ebenen aus `bestandsverzeichnis.csv` |
 | `datenformat.test.mjs` | alle `unsicherheit_anmerkung`-Einträge der CSV-Dateien in `data/` gegen das Format; bewusste Ausnahmen stehen als Liste im Test |
 | `hilfen.mjs` | kein Test: lädt `vendor/d3/d3.v7.min.js` ohne Browser, ersetzt `fetch` durch Dateizugriff |
@@ -51,7 +52,8 @@ python server_gross_klein.py "C:\Users\ali\Desktop\GitHub\Interface-Krems" 8901
 | axe-core, 31 Ansichten in bis zu fünf Zuständen | `node t4_axe.mjs` | `a6/k6/axe/zusammenfassung.txt` |
 | Lighthouse-Zugänglichkeit, 31 Ansichten | `node t4_lighthouse.mjs` | `a6/k6/lighthouse/zusammenfassung.json` |
 | Tastatur (Erreichbarkeit, Fokus, Auslösen, Esc) | `node t4_tastatur.mjs`, Nachprüfung über Elementmarken `node a8_tab_identitaet.mjs <ansicht> …` | `a6/k6/tastatur/auswertung.tsv` |
-| Sitzungsbedienung (alle Module nacheinander in einem Tab) | `PRUEF_AUSGABE=<ordner> node t2_sitzung.mjs` | `<ordner>/protokoll.json` |
+| Sitzungsbedienung (alle Module nacheinander in einem Tab) | `PRUEF_AUSGABE=<ordner> node t2_sitzung.mjs`; Fenstergröße über `PRUEF_FENSTER=1366x768` (Standard 1366x900), meldet je Ansicht den Ersatztext „größerer Bildschirm“ | `<ordner>/protokoll.json` |
+| Stammbaum bei Laptop-Größen, 375 px, Größenwechsel, Listener | `node a9_abnahme.mjs` | `a9/stammbaum_abnahme.txt`, Screenshots |
 | Matrix beschädigter Daten (8 Fälle × Dateien × Ansichten) | `server_datenkopie.py` starten, dann `node a7_matrix.mjs` | `a7/regression/voll_zusammenfassung.txt` |
 | Zweitarchiv (fiktives Archiv, nur `data/` und Karten getauscht) | `Pruefung_2026-11-14/tools/t1_zweitarchiv.py`, dann `t1_zweitarchiv_browser.mjs` | Prüfordner `k4/` |
 | Funktionen über 100 Zeilen mit/ohne Begründung | `node a8_funktionen.mjs` | Ausgabe in der Konsole |
@@ -67,5 +69,5 @@ Die Matrix arbeitet auf einer Kopie von `data/` (`a7/regression/daten_kopie`) un
 Ende vergleicht sie die Kopie mit dem Original (`diff-exit=0`). Die Dateien in `data/` des Repositorys bleiben unberührt.
 
 Zuletzt gemessen (15.11.2026): axe 0 Verstöße in 124 Zuständen; Lighthouse 1,0 in 31 von 31 Ansichten; Tastatur alle
-Bedienelemente erreichbar (außer den Links im zugeklappten Impressum, wie vorgesehen); Sitzung 39 Ansichten, 0 Fehler;
+Bedienelemente erreichbar (außer den Links im zugeklappten Impressum, wie vorgesehen); Sitzung 39 Ansichten, 0 Fehler (auch bei 1366 × 768 und 1280 × 720, ohne Ersatztext); 34 Tests;
 Matrix 0 Abstürze, 0 „leer ohne Hinweis“, 0 „stark abweichend“ ohne Hinweis. Einzelheiten: PROJEKTLOG 87–89.

@@ -30,6 +30,16 @@ export function istBildschirmZuKlein(breite, hoehe) {
   return breite < MINDEST_BREITE || hoehe < MINDEST_HOEHE;
 }
 
+// Auftrag 9 (Stammbaum): Prüfung nach der tatsächlichen Breite des Darstellungsbereichs (clientWidth des Containers,
+// also nach Abzug von Seitenleiste und Rändern) und der Höhe des Browserfensters. Bewusst NICHT nach der Resthöhe
+// unterhalb der Oberkante: die hängt von Kopfzeile, Scrollstand und Browserleisten ab und lag auf gängigen Laptops
+// (Fensterhöhe um 650-720 px) knapp unter der Grenze. Die Zeichnung selbst braucht nur 320 px Höhe (viewportGroesse.js)
+// und lässt sich zoomen und verschieben. Breite 0 heißt „noch nicht gelayoutet“, nicht „zu klein“ (null = später messen).
+export function istDarstellungsbereichZuKlein(bereichBreite, fensterHoehe) {
+  if (!bereichBreite || !fensterHoehe) return null;
+  return istBildschirmZuKlein(bereichBreite, fensterHoehe);
+}
+
 const HINWEIS_TEXT = 'Diese Visualisierung benötigt einen größeren Bildschirm. '
   + 'Bitte Fenster vergrößern oder einen Desktop-/Laptop-Bildschirm verwenden.';
 

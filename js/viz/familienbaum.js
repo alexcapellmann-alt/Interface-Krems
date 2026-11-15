@@ -342,7 +342,7 @@ import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 
 import { infotextFuerModul, konfigurationswert, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareHoehe, ermittleVerfuegbareBreite } from '../utils/viewportGroesse.js';
 import {
-  istBildschirmZuKlein,
+  istDarstellungsbereichZuKlein,
   baueBildschirmHinweis,
   fuegeBildschirmHinweisStyleEin
 } from '../utils/bildschirmHinweis.js';
@@ -1623,10 +1623,15 @@ export function render(container, data, options = {}) {
   // gemessen, statt die verfrühte 0-Messung als "Bildschirm zu klein" zu
   // werten. Im Normalfall (innerWidth/innerHeight bereits gültig) läuft
   // exakt derselbe Code wie zuvor, synchron, ohne Verzögerung.
-  function pruefeGroesseUndBaueRest() {
-    const breite = ermittleVerfuegbareBreite(container);
-    const hoehe = ermittleVerfuegbareHoehe(container, { reserveUnten: 10 });
-    if (istBildschirmZuKlein(breite, hoehe)) {
+  // Auftrag 9: Prüfung nach Breite des Darstellungsbereichs und Fensterhöhe (siehe bildschirmHinweis.js); ist der
+  // Bereich noch nicht gelayoutet (Breite 0), wird ein Frame später gemessen statt „zu klein“ zu melden.
+  function pruefeGroesseUndBaueRest(versuch = 0) {
+    const zuKlein = istDarstellungsbereichZuKlein(container.clientWidth, window.innerHeight);
+    if (zuKlein === null && versuch < 5) {
+      requestAnimationFrame(() => { if (instanz && instanz.wurzel === wurzel) pruefeGroesseUndBaueRest(versuch + 1); });
+      return;
+    }
+    if (zuKlein) {
       wurzel.appendChild(baueBildschirmHinweis());
       return;
     }
@@ -1656,9 +1661,7 @@ export function resize(neueOptionen = {}) {
     render(instanz.container, instanz.records, instanz.options);
     return;
   }
-  const breite = instanz.options.width || ermittleVerfuegbareBreite(instanz.container);
-  const hoehe = instanz.options.height || ermittleVerfuegbareHoehe(instanz.container, { reserveUnten: 10 });
-  if (istBildschirmZuKlein(breite, hoehe)) {
+  if (istDarstellungsbereichZuKlein(instanz.options.width || instanz.container.clientWidth, window.innerHeight)) {
     render(instanz.container, instanz.records, instanz.options);
     return;
   }

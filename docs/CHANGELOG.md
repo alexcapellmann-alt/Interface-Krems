@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-15 (239) – Nachbesserung 9: Stammbaum auf dem Laptop, Folie 1 der Willkommenstour
+
+- `js/utils/bildschirmHinweis.js`: neu `istDarstellungsbereichZuKlein()` (Breite des Darstellungsbereichs und Fensterhöhe, Grenzwerte unverändert 900 × 500); `js/viz/familienbaum.js` prüft damit statt mit der Resthöhe unter der Oberkante.
+- `data/buergerinnen_stationen.csv`: „Jeder Punkt in diesem Tor“ → „Jeder Punkt im Steiner Tor“.
+- Neu `tests/bildschirmHinweis.test.mjs`.
+- Vorher/Nachher: kleinste Fensterhöhe mit Stammbaum 717 px → 500 px; Ersatztext bei 1366 × 768 und 1280 × 720 in 0 von 39 Ansichten; Tests 29 → 34. Einzelheiten: PROJEKTLOG 91.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-11-15 (238) – Nachbesserung 6, Punkt 17: einfache Sprache umgesetzt
 
 - `data/infotexte.csv` (24 Texte) und `data/ansichten.csv` (Einleitungen Erkundung, Bestand, Personen): freigegebene Zeilen der Vorschlagsliste umgesetzt; Platzhalter, Links und Absätze unverändert, kein neues Semikolon, kein senkrechter Strich.

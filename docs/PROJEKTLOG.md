@@ -261,6 +261,74 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-15 (91) – Nachbesserung 9: Stammbaum auf dem Laptop, Text der Willkommenstour
+
+Grundlage: Auftrag 9. Nachweise: `Nachbesserung_2026-11-15/a9/`, Skripte `tools/a9_*.mjs`.
+
+**Punkt 1: Stammbaum zeigt auf dem Laptop „größerer Bildschirm“ – von einem Nutzer gefunden, nicht von den Prüfungen.**
+- **Fehlerbild:** Auf dem Laptop des Autors erschien statt des Stammbaums der Hinweis „Diese Visualisierung benötigt einen
+  größeren Bildschirm“. axe, Sitzungsbedienung und Tests hatten ihn nicht gefunden: Sie liefen alle bei einem festen
+  Fenster von 1366 × 900 (bzw. 1366 × 768 und größer), und dort erscheint der Baum.
+- **Auslösende Bedingung (vorher):** `familienbaum.js` ersetzte die Ansicht durch den Hinweis, wenn die *Resthöhe unterhalb
+  der Oberkante des Darstellungsbereichs* unter 500 px lag oder dessen Breite unter 900 px (`bildschirmHinweis.js`,
+  seit 22.09.2026). Der Darstellungsbereich beginnt etwa 216 px unter dem Fensterrand (Kopfzeile, Bereichs- und
+  Ansichtenleiste). Der Baum erschien also erst ab rund **717 px Fensterhöhe** (gemessen, `a9_grenze.mjs`). Ein Laptop
+  mit 1366 × 768 Bildschirm hat im Browser nach Tab- und Adressleiste nur etwa 650 px; mit 125 % oder 150 % Skalierung
+  ist es ähnlich knapp. Ob der Hinweis kam, hing damit von Lesezeichenleiste, Zoom, Scrollstand und dem Weg zur Ansicht
+  ab (gemessen: der Stand vor der Nachbesserung zeigte bei 1280 × 720 den Hinweis, wenn man aus der Personenliste mit
+  offener Seitenleiste kam, direkt aufgerufen nicht).
+- **Rolle der Nachbesserung:** Nicht nachweisbar. Vorher (Stand `96a10e7`) und nachher (`3d4430e`) gleich gemessen: gleiche
+  Grenze (717 px Höhe, 932 px Fensterbreite), gleiche Oberkante bei allen Breiten von 940 bis 1920 px, gleiches Ergebnis
+  bei fünf Laptop-Größen und vier Wegen zur Ansicht, auch auf der veröffentlichten Seite (`a9_stammbaum_vergleich.mjs`,
+  `a9_stammbaum_wege.mjs`, `a9_oberkante.mjs`, `a9_live.mjs`). Die Bildschirmgröße des Laptops ist nicht bekannt; die
+  wahrscheinlichste Erklärung ist, dass das Fenster dort knapp über bzw. unter der Grenze lag. Die Ursache ist damit die
+  Bedingung selbst: Sie hing von der Seite ab (Kopfzeile, Scrollstand, Browserleisten), nicht vom Gerät.
+- **Korrektur:** Der Stammbaum prüft jetzt die tatsächliche Breite des Darstellungsbereichs (`clientWidth`, nach Abzug von
+  Rändern und Seitenleiste) und die Höhe des Browserfensters – wie Kalender-Heatmap und Zeitachse. Die Grenzwerte bleiben
+  900 × 500 px (`MINDEST_BREITE`, `MINDEST_HOEHE`, eine Stelle in `bildschirmHinweis.js`), neue reine Funktion
+  `istDarstellungsbereichZuKlein()`. Begründung: Die Zeichnung selbst kommt mit 320 px Höhe aus (`viewportGroesse.js`) und
+  lässt sich zoomen und verschieben; unter 900 px Breite (Telefone, kleine Tablets hochkant, Telefone quer) passen
+  Werkzeugleiste, Legende und Baum nicht sinnvoll nebeneinander. Breite 0 bedeutet „noch nicht gelayoutet“: dann wird bis
+  zu fünf Frames später gemessen statt den Hinweis zu zeigen. `devicePixelRatio` spielt keine Rolle (wird nirgends
+  gelesen); die Seitenleisten-Breite geht über `clientWidth` richtig ein.
+- **Abnahme** (`a9_abnahme.mjs`, Screenshots `a9/stammbaum_*.png`): Baum mit 75 Personen bei 1280 × 720, 1366 × 768,
+  1440 × 900, 1536 × 864, 1920 × 1080 und zusätzlich 1366 × 657 und 1280 × 609 (Laptop-Fenster mit Browserleisten), je direkt
+  und nach offener Seitenleiste der Personenliste (der Stammbaum hat keine eigene Seitenleiste); 0 Konsolenfehler. Bei 375 px
+  der Hinweis mit `role="status"` und dem Vorschlag, das Fenster zu vergrößern oder einen Laptop/Desktop zu nutzen.
+  Größenwechsel 1920 → 1366 → 1920 → 1366 → 1920 → 375 → 1920: Baum bzw. Hinweis wie erwartet, Listener an
+  window/document vor und nach dem Wechsel gleich (16), 0 Fehler.
+- **Gleiche Fehler in anderen Modulen (gemeldet, nicht geändert):** Vollständiger Ersatz durch den Hinweis gibt es nur noch
+  in `kalenderHeatmap.js` und `zeitachse.js`; beide prüfen Fensterbreite und -höhe (900 × 500), nicht die Resthöhe – nicht
+  dasselbe Fehlerbild. Nur ein Zusatzhinweis neben der weiter gezeigten Ansicht: `app.js` (`KLEINER_BILDSCHIRM_SCHWELLE`
+  700 px Fensterbreite; Personennetzwerk, Strahl, Urkundennetzwerk). Umschalten der Anordnung, kein Ersatz:
+  `buergerinnen.js` (`TEXT_MIN_BREITE` 820 px Bühnenbreite), `fuehrungStation.js`/`fuehrungAbschluss.js`
+  (`MOBIL_UMBRUCH_PX`), `urkundenNetzwerk.js` (Höhe bei schmalen Fenstern).
+- **Neue Prüfung:** `tests/bildschirmHinweis.test.mjs` (5 Tests: Grenzwerte, gängige Laptop-Fenster, Telefon, Breite 0).
+  `tools/t2_sitzung.mjs` nimmt die Fenstergröße aus `PRUEF_FENSTER` und hält je Ansicht fest, ob der Ersatztext erscheint;
+  bei 1366 × 768 und 1280 × 720: in keiner der 39 Ansichten, 0 Fehler.
+- **Für Kapitel 7 (Grenze der Prüfmethode):** Alle automatischen Prüfungen liefen bei einer festen, großzügigen
+  Fenstergröße. Eine Bedingung, die von der Fensterhöhe abhängt, fällt dabei nicht auf. Gefunden hat den Fehler ein Nutzer
+  auf einem realen Gerät. Seitdem laufen die Sitzungsbedienung zusätzlich bei 1366 × 768 und 1280 × 720 und ein Test der
+  Grenzwerte.
+
+**Punkt 2: Folie 1 der Willkommenstour.** `data/buergerinnen_stationen.csv`, Station `archiv`. Das Tor der Folie ist das
+Steiner Tor (Umriss `vendor/formen/tor.json`, Name in `archiv.csv`, `tour_formname`). Schreibweise nach Entscheidung des
+Autors „Steiner Tor“ wie in den übrigen Daten (sein Wortlaut war „Steinertor“).
+- Vorher: „Ein Archiv bewahrt auf, was eine Stadt über Jahrhunderte aufgeschrieben hat. Jeder Punkt in diesem Tor ist ein
+  Bestand des Stadtarchivs Krems, also eine Gruppe von Büchern, Akten oder Rechnungen, die zusammengehören. Zusammen sind
+  es {bestaende} Bestände.“
+- Nachher: „Ein Archiv bewahrt auf, was eine Stadt über Jahrhunderte aufgeschrieben hat. Jeder Punkt im Steiner Tor ist
+  ein Bestand des Stadtarchivs Krems, also eine Gruppe von Büchern, Akten oder Rechnungen, die zusammengehören. Zusammen
+  sind es {bestaende} Bestände.“
+- Weitere Vorkommen von „diesem Tor“: keine. „Steiner Tor“ steht außerdem im Info-Text der Tour („Jeder Punkt des Steiner
+  Tors …“) und in fünf Folienbeschreibungen – unverändert. Kein Semikolon, kein senkrechter Strich, kein gerades
+  Anführungszeichen im neuen Text. Im Browser geprüft (`a9/tour_folie1.png`).
+
+**Regressionstest:** Tests 29 → 34 (5 neue), alle bestanden; axe 31 Ansichten, 124 Zustände: 0 Verstöße (wie vorher);
+Sitzungsbedienung 1366 × 900: 39 Ansichten, 0 Fehler (wie vorher). Keine Abweichung.
+
+---
+
 ## 2026-11-15 (90) – Nachbesserung 6, Punkt 17: einfache Sprache umgesetzt, Sachkorrektur „67 Inventare“
 
 Grundlage: Vorschlagsliste aus Nachbesserung 6, Punkt 17 (`Nachbesserung_2026-11-15/a6/VORSCHLAEGE_EINFACHE_SPRACHE.md`),
