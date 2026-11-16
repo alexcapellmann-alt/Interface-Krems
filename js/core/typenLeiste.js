@@ -2,7 +2,8 @@
 // Auftrag 13 (Stufe B, Punkt 2): Typenleiste des Modus „Licht aus“ – eigene Zeile unter der σ-Zeile.
 //
 // Zeile 1 (role=toolbar): „Zeige:“, „Alle“, je Typ aus data/unsicherheit_typen.csv eine Schaltfläche mit Zahl,
-//   „Nur diese zeigen“ (filtert statt dimmt, Entscheidung 8) und „Licht wieder an (Esc)“.
+//   Der Modus filtert immer auf die leuchtenden Elemente (16.11.2026, Wunsch des Autors; eigener Schalter entfällt).
+//   Beendet wird der Modus über den σ-Knopf oder Esc.
 //   - Typen, die in der Ansicht nicht vorkommen: ausgegraut (aria-disabled, bleiben per Tastatur erreichbar) mit
 //     Begründung; in der Kompaktvariante (Fenster niedriger als KOMPAKT_UNTER_HOEHE) stattdessen ein Aufklapper
 //     „n weitere Arten“ mit denselben Begründungen.
@@ -45,7 +46,7 @@ export function erzeugeTypenLeiste(nachElement) {
 
   function zeige(stand) {
     letzterStand = stand;
-    const { zaehlung, massengruppen = [], auswahl, nurDieseMoeglich, nurDieseGrund, hinweise = [], kompakt, ansichtName, onAuswahl, onAus } = stand;
+    const { zaehlung, massengruppen = [], auswahl, hinweise = [], kompakt, ansichtName, onAuswahl } = stand;
     const fokusVorher = document.activeElement && wurzel.contains(document.activeElement) ? document.activeElement.dataset.lichtausId : null;
     wurzel.textContent = '';
     wurzel.hidden = false;
@@ -116,10 +117,6 @@ export function erzeugeTypenLeiste(nachElement) {
       zeile.appendChild(weitere);
     }
 
-    zeile.appendChild(knopf({ id: 'nurdiese', text: 'Nur diese zeigen', gedrueckt: auswahl.nurDiese && nurDieseMoeglich, gesperrt: !nurDieseMoeglich, klasse: 'lichtaus-nurdiese',
-      erklaerung: nurDieseMoeglich ? 'Blendet alles aus, was gerade nicht leuchtet (filtern statt abdunkeln).' : (nurDieseGrund || 'In dieser Ansicht nicht möglich.'),
-      beiKlick: () => onAuswahl({ art: 'nurDiese' }) }));
-    zeile.appendChild(knopf({ id: 'aus', text: 'Licht wieder an (Esc)', klasse: 'lichtaus-aus', beiKlick: () => onAus() }));
 
     const zeile2 = element('div', 'lichtaus-zeile lichtaus-zeile-2');
     const reihenfolge = auspraegungenListe().map((a) => a.auspraegung_id);

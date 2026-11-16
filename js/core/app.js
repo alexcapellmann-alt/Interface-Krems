@@ -824,10 +824,8 @@ function zeigeLichtAusLeiste(kontext, meldung) {
     const hoeheVorher = kontext.typenLeiste.element.offsetHeight;
     kontext.typenLeiste.zeige({
       zaehlung, massengruppen, auswahl, hinweise, kompakt: istKompakt(),
-      nurDieseMoeglich: meldung.nurDieseMoeglich !== false, nurDieseGrund: meldung.nurDieseGrund,
       ansichtName: `der Ansicht „${eintrag.label || eintrag.id || ''}“`,
-      onAuswahl: (aktion) => aendereLichtAusAuswahl(kontext, aktion),
-      onAus: () => beendeLichtAus(kontext, { fokusZumKnopf: true })
+      onAuswahl: (aktion) => aendereLichtAusAuswahl(kontext, aktion)
     });
     // Die Leiste verschiebt die Zeichenfläche: neu messen wie bei einem Fenster-Resize (der Stammbaum misst seine Höhe ab
     // seiner Oberkante; die Messung selbst aus Auftrag 9 bleibt unverändert). Gleiche Höhe → kein erneuter Aufruf.
@@ -842,19 +840,23 @@ function aendereLichtAusAuswahl(kontext, aktion) {
   kontext.aktuellesVizModul?.resize({ lichtAus: lichtAusOptionen(kontext) });
 }
 
+// Auswahl beim Einschalten bzw. beim Wechsel: „Alle“, gefiltert auf die leuchtenden Elemente (16.11.2026, Wunsch des
+// Autors: immer gefiltert; Ansichten, die nicht filtern können, wie der Stammbaum, dunkeln weiter ab)
+function startAuswahl() {
+  return { ...LEERE_AUSWAHL, nurDiese: true };
+}
+
 // σ-Knopf in einer freigegebenen Ansicht (der Zustand ist bereits umgeschaltet)
 function schalteLichtAus(kontext, aktiv) {
   wendeThemaAn();
   sageModusAn(aktiv);
-  if (!aktiv) {
-    setLichtAusAuswahl(LEERE_AUSWAHL);
-    kontext.typenLeiste?.verstecke();
-  }
+  setLichtAusAuswahl(aktiv ? startAuswahl() : LEERE_AUSWAHL);
+  if (!aktiv) kontext.typenLeiste?.verstecke();
   kontext.aktuellesVizModul?.resize({ showUncertainty: false, lichtAus: lichtAusOptionen(kontext) });
   if (!aktiv) kontext.aktuellesVizModul?.resize(); // Leiste weg: Zeichenfläche neu messen
 }
 
-// „Licht wieder an“ und Esc: wie ein Klick auf den σ-Knopf, danach Fokus auf den Knopf (die Leiste verschwindet)
+// Esc: wie ein Klick auf den σ-Knopf, danach Fokus auf den Knopf (die Leiste verschwindet)
 function beendeLichtAus(kontext, { fokusZumKnopf = false } = {}) {
   if (!istLichtAus() || !kontext?.unsicherheitsButton) return;
   const knopf = kontext.unsicherheitsButton.element;
@@ -1075,11 +1077,11 @@ async function wechsleZuAnsicht(kontext, eintrag) {
       try { kontext.aktuellesVizModul.destroy(); } finally { kontext.aktuellesVizModul = null; }
     }
     // Abschnitt 11: der Modus setzt sich bei jedem Wechsel zurück – außer zwischen zwei für „Licht aus“ freigegebenen
-    // Ansichten (Auftrag 13, Entscheidung 5/6, bestätigt nach §14). Die Typenauswahl beginnt wieder bei „Alle“.
+    // Ansichten (Auftrag 13, Entscheidung 5/6, bestätigt nach §14). Die Typenauswahl beginnt wieder bei „Alle“ (startAuswahl).
     const modusBleibt = modusNachWechsel({ aktiv: getZustand().unsicherheitModusAktiv, vorherLichtAus: getZustand().aktiveAnsichtLichtAus, nachherLichtAus: Boolean(eintrag.lichtAus) });
     setUnsicherheitModus(modusBleibt);
     setAktiveAnsichtLichtAus(Boolean(eintrag.lichtAus));
-    setLichtAusAuswahl(LEERE_AUSWAHL);
+    setLichtAusAuswahl(startAuswahl());
     kontext.lichtAusEintrag = eintrag;
     kontext.unsicherheitsButton.setzeZustand(modusBleibt, { lichtAus: Boolean(eintrag.lichtAus) });
     if (!modusBleibt) kontext.typenLeiste?.verstecke();

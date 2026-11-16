@@ -98,20 +98,24 @@ test('Methodenhinweise je Pilotansicht (geltungsbereich)', () => {
 });
 
 test('Zahlen der Pilotansichten auf den Daten (Schwelle aus der Konfiguration)', () => {
-  assert.equal(MASSEN_SCHWELLE, 0.30);
+  // Seit 16.11.2026 keine Sonderbehandlung von Massenangaben: „Ausstellungsort fehlt“ zählt bei „Alle“ mit
+  assert.equal(MASSEN_SCHWELLE, null);
   // Regesten: Einheit = Urkunde, Felder datum/orte/personen/ausstellungsort
   const urkunden = leseCsvRoh('urkunden.csv');
   const kacheln = urkunden.map((r) => ({ eintraege: eintraegeAus(r, 'urkunden.csv', ['datum', 'orte', 'personen', 'ausstellungsort']) }));
   const v = lichtAusVorbereitung(kacheln, LEERE_AUSWAHL);
-  assert.deepEqual(v.massengruppen.map((g) => `${g.feld} ${g.typ}/${g.auspraegung} ${g.anzahl}`), ['ausstellungsort geographisch/fehlend 571']);
+  assert.deepEqual(v.massengruppen, []);
   const z = zaehleFuerLeiste(kacheln, LEERE_AUSWAHL, v.masse);
-  // 210 Urkunden mit Typ bei Datum, Orten oder Personen + 3 nur mit „Ausstellungsort ungenau“ (Feldlager, keine Massengruppe)
-  assert.equal(z.alle, 213, 'Alle ohne Massenangabe (PROJEKTLOG 95; alter σ-Filter: 215)');
-  assert.deepEqual(z.proTyp, { zeitlich: 77, geographisch: 72, identifikation: 85 });
-  assert.equal(zaehleFuerLeiste(kacheln, { typen: 'alle', masseEin: v.masse }, v.masse).alle, 687);
-  // Stammbaum: keine Massengruppe (Geburtsdatum ungenau 25 % < 30 %)
+  // 213 wie bisher (PROJEKTLOG 95) + die Urkunden, die nur „Ausstellungsort fehlt“ tragen
+  assert.equal(z.alle, 687);
+  assert.deepEqual(z.proTyp, { zeitlich: 77, geographisch: 617, identifikation: 85 });
+  // Mit der früheren Schwelle 30 % wäre „Ausstellungsort fehlt“ (571) die einzige Massengruppe (Regel bleibt prüfbar)
+  const frueher = lichtAusVorbereitung(kacheln, LEERE_AUSWAHL, 0.30);
+  assert.deepEqual(frueher.massengruppen.map((g) => `${g.feld} ${g.typ}/${g.auspraegung} ${g.anzahl}`), ['ausstellungsort geographisch/fehlend 571']);
+  assert.equal(zaehleFuerLeiste(kacheln, LEERE_AUSWAHL, frueher.masse).alle, 213);
+  // Stammbaum: keine Massengruppe
   const familien = leseCsvRoh('familien.csv').map((r) => ({ eintraege: eintraegeAus(r, 'familien.csv', ['geburtsdatum', 'sterbedatum']) }));
-  assert.deepEqual(lichtAusVorbereitung(familien, LEERE_AUSWAHL).massengruppen, []);
+  assert.deepEqual(lichtAusVorbereitung(familien, LEERE_AUSWAHL, 0.30).massengruppen, []);
 });
 
 test('Keine Typnamen im Code (Typen kommen aus unsicherheit_typen.csv)', () => {

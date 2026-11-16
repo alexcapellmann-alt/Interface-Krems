@@ -156,7 +156,7 @@ function ermittleAlleKategorien() {
 // bei jedem Tastendruck nur noch ein einfacher Teilstring-Vergleich pro
 // Record nötig ist, kein erneutes Array-Joinen/Lowercasing.
 function baueDurchsuchbarenText(record) {
-  const felder = [record.signatur, record.regest, orteWieImRegest(record), record.personen, record.kategorien]; // Auftrag 11
+  const felder = [record.signatur, record.regest, record.ausstellungsort, orteWieImRegest(record), record.personen, record.kategorien]; // Auftrag 11; Ausstellungsort seit 16.11.2026
   return felder
     .map((wert) => (Array.isArray(wert) ? wert.join(' ') : wert))
     .filter(Boolean)
@@ -224,6 +224,7 @@ function fuegeStyleEin(container) {
     .regk-chevron.regk-chevron-aufgeklappt { transform: rotate(180deg); }
     .regk-feld-unsicher { border: 1px dashed var(--unsicher); padding: 1px 4px; border-radius: 3px; }
     .regk-foto-platzhalter { font-style: italic; color: var(--text-muted); }
+    .regk-ohne-angabe { font-style: italic; color: var(--text-muted); }
     .regk-foto-bereich img { max-width: 100px; max-height: 100px; margin: 2px; cursor: pointer; border-radius: 3px;
       transition: box-shadow .15s ease; }
     .regk-foto-bereich img:hover { box-shadow: 0 0 0 2px var(--accent); }
@@ -295,6 +296,32 @@ function baueListenFeld(label, werte, entityTyp, feldname, unsicher, anmerkung, 
   const feld = document.createElement('p');
   feld.appendChild(document.createTextNode(`${label}: `));
   feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks(liste), zeigeUnsicherheit && unsicher, anmerkung, feldname, container));
+  return feld;
+}
+
+// 16.11.2026 (Wunsch des Autors): Ausstellungsort (Spalte `ausstellungsort`) und die übrigen Orte wie im Regest getrennt.
+// Steht der Ausstellungsort als einziger Ort in `orte`, gibt es keine Zeile „Weitere Orte“; eine Unsicherheit der Orte
+// gehört dann zum Ausstellungsort (orteAmAusstellungsort).
+function teileOrte(record) {
+  const ausstellungsort = String(record.ausstellungsort ?? '').trim();
+  const roh = orteWieImRegest(record);
+  const alle = (Array.isArray(roh) ? roh : String(roh ?? '').split('|')).map((o) => String(o).trim()).filter(Boolean);
+  const weitereOrte = alle.filter((o) => o !== ausstellungsort);
+  return { ausstellungsort, weitereOrte, orteAmAusstellungsort: Boolean(ausstellungsort) && alle.includes(ausstellungsort) && weitereOrte.length === 0 };
+}
+
+function baueAusstellungsortFeld(record, ausstellungsort, orteAmAusstellungsort, container, zeigeUnsicherheit) {
+  const feld = document.createElement('p');
+  feld.appendChild(document.createTextNode('Ausstellungsort: '));
+  if (ausstellungsort) {
+    feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks([ausstellungsort]), zeigeUnsicherheit && orteAmAusstellungsort && record.orte_unsicher, record.unsicherheit_anmerkung, 'orte', container));
+  } else {
+    const leer = document.createElement('span');
+    leer.className = 'regk-ohne-angabe';
+    leer.textContent = 'nicht angegeben';
+    feld.appendChild(leer);
+  }
+  feld.dataset.lichtFeld = orteAmAusstellungsort ? 'ausstellungsort orte' : 'ausstellungsort'; // Auftrag 13
   return feld;
 }
 
@@ -515,8 +542,9 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   datumFeld.dataset.lichtFeld = 'datum'; // Auftrag 13
   karte.appendChild(datumFeld);
 
-  const orteFeld = baueListenFeld('Orte', orteWieImRegest(record), 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
-  if (orteFeld) { orteFeld.dataset.lichtFeld = 'orte'; karte.appendChild(orteFeld); }
+  // 16.11.2026 (Wunsch des Autors): Ausstellungsort oben, die übrigen genannten Orte als „Weitere Orte“ unter den Personen
+  const { ausstellungsort, weitereOrte, orteAmAusstellungsort } = teileOrte(record);
+  karte.appendChild(baueAusstellungsortFeld(record, ausstellungsort, orteAmAusstellungsort, container, zeigeUnsicherheit));
 
   // AUFTRAG "Teil 2i": die vormalige, hier gebaute "Personen"-Zeile
   // (Filter-Buttons über den früheren Entity-Filter, optisch wie Links, aber ohne
@@ -561,6 +589,12 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
       if (event.target.closest('a')) event.stopPropagation();
     });
     karte.appendChild(genanntePersonenZeile);
+  }
+
+  const orteFeld = baueListenFeld('Weitere Orte', weitereOrte, 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
+  if (orteFeld) {
+    orteFeld.dataset.lichtFeld = 'orte'; // Auftrag 13
+    karte.appendChild(orteFeld);
   }
 
   // Partizipations-Modul (Wunsch des Autors, 2026-10-27): „Änderung vorschlagen“ in jeder Kachel.
@@ -633,9 +667,9 @@ function baueLazyBeobachter() {
 
 // --- Auftrag 13: Modus „Licht aus“ ------------------------------------------
 // Alle Kacheln bleiben; unsichere leuchten (Bernstein-Rand), die übrigen sind über eine eigene Farbstufe gedimmt (Text
-// hält 4,5:1). Das Muster der Ausprägung steht am betroffenen Feld (Datum, Orte, Personen); hat eine leuchtende Kachel
-// kein sichtbares Feld dazu (Ausstellungsort), trägt die Kachel selbst das Muster. „Nur diese zeigen“ filtert wie der
-// bisherige σ-Filter. Die Zähler der Leiste gelten für die Kacheln nach Kategorie und Suche (ohne „Nur diese“).
+// hält 4,5:1). Das Muster der Ausprägung steht am betroffenen Feld (Datum, Ausstellungsort, Weitere Orte, Personen); hat
+// eine leuchtende Kachel kein sichtbares Feld dazu, trägt die Kachel selbst das Muster. Der Modus filtert immer auf die
+// leuchtenden Kacheln (16.11.2026). Die Zähler der Leiste gelten für die Kacheln nach Kategorie und Suche (ohne „Nur diese“).
 const LICHT_AUS_DATEI = 'urkunden.csv';
 const LICHT_AUS_FELDER = ['datum', 'orte', 'personen', 'ausstellungsort'];
 const LICHT_AUS_HINWEIS_FELDER = [...LICHT_AUS_FELDER, 'kategorien'];
@@ -658,7 +692,8 @@ function kennzeichneKachel(karte, record) {
   setzeLicht(karte, wirksam.length > 0);
   let amFeld = false;
   for (const feld of karte.querySelectorAll('[data-licht-feld]')) {
-    const aus = wirksam.filter((e) => e.feld === feld.dataset.lichtFeld).map((e) => e.auspraegung);
+    const felder = feld.dataset.lichtFeld.split(' ');
+    const aus = wirksam.filter((e) => felder.includes(e.feld)).map((e) => e.auspraegung);
     if (setzeMuster(feld, aus)) amFeld = true;
   }
   if (wirksam.length && !amFeld) setzeMuster(karte, wirksam.map((e) => e.auspraegung));

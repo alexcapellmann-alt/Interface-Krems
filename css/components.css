@@ -928,8 +928,6 @@ html, body, .app-header, .app-footer, #app-content, .regk-karte, .lichtaus-leist
 .lichtaus-knopf[aria-disabled="true"] { background: transparent; border-style: dashed; color: var(--lichtaus-ausgegraut); cursor: not-allowed; }
 .lichtaus-zahl { min-width: 1.6em; padding: 0 5px; border-radius: 9px; background: rgba(255, 255, 255, .12); font-variant-numeric: tabular-nums; text-align: center; }
 .lichtaus-knopf[aria-pressed="true"] .lichtaus-zahl { background: rgba(23, 34, 44, .18); }
-.lichtaus-aus { margin-left: auto; border-radius: var(--radius); background: var(--text); color: var(--bg); font-weight: 600; }
-.lichtaus-aus:hover { background: var(--text-muted); }
 .lichtaus-masse { border-style: dashed; }
 .lichtaus-weitere-bereich { position: relative; }
 .lichtaus-weitere-liste { position: absolute; z-index: 1200; top: calc(100% + 4px); left: 0; min-width: 320px; margin: 0; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);

@@ -10,7 +10,9 @@
 // Massenangabe (Entscheidung 3): Eine Gruppe aus Feld und Typ/Ausprägung, die mindestens diesen Anteil der Datensätze
 // einer Ansicht betrifft, zählt bei „Alle“ nicht mit und erscheint als eigener Zusatzschalter. Gerechnet auf den ganzen
 // Daten der Ansicht, nicht auf dem Filterstand. Begründung des Werts und Gruppen bei 20/25/35/40 %: PROJEKTLOG 95.
-export const MASSEN_SCHWELLE = 0.30;
+// Seit 16.11.2026 ausgeschaltet (null; Wunsch des Autors: „Ausstellungsort fehlt“ zählt bei „Alle“ mit). Ein Wert
+// zwischen 0 und 1 schaltet die Sonderbehandlung wieder ein (vorher 0.30).
+export const MASSEN_SCHWELLE = null;
 
 // Kompaktvariante der Typenleiste (Entscheidung 4): unter dieser Fensterhöhe (px) zeigt die Leiste nur die Typen, die
 // in der Ansicht vorkommen; die übrigen stehen mit Begründung in einem Aufklapper.

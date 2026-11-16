@@ -18,8 +18,8 @@ Ort, aber die Daten liefern nichts dafür (nichts wird erfunden).
 | **Muster je Ausprägung** (gestrichelt / doppelt / schraffiert / gepunktet) | **geeignet** – am betroffenen Feld (Datum, Orte, Personen), wie Masterprompt §11 „gezielt auf das jeweils betroffene Feld“; alle vier Ausprägungen kommen vor. Ohne Feld (Ausstellungsort) trägt die Kachel das Muster. | **bedingt** – an der Markerkontur gut lesbar ab etwa 6 px Radius; im dichten Bereich um Krems überdecken sich Marker. „Strittig“ als zweiter Ring. „Fehlt“ nicht auf der Karte (siehe Randliste). | **geeignet** – als Querstrich an der Kante (oben Geburt, unten Tod); bei jedem Zoom gleich breit. Vorkommend: ungenau, mehrdeutig. |
 | **Geisterelement** (hohl, schraffiert) | Als Kachel **nicht anwendbar, keine Datengrundlage**: 0 undatierte Urkunden (`jahr` in allen 1067 gefüllt); Jahrgangslücken (28 Bestände) gehören zum Strahl, nicht zu den Regesten. Am Feld als schraffierter Rahmen für „Ort fehlt“ (13 Urkunden). | **geeignet** in der Randliste (nicht als Punkt): 30 Orte ohne ermittelte Lage, 571 Urkunden ohne Ausstellungsort. | **nicht anwendbar, keine Datengrundlage**: nur 2 Personen mit bekanntem Vater und fehlender Mutter; beide eingeheiratet (nach Auftrag kein Platzhalter, Methodenhinweis genügt). |
 | **Randliste** („Nicht auf der Karte“) | nicht nötig (jede Urkunde hat eine Kachel) | **geeignet** – macht sichtbar, was eine Karte sonst verschweigt, ohne Koordinaten zu erfinden. | nicht nötig |
-| **Filtern** („Nur diese zeigen“) | **geeignet** – ersetzt den bisherigen σ-Filter (213 statt 215; Abgleich PROJEKTLOG 95). | **geeignet** – 100 von 224 Orten; Zeitregler wirkt weiter. | **ungeeignet** – herausgefilterte Personen ließen Lücken; Eltern-, Kind- und Ehelinien verlören ihren Bezug. Schalter ausgegraut mit Begründung. |
-| **Typenleiste mit Zählern** | **geeignet** – drei Typen; Massenangabe „Ausstellungsort fehlt“ (571, 54 %) als eigener Schalter, sonst leuchteten 687 statt 213 Kacheln. | **geeignet** – zwei Typen (Ortsangabe 62, Datierung 45). | **bedingt** – nur ein Typ befüllt (Datierung), „Alle“ = „Datierung“. |
+| **Filtern** (seit 16.11.2026 immer an, ohne eigenen Schalter) | **geeignet** – ersetzt den bisherigen σ-Filter (687 Urkunden einschließlich „Ausstellungsort fehlt“; Abgleich PROJEKTLOG 95). | **geeignet** – 100 von 224 Orten; Zeitregler wirkt weiter. | **ungeeignet** – herausgefilterte Personen ließen Lücken; Eltern-, Kind- und Ehelinien verlören ihren Bezug. Der Stammbaum dunkelt deshalb ab. |
+| **Typenleiste mit Zählern** | **geeignet** – drei Typen; „Ausstellungsort fehlt“ (571, 54 %) zählt seit 16.11.2026 bei „Alle“ mit (687), vorher eigener Schalter (213). | **geeignet** – zwei Typen (Ortsangabe 62, Datierung 45). | **bedingt** – nur ein Typ befüllt (Datierung), „Alle“ = „Datierung“. |
 
 ## 2. Typ × Ansicht (welche Typen der Pilot zeigt)
 
@@ -44,7 +44,9 @@ mit der Begründung „In der Ansicht … gibt es keine Angaben dieser Art.“
 - **Massentypen:** Eine Gruppe, die mindestens 30 % der Elemente einer Ansicht betrifft, macht „Alle“ wertlos (im
   Kachelraster 64 % leuchtend). Sie zählt deshalb erst mit, wenn sie gezielt eingeschaltet wird. Die Schwelle ist ein
   benannter Parameter (`js/config/lichtAus.js`); bei 20 % kippte die Ortsangabe der Karte (23 %), bei 25 % das
-  Geburtsdatum im Stammbaum (25 %), bei 35 % kehrte die angenommene soziale Gruppe (31 %) in „Alle“ zurück.
+  Geburtsdatum im Stammbaum (25 %), bei 35 % kehrte die angenommene soziale Gruppe (31 %) in „Alle“ zurück. Seit
+  16.11.2026 ausgeschaltet (Wunsch des Autors): „Ausstellungsort fehlt“ zählt in den Regesten bei „Alle“ mit; dafür
+  trägt die Kachel eine eigene Zeile „Ausstellungsort“.
 - **Fokus gegen Licht:** Weiß neben Bernstein hat nur 1,8:1; der Fokus ist deshalb ein Doppelring (dunkel innen, weiß
   außen) und bleibt vom Licht unterscheidbar.
 - **Gedimmter Text:** Abdunkeln über Deckkraft verletzt 4,5:1; Text braucht eine eigene Farbstufe.

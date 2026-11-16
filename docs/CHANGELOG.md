@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-16 (243) – „Licht aus“ filtert immer, Ausstellungsort zählt mit; Kachel trennt Ausstellungsort und weitere Orte
+
+- `js/core/typenLeiste.js`, `css/components.css`: Schaltflächen „Licht wieder an (Esc)“ und „Nur diese zeigen“ entfernt. Beendet wird der Modus über den σ-Knopf (Esc bleibt).
+- `js/core/app.js` (`startAuswahl`): der Modus zeigt in jeder freigegebenen Ansicht nur die leuchtenden Elemente (Regesten, Karte); der Stammbaum dunkelt weiter ab.
+- `js/config/lichtAus.js`: `MASSEN_SCHWELLE = null` (vorher 0,30) – „Ausstellungsort fehlt“ zählt bei „Alle“ mit. Regesten: Alle 687 (vorher 213), Ortsangabe 617 (vorher 72).
+- `js/viz/regestenKachelraster.js`: neue Zeile „Ausstellungsort: …“ unter dem Datum (leer: „nicht angegeben“); die übrigen Orte stehen als „Weitere Orte“ unter den Personen. Muster des Modus am jeweiligen Feld; die Suche findet auch den Ausstellungsort.
+- `tests/lichtAus.test.mjs` (Zahlen), `docs/SCHEMA.md`, `docs/EIGNUNGSMATRIX_UNSICHERHEIT.md`. Wunsch des Autors. Tests 58/58; axe in den drei Ansichten mit und ohne Modus ohne Befund; Browserprüfung ohne Fehler.
+
+---
+
 ## 2026-11-16 (242) – Unsicherheits-Modus „Licht aus“ mit Pilot in Regesten, Karte und Stammbaum (Auftrag 13)
 
 - σ-Knopf in den freigegebenen Ansichten (Registry `lichtAus`: Regesten, Karte, Stammbaum) schaltet die Seite dunkel (zweite Palette in `css/base.css`, keine Inversion); unsichere Elemente leuchten in Bernstein mit Muster je Ausprägung. Modus bleibt zwischen diesen Ansichten, sonst Licht an; Esc und „Licht wieder an“ beenden ihn.

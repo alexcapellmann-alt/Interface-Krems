@@ -116,9 +116,14 @@ Eintrag in `unsicherheit_typ` leuchten. Die Daten bleiben unverändert; das Zusa
 - **Muster je Ausprägung:** Zuordnung `auspraegung_id` → Muster in `js/config/lichtAus.js` (ungenau gestrichelt, strittig
   doppelt, fehlend schraffierter Rahmen, mehrdeutig gepunktet); Anzeigename und Erklärung aus
   `unsicherheit_auspraegungen.csv`. Eine neue Ausprägung ohne Zuordnung erscheint durchgezogen.
-- **Massenangabe:** Eine Gruppe aus Datei, Feld und Typ/Ausprägung, die mindestens `MASSEN_SCHWELLE` (0,30, ebenda) der
-  Elemente der Ansicht betrifft, zählt bei „Alle“ nicht mit und hat einen eigenen Schalter mit Zahl. Heute: Ausstellungsort
-  fehlt (Regesten, 571 von 1067).
+- **Massenangabe:** Eine Gruppe aus Datei, Feld und Typ/Ausprägung, die mindestens `MASSEN_SCHWELLE` (ebenda) der
+  Elemente der Ansicht betrifft, zählt bei „Alle“ nicht mit und hat einen eigenen Schalter mit Zahl. Seit 16.11.2026
+  ausgeschaltet (`null`, Wunsch des Autors): auch „Ausstellungsort fehlt“ (Regesten, 571 von 1067) zählt bei „Alle“ mit.
+- **Filtern:** Der Modus zeigt immer nur die leuchtenden Elemente (Regesten, Karte); der Stammbaum dunkelt ab, weil
+  herausgefilterte Personen Lücken im Baum ließen. Einen eigenen Schalter dafür gibt es nicht.
+- **Regesten-Kachel:** „Ausstellungsort“ (Spalte `ausstellungsort`, leer: „nicht angegeben“) steht unter dem Datum;
+  die übrigen Orte wie im Regest stehen als „Weitere Orte“ unter den Personen. Ist der Ausstellungsort der einzige Ort
+  in `orte`, gilt eine Unsicherheit der Orte für die Zeile „Ausstellungsort“.
 - **Methodenhinweise:** `methodenhinweise.csv` erscheint im Modus unter „Hinweise zur Methode“, wenn `geltungsbereich` zur
   Ansicht passt. Schreibweise, durch `;` getrennt: `datei.csv/feld[, feld]` (Datei und Feld, die die Ansicht liest),
   `Ansicht Name` bzw. `Ansichten Name, Name` (Klammerzusätze zählen nicht), `Bereich Name`. Ein Hinweis zu Datei und
