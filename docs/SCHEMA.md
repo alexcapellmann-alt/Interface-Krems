@@ -105,6 +105,26 @@ Bekannte Warnungen: `orte.csv` (`orte_unsicher` gilt für den ganzen Ort, fehlt 
 Herkunftsnamen haben keinen Typ) und `bestandsverzeichnis.csv` (`daten_unsicher` gilt für den ganzen Bestand). Die
 Anzeige nach Typen folgt in Auftrag 13. Was wie befüllt ist, steht in PROJEKTLOG 94.
 
+**Unsicherheitstypen im Modus „Licht aus“ (seit 16.11.2026, Auftrag 13, PROJEKTLOG 95).** Der σ-Knopf schaltet in den
+dafür freigegebenen Ansichten (Registry `lichtAus`: Regesten, Karte, Stammbaum) die Seite dunkel; Elemente mit einem
+Eintrag in `unsicherheit_typ` leuchten. Die Daten bleiben unverändert; das Zusammenspiel:
+- **Welche Felder eine Ansicht liest:** Regesten `urkunden.csv` datum, orte, personen, ausstellungsort (Einheit: Urkunde);
+  Karte `orte.csv` orte und `urkunden.csv` datum der Urkunden des Orts (Einheit: Ort mit Koordinaten); Stammbaum
+  `familien.csv` geburtsdatum, sterbedatum (Einheit: Person im Baum). Steht im jeweiligen Modul (`LICHT_AUS_FELDER`).
+- **Typenleiste:** eine Schaltfläche je Zeile von `unsicherheit_typen.csv` (Anzeigename, Erklärung), Zahl = Elemente der
+  Ansicht mit dem Typ. Typen ohne Eintrag in der Ansicht: ausgegraut mit Begründung.
+- **Muster je Ausprägung:** Zuordnung `auspraegung_id` → Muster in `js/config/lichtAus.js` (ungenau gestrichelt, strittig
+  doppelt, fehlend schraffierter Rahmen, mehrdeutig gepunktet); Anzeigename und Erklärung aus
+  `unsicherheit_auspraegungen.csv`. Eine neue Ausprägung ohne Zuordnung erscheint durchgezogen.
+- **Massenangabe:** Eine Gruppe aus Datei, Feld und Typ/Ausprägung, die mindestens `MASSEN_SCHWELLE` (0,30, ebenda) der
+  Elemente der Ansicht betrifft, zählt bei „Alle“ nicht mit und hat einen eigenen Schalter mit Zahl. Heute: Ausstellungsort
+  fehlt (Regesten, 571 von 1067).
+- **Methodenhinweise:** `methodenhinweise.csv` erscheint im Modus unter „Hinweise zur Methode“, wenn `geltungsbereich` zur
+  Ansicht passt. Schreibweise, durch `;` getrennt: `datei.csv/feld[, feld]` (Datei und Feld, die die Ansicht liest),
+  `Ansicht Name` bzw. `Ansichten Name, Name` (Klammerzusätze zählen nicht), `Bereich Name`. Ein Hinweis zu Datei und
+  Feld einer Massengruppe steht an deren Schalter.
+- **Detailansicht:** Der Aufklapper „σ Angaben unsicher“ nennt zusätzlich „Art der Unsicherheit: <Feld>: <Typ>, <Ausprägung>“.
+
 **Format von `unsicherheit_anmerkung` (seit 15.11.2026, PROJEKTLOG 80):** Jeder Eintrag lautet `<feldname>: <Erklärung>`, `<feldname>` ist eine echte Spalte derselben Tabelle (Schreibung wie im Kopf, Abgleich ohne Groß-/Kleinschreibung). Mehrere Einträge werden mit Pipe `|` getrennt (z. B. `orte: Marquartsurfar (…)|datum: Nur ungefähre Datierung …`); der DataLoader zerlegt sie der allgemeinen Pipe-Konvention folgend in eine Liste. Der Tooltip eines markierten Feldes zeigt nur die Einträge mit dessen Namen (`filtereErklaerungFuerFeld()`, `js/utils/uncertainty.js`); Anzeigen der ganzen Anmerkung übersetzen den Feldnamen in eine lesbare Bezeichnung (`lesbareAnmerkung()`, ebenda – die einzige Stelle der Übersetzung, ein unbekannter Feldname bleibt roh stehen). Ausnahme: Anmerkungen, die mehrere Felder oder den ganzen Datensatz betreffen (z. B. „Doppelt erfasst als …“, „Bestandsumfang sowie Zeitraum …“), bleiben Freitext ohne Feldnamen; sie werden immer ganz gezeigt. Hinweis: Eine feldspezifische Anzeige erreicht eine Erklärung nur, wenn es zu dem Feld eine Spalte `<feldname>_unsicher` gibt und sie in der Zeile `ja` ist (fehlt z. B. für `personen_id` und `Wirtschaftssektor` in `buergerbuch.csv`).
 
 **Wichtiger Hinweis zum Dateiformat:** Die Quelldateien werden als Excel (.xlsx) gepflegt (Arbeits-/Erfassungsformat). Vor dem Einsatz im Interface werden sie als CSV (UTF-8, Semikolon-getrennt) exportiert und in `data/` abgelegt – der `dataLoader.js` liest ausschließlich CSV. Pipe-Zeichen innerhalb von Zellen sind beim Export unproblematisch, da sie sich vom Spalten-Trennzeichen (Semikolon) unterscheiden; Zellen mit zufälligen Semikolons im Freitext werden von Excel automatisch in Anführungszeichen gesetzt und von `d3.csvParse()` korrekt gelesen.
@@ -502,6 +522,7 @@ Eine Zeile pro Einstellung (Schlüssel-Wert-Tabelle, KEINE Zeile pro Urkunde o. 
 | `website` | www.krems.gv.at/stadtarchiv | als lesbarer Text angezeigt |
 | `website_link` | https://www.krems.gv.at/stadtarchiv | NICHT sichtbar, vollständige URL für den Link hinter `website` |
 | `akzentfarbe` | #2c4a6e | Hauptfarbe der Oberfläche (Buttons, Links, Info-Buttons) - ein Hex-Farbcode wie in jedem Grafikprogramm, mit `#`. Kontrast zu Weiß sollte mindestens 4,5:1 betragen (in jedem Online-Kontrast-Prüfer eingeben) |
+| `akzentfarbe_dunkel` | (leer) | Optional (Auftrag 13): Akzentfarbe im dunklen Modus „Licht aus“. Leer = aus `akzentfarbe` abgeleitet. In beiden Fällen hellt das Interface die Farbe auf, bis sie 4,5:1 gegen die dunklen Flächen hält (`AKZENT_DUNKEL_MINDESTKONTRAST`, `js/config/lichtAus.js`) |
 | `karte_zentrum_lat` | 48.42 | Breitengrad, wo alle Karten beim Öffnen zentriert sind. Fehlt er (oder `karte_zentrum_lon`), zeigt die Karte den Ausschnitt aller Orte aus `orte.csv`, ohne Orte eine Weltübersicht (seit Auftrag C1; vorher galt ein fester Krems-Ausschnitt) |
 | `karte_zentrum_lon` | 15.6 | Längengrad, siehe oben |
 | `karte_zoom` | 7 | Start-Zoomstufe der Karten (kleinere Zahl = weiter herausgezoomt). Leer: 7 |

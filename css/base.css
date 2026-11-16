@@ -57,7 +57,44 @@
 
   --radius: 6px;
   --shadow: 0 2px 12px rgba(0, 0, 0, .10);
+
+  /* Auftrag 13: zweite Palette des Modus „Licht aus“ (Entscheidung 2, 16.11.2026). Grundlage ist die geprüfte dunkle
+     Bühne der Führungen. Gilt nur unter :root[data-modus="unsicherheit"] (unten); die Werte stehen hier, damit
+     js/core/lichtAusModus.js die dunkle Akzentfarbe gegen --lichtaus-bg/--lichtaus-surface prüfen kann.
+     Kontraste (a13/a3_entwurf/kontrast.json): Text 14,4:1; gedimmter Text 5,4:1; Bedienrand 4,8:1; Licht 9,0:1. */
+  --lichtaus-bg:              #17222c;
+  --lichtaus-surface:         #1f2d3a;
+  --lichtaus-linie:           #4a5c6e; /* nur Trennlinien, keine Bedienelemente */
+  --lichtaus-rand:            #7a8ea3; /* Rand der Bedienelemente, 3:1 auf beiden Flächen */
+  --lichtaus-text:            #f4f2ec;
+  --lichtaus-text-muted:      #cbd2d9;
+  --lichtaus-gedimmt-flaeche: #1a2631;
+  --lichtaus-gedimmt-text:    #8f9aa5;
+  --lichtaus-gedimmt-marke:   #2c3a47;
+  --lichtaus-gedimmt-marke-text: #b4bec8;
+  --lichtaus-ausgegraut:      #8c99a6;
+  --lichtaus-fokus:           #ffffff;
+  --licht:                    #f2b84b; /* Bernstein: unsichere Elemente leuchten */
+  --lichtaus-gedimmt:         0.28;    /* Deckkraft gedimmter Grafikflächen (nie für Text) */
 }
+
+/* Auftrag 13: Modus „Licht aus“ – die Seite wird abgedunkelt, nicht invertiert. Die Akzentfarbe kommt hier aus
+   --accent-dunkel (js/core/lichtAusModus.js), weil app.js --accent als Inline-Stil aus archiv.csv setzt; deshalb
+   !important (gewinnt nur so gegen den Inline-Wert). */
+:root[data-modus="unsicherheit"] {
+  --bg:           var(--lichtaus-bg);
+  --surface:      var(--lichtaus-surface);
+  --border:       var(--lichtaus-linie);
+  --text:         var(--lichtaus-text);
+  --text-muted:   var(--lichtaus-text-muted);
+  --accent:       var(--accent-dunkel, var(--lichtaus-text-muted)) !important;
+  --accent-text:  var(--lichtaus-bg);
+  --unvollstaendig:    var(--lichtaus-text-muted); /* Entscheidung 12: Fehlermarkierung grau-weiß statt orange */
+  --unvollstaendig-bg: var(--lichtaus-surface);
+  --shadow: 0 2px 12px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+:root[data-modus="unsicherheit"] body { background-color: var(--bg); color: var(--text); }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -120,4 +157,12 @@ input:focus-visible,
 [tabindex]:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Auftrag 13 (Entscheidung 2): im Modus „Licht aus“ Fokus als Doppelring – innen dunkel, außen weiß –, damit er
+   sich vom Bernstein-Licht unterscheidet (weiß neben Bernstein allein nur 1,8:1). */
+:root[data-modus="unsicherheit"] :is(a, button, select, input, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--lichtaus-fokus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--lichtaus-bg);
 }

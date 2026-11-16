@@ -892,3 +892,104 @@ svg .datensatz-unvollstaendig { stroke: var(--unvollstaendig) !important; stroke
 
 /* Nachbesserung 4, Punkt 4: dezenter Hinweis auf Datenbestände ohne Visualisierung (Startseite der Erkundung) */
 .hinweis-unbekannte-daten { margin-top: var(--space-3); color: var(--text-muted); font-size: var(--fs-md); border-left: 3px solid var(--border); padding-left: var(--space-2); }
+
+/* ===================================================================================================================
+   Auftrag 13: Modus „Licht aus“ (js/core/lichtAusModus.js, js/core/typenLeiste.js, js/utils/lichtAusDarstellung.js).
+   Gilt nur unter :root[data-modus="unsicherheit"]; Palette in css/base.css. Abgedunkelt wird über die zweite Palette
+   und über Deckkraft der Grafikflächen – nie über Farbinversion. Text wird nie über Deckkraft gedimmt (4,5:1 bleibt).
+   Muster je Ausprägung (data-muster, js/config/lichtAus.js): gestrichelt (ungenau), doppelt (strittig), geist mit
+   Schraffur (fehlt), gepunktet (mehrdeutig). Farbe allein trägt keine Bedeutung.
+   =================================================================================================================== */
+html, body, .app-header, .app-footer, #app-content, .regk-karte, .lichtaus-leiste { transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
+@media (prefers-reduced-motion: reduce) {
+  html, body, .app-header, .app-footer, #app-content, .regk-karte, .lichtaus-leiste { transition: none; }
+}
+:root[data-modus="unsicherheit"] body.mit-hintergrundkarte { background-image: var(--hintergrundkarte-dunkel, none); }
+/* Entscheidung 12: helle Unterlage statt zweiter Logodatei */
+:root[data-modus="unsicherheit"] .app-logo-svg { background: #f7f5f0; border-radius: 4px; padding: 2px 4px; }
+:root[data-modus="unsicherheit"] :is(.haupt-navigation, .bereichs-leiste, .ansichten-leiste) a[aria-current="page"],
+:root[data-modus="unsicherheit"] :is(.darstellung-knopf, .karte-abspielen, .ansicht-wechsel-leiste button)[aria-pressed="true"] { color: var(--accent-text); }
+:root[data-modus="unsicherheit"] .vorschlag-senden { color: var(--accent-text); }
+:root[data-modus="unsicherheit"] .karte-sidebar-ort.karte-sidebar-ort-hervorgehoben { background: var(--surface) !important; outline: 3px solid var(--licht) !important; }
+:root[data-modus="unsicherheit"] :is(input, select, textarea) { background-color: var(--surface); color: var(--text); border-color: var(--lichtaus-rand); }
+
+/* σ-Knopf im Modus: zeigt den Zustand auch über die Fläche */
+:root[data-modus="unsicherheit"] .werkzeugleiste-unsicherheit > button[aria-pressed="true"] { background: var(--licht); color: var(--lichtaus-bg); border-color: var(--licht); }
+
+/* Typenleiste */
+.lichtaus-leiste { grid-column: 1 / -1; padding: var(--space-2) var(--space-4) var(--space-1); border-bottom: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.lichtaus-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lichtaus-zeile-2 { margin-top: var(--space-2); font-size: var(--fs-sm); gap: var(--space-2) var(--space-4); }
+.lichtaus-titel { font-weight: 600; }
+.lichtaus-knopf { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 36px; padding: 4px 12px; border-radius: 18px;
+  border: 1px solid var(--lichtaus-rand); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.lichtaus-knopf:hover { background: color-mix(in srgb, var(--surface) 80%, white); }
+.lichtaus-knopf[aria-pressed="true"] { background: var(--licht); border-color: var(--licht); color: var(--lichtaus-bg); font-weight: 600; }
+.lichtaus-knopf[aria-disabled="true"] { background: transparent; border-style: dashed; color: var(--lichtaus-ausgegraut); cursor: not-allowed; }
+.lichtaus-zahl { min-width: 1.6em; padding: 0 5px; border-radius: 9px; background: rgba(255, 255, 255, .12); font-variant-numeric: tabular-nums; text-align: center; }
+.lichtaus-knopf[aria-pressed="true"] .lichtaus-zahl { background: rgba(23, 34, 44, .18); }
+.lichtaus-aus { margin-left: auto; border-radius: var(--radius); background: var(--text); color: var(--bg); font-weight: 600; }
+.lichtaus-aus:hover { background: var(--text-muted); }
+.lichtaus-masse { border-style: dashed; }
+.lichtaus-weitere-bereich { position: relative; }
+.lichtaus-weitere-liste { position: absolute; z-index: 1200; top: calc(100% + 4px); left: 0; min-width: 320px; margin: 0; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
+  background: var(--surface); color: var(--text); border: 1px solid var(--lichtaus-rand); border-radius: var(--radius); box-shadow: var(--shadow); font-size: var(--fs-sm); }
+.lichtaus-legende { display: inline-flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin: 0; padding: 0; list-style: none; }
+.lichtaus-legende-eintrag { display: inline-flex; align-items: center; gap: 6px; }
+.lichtaus-probe { display: inline-block; width: 26px; height: 14px; border-radius: 2px; }
+.lichtaus-hinweise summary { cursor: pointer; text-decoration: underline; }
+.lichtaus-hinweise[open] { flex-basis: 100%; }
+.lichtaus-hinweise ul { margin: var(--space-1) 0 0; padding-left: var(--space-5); max-width: 80ch; }
+.lichtaus-erklaerung { min-height: 1.4em; margin: var(--space-1) 0 0; font-size: var(--fs-sm); color: var(--text-muted); }
+.lichtaus-kompakt .lichtaus-zeile-2 { margin-top: var(--space-1); }
+
+/* Muster (HTML-Felder und Legende) */
+:root[data-modus="unsicherheit"] .lichtaus-feld { border-radius: 3px; outline-offset: 1px; }
+.lichtaus-probe[data-muster="gestrichelt"], :root[data-modus="unsicherheit"] .lichtaus-feld[data-muster="gestrichelt"] { outline: 2px dashed var(--licht); }
+.lichtaus-probe[data-muster="doppelt"], :root[data-modus="unsicherheit"] .lichtaus-feld[data-muster="doppelt"] { outline: 5px double var(--licht); }
+.lichtaus-probe[data-muster="gepunktet"], :root[data-modus="unsicherheit"] .lichtaus-feld[data-muster="gepunktet"] { outline: 3px dotted var(--licht); }
+.lichtaus-probe[data-muster="geist"], :root[data-modus="unsicherheit"] .lichtaus-feld[data-muster="geist"] { outline: 2px solid var(--licht);
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--licht) 16%, transparent) 0 3px, transparent 3px 9px); font-style: italic; }
+.lichtaus-probe[data-muster="ohne"], :root[data-modus="unsicherheit"] .lichtaus-feld[data-muster="ohne"] { outline: 2px solid var(--licht); }
+.lichtaus-probe[data-muster="doppelt"] { outline-offset: -3px; }
+.lichtaus-probe[data-muster="geist"], .lichtaus-probe[data-muster="ohne"] { outline-offset: -2px; }
+
+/* Kachelraster */
+:root[data-modus="unsicherheit"] .regk-karte.lichtaus-licht { border: 2px solid var(--licht); box-shadow: 0 0 0 3px color-mix(in srgb, var(--licht) 18%, transparent); }
+:root[data-modus="unsicherheit"] .regk-karte.lichtaus-gedimmt { background: var(--lichtaus-gedimmt-flaeche); border-color: var(--lichtaus-gedimmt-marke); }
+:root[data-modus="unsicherheit"] .regk-karte.lichtaus-gedimmt :is(p, h2, span, a, button, .regk-regest) { color: var(--lichtaus-gedimmt-text); }
+:root[data-modus="unsicherheit"] .regk-karte.lichtaus-gedimmt img { opacity: .35; }
+:root[data-modus="unsicherheit"] .regk-karte.lichtaus-gedimmt .regk-kategorie-badge { background: var(--lichtaus-gedimmt-marke) !important; color: var(--lichtaus-gedimmt-marke-text) !important; }
+:root[data-modus="unsicherheit"] .regk-karte.lichtaus-gedimmt .vorschlag-btn { border-color: var(--lichtaus-gedimmt-marke); }
+
+/* Karte (Leaflet): Kacheln abgedunkelt, Marker über Klassen und data-muster */
+:root[data-modus="unsicherheit"] .leaflet-tile-pane { filter: brightness(.38) saturate(.4) contrast(1.1); }
+:root[data-modus="unsicherheit"] .leaflet-container { background: var(--lichtaus-bg); }
+:root[data-modus="unsicherheit"] .leaflet-control-zoom a, :root[data-modus="unsicherheit"] .leaflet-control-attribution { background: var(--surface); color: var(--text); }
+:root[data-modus="unsicherheit"] .leaflet-control-attribution a { color: var(--accent); }
+:root[data-modus="unsicherheit"] path.lichtaus-licht { stroke: var(--licht); stroke-width: 3px; stroke-opacity: 1; fill-opacity: .85; }
+:root[data-modus="unsicherheit"] path.lichtaus-gedimmt { opacity: var(--lichtaus-gedimmt); }
+:root[data-modus="unsicherheit"] path.lichtaus-ring { stroke: var(--licht); stroke-width: 2px; fill: none; pointer-events: none; }
+:root[data-modus="unsicherheit"] path[data-muster="gestrichelt"] { stroke-dasharray: 6 4; }
+:root[data-modus="unsicherheit"] path[data-muster="gepunktet"] { stroke-dasharray: 0.1 5; stroke-linecap: round; }
+.lichtaus-randliste { position: absolute; z-index: 800; top: 12px; right: 12px; width: 280px; max-height: calc(100% - 24px); overflow: auto;
+  padding: var(--space-2) var(--space-3); background: var(--surface); color: var(--text); border: 2px solid var(--licht); border-radius: var(--radius); box-shadow: var(--shadow); font-size: var(--fs-sm); }
+.lichtaus-randliste h2 { margin: 0 0 var(--space-1); font-family: var(--font-ui); font-size: var(--fs-md); }
+.lichtaus-randliste .lichtaus-geist { margin: var(--space-2) 0 var(--space-1); padding: 4px 8px; border: 2px solid var(--licht); border-radius: 4px; font-style: italic;
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--licht) 16%, transparent) 0 3px, transparent 3px 9px); }
+.lichtaus-randliste ul { margin: 0; padding-left: var(--space-5); }
+.lichtaus-randliste button { margin-top: var(--space-1); min-height: 32px; border: 1px solid var(--lichtaus-rand); border-radius: var(--radius); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+
+/* Stammbaum: Lichthof mit dunklem Spalt (Licht gegen Grund 9:1 statt 1,2:1 neben hellen Füllungen) */
+:root[data-modus="unsicherheit"] .lichtaus-hof { fill: none; stroke: var(--licht); stroke-width: 10px; vector-effect: non-scaling-stroke; pointer-events: none; }
+:root[data-modus="unsicherheit"] g.lichtaus-licht > rect.familienbaum-balken { stroke: var(--lichtaus-bg); stroke-width: 6px; stroke-dasharray: none; vector-effect: non-scaling-stroke; }
+:root[data-modus="unsicherheit"] .lichtaus-strich { stroke: var(--licht); stroke-width: 4px; vector-effect: non-scaling-stroke; pointer-events: none; }
+:root[data-modus="unsicherheit"] .lichtaus-strich[data-muster="gestrichelt"] { stroke-dasharray: 6 4; }
+:root[data-modus="unsicherheit"] .lichtaus-strich[data-muster="gepunktet"] { stroke-dasharray: 0.1 5; stroke-linecap: round; }
+:root[data-modus="unsicherheit"] .lichtaus-strich[data-muster="doppelt"] { stroke-width: 8px; }
+:root[data-modus="unsicherheit"] .lichtaus-strich-innen { stroke: var(--lichtaus-bg); stroke-width: 2px; vector-effect: non-scaling-stroke; pointer-events: none; }
+:root[data-modus="unsicherheit"] g.familienbaum-person.lichtaus-gedimmt > :is(rect, path, circle) { opacity: var(--lichtaus-gedimmt); }
+:root[data-modus="unsicherheit"] g.familienbaum-person.lichtaus-gedimmt > text { fill: var(--lichtaus-gedimmt-text); }
+:root[data-modus="unsicherheit"] :is(.familienbaum-eltern-kind-linien, .familienbaum-ehe-linien, .familienbaum-ehe-symbole) { opacity: var(--lichtaus-gedimmt); }
+:root[data-modus="unsicherheit"] .familienbaum-jahresachse text { fill: var(--text); }
+:root[data-modus="unsicherheit"] .familienbaum-jahresachse :is(line, path) { stroke: var(--text-muted); }

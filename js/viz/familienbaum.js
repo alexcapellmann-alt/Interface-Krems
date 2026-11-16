@@ -339,6 +339,9 @@ import { erzeugeHinweisBalken } from '../utils/hinweisBalken.js';
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
+import { eintraegeAus, lichtAusVorbereitung } from '../utils/lichtAus.js'; // Auftrag 13
+import { setzeLicht, musterAus, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
 import { infotextFuerModul, konfigurationswert, konfigurationsliste } from '../core/archivKonfiguration.js';
 import { ermittleVerfuegbareHoehe, ermittleVerfuegbareBreite } from '../utils/viewportGroesse.js';
 import {
@@ -1472,6 +1475,7 @@ function baueWerkzeugleiste(container) {
 function zeichneFamilienbaum() {
   const { container, plotBereich, byId, kinderIndex, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
+  instanz.letzteUnsicherheit = Boolean(zeigeUnsicherheit); // Auftrag 13 (resize)
   plotBereich.innerHTML = '';
   if (instanz.legende) instanz.legende.querySelector('.familienbaum-legende-unsicher').hidden = !zeigeUnsicherheit;
   // Punkt 3 (3. Folgeauftrag): kein Element wird gerade gehovert, direkt
@@ -1537,6 +1541,54 @@ function zeichneFamilienbaum() {
 
   instanz.zoomVerhalten = wireZoom(svg, zoomInhalt, achseGruppe, breite - RAND.links, hoehe, { minX, maxX, minY, maxY });
   instanz.letzteBaumausdehnung = { minX, maxX, minY, maxY };
+  kennzeichneLichtAus(); // Auftrag 13
+}
+
+// --- Auftrag 13: Modus „Licht aus“ ------------------------------------------
+// Unsichere Personen leuchten: Lichthof (Bernstein) mit dunklem Spalt um den Balken, damit das Licht auch neben hellen
+// Füllungen (Grau, Gold, „durch Heirat“) 3:1 hält. Die zeitliche Unsicherheit steht als Querstrich im Muster ihrer
+// Ausprägung an der Kante: oben Geburtsdatum, unten Sterbedatum. Übrige Personen: nur die Flächen gedimmt, Namen
+// bleiben lesbar; Linien und Ehe-Symbole gedimmt (css/components.css). Strichbreiten in Bildschirmpixeln
+// (vector-effect), damit sie bei jedem Zoom gleich bleiben. „Nur diese zeigen“ gibt es hier nicht (Lücken im Baum).
+// Identifikations- oder Beziehungsangaben trägt familien.csv nicht (Auftrag 12); sie erscheinen in der Leiste ausgegraut.
+const LICHT_AUS_DATEI = 'familien.csv';
+const LICHT_AUS_FELDER = ['geburtsdatum', 'sterbedatum'];
+const LICHT_AUS_OHNE_NUR_DIESE = 'Im Stammbaum würden Lücken entstehen: Linien zwischen Eltern, Kindern und Ehepartnern verlören ihren Bezug.';
+
+function kennzeichneLichtAus() {
+  const knoten = instanz?.selektionen?.knoten;
+  if (!knoten) return;
+  knoten.selectAll('.lichtaus-hof, .lichtaus-strich, .lichtaus-strich-innen').remove();
+  const optionen = instanz.options.lichtAus;
+  if (!optionen) {
+    knoten.each(function () { setzeLicht(this, null); });
+    knoten.attr('aria-label', (d) => `${d.person.name}, Details anzeigen`);
+    return;
+  }
+  const einheiten = knoten.data().map((d) => ({ id: d.id, eintraege: eintraegeAus(d.person, LICHT_AUS_DATEI, LICHT_AUS_FELDER) }));
+  const vorbereitung = lichtAusVorbereitung(einheiten, optionen.auswahl);
+  knoten.each(function (d, i) {
+    const wirksam = vorbereitung.wirksam(einheiten[i]);
+    setzeLicht(this, wirksam.length > 0);
+    this.setAttribute('aria-label', `${d.person.name}${wirksam.length ? `, unsicher: ${beschreibeEintraege(wirksam, typName, auspraegungName)}` : ''}, Details anzeigen`);
+    if (!wirksam.length) return;
+    const g = d3.select(this);
+    const balken = g.select('rect.familienbaum-balken');
+    const x = +balken.attr('x'), y = +balken.attr('y'), w = +balken.attr('width'), h = +balken.attr('height');
+    g.insert('rect', ':first-child').attr('class', 'lichtaus-hof').attr('aria-hidden', 'true')
+      .attr('x', x).attr('y', y).attr('width', w).attr('height', h).attr('rx', 3);
+    for (const feld of LICHT_AUS_FELDER) {
+      const muster = musterAus(wirksam.filter((e) => e.feld === feld).map((e) => e.auspraegung));
+      if (!muster) continue;
+      const yy = feld === 'geburtsdatum' ? y : y + h;
+      const strich = (klasse) => g.append('line').attr('class', klasse).attr('aria-hidden', 'true')
+        .attr('x1', x).attr('x2', x + w).attr('y1', yy).attr('y2', yy);
+      strich('lichtaus-strich').attr('data-muster', muster);
+      if (muster === 'doppelt') strich('lichtaus-strich-innen');
+    }
+  });
+  optionen.melde?.({ einheiten, massengruppen: vorbereitung.massengruppen, felder: { [LICHT_AUS_DATEI]: LICHT_AUS_FELDER },
+    nurDieseMoeglich: false, nurDieseGrund: LICHT_AUS_OHNE_NUR_DIESE });
 }
 
 // --- Modul-Interface (Abschnitt 5) ---------------------------------------
@@ -1656,6 +1708,12 @@ export function render(container, data, options = {}) {
 export function resize(neueOptionen = {}) {
   if (!instanz) return;
   instanz.options = { ...instanz.options, ...neueOptionen };
+  // Auftrag 13: nur die Auswahl im Modus „Licht aus“ geändert – Kennzeichnung neu, ohne den Baum neu zu zeichnen
+  const nurLichtAus = Object.keys(neueOptionen).every((k) => k === 'lichtAus' || (k === 'showUncertainty' && !neueOptionen.showUncertainty === !instanz.letzteUnsicherheit));
+  if (nurLichtAus && 'lichtAus' in neueOptionen && instanz.selektionen?.knoten && !instanz.selektionen.knoten.empty()) {
+    kennzeichneLichtAus();
+    return;
+  }
 
   if (!instanz.plotBereich) {
     render(instanz.container, instanz.records, instanz.options);

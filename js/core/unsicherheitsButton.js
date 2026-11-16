@@ -32,9 +32,14 @@ export function erzeugeUnsicherheitsButton(container, { onToggle } = {}) {
   // Buttons 'Unsicherheiten anzeigen' erhalten σ vor der Beschriftung") -
   // der sichtbare Begleittext liefert bereits die zugängliche Bezeichnung,
   // keine zusätzliche aria-label nötig.
+  // Auftrag 13 (Stufe B): in Ansichten mit `lichtAus` heißt der Knopf fest „σ Unsicherheiten“ und zeigt den Zustand nur
+  // über aria-pressed (und die Fläche, css/components.css); in den übrigen Ansichten bleibt die bisherige Beschriftung.
+  let festeBeschriftung = false;
   function aktualisiereBeschriftung(aktiv) {
     button.setAttribute('aria-pressed', String(aktiv));
-    button.textContent = `${UNSICHERHEIT_SYMBOL} ${aktiv ? 'Unsicherheiten ausblenden' : 'Unsicherheiten anzeigen'}`;
+    button.textContent = festeBeschriftung
+      ? `${UNSICHERHEIT_SYMBOL} Unsicherheiten`
+      : `${UNSICHERHEIT_SYMBOL} ${aktiv ? 'Unsicherheiten ausblenden' : 'Unsicherheiten anzeigen'}`;
   }
   aktualisiereBeschriftung(false);
 
@@ -56,6 +61,12 @@ export function erzeugeUnsicherheitsButton(container, { onToggle } = {}) {
     setzeZurueck() {
       aktualisiereBeschriftung(false);
     },
+    // Auftrag 13: Zustand und Beschriftungsart nach einem Ansichtenwechsel (der Modus kann erhalten bleiben)
+    setzeZustand(aktiv, { lichtAus = false } = {}) {
+      festeBeschriftung = Boolean(lichtAus);
+      aktualisiereBeschriftung(Boolean(aktiv));
+    },
+    element: button,
     destroy() {
       container.innerHTML = '';
     }

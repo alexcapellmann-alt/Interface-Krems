@@ -136,7 +136,13 @@
 // (nach der Pause) gegen den dann aktuellen Stand geprüft.
 
 import { starteRouter, navigiereZu, aktuelleRoute } from './router.js';
-import { getZustand, setUnsicherheitModus, setAktiverTab, setAktiveAnsicht } from './state.js';
+import { getZustand, setUnsicherheitModus, setAktiverTab, setAktiveAnsicht, istLichtAus, setAktiveAnsichtLichtAus, getLichtAusAuswahl, setLichtAusAuswahl } from './state.js';
+// Auftrag 13: Modus „Licht aus“ (Steuerung, Typenleiste, Vokabular, reine Logik, Einstellungen)
+import { wendeThemaAn, sageModusAn, beendeLichtAusUeberall, installiereEsc, setzeDunkleAkzentfarbe } from './lichtAusModus.js';
+import { erzeugeTypenLeiste } from './typenLeiste.js';
+import { ladeUnsicherheitVokabular, methodenhinweise } from './unsicherheitVokabular.js';
+import { LEERE_AUSWAHL, modusNachWechsel, schalteTyp, schalteMasse, schalteNurDiese, zaehleFuerLeiste, hinweiseFuerAnsicht, hinweisFuerGruppe } from '../utils/lichtAus.js';
+import { KOMPAKT_UNTER_HOEHE } from '../config/lichtAus.js';
 import { ladeGecachteCSV } from './datenCache.js';
 import { namenOhneOrtsbezug, bereinigeUrkundenOrte, hatOrtsbezug } from '../utils/ortsart.js'; // Auftrag 11
 import { erzeugeAnsichtWechseln } from './ansichtWechseln.js';
@@ -792,6 +798,70 @@ function zeigeGalerie(kontext) {
   });
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Auftrag 13 (Stufe B): Modus „Licht aus“ in den freigegebenen Ansichten (Registry `lichtAus`). Ablauf:
+// σ-Knopf bzw. Ansichtenwechsel setzen den Zustand (state.js) → wendeThemaAn() setzt das Wurzelattribut → das Modul
+// bekommt `options.lichtAus` = { auswahl, melde } und kennzeichnet seine Elemente → es meldet seine Einheiten zurück
+// (melde) → zeigeLichtAusLeiste() rechnet die Zähler und zeigt die Typenleiste → eine Auswahl dort setzt den Zustand
+// und ruft resize({ lichtAus }) des Moduls erneut auf. Die übrigen σ-Ansichten behalten das bisherige Verhalten.
+const istKompakt = () => window.innerHeight < KOMPAKT_UNTER_HOEHE;
+
+function lichtAusOptionen(kontext) {
+  return istLichtAus() ? { auswahl: getLichtAusAuswahl(), melde: (meldung) => zeigeLichtAusLeiste(kontext, meldung) } : null;
+}
+
+function zeigeLichtAusLeiste(kontext, meldung) {
+  ladeUnsicherheitVokabular().then(() => {
+    if (!istLichtAus() || !kontext.typenLeiste || aktuellerKontext !== kontext) return;
+    const eintrag = kontext.lichtAusEintrag || {};
+    const auswahl = getLichtAusAuswahl();
+    const alleHinweise = methodenhinweise();
+    const massengruppen = (meldung.massengruppen || []).map((g) => ({ ...g, hinweis: hinweisFuerGruppe(alleHinweise, g)?.text || '' }));
+    const zaehlung = zaehleFuerLeiste(meldung.einheiten || [], auswahl, massengruppen.map((g) => g.schluessel));
+    const masseHinweise = new Set(massengruppen.map((g) => g.hinweis).filter(Boolean));
+    const hinweise = hinweiseFuerAnsicht(alleHinweise, { felder: meldung.felder || {}, namen: [eintrag.label, eintrag.id], bereich: kontext.bereich?.label })
+      .filter((h) => !masseHinweise.has(h.text));
+    const hoeheVorher = kontext.typenLeiste.element.offsetHeight;
+    kontext.typenLeiste.zeige({
+      zaehlung, massengruppen, auswahl, hinweise, kompakt: istKompakt(),
+      nurDieseMoeglich: meldung.nurDieseMoeglich !== false, nurDieseGrund: meldung.nurDieseGrund,
+      ansichtName: `der Ansicht „${eintrag.label || eintrag.id || ''}“`,
+      onAuswahl: (aktion) => aendereLichtAusAuswahl(kontext, aktion),
+      onAus: () => beendeLichtAus(kontext, { fokusZumKnopf: true })
+    });
+    // Die Leiste verschiebt die Zeichenfläche: neu messen wie bei einem Fenster-Resize (der Stammbaum misst seine Höhe ab
+    // seiner Oberkante; die Messung selbst aus Auftrag 9 bleibt unverändert). Gleiche Höhe → kein erneuter Aufruf.
+    if (kontext.typenLeiste.element.offsetHeight !== hoeheVorher) kontext.aktuellesVizModul?.resize();
+  });
+}
+
+function aendereLichtAusAuswahl(kontext, aktion) {
+  const alt = getLichtAusAuswahl();
+  const neu = aktion.art === 'typ' ? schalteTyp(alt, aktion.wert) : aktion.art === 'masse' ? schalteMasse(alt, aktion.wert) : schalteNurDiese(alt);
+  setLichtAusAuswahl(neu);
+  kontext.aktuellesVizModul?.resize({ lichtAus: lichtAusOptionen(kontext) });
+}
+
+// σ-Knopf in einer freigegebenen Ansicht (der Zustand ist bereits umgeschaltet)
+function schalteLichtAus(kontext, aktiv) {
+  wendeThemaAn();
+  sageModusAn(aktiv);
+  if (!aktiv) {
+    setLichtAusAuswahl(LEERE_AUSWAHL);
+    kontext.typenLeiste?.verstecke();
+  }
+  kontext.aktuellesVizModul?.resize({ showUncertainty: false, lichtAus: lichtAusOptionen(kontext) });
+  if (!aktiv) kontext.aktuellesVizModul?.resize(); // Leiste weg: Zeichenfläche neu messen
+}
+
+// „Licht wieder an“ und Esc: wie ein Klick auf den σ-Knopf, danach Fokus auf den Knopf (die Leiste verschwindet)
+function beendeLichtAus(kontext, { fokusZumKnopf = false } = {}) {
+  if (!istLichtAus() || !kontext?.unsicherheitsButton) return;
+  const knopf = kontext.unsicherheitsButton.element;
+  knopf.click();
+  if (fokusZumKnopf) knopf.focus();
+}
+
 // Baut Werkzeugleiste/Viz-Container/Flyout einmalig auf, sobald erstmals eine
 // Visualisierung geöffnet wird - bleiben danach bestehen, solange man
 // innerhalb dieses Bereichs zwischen Visualisierungen wechselt (nur
@@ -804,9 +874,11 @@ function stelleVizFlyoutSicher(kontext) {
   const unsicherheitsContainer = erzeugeUnterContainer('werkzeugleiste-unsicherheit');
   kontext.unsicherheitsContainer = unsicherheitsContainer;
   kontext.kleinerBildschirmHinweis = erzeugeKleinerBildschirmHinweis();
+  kontext.typenLeiste = erzeugeTypenLeiste(unsicherheitsContainer); // Auftrag 13: eigene Zeile direkt unter der σ-Zeile
   kontext.vizContainer = erzeugeUnterContainer('viz-inhalt');
   kontext.unsicherheitsButton = erzeugeUnsicherheitsButton(unsicherheitsContainer, {
     onToggle: (aktiv) => {
+      if (getZustand().aktiveAnsichtLichtAus) { schalteLichtAus(kontext, aktiv); return; } // Auftrag 13
       // 2026-10-28: in den Bestand-Ansichten filtert der Knopf; die Formen gleiten dabei an ihren neuen Platz
       const formenVorher = kontext.tab === 'bestand'
         ? erfasseFormen(kontext.vizContainer, { bild: kontext.ansichtId !== 'ganttDiagramm' }) : null;
@@ -933,6 +1005,8 @@ function raeumeVizAnsichtAuf(kontext) {
   kontext.ansichtenLeisteBereich?.remove();
   kontext.ansichtenLeisteBereich = null;
   kontext.unsicherheitsButton?.destroy();
+  kontext.typenLeiste?.destroy(); // Auftrag 13
+  kontext.typenLeiste = null;
   kontext.bestandSuche?.destroy();
   kontext.bestandSuche = null;
   kontext.ansichtWechselLeiste?.remove();
@@ -974,6 +1048,9 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     if (meineGeneration !== generation) return;
     const pruefung = pm.pruefeAnsicht(eintrag.id);
     if (pruefung.blockiert || !kontext.records) {
+      beendeLichtAusUeberall(); // Auftrag 13: ohne Zeichnung kein Modus
+      kontext.typenLeiste?.verstecke();
+      kontext.unsicherheitsButton?.setzeZustand(false, { lichtAus: Boolean(eintrag.lichtAus) });
       if (kontext.aktuellesVizModul) {
         try { kontext.aktuellesVizModul.destroy(); } finally { kontext.aktuellesVizModul = null; }
       }
@@ -997,8 +1074,16 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     if (kontext.aktuellesVizModul) {
       try { kontext.aktuellesVizModul.destroy(); } finally { kontext.aktuellesVizModul = null; }
     }
-    setUnsicherheitModus(false); // Abschnitt 11, wie ansichtWechseln.js: setzt sich bei jedem Wechsel zurück
-    kontext.unsicherheitsButton.setzeZurueck();
+    // Abschnitt 11: der Modus setzt sich bei jedem Wechsel zurück – außer zwischen zwei für „Licht aus“ freigegebenen
+    // Ansichten (Auftrag 13, Entscheidung 5/6, bestätigt nach §14). Die Typenauswahl beginnt wieder bei „Alle“.
+    const modusBleibt = modusNachWechsel({ aktiv: getZustand().unsicherheitModusAktiv, vorherLichtAus: getZustand().aktiveAnsichtLichtAus, nachherLichtAus: Boolean(eintrag.lichtAus) });
+    setUnsicherheitModus(modusBleibt);
+    setAktiveAnsichtLichtAus(Boolean(eintrag.lichtAus));
+    setLichtAusAuswahl(LEERE_AUSWAHL);
+    kontext.lichtAusEintrag = eintrag;
+    kontext.unsicherheitsButton.setzeZustand(modusBleibt, { lichtAus: Boolean(eintrag.lichtAus) });
+    if (!modusBleibt) kontext.typenLeiste?.verstecke();
+    wendeThemaAn();
     // 2026-10-28: Ansichten mit eigenem Unsicherheits-Knopf (Registry `eigenerUnsicherheitsButton`, z. B. die
     // Bilderwand) blenden die allgemeine Zeile darüber aus, damit sie die Ansicht nicht nach unten schiebt;
     // ebenso Ansichten ohne Unsicherheitskennzeichnung (`ohneUnsicherheitsButton`: Wortwolke, Bürgerinnen?)
@@ -1008,7 +1093,8 @@ async function wechsleZuAnsicht(kontext, eintrag) {
     // Kommentar in renderVisualisierungenTab()'s ladeModulUndRender() oben.
     const datenFuerModul = eintrag.datenSchluessel ? kontext.records[eintrag.datenSchluessel] : kontext.records;
     setzeAbdunkelung(kontext.vizContainer, false); // Nachbesserung 3, Punkt 4: Modus beim Wechsel aus
-    mod.render(kontext.vizContainer, datenFuerModul, { showUncertainty: false, obergrenze: eintrag.obergrenze }); // AUFTRAG G1
+    // AUFTRAG G1; Auftrag 13: `lichtAus` nur, wenn der Modus beim Wechsel erhalten blieb (sonst null)
+    mod.render(kontext.vizContainer, datenFuerModul, { showUncertainty: false, obergrenze: eintrag.obergrenze, lichtAus: lichtAusOptionen(kontext) });
     setzeVizHinweisBalken(kontext, pruefung.texte); // AUFTRAG B2: nur bei Problemen in Nebendateien
 
     kontext.ansichtId = eintrag.id;
@@ -1036,6 +1122,7 @@ async function aktualisiereGalerieFlyoutAnsicht(kontext) {
   const ansichtId = kontext.ermittleAnsichtId(route);
   const eintrag = kontext.bereich.ansichten.find((a) => a.id === ansichtId);
   if (!eintrag) {
+    beendeLichtAusUeberall(); // Auftrag 13: Galerien sind keine freigegebenen Ansichten
     zeigeGalerie(kontext);
     // AUFTRAG C2 (Restpunkt aus C1): direkter Link auf eine Ansicht mit
     // anbieten=nein - Hinweisbalken über der Galerie statt stillschweigend.
@@ -1323,6 +1410,7 @@ function verarbeiteResize(meineGeneration) {
     aktualisiereKleinerBildschirmHinweis(aktuellerKontext.kleinerBildschirmHinweis, aktuellerKontext.ansichtId);
   }
   aktuellerKontext.aktuellesVizModul?.resize();
+  aktuellerKontext.typenLeiste?.aktualisiereKompakt(istKompakt()); // Auftrag 13
 }
 
 // Nachbesserung 2, Punkt 6 (2026-11-15): Impressum in der Fußzeile aus archiv.csv - Archivname, Adresse, E-Mail,
@@ -1352,6 +1440,7 @@ function baueImpressum() {
 function handleRouteChange() {
   const route = aktuelleRoute();
   aktualisiereNavHervorhebung(route.tab);
+  if (route.tab !== 'visualisierungen') beendeLichtAusUeberall(); // Auftrag 13: Startseite, Bestand, Führungen, Literatur, Über
   aktualisiereSeitenueberschrift(route); // AUFTRAG D, Punkt 1
   // Wunsch des Autors: die Fußzeile (`footer_text`) seit 2026-10-25 nur noch auf der Startseite, seit
   // 2026-10-27 auch dort nicht mehr (die Startseite hat ihre eigene Fußzeile, `footer_hinweis`).
@@ -1532,6 +1621,7 @@ function wendeArchivIdentitaetAn() {
 
   const akzentfarbe = konfigurationswert('akzentfarbe');
   if (akzentfarbe) document.documentElement.style.setProperty('--accent', akzentfarbe);
+  setzeDunkleAkzentfarbe(akzentfarbe, konfigurationswert('akzentfarbe_dunkel')); // Auftrag 13, Entscheidung 10
 
   wendeFaviconAn();
 }
@@ -1664,6 +1754,8 @@ window.addEventListener('resize', planeResizeVerarbeitung);
 const [, ansichtenZeilen] = await Promise.all([ladeArchivKonfiguration(), ladeAnsichtenKonfiguration()]);
 wendeAnsichtenKonfigurationAn(ansichtenZeilen);
 wendeArchivIdentitaetAn();
+ladeUnsicherheitVokabular(); // Auftrag 13: Texte der Typenleiste
+installiereEsc(() => (aktuellerKontext?.unsicherheitsButton ? beendeLichtAus(aktuellerKontext, { fokusZumKnopf: true }) : beendeLichtAusUeberall()));
 pruefeUeberSeiteVerfuegbarkeit();
 pruefeLiteraturVerfuegbarkeit();
 const erstesRendern = handleRouteChange();

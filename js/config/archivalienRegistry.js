@@ -14,6 +14,9 @@
 // `datenDatei` – ein Pfad oder ein Objekt mehrerer Quellen, die app.js gemeinsam lädt; `datenSchluessel` wählt daraus
 // den Teil, den ein Modul als flache Liste erwartet. `hatGalerie` (Bereich mit Kachel-Galerie),
 // `eigenerUnsicherheitsButton`/`ohneUnsicherheitsButton` (allgemeiner Unsicherheitsknopf ausgeblendet).
+// `lichtAus` (Auftrag 13, Entscheidung 5): Ansicht ist für den Modus „Licht aus“ freigegeben (σ-Knopf mit Typenleiste,
+// dunkle Seite, Modus bleibt beim Wechsel zwischen freigegebenen Ansichten). Ohne den Eintrag behält der Knopf sein
+// bisheriges Verhalten. Eine weitere Ansicht wird umgestellt, indem ihr Modul den Modus unterstützt und hier `lichtAus: true` steht.
 // Welche Spalten eine Ansicht mindestens braucht, steht in js/config/datenAnforderungen.js.
 //
 // Pflegeregel (Masterprompt §14): Einträge für neue Module dürfen ergänzt werden; bestehende nur nach Rückfrage ändern.
@@ -52,7 +55,7 @@ export const ARCHIVALIENTYPEN = [
     primaeransicht: 'regestenKachelraster',
     hatGalerie: true,
     ansichten: [
-      { id: 'regestenKachelraster', label: 'Regesten', modulPfad: '../viz/regestenKachelraster.js',
+      { id: 'regestenKachelraster', label: 'Regesten', modulPfad: '../viz/regestenKachelraster.js', lichtAus: true,
         // AUFTRAG C1, Punkt 1/2: neutrale Vorgabe - die archivspezifische
         // Fassung (mit berechneter Urkundenzahl) steht in data/ansichten.csv.
         beschreibung: 'Durchsuchbare Kurzfassungen (Regesten) aller Urkunden mit Foto, Kategorie und Volltextsuche.' },
@@ -269,7 +272,7 @@ export const ARCHIVALIENTYPEN = [
       // Label umbenannt, siehe Kommentar oben (Punkt 1).
       // AUFTRAG C1, Punkt 2/3: neutrale Vorgabe - Name und Beschreibung des
       // Archivs (Krems: Habsburg) stehen in data/ansichten.csv.
-      { id: 'familienbaum', label: 'Stammbaum', modulPfad: '../viz/familienbaum.js', datenSchluessel: 'familien',
+      { id: 'familienbaum', label: 'Stammbaum', modulPfad: '../viz/familienbaum.js', datenSchluessel: 'familien', lichtAus: true,
         beschreibung: 'Zeitleisten-Stammbaum einer Herrscherfamilie, mit Herrschaftszeiten von Kaisern und Königen.' },
       // AUFTRAG "Chord-Diagramm – soziale Gruppen (Dynastie/Adel/Klerus/
       // Bürger), Umzug nach Personen": vierter Eintrag, von
@@ -332,7 +335,7 @@ export const ARCHIVALIENTYPEN = [
       // Wunsch des Autors (2026-10-28): Ortsliste nach dem Vorbild der Personenliste
       { id: 'ortsliste', label: 'Ortsliste', modulPfad: '../viz/ortsliste.js',
         beschreibung: 'Durchsuchbare, sortierbare Liste aller Orte mit der Zahl ihrer Nennungen in Urkunden und Verlassenschaftsinventaren.' },
-      { id: 'karte', label: 'Karte', modulPfad: '../viz/karte.js', datenSchluessel: 'urkunden',
+      { id: 'karte', label: 'Karte', modulPfad: '../viz/karte.js', datenSchluessel: 'urkunden', lichtAus: true,
         beschreibung: 'Alle in den Urkunden genannten Orte auf einer Karte, Größe = Häufigkeit der Nennung.' },
       { id: 'verbindungskarte', label: 'Verbindungskarte', modulPfad: '../viz/verbindungskarte.js', datenSchluessel: 'urkunden',
         beschreibung: 'Zeigt, welche Orte gemeinsam in derselben Urkunde genannt werden.' },

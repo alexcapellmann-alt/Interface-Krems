@@ -261,6 +261,107 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-16 (95) – Unsicherheits-Modus „Licht aus“, Pilot in Regesten, Karte und Stammbaum (Auftrag 13)
+
+**Bestätigung nach Masterprompt §14 (Auftrag 12, ergänzt am 16.11.2026):** Der Autor bestätigt, dass die erweiterte
+Bedeutung des σ-Knopfs auch (a) das Fortbestehen des Modus beim Wechsel zwischen den freigegebenen Pilotansichten und
+(b) die Bedeutung „gestrichelt = ungenau“ einschließt. Masterprompt §11 („schaltet sich bei Ansichtswechsel automatisch
+aus“, „gestrichelter Rand + Warnsymbol“) gilt weiter für alle übrigen Ansichten; der Masterprompt bleibt unverändert.
+Der Typ `identifikation` („Wer ist gemeint?“) ist eine eigene Ergänzung des Projekts, nicht von Windhager, Salisu,
+Mayr (2019). **Entscheidung gegen Farbinversion:** Die Seite wird über eine zweite Palette abgedunkelt; Fotos,
+Kategorie- und Familienfarben bleiben, Kartenkacheln nur über Helligkeit und Sättigung.
+
+Stufe A (Bestandsaufnahme, Entwurf als Attrappe, Kontraste, Farbfehlsicht): `Unsicherheitstypen_2026-11/a13/BERICHT_STUFE_A.md`.
+Freigabe des Autors (16.11.2026) mit 13 Entscheidungen, umgesetzt wie folgt:
+
+1. Muster: gestrichelt (ungenau), Doppelkontur (strittig), schraffierter Rahmen (fehlt), gepunktet (mehrdeutig); keine
+   weiche Kontur. Zuordnung in `js/config/lichtAus.js`.
+2. Licht Bernstein `#f2b84b`, im Stammbaum mit dunklem Spalt (Lichthof); Fokus im Modus als Doppelring (2 px dunkel,
+   3 px weiß); Rand der Bedienelemente `#7a8ea3`. Palette als Variablen `--lichtaus-*` in `css/base.css`.
+3. Massenangabe: `MASSEN_SCHWELLE = 0.30` in `js/config/lichtAus.js`. Anteil je Gruppe (Datei, Feld, Typ/Ausprägung) an
+   den Elementen der ganzen Ansicht; Zusatzschalter mit Zahl. Gruppen je Schwelle (Abgleich vor Stufe B,
+   `a13/b0_abgleich/massenschwellen.csv`):
+
+   | Gruppe | Anteil | 20 % | 25 % | 30 % | 35 % | 40 % |
+   |---|---:|:-:|:-:|:-:|:-:|:-:|
+   | Ausstellungsort fehlt (Regesten, Karte*) | 53,5 % | ja | ja | ja | ja | ja |
+   | Wirtschaftssektor fehlt (Wirtschaftssektoren) | 44,8 % | ja | ja | ja | ja | ja |
+   | soziale Gruppe angenommen (Personenliste, Soziale Gruppen, Karte Soziale Gruppen) | 31,2 % | ja | ja | ja | – | – |
+   | Geburtsdatum ungenau (Stammbaum) | 25,0 % | ja | ja | – | – | – |
+   | Ort mehrdeutig (Ortsliste, Karte, Verbindungskarte, Karte Soziale Gruppen) | 23,0 % | ja | – | – | – | – |
+
+   *In der umgesetzten Karte ist die Einheit der Ort, der Ausstellungsort gehört nicht dazu (er steht in der Randliste).
+   Im Pilot wirkt heute nur „Ausstellungsort fehlt“ in den Regesten (571 von 1067).
+4. Typenleiste als eigene Zeile unter der σ-Zeile; unter 900 px Fensterhöhe Kompaktvariante (`KOMPAKT_UNTER_HOEHE`): nur
+   vorhandene Typen, übrige unter „n weitere Arten“ mit Begründung. Nach dem Ein- oder Ausblenden misst die Ansicht ihre
+   Zeichenfläche neu (wie bei einem Fenster-Resize; die Messung aus Auftrag 9 bleibt unverändert). Abnahme Stammbaum mit
+   Modus: 1280×720 Baum 75 Personen, 26 leuchtend, Zeichenfläche 1248×320 ab y=357 (ganz im Fenster), kein Ersatztext;
+   1366×768 1334×357 ab y=357; ebenso 1440×900, 1536×864, 1920×1080, 1366×657, 1280×609, direkt und nach der
+   Seitenleiste der Personenliste; Breite in beiden Zuständen gleich, 0 Fehler.
+5. Übrige 14 σ-Ansichten: Knopf, Beschriftung und Verhalten unverändert. Registry-Eintrag `lichtAus: true` an den drei
+   Pilotansichten; der Zustand steht an einer Stelle (`state.js`: `unsicherheitModusAktiv` + `aktiveAnsichtLichtAus`,
+   `istLichtAus()`); `modusNachWechsel()` (reine Funktion, getestet) hält ihn nur von Pilot zu Pilot. Galerien, Bestand,
+   Führungen, Startseite, Literatur und Über schalten das Licht an.
+6. §14-Bestätigung: siehe oben.
+7. Geister nur als Randliste der Karte („Nicht auf der Karte“: 30 Orte ohne ermittelte Lage, 571 Urkunden ohne
+   Ausstellungsort; reine Darstellung). Kachelraster und Stammbaum in der Eignungsmatrix „nicht anwendbar, keine
+   Datengrundlage“ (`docs/EIGNUNGSMATRIX_UNSICHERHEIT.md`).
+8. „Nur diese zeigen“ in der Leiste (filtert statt dimmt): Regesten und Karte; im Stammbaum ausgegraut mit Begründung
+   (Lücken im Baum).
+9. Abgleich vor Stufe B:
+   - Regesten, alter σ-Filter 215 gegen „mit Typ“: Alle 210 mit Typ bei Datum/Orten/Personen sind auch im alten Filter;
+     Markierung und Typ stimmen bei datum, orte, personen in beiden Richtungen überein. Nur im alten Filter: StaAKr-0007,
+     StaAKr-0008, StaAKr-0876 (Anmerkung ohne Feldnamen, Doppelerfassung bzw. weitere Ausfertigung; bei 0876 offene
+     Frage Original/Abschrift), StAK-UrkSt-0004 (`bilder:`), StaAKr-0566b (`kategorien:`). Nicht geändert (Daten gesperrt),
+     offener Datenpunkt. In der Umsetzung zeigt „Alle“ 213: die 210 und 3 Urkunden, die nur „Ausstellungsort ungenau“
+     tragen (Feldlager StaAKr-0506, -0517, -0518; diese Gruppe ist keine Massenangabe).
+   - Karte, 102 gegen 100: Alter Filter und Typ „Ortsangabe“ treffen dieselben 62 Orte. „102“ war die Zahl aller
+     sichtbaren Grafikelemente der Messung, „100“ sind 62 Orte mit Ortsangabe und 45 mit unsicher datierter Urkunde
+     (7 mit beidem). Ankenwarth und Trauttmansdorf: Markierung ohne Typ (Herkunftsnamen, bekannt).
+10. Dunkle Akzentfarbe: optionaler Schlüssel `akzentfarbe_dunkel` in `archiv.csv`, sonst aus `akzentfarbe` abgeleitet;
+    `hellGenugAufDunkel()` hellt auf, bis 4,5:1 gegen `--lichtaus-bg` und `--lichtaus-surface` erreicht sind (Test).
+    Gesetzt als `--accent-dunkel`; im Modus gilt `--accent: var(--accent-dunkel) !important`, weil app.js `--accent` als
+    Inline-Stil setzt. Keine feste Farbe im Code.
+11. Offener Punkt: In Kategoriefluss und Verbindungskarte hat der σ-Knopf keine sichtbare Wirkung (0 hell gekennzeichnete
+    Elemente, Messung Stufe A und B). Nicht geändert.
+12. Logo auf heller Unterlage; Fehlermarkierung im Modus grau-weiß (`--unvollstaendig`); Methodenhinweise nach
+    `geltungsbereich` (Datei/Feld, Ansicht, Bereich), ein Hinweis zu einer Massengruppe steht an deren Schalter.
+13. Commit 8f17b7c (Aufträge 11 und 12) geprüft; alle Prüfungen an der Umsetzung, nicht an der Attrappe.
+
+**Modulschnittstelle (additiv, Masterprompt §5):** Ein Pilotmodul bekommt `options.lichtAus` = `{ auswahl, melde }` oder
+`null`. Es kennzeichnet seine Elemente (`lichtaus-licht` / `lichtaus-gedimmt`, `data-muster`) und meldet
+`{ einheiten, massengruppen, felder, nurDieseMoeglich, nurDieseGrund }` an die Typenleiste. `showUncertainty` bleibt für
+die übrigen Ansichten unverändert. Die Typenleiste und die Detailansicht nehmen alle Texte aus den Datendateien; im
+Code stehen keine Typnamen (Test).
+
+**Zählung in den Pilotansichten** (1366×768): Regesten Alle 213, Datierung 77, Ortsangabe 72, Wer ist gemeint? 85,
+Massenangabe Ausstellungsort fehlt 571; Karte Alle 100 von 224, Ortsangabe 62, Datierung 45; Stammbaum Alle 26 von 75,
+Datierung 26 (nur zeitlich befüllt; Identifikation und Beziehung kommen in `familien.csv` nicht vor).
+
+**Prüfung (Belege `a13/b_regression/`, Bilder `a13/b_bilder/`):**
+- Tests 47 → 57 (neu `tests/lichtAus.test.mjs`: Auswahl, Alle, Massengruppen, ausgegraute Typen, Moduswechsel, Zähler,
+  Muster, Akzentkontrast, Methodenhinweise, Zahlen der Pilotansichten, keine Typnamen im Code), alle bestanden.
+- axe (WCAG 2.2 AA und best-practice) in 163 Zuständen, davon 39 im Modus (ein Typ, mehrere, Nur diese, Masse,
+  Aufklapper, Hinweise, Fokus, Seitenleiste; Fensterhöhe 768 und 900): 0 Verstöße durch Auftrag 13. Ein Vorbefund:
+  Bilderwand, offener Info-Text, `target-size` (Laschen teilweise verdeckt) bei 768 px Höhe, auch am Stand 8f17b7c
+  (nachgeprüft; die frühere Prüfung lief mit 900 px). Unterwegs behoben: aria-label an Leaflet-Pfaden, Überschrift der
+  Randliste, Kontrast „Senden“ und Hervorhebung in der Seitenleiste „Unsichere Orte“.
+- Sitzungsbedienung über alle Ansichten bei 1366×768 und 1280×720: ohne Modus 39 Ansichten, 0 Fehler; mit Modus 42
+  Schritte, 0 Fehler, kein Ersatztext; der Modus kommt nur von Pilot zu Pilot an (Regesten → Karte, Karte → Stammbaum),
+  0 Regelverstöße.
+- Tastatur: σ, alle Leistenknöpfe, Leertaste, Aufklapper, Esc (schließt zuerst den Aufklapper, dann den Modus),
+  „Licht wieder an“; Fokus danach auf dem σ-Knopf; Fokus im dunklen Zustand überall Doppelring, auch an SVG-Personen.
+- prefers-reduced-motion: Übergang 0,3 s → 0 s. forced-colors: Muster bleiben als Linienart (dashed, double, solid).
+- Zehnmal ein/aus mit Größenwechseln je Pilotansicht: Listener an window und document gleich (18/19/18), 0 Fehler.
+- Zahlenvergleich alter σ-Filter (A2-Messung vorher/nachher): alle 14 übrigen σ-Ansichten gleich; die drei
+  Pilotansichten wie vorgesehen anders.
+
+**Offene Punkte:** Kategoriefluss und Verbindungskarte (Punkt 11); die fünf Regesten-Anmerkungen ohne Typ (Punkt 9);
+Identifikations- und Beziehungsangaben im Stammbaum fehlen in den Daten; Vorbefund Bilderwand bei 768 px Höhe; die
+übrigen σ-Ansichten folgen über `lichtAus` in eigenen Aufträgen (Eignungsmatrix als Vorlage).
+
+---
+
 ## 2026-11-15 (94) – Unsicherheitstypen: Schema und Inhalte (Auftrag 12)
 
 **Bestätigung nach Masterprompt §14:** Der Autor bestätigt ausdrücklich, dass die Bedeutung des Unsicherheitsknopfs erweitert

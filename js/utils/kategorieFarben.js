@@ -70,6 +70,20 @@ export function lesbareTextfarbe(hex, hintergrund = '#f7f5f0') {
 
 // Palettenfarbe als Fläche unter heller Schrift (2026-10-28, Themenfelder der Führungen): dunkelt die Farbe
 // so weit ab, bis weiße Schrift darauf mindestens 4,5:1 Kontrast hat; der Farbton bleibt.
+// Auftrag 13 (Entscheidung 10): hellt `hex` in kleinen Schritten auf (Farbton bleibt), bis die Farbe gegen JEDEN der
+// dunklen Gründe mindestens `mindest` Kontrast hält – für die dunkle Akzentfarbe im Modus „Licht aus“. Erreicht auch
+// Weiß den Wert nicht, gilt der hellste Schritt (dann ist der Grund nicht dunkel genug; der Test prüft die Gründe).
+export function hellGenugAufDunkel(hex, gruende, mindest = 4.5) {
+  const farbe = d3.hsl(hex);
+  if (!Number.isFinite(farbe.l)) return '#ffffff';
+  if (!Number.isFinite(farbe.s)) farbe.s = 0;
+  const reicht = () => gruende.every((g) => wcagKontrast(farbe.formatHex(), g) >= mindest);
+  for (let versuch = 0; versuch < 60 && !reicht(); versuch += 1) {
+    farbe.l = Math.min(1, farbe.l + 0.02);
+  }
+  return farbe.formatHex();
+}
+
 export function dunkelGenugFuerWeiss(hex) {
   const farbe = d3.hsl(hex);
   for (let versuch = 0; versuch < 30 && wcagKontrast(farbe.formatHex(), '#ffffff') < 4.5; versuch += 1) {

@@ -9,6 +9,11 @@ const zustand = {
   aktiverTab: null,
   aktiveAnsicht: null,
   unsicherheitModusAktiv: false,
+  // Auftrag 13: Modus „Licht aus“. `aktiveAnsichtLichtAus` = die gezeigte Ansicht ist dafür freigegeben (Registry
+  // `lichtAus`); nur dann bedeutet unsicherheitModusAktiv „Licht aus“, sonst gilt das bisherige Verhalten des Knopfs.
+  // `lichtAusAuswahl`: { typen: 'alle' | [typ, …], masseEin: [Gruppe, …], nurDiese } (js/utils/lichtAus.js).
+  aktiveAnsichtLichtAus: false,
+  lichtAusAuswahl: { typen: 'alle', masseEin: [], nurDiese: false },
   // Nachbesserung 1 (2026-11-15): Entity-Filter entfernt (nie ausgewertet, Prüfung 14.11.2026, Befund 8.2);
   // Kontext läuft über ?datensatz=<typ>:<id>, siehe router.js.
   filter: {
@@ -47,6 +52,24 @@ export function setAktiveAnsicht(ansicht) {
 
 export function setUnsicherheitModus(aktiv) {
   zustand.unsicherheitModusAktiv = Boolean(aktiv);
+}
+
+// Auftrag 13: Licht aus ist an, wenn der Unsicherheitsmodus an ist UND die Ansicht dafür freigegeben ist
+export function istLichtAus() {
+  return zustand.unsicherheitModusAktiv && zustand.aktiveAnsichtLichtAus;
+}
+
+export function setAktiveAnsichtLichtAus(freigegeben) {
+  zustand.aktiveAnsichtLichtAus = Boolean(freigegeben);
+}
+
+export function setLichtAusAuswahl(auswahl) {
+  zustand.lichtAusAuswahl = { typen: auswahl.typen === 'alle' ? 'alle' : [...auswahl.typen], masseEin: [...(auswahl.masseEin || [])], nurDiese: Boolean(auswahl.nurDiese) };
+}
+
+export function getLichtAusAuswahl() {
+  const a = zustand.lichtAusAuswahl;
+  return { typen: a.typen === 'alle' ? 'alle' : [...a.typen], masseEin: [...a.masseEin], nurDiese: a.nurDiese };
 }
 
 export function toggleUnsicherheitModus() {

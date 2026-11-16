@@ -230,6 +230,9 @@ import { hatOrtsbezug } from '../utils/ortsart.js'; // Auftrag 11
 import { erzeugeInfoButton } from '../utils/infoButton.js';
 import { beschreibeSvgAusInfotext } from '../utils/svgBeschreibung.js';
 import { markiereHellElement } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 4
+import { eintraegeAus, lichtAusVorbereitung, wirksameEintraege } from '../utils/lichtAus.js'; // Auftrag 13
+import { setzeLicht, musterAus, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
 import { baueSidebarGeruest, fuegeSidebarStyleEin, schliesseSidebar, zeigeUrkundenDetail, zeigeUrkundenSidebar } from '../utils/sidebar.js';
 import { parseJahr } from '../utils/urkundenZeit.js';
 import { ladeCSV } from '../core/dataLoader.js';
@@ -730,6 +733,96 @@ function beschreibeKartenebene() {
   if (ebene) beschreibeSvgAusInfotext(ebene, 'karte', { rolle: 'group', titel: 'Karte der Orte mit Urkunden' });
 }
 
+// --- Auftrag 13: Modus „Licht aus“ ------------------------------------------
+// Alle Orte bleiben auf der Karte (Zeitregler wirkt weiter); Orte mit Unsicherheit leuchten (Bernstein-Kontur im Muster
+// der Ausprägung, bei „strittig“ ein zweiter Ring), die übrigen sind gedimmt; die Kartenkacheln sind abgedunkelt
+// (css/components.css). Ein Marker trägt die Einträge seines Orts aus orte.csv (Feld `orte`) und die Datierungs-
+// einträge seiner Urkunden (`datum`). „Nur diese zeigen“ blendet die übrigen Marker aus. Orte ohne ermittelte Lage
+// und Urkunden ohne Ausstellungsort stehen als Geister in der Randliste „Nicht auf der Karte“ (Entscheidung 7), nicht
+// auf der Karte. Ein Klick auf einen leuchtenden Ort mit unsicherer Ortsangabe springt wie bisher in die Übersicht
+// „Unsichere Orte“, sonst öffnet er die Urkunden des Orts.
+const LICHT_AUS_FELDER = { 'orte.csv': ['orte'], 'urkunden.csv': ['orte', 'datum'] };
+
+function lichtAusEinheitFuerOrt(ortsEintrag) {
+  if (!instanz.lichtAusEinheiten) instanz.lichtAusEinheiten = new Map();
+  let e = instanz.lichtAusEinheiten.get(ortsEintrag.name);
+  if (!e) {
+    const eintraege = eintraegeAus(ortsEintrag.ortRecord, 'orte.csv', ['orte']);
+    for (const record of ortsEintrag.eintraege) eintraege.push(...eintraegeAus(record, 'urkunden.csv', ['datum']));
+    e = { name: ortsEintrag.name, eintraege };
+    instanz.lichtAusEinheiten.set(ortsEintrag.name, e);
+  }
+  return e;
+}
+
+function bereiteLichtAusVor() {
+  const optionen = instanz.options.lichtAus;
+  instanz.lichtAus = optionen && instanz.aggregation
+    ? lichtAusVorbereitung(Array.from(instanz.aggregation.values()).map(lichtAusEinheitFuerOrt), optionen.auswahl) : null;
+}
+
+const wirksamFuerOrt = (ortsEintrag) => (instanz.lichtAus ? instanz.lichtAus.wirksam(lichtAusEinheitFuerOrt(ortsEintrag)) : []);
+
+// Randliste „Nicht auf der Karte“ – nur Darstellung, kein erfundener Datensatz
+function zeigeLichtAusRandliste() {
+  instanz.randliste?.remove();
+  instanz.randliste = null;
+  const optionen = instanz.options.lichtAus;
+  if (!optionen || !instanz.mapDiv || !instanz.orteRoh) return;
+  const passt = (record, datei, felder) => wirksameEintraege(eintraegeAus(record, datei, felder), optionen.auswahl, []).length > 0;
+  const ohneLage = instanz.orteRoh.filter((r) => hatOrtsbezug(r) && !String(r.lat ?? '').trim() && passt(r, 'orte.csv', null))
+    .map((r) => r.orte).sort((a, b) => a.localeCompare(b, 'de'));
+  const ohneAusstellungsort = instanz.records.filter((r) => !String(r.ausstellungsort ?? '').trim() && passt(r, 'urkunden.csv', ['ausstellungsort'])).length;
+  if (!ohneLage.length && !ohneAusstellungsort) return;
+  const box = document.createElement('section');
+  box.className = 'lichtaus-randliste';
+  box.setAttribute('aria-label', 'Nicht auf der Karte');
+  const titel = document.createElement('h2'); // Überschriftenfolge: direkt unter der h1 der Seite
+  titel.textContent = 'Nicht auf der Karte';
+  box.appendChild(titel);
+  if (ohneLage.length) {
+    const geist = document.createElement('p');
+    geist.className = 'lichtaus-geist';
+    geist.textContent = `${ohneLage.length} ${ohneLage.length === 1 ? 'Ort' : 'Orte'} ohne ermittelte Lage`;
+    const liste = document.createElement('ul');
+    liste.id = `lichtaus-ohne-lage-${Math.random().toString(36).slice(2, 8)}`;
+    const zeige = (alle) => { liste.textContent = ''; (alle ? ohneLage : ohneLage.slice(0, 8)).forEach((n) => { const li = document.createElement('li'); li.textContent = n; liste.appendChild(li); }); };
+    zeige(false);
+    box.append(geist, liste);
+    if (ohneLage.length > 8) {
+      const mehr = document.createElement('button');
+      mehr.type = 'button';
+      mehr.textContent = `Alle ${ohneLage.length} anzeigen`;
+      mehr.setAttribute('aria-expanded', 'false');
+      mehr.setAttribute('aria-controls', liste.id);
+      mehr.addEventListener('click', () => {
+        const offen = mehr.getAttribute('aria-expanded') !== 'true';
+        mehr.setAttribute('aria-expanded', String(offen));
+        mehr.textContent = offen ? 'Weniger anzeigen' : `Alle ${ohneLage.length} anzeigen`;
+        zeige(offen);
+      });
+      box.appendChild(mehr);
+    }
+  }
+  if (ohneAusstellungsort) {
+    const geist = document.createElement('p');
+    geist.className = 'lichtaus-geist';
+    geist.textContent = `${ohneAusstellungsort} ${ohneAusstellungsort === 1 ? 'Urkunde' : 'Urkunden'} ohne Ausstellungsort`;
+    box.appendChild(geist);
+  }
+  L.DomEvent.disableClickPropagation(box);
+  L.DomEvent.disableScrollPropagation(box);
+  instanz.mapDiv.appendChild(box);
+  instanz.randliste = box;
+}
+
+function meldeLichtAus(sichtbareOrte) {
+  const optionen = instanz.options.lichtAus;
+  if (!optionen || !instanz.lichtAus) return;
+  optionen.melde?.({ einheiten: sichtbareOrte.map(lichtAusEinheitFuerOrt), massengruppen: instanz.lichtAus.massengruppen,
+    felder: LICHT_AUS_FELDER, nurDieseMoeglich: true });
+}
+
 function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
   instanz.markerLayer.clearLayers();
   orteListe.forEach((ortsEintrag) => {
@@ -747,8 +840,21 @@ function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
     // über sidebar.js' etabliertes zeigeUrkundenSidebar(), Punkt 2
     // (Unsicherheiten-Modus) springt stattdessen innerhalb der bereits
     // offenen Übersicht zum passenden Ortsabschnitt.
+    // Auftrag 13: leuchten oder gedimmt; „strittig“ bekommt einen zweiten Ring
+    const wirksam = wirksamFuerOrt(ortsEintrag);
+    const ortUnsicher = wirksam.some((e) => e.datei === 'orte.csv');
+    if (instanz.lichtAus) {
+      const muster = musterAus(wirksam.map((e) => e.auspraegung));
+      const el = marker.getElement();
+      setzeLicht(el, wirksam.length > 0);
+      if (el && muster) el.dataset.muster = muster;
+      if (muster === 'doppelt') {
+        L.circleMarker([ortsEintrag.lat, ortsEintrag.lon], { radius: radiusFn(ortsEintrag) + 5, className: 'lichtaus-ring', interactive: false, fill: false })
+          .addTo(instanz.markerLayer);
+      }
+    }
     const aktiviere = () => {
-      if (istUnsicherModus) {
+      if (istUnsicherModus || (ortUnsicher && instanz.unsichereOrteDaten)) {
         springeZuOrtsAbschnitt(ortsEintrag.name);
       } else {
         zeigeUrkundenSidebar(instanz.sidebar, ortsEintrag.name, ortsEintrag.eintraege);
@@ -761,7 +867,7 @@ function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
       element.setAttribute('tabindex', '0');
       const tooltipText = mitUnvollstaendigHinweis(ortsEintrag.ortRecord, istUnsicherModus
         ? [ortsEintrag.name, `${ortsEintrag.urkunden.length} unsichere Urkunde(n)`].join('\n')
-        : baueMarkerTooltip(ortsEintrag));
+        : [baueMarkerTooltip(ortsEintrag), ...(wirksam.length ? [`Unsicher: ${beschreibeEintraege(wirksam, typName, auspraegungName)}`] : [])].join('\n'));
       markiereElement(element, ortsEintrag.ortRecord); // Nachbesserung 3, Punkt 3
       markiereHellElement(element, istUnsicherModus); // Nachbesserung 3, Punkt 4: im Modus zeigt die Karte nur unsichere Orte
       element.addEventListener('mouseenter', () => zeigeTooltip(tooltipText, element, instanz.mapDiv));
@@ -802,11 +908,16 @@ function aktualisiereMarker() {
   }
 
   const alleOrte = Array.from(instanz.aggregation.values());
-  const sichtbareOrte = instanz.aktiverZeitraum
+  const imZeitraum = instanz.aktiverZeitraum
     ? alleOrte.filter((ort) => ortHatJahrImZeitraum(ort, instanz.aktiverZeitraum))
     : alleOrte;
+  bereiteLichtAusVor(); // Auftrag 13
+  const sichtbareOrte = instanz.lichtAus && options.lichtAus.auswahl?.nurDiese
+    ? imZeitraum.filter((ort) => wirksamFuerOrt(ort).length > 0) : imZeitraum;
   const radiusSkala = d3.scaleSqrt().domain([1, d3.max(sichtbareOrte, (d) => d.anzahl) || 1]).range([5, 24]);
   zeichneMarkerFuerOrte(sichtbareOrte, (d) => radiusSkala(d.anzahl), false);
+  zeigeLichtAusRandliste();
+  meldeLichtAus(imZeitraum);
 }
 
 async function zeichneKarte() {
@@ -871,6 +982,7 @@ async function zeichneKarte() {
     const ortsVerzeichnis = await ladeOrtsVerzeichnis();
     if (!instanz) return; // destroy() kann während des await aufgerufen worden sein
     instanz.aggregation = baueOrtsAggregation(records, ortsVerzeichnis);
+    if (options.lichtAus) await ladeLichtAusDaten(); // Auftrag 13
   }
   if (!instanz) return; // destroy() kann während des await aufgerufen worden sein
   await setzeStartansicht(karte, start); // AUFTRAG C1, Punkt 5
@@ -901,10 +1013,24 @@ async function zeichneKarte() {
   // oeffneUnsichereOrteSidebar() auslösen, die im Normalmodus mangels
   // instanz.unsichereOrteDaten sofort abstürzen würde.
   instanz.sidebar.zurueckBtn.addEventListener('click', () => {
-    if (zeigeUnsicherheit) oeffneUnsichereOrteSidebar();
+    if (zeigeUnsicherheit || (instanz.options.lichtAus && instanz.unsichereOrteDaten)) oeffneUnsichereOrteSidebar(); // Auftrag 13
   });
   if (zeigeUnsicherheit) {
     oeffneUnsichereOrteSidebar();
+  }
+}
+
+// Auftrag 13: orte.csv (Randliste) und die Übersicht „Unsichere Orte“ (Sprung bei Klick), je einmal je Instanz
+async function ladeLichtAusDaten() {
+  if (!instanz.orteRoh) {
+    const { records: orteRoh } = await ladeCSV('data/orte.csv');
+    if (!instanz) return;
+    instanz.orteRoh = orteRoh;
+  }
+  if (!instanz.unsichereOrteDaten) {
+    const daten = await ladeUnsichereOrteDaten(instanz.records);
+    if (!instanz) return;
+    instanz.unsichereOrteDaten = daten;
   }
 }
 
@@ -936,7 +1062,17 @@ export function render(container, data, options = {}) {
 
 export function resize(neueOptionen = {}) {
   if (!instanz) return;
+  const lichtAusVorher = Boolean(instanz.options.lichtAus);
+  const unsicherheitVorher = Boolean(instanz.options.showUncertainty);
   instanz.options = { ...instanz.options, ...neueOptionen };
+  // Auftrag 13: Modus „Licht aus“ an/aus oder andere Auswahl – nur die Marker neu (Karte und Ausschnitt bleiben)
+  const nurLichtAus = 'lichtAus' in neueOptionen && !neueOptionen.width && !neueOptionen.height
+    && Boolean(instanz.options.showUncertainty) === unsicherheitVorher && instanz.aggregation && instanz.karte;
+  if (nurLichtAus) {
+    if (instanz.options.lichtAus && !lichtAusVorher) ladeLichtAusDaten().then(() => { if (instanz) aktualisiereMarker(); });
+    else aktualisiereMarker();
+    return;
+  }
   if (neueOptionen.width || neueOptionen.height || 'showUncertainty' in neueOptionen) {
     zeichneKarte();
   } else if (instanz.karte) {

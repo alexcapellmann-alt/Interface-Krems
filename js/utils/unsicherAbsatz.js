@@ -11,7 +11,8 @@
 // Start eingeklappt) unveraendert aus der urspruenglichen Fuehrungen-Fassung.
 
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
-import { lesbareAnmerkung } from './uncertainty.js';
+import { lesbareAnmerkung, leseUnsicherheitTypen, feldBezeichnung } from './uncertainty.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js'; // Auftrag 13
 import { baueVorschlagFormular, baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 
 function alsText(wert) {
@@ -42,6 +43,11 @@ export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag } = {
   text.className = 'unsicher-absatz-text';
   text.hidden = true;
   text.textContent = lesbareAnmerkung(record.unsicherheit_anmerkung, '; ') || 'Keine weitere Angabe.';
+  // Auftrag 13: Detailansicht unverändert, ergänzt um Typ und Ausprägung je Feld (Anzeigenamen aus den Datendateien)
+  const typen = leseUnsicherheitTypen(record.unsicherheit_typ);
+  const typText = typen.length
+    ? `Art der Unsicherheit: ${typen.map((e) => `${feldBezeichnung(e.feld)}: ${typName(e.typ)}, ${auspraegungName(e.auspraegung)}`).join('; ')}.`
+    : '';
   const form = vorschlag ? baueVorschlagFormular(vorschlag) : null;
   if (form) form.hidden = true;
   btn.addEventListener('click', () => {
@@ -51,6 +57,14 @@ export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag } = {
     if (form) form.hidden = offen;
   });
   wrapper.append(btn, text);
+  if (typText) {
+    const typAbsatz = document.createElement('p');
+    typAbsatz.className = 'unsicher-absatz-text unsicher-absatz-typ';
+    typAbsatz.hidden = true;
+    typAbsatz.textContent = typText;
+    btn.addEventListener('click', () => { typAbsatz.hidden = btn.getAttribute('aria-expanded') !== 'true'; });
+    wrapper.append(typAbsatz);
+  }
   if (form) wrapper.append(form);
   return wrapper;
 }

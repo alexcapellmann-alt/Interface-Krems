@@ -98,6 +98,9 @@ import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { urkundeBezug } from '../beteiligung/bezuege.js'; // Partizipations-Modul
 import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 import { orteWieImRegest } from '../utils/ortsart.js'; // Auftrag 11
+import { eintraegeAus, lichtAusVorbereitung } from '../utils/lichtAus.js'; // Auftrag 13
+import { setzeLicht, setzeMuster, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
 
 // Auftrag "Geteilter Info-Button", Punkt 3 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
@@ -508,10 +511,12 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   const chevron = baueChevron();
   titel.appendChild(chevron);
   karte.appendChild(titel);
-  karte.appendChild(baueDatumFeld(record, container, zeigeUnsicherheit));
+  const datumFeld = baueDatumFeld(record, container, zeigeUnsicherheit);
+  datumFeld.dataset.lichtFeld = 'datum'; // Auftrag 13
+  karte.appendChild(datumFeld);
 
   const orteFeld = baueListenFeld('Orte', orteWieImRegest(record), 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
-  if (orteFeld) karte.appendChild(orteFeld);
+  if (orteFeld) { orteFeld.dataset.lichtFeld = 'orte'; karte.appendChild(orteFeld); }
 
   // AUFTRAG "Teil 2i": die vormalige, hier gebaute "Personen"-Zeile
   // (Filter-Buttons über den früheren Entity-Filter, optisch wie Links, aber ohne
@@ -548,6 +553,7 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
     { unsicher: zeigeUnsicherheit && !!record.personen_unsicher }
   );
   if (genanntePersonenZeile) {
+    genanntePersonenZeile.dataset.lichtFeld = 'personen'; // Auftrag 13
     // Dieselbe Ausnahme vom kachelweiten Klick-Handler wie die Ortsnamen-
     // Buttons oben (baueEntityButtons()) - ein Linkklick darf die Kachel
     // nicht zusätzlich auf-/zuklappen.
@@ -625,15 +631,53 @@ function baueLazyBeobachter() {
   };
 }
 
+// --- Auftrag 13: Modus „Licht aus“ ------------------------------------------
+// Alle Kacheln bleiben; unsichere leuchten (Bernstein-Rand), die übrigen sind über eine eigene Farbstufe gedimmt (Text
+// hält 4,5:1). Das Muster der Ausprägung steht am betroffenen Feld (Datum, Orte, Personen); hat eine leuchtende Kachel
+// kein sichtbares Feld dazu (Ausstellungsort), trägt die Kachel selbst das Muster. „Nur diese zeigen“ filtert wie der
+// bisherige σ-Filter. Die Zähler der Leiste gelten für die Kacheln nach Kategorie und Suche (ohne „Nur diese“).
+const LICHT_AUS_DATEI = 'urkunden.csv';
+const LICHT_AUS_FELDER = ['datum', 'orte', 'personen', 'ausstellungsort'];
+const LICHT_AUS_HINWEIS_FELDER = [...LICHT_AUS_FELDER, 'kategorien'];
+
+function lichtAusEinheit(record) {
+  if (!instanz.lichtAusEinheiten) instanz.lichtAusEinheiten = new Map();
+  let e = instanz.lichtAusEinheiten.get(record);
+  if (!e) { e = { signatur: record.signatur, eintraege: eintraegeAus(record, LICHT_AUS_DATEI, LICHT_AUS_FELDER) }; instanz.lichtAusEinheiten.set(record, e); }
+  return e;
+}
+
+function bereiteLichtAusVor() {
+  const optionen = instanz.options.lichtAus;
+  instanz.lichtAus = optionen ? lichtAusVorbereitung(instanz.records.map(lichtAusEinheit), optionen.auswahl) : null;
+}
+
+function kennzeichneKachel(karte, record) {
+  if (!instanz.lichtAus) return;
+  const wirksam = instanz.lichtAus.wirksam(lichtAusEinheit(record));
+  setzeLicht(karte, wirksam.length > 0);
+  let amFeld = false;
+  for (const feld of karte.querySelectorAll('[data-licht-feld]')) {
+    const aus = wirksam.filter((e) => e.feld === feld.dataset.lichtFeld).map((e) => e.auspraegung);
+    if (setzeMuster(feld, aus)) amFeld = true;
+  }
+  if (wirksam.length && !amFeld) setzeMuster(karte, wirksam.map((e) => e.auspraegung));
+  if (wirksam.length) karte.setAttribute('aria-label', `Urkunde ${record.signatur}, unsicher: ${beschreibeEintraege(wirksam, typName, auspraegungName)}`);
+}
+
 // Punkt 3 (Kombinationslogik): alle drei Filter (Unsicherheiten-Toggle,
 // Kategorie, Suche) wirken per UND-Verknüpfung - jeder Schritt filtert das
 // Ergebnis des vorherigen weiter ein, keiner überschreibt einen anderen. Bei
 // komplett inaktiven Filtern alle Records unverändert (Normalzustand,
 // Punkt 6 Auftrag wörtlich). Reihenfolge nach Aufwand gestaffelt (billige
 // Boolean-/Array-Prüfungen zuerst, der Such-Teilstring-Vergleich zuletzt).
-function ermittleGefilterteRecords() {
+function ermittleGefilterteRecords({ ohneNurDiese = false } = {}) {
   const { records, options, filterZustand, suchtextByRecord } = instanz;
   let ergebnis = options.showUncertainty ? records.filter(istRecordUnsicher) : records;
+  // Auftrag 13: „Nur diese zeigen“ filtert auf die leuchtenden Kacheln
+  if (!ohneNurDiese && instanz.lichtAus && options.lichtAus?.auswahl?.nurDiese) {
+    ergebnis = ergebnis.filter((record) => instanz.lichtAus.wirksam(lichtAusEinheit(record)).length > 0);
+  }
 
   if (filterZustand.kategorie) {
     ergebnis = ergebnis.filter((record) => {
@@ -656,7 +700,7 @@ function ermittleGefilterteRecords() {
 // Filterlogik selbst (die läuft immer über ermittleGefilterteRecords()).
 function istIrgendeinFilterAktiv() {
   const { options, filterZustand } = instanz;
-  return !!(options.showUncertainty || filterZustand.kategorie || filterZustand.suchbegriff);
+  return !!(options.showUncertainty || options.lichtAus?.auswahl?.nurDiese || filterZustand.kategorie || filterZustand.suchbegriff);
 }
 
 // Punkt 1 (Paginierung): "← Seite X / Y →" analog zum Alpha-Prototyp, dazu
@@ -722,6 +766,7 @@ function zeichneKachelraster() {
   const { container, inhaltContainer, beobachter, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
   inhaltContainer.innerHTML = '';
+  bereiteLichtAusVor(); // Auftrag 13
 
   const gefilterteRecords = ermittleGefilterteRecords();
   // Nachbesserung 6, Punkt 10: Trefferzahl ansagen (js/utils/liveAnsage.js)
@@ -747,6 +792,7 @@ function zeichneKachelraster() {
   seiteRecords.forEach((record) => {
     const karte = baueKarte(record, beobachter, container, zeigeUnsicherheit);
     karte.setAttribute('role', 'listitem');
+    kennzeichneKachel(karte, record); // Auftrag 13
     raster.appendChild(karte);
     if (instanz.zielSignatur && record.signatur === instanz.zielSignatur) {
       zielKarteElement = karte;
@@ -777,6 +823,7 @@ function zeichneKachelraster() {
     zielKarteElement.focus();
     instanz.zielSignatur = null;
   }
+  meldeLichtAus(); // Auftrag 13: Zähler der Typenleiste nach jedem Neuzeichnen (auch bei Kategorie und Suche)
 }
 
 export function render(container, data, options = {}) {
@@ -870,9 +917,25 @@ export function render(container, data, options = {}) {
 export function resize(neueOptionen = {}) {
   if (!instanz) return;
   if (Object.keys(neueOptionen).length === 0) return;
+  const nurDieseVorher = Boolean(instanz.options.lichtAus?.auswahl?.nurDiese);
   instanz.options = { ...instanz.options, ...neueOptionen };
-  instanz.aktuelleSeite = 1;
+  // Auftrag 13: eine Typenauswahl ohne „Nur diese“-Wechsel behält die Seite
+  const nurAuswahl = Object.keys(neueOptionen).every((k) => k === 'lichtAus') && instanz.options.lichtAus
+    && nurDieseVorher === Boolean(instanz.options.lichtAus.auswahl?.nurDiese);
+  if (!nurAuswahl) instanz.aktuelleSeite = 1;
   zeichneKachelraster();
+}
+
+// Auftrag 13: Einheiten für die Zähler der Typenleiste (nach Kategorie und Suche, ohne „Nur diese“)
+function meldeLichtAus() {
+  const optionen = instanz?.options.lichtAus;
+  if (!optionen || !instanz.lichtAus) return;
+  optionen.melde?.({
+    einheiten: ermittleGefilterteRecords({ ohneNurDiese: true }).map(lichtAusEinheit),
+    massengruppen: instanz.lichtAus.massengruppen,
+    felder: { [LICHT_AUS_DATEI]: LICHT_AUS_HINWEIS_FELDER },
+    nurDieseMoeglich: true
+  });
 }
 
 export function destroy() {

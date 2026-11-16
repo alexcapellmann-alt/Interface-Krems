@@ -22,6 +22,7 @@ Namens), das Muster löst Node selbst auf. Erwartet: alle Tests bestanden (`fail
 | `dataLoader.test.mjs` | `js/core/dataLoader.js`: BOM, Semikolon, Pipe-Listen, Zeilenumbruch in Anführungszeichen, unbekannte Spalte, `errors` (leere Zeile, fehlender Pflichtwert mit Zeile und Spalte; der Datensatz bleibt in `records`) |
 | `datePrecision.test.mjs` | `js/utils/datePrecision.js`: alle Beispiele der Mustertabelle (Masterprompt §12) und die Randfälle aus Nachbesserung 7 (unmögliche Tage und Monate, „o. D.“, „undatiert“) |
 | `uncertainty.test.mjs` | `js/utils/uncertainty.js`: Format `<feld>: <Erklärung>`, `filtereErklaerungFuerFeld()`, lesbare Feldnamen |
+| `lichtAus.test.mjs` | `js/utils/lichtAus.js` (Auswahl, Alle, Massengruppen, ausgegraute Typen, Moduswechsel beim Ansichtenwechsel, Zähler, Muster), `hellGenugAufDunkel` (Akzentkontrast 4,5:1), Methodenhinweise je Pilotansicht, Zahlen der Pilotansichten auf den Daten, keine Typnamen im Code |
 | `unsicherheitTyp.test.mjs` | `js/utils/uncertainty.js`: Parser der Unsicherheitstypen (Leerzeichen, Groß-/Kleinschreibung, mehrere Doppelpunkte, leere Einträge), Prüfung; Vokabulardateien; alle sieben Dateien mit `unsicherheit_typ` ohne Fehler, Warnungen nur die dokumentierten |
 | `bildschirmHinweis.test.mjs` | `js/utils/bildschirmHinweis.js`: Grenze für den Hinweis „größerer Bildschirm“ (900 × 500), gängige Laptop-Fenster, Telefon, Breite 0 |
 | `bestandsHierarchie.test.mjs` | `js/utils/bestandsHierarchie.js`: vier Ebenen aus `bestandsverzeichnis.csv` |
@@ -72,6 +73,14 @@ Ende vergleicht sie die Kopie mit dem Original (`diff-exit=0`). Die Dateien in `
 Zuletzt gemessen (15.11.2026): axe 0 Verstöße in 124 Zuständen; Lighthouse 1,0 in 31 von 31 Ansichten; Tastatur alle
 Bedienelemente erreichbar (außer den Links im zugeklappten Impressum, wie vorgesehen); Sitzung 39 Ansichten, 0 Fehler (auch bei 1366 × 768 und 1280 × 720, ohne Ersatztext); 34 Tests;
 Matrix 0 Abstürze, 0 „leer ohne Hinweis“, 0 „stark abweichend“ ohne Hinweis. Einzelheiten: PROJEKTLOG 87–89.
+
+**Auftrag 13 (16.11.2026):** Prüfskripte in `Unsicherheitstypen_2026-11/a13/werkzeuge/` (Server 8901):
+`b_axe.mjs` (alle Zustände plus Modus „Licht aus“; `NUR`, `PRUEF_AUSGABE`), `b_sitzung_modus.mjs` (Sitzung mit Modus,
+`PRUEF_FENSTER`), `b_tastatur_medien.mjs` (Tastatur, reduced-motion, forced-colors, Listener), `b_stammbaum_abnahme.mjs`,
+`b_rundgang.mjs` (Bilder je Zustand), `b_sigma_vergleich.mjs` (Zahlen des alten σ-Filters). Vergleichsstand vor einem
+Auftrag: `git archive <commit>` in einen Ordner außerhalb des Repositorys und auf eigenem Port starten. Zuletzt
+gemessen: 57 Tests; axe 163 Zustände, 0 neue Verstöße (Vorbefund Bilderwand bei 768 px Höhe); Sitzung mit und ohne
+Modus bei 1366×768 und 1280×720 ohne Fehler (PROJEKTLOG 95).
 
 ## 3. Datenerhebungen (nur lesen)
 

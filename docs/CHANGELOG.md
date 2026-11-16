@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-16 (242) – Unsicherheits-Modus „Licht aus“ mit Pilot in Regesten, Karte und Stammbaum (Auftrag 13)
+
+- σ-Knopf in den freigegebenen Ansichten (Registry `lichtAus`: Regesten, Karte, Stammbaum) schaltet die Seite dunkel (zweite Palette in `css/base.css`, keine Inversion); unsichere Elemente leuchten in Bernstein mit Muster je Ausprägung. Modus bleibt zwischen diesen Ansichten, sonst Licht an; Esc und „Licht wieder an“ beenden ihn.
+- Neu: `js/config/lichtAus.js` (Schwelle Massenangabe 0,30, Kompaktleiste unter 900 px, Muster, Akzentkontrast), `js/utils/lichtAus.js` (reine Logik), `js/utils/lichtAusDarstellung.js`, `js/core/lichtAusModus.js` (Thema, Esc, Ansage, dunkle Akzentfarbe), `js/core/typenLeiste.js`, `js/core/unsicherheitVokabular.js`, `tests/lichtAus.test.mjs`, `docs/EIGNUNGSMATRIX_UNSICHERHEIT.md`.
+- Geändert: `app.js` (Wechsel, Leiste, Akzent), `state.js` (+ `aktiveAnsichtLichtAus`, `lichtAusAuswahl`), `unsicherheitsButton.js` (feste Beschriftung „σ Unsicherheiten“ in Pilotansichten), `archivalienRegistry.js` (`lichtAus`), `regestenKachelraster.js`, `karte.js` (Randliste „Nicht auf der Karte“), `familienbaum.js` (Lichthof), `unsicherAbsatz.js` (Art der Unsicherheit), `kategorieFarben.js` (`hellGenugAufDunkel`), `css/base.css`, `css/components.css`. Optionaler Schlüssel `akzentfarbe_dunkel` in `archiv.csv`.
+- Übrige 14 σ-Ansichten unverändert (Zahlen gegen Stufe A gleich). Tests 47 → 57; axe 0 neue Verstöße in 163 Zuständen; Sitzung mit und ohne Modus bei 1366×768 und 1280×720 ohne Fehler. Einzelheiten: PROJEKTLOG 95.
+
+Kein Commit durch Claude Code.
+
+---
+
 ## 2026-11-15 (241) – Unsicherheitstypen: Schema und Inhalte (Auftrag 12)
 
 - Neu `data/unsicherheit_typen.csv` (8 Typen nach Windhager, `identifikation` als eigene Ergänzung), `data/unsicherheit_auspraegungen.csv` (4), `data/datumsabweichungen.csv` (31), `data/soziale_gruppe_regeln.csv`, `data/methodenhinweise.csv` (11), `data/luecken_hinweise.csv` (14).
