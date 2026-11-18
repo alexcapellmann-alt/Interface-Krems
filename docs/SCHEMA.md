@@ -121,7 +121,8 @@ Eintrag in `unsicherheit_typ` leuchten. Die Daten bleiben unverändert; das Zusa
   ausgeschaltet (`null`, Wunsch des Autors): auch „Ausstellungsort fehlt“ (Regesten, 571 von 1067) zählt bei „Alle“ mit.
 - **Filtern:** Der Modus zeigt immer nur die leuchtenden Elemente (Regesten, Karte); der Stammbaum dunkelt ab, weil
   herausgefilterte Personen Lücken im Baum ließen. Einen eigenen Schalter dafür gibt es nicht.
-- **Regesten-Kachel:** „Ausstellungsort“ (Spalte `ausstellungsort`, leer: „nicht angegeben“) steht unter dem Datum;
+- **Regesten-Kachel:** „Ausstellungsort“ (Spalte `ausstellungsort`, leer: „nicht angegeben“) steht unter dem Datum,
+  „Kategorien“ (leer ebenfalls „nicht angegeben“) darunter; Fotos und Kategorien tragen im Modus ihr Muster am Feld;
   die übrigen Orte wie im Regest stehen als „Weitere Orte“ unter den Personen. Ist der Ausstellungsort der einzige Ort
   in `orte`, gilt eine Unsicherheit der Orte für die Zeile „Ausstellungsort“.
 - **Methodenhinweise:** `methodenhinweise.csv` erscheint im Modus unter „Hinweise zur Methode“, wenn `geltungsbereich` zur
@@ -155,6 +156,8 @@ Bereits ausgereifte, produktiv genutzte Tabelle. 26 bestehende Visualisierungen 
 | `personen_unsicher` | ja/nein | – | |
 | `kategorien` | Liste (Pipe-getrennt) | **Pflicht** (Horizon Chart, Sankey) | Farben: Die 16 Krems-Kategorien haben feste Farben; jede andere Kategorie bekommt automatisch eine Farbe (Abschnitt 14, „Farben der Kategorien“). Herkunft: Die Kategorien folgen den Namen des Dokumentationsprofils nach Becker (wie `bkk_kategorie` der Bestände) und wurden automatisch zugeordnet und stichprobenartig geprüft (Angabe des Autors, `methodenhinweise.csv`). Sie beschreiben den Inhalt; ein Geistlicher als Grundherr oder Zeuge macht eine Urkunde nicht zu „Religion“. |
 | `ausstellungsort` | Text | nein | seit 15.11.2026 (Auftrag 12): Ausstellungsort aus dem Anfang des Regests („Datum, Ort“), Abkürzungen und alte Schreibweisen auf die Namen der Ortsliste abgebildet (z. B. „Wr. Neustadt“ → Wiener Neustadt); Feldlager als Text („Im Feld bei Gent“). Leer = im Regest nicht angegeben. `orte` bleibt unverändert. |
+| `ausstellungsort_unsicher` | ja/nein | – | seit 16.11.2026: `ja`, wenn `unsicherheit_typ` einen Eintrag für `ausstellungsort` hat (575: 571 fehlt, 4 ungenau, darunter die Feldlager), sonst `nein`. Ohne eigene Erklärung in `unsicherheit_anmerkung` gilt der Standardtext aus `unsicherheit_standardtexte.csv` (13.11). |
+| `kategorien_unsicher` | ja/nein | – | seit 18.11.2026: `ja`, wenn `unsicherheit_typ` einen Eintrag für `kategorien` hat (14: StaAKr-0566b und die 13 Urkunden ohne Kategorien, alle `zuordnung/fehlend`), sonst `nein`. Letzte Spalte. |
 | `foto_ordner` | Text | nein | tatsächlicher Ordnername unter `fotos/thumbs/` – **vollständig befüllt** (1068/1068 – Stand vor der Dublettenbereinigung am 2026-09-30 – automatisch zugeordnet über `id`/`signatur`-Abgleich, entspricht 1:1 der `signatur`-Spalte) |
 | `unsicherheit_anmerkung` | Text | nein | für Hover-Tooltip |
 | `bilder` | Liste (Pipe-getrennt) | nein | **neu (Auftrag "Urkundenfotos über die Spalte `bilder`", 2026-09-30):** die tatsächlichen Dateinamen der Fotos zu dieser Urkunde, ohne Pfad - der vollständige Bildpfad ergibt sich aus `fotos/thumbs/<foto_ordner>/<Dateiname>`. Letzte Spalte der Tabelle, direkt nach `foto_ordner` eingefügt. Löst das bisherige, separat per Kommandozeilenskript erzeugte JSON-Manifest ab (siehe PROJEKTLOG) - Foto-Zuordnung ist damit ohne Programmierkenntnisse direkt in der Tabelle pflegbar. |
@@ -256,7 +259,7 @@ Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht;
 | `Beruf/Funktion/Stand` | Text | nein | Originaltext |
 | `Beruf` | Text | nein | bereinigt |
 | `Ort (Schaetzung)` | Text | nein | Krems, Stein oder `unklar`. Seit 15.11.2026 für Masko, Rabrath, Wolfin und Gindlin nach Dietrichs Text ergänzt (Krems, mit Seitenangabe in PROJEKTLOG 93); Järitschin (Wienerin mit Haus in Krems) bleibt `unklar`. |
-| `Geschlecht (Schaetzung)` | Text | nein | Nach dem Namen geschätzt. Das ist eine **Projektentscheidung**, nicht Dietrichs Aussage: Dietrich zählt Frauen und Männer, begründet ein „geschätzt“ aber nirgends. |
+| `Geschlecht (Schaetzung)` | Text | nein | Nach dem Namen geschätzt. Dietrich zählt Frauen und Männer; die Angabe „geschätzt“ wird bei ihm nicht näher erläutert. Die Behandlung als Schätzung nach dem Namen ist eine **Projektentscheidung**. |
 | `Vermoegensgruppe` | Text (A–E, S) | nein | A bis E nach Dietrich. `S` = Sonderfall, den Dietrich als „nicht repräsentativ“ ausnimmt (auswärtiges oder nicht taxiertes Vermögen, Zweitinventar, gemeinsames Inventar eines Ehepaars; Dietrich, gedruckte S. 30, 32, 34). `A*` steht einmal: beim ersten der zwei Inventare der Anna Catharina Schönthanin (1692, Gruppe A; 1693 Gruppe B). Ein Sternchen erklärt Dietrich nicht; auch die Sternchen an Namen bleiben unerklärt. |
 | `Realvermoegen_fl` | Zahl | **Pflicht** (Parallelkoordinaten) | |
 | `Gesamtvermoegen_fl` | Zahl | **Pflicht** (Parallelkoordinaten) | |
@@ -810,6 +813,17 @@ geographisch und identifikation verwendet; `strittig` nur, wo verschiedene Quell
 | `soziale_gruppe_regeln.csv` | `reihenfolge`, `gruppe`, `regelart`, `begriff`, `anwendung` | Die Regeln, nach denen `soziale_gruppe` in `personenliste.csv` vergeben wurde (bis 27.10.2026 im Code, aus der Git-Geschichte rekonstruiert). Wird nicht angewandt, nur zur Nachvollziehbarkeit. |
 | `methodenhinweise.csv` | `id`, `geltungsbereich`, `text`, `quelle` | Hinweise zur Methode, die nicht einzelne Datensätze markieren (soziale Gruppe, Kategorien, geschätztes Geschlecht, Gewinnung von Orten und Personen, Bürgschaften, Netzwerkkanten, Einzelstücke, Eltern im Stammbaum, Ausstellungsort, fehlender Beruf, Standardgruppe Bürgertum). Anzeige folgt in Auftrag 13. |
 | `luecken_hinweise.csv` | `bezug`, `text`, `link`, `quelle` | Hinweise, wo Fehlendes liegen könnte; vorbefüllt nur aus dem Bestandsverzeichnis (13 Verweise und ein Eintrag „Zerstörtes Steiner Archiv“). Weitere Einträge trägt das Archiv selbst ein. |
+
+### 13.11 unsicherheit_standardtexte.csv – Standardtexte zu Feld und Ausprägung (neu, 18.11.2026)
+
+| Spalte | Typ | Pflicht | Inhalt |
+|---|---|---|---|
+| `datei` | Text | ja | Datendatei, z. B. `urkunden.csv` |
+| `feld` | Text | ja | Spalte dieser Datei |
+| `auspraegung` | Text | ja | `auspraegung_id` aus `unsicherheit_auspraegungen.csv` |
+| `text` | Text | ja | Erklärung, die gilt, wenn ein Datensatz zu diesem Feld einen Typ mit dieser Ausprägung, aber keine eigene Erklärung `<feld>: …` in `unsicherheit_anmerkung` hat |
+
+Verwendet in der Detailansicht („σ Angaben unsicher“, der Aufrufer übergibt `datei`) und beim Überfahren der leuchtenden Felder einer Regesten-Kachel (`erklaerungFuerFeld()`, `js/core/unsicherheitVokabular.js`). Statt vieler gleichlautender Anmerkungen steht der Text einmal hier. Heute drei Zeilen: `urkunden.csv` Ausstellungsort fehlt / ungenau, Kategorien fehlt. Ein Test prüft Schlüssel und Abdeckung.
 
 ## 14. Neues Archiv einrichten (Anleitung, Stand Auftrag C1, 2026-10-03)
 

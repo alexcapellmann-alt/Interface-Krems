@@ -11,6 +11,7 @@ import {
   schalteTyp, schalteMasse, schalteNurDiese, modusNachWechsel, vorrangigeAuspraegung, musterFuer, fehlendeTypen,
   hinweiseFuerAnsicht, hinweisFuerGruppe, lichtAusVorbereitung
 } from '../js/utils/lichtAus.js';
+import { pruefeUnsicherheitTypen, leseUnsicherheitTypen, erklaerungFuerFeldAus, beschreibungFuerFelder } from '../js/utils/uncertainty.js';
 import { MASSEN_SCHWELLE, MUSTER_JE_AUSPRAEGUNG, MUSTER_VORRANG } from '../js/config/lichtAus.js';
 
 ladeD3();
@@ -102,20 +103,74 @@ test('Zahlen der Pilotansichten auf den Daten (Schwelle aus der Konfiguration)',
   assert.equal(MASSEN_SCHWELLE, null);
   // Regesten: Einheit = Urkunde, Felder datum/orte/personen/ausstellungsort
   const urkunden = leseCsvRoh('urkunden.csv');
-  const kacheln = urkunden.map((r) => ({ eintraege: eintraegeAus(r, 'urkunden.csv', ['datum', 'orte', 'personen', 'ausstellungsort']) }));
+  const kacheln = urkunden.map((r) => ({ eintraege: eintraegeAus(r, 'urkunden.csv', ['datum', 'orte', 'personen', 'ausstellungsort', 'bilder', 'kategorien']) }));
   const v = lichtAusVorbereitung(kacheln, LEERE_AUSWAHL);
   assert.deepEqual(v.massengruppen, []);
   const z = zaehleFuerLeiste(kacheln, LEERE_AUSWAHL, v.masse);
   // 213 wie bisher (PROJEKTLOG 95) + die Urkunden, die nur „Ausstellungsort fehlt“ tragen
   assert.equal(z.alle, 687);
-  assert.deepEqual(z.proTyp, { zeitlich: 77, geographisch: 617, identifikation: 85 });
+  // seit 16./18.11.2026 dazu: Fotos (StAK-UrkSt-0004, Einzelangabe) und Kategorien (StaAKr-0566b und 13 Urkunden ohne
+  // Kategorien, Zuordnung); alle tragen schon „Ausstellungsort fehlt“, „Alle“ bleibt deshalb 687
+  assert.deepEqual(z.proTyp, { zeitlich: 77, geographisch: 617, identifikation: 85, zuordnung: 14, attribut: 1 });
   // Mit der früheren Schwelle 30 % wäre „Ausstellungsort fehlt“ (571) die einzige Massengruppe (Regel bleibt prüfbar)
   const frueher = lichtAusVorbereitung(kacheln, LEERE_AUSWAHL, 0.30);
   assert.deepEqual(frueher.massengruppen.map((g) => `${g.feld} ${g.typ}/${g.auspraegung} ${g.anzahl}`), ['ausstellungsort geographisch/fehlend 571']);
-  assert.equal(zaehleFuerLeiste(kacheln, LEERE_AUSWAHL, frueher.masse).alle, 213);
+  // 213 + StAK-UrkSt-0004 und StaAKr-0566b (Fotos, Kategorien) = 215; dieselbe Zahl wie der alte σ-Filter, andere Menge
+  // (PROJEKTLOG 95, Nachtrag 16.11.2026)
+  assert.equal(zaehleFuerLeiste(kacheln, LEERE_AUSWAHL, frueher.masse).alle, 215);
   // Stammbaum: keine Massengruppe
   const familien = leseCsvRoh('familien.csv').map((r) => ({ eintraege: eintraegeAus(r, 'familien.csv', ['geburtsdatum', 'sterbedatum']) }));
   assert.deepEqual(lichtAusVorbereitung(familien, LEERE_AUSWAHL, 0.30).massengruppen, []);
+});
+
+test('urkunden.csv: Typ und Markierung passen zusammen (ausstellungsort_unsicher seit 16.11.2026)', () => {
+  const vok = { typen: new Set(leseCsvRoh('unsicherheit_typen.csv').map((t) => t.typ_id)), auspraegungen: new Set(leseCsvRoh('unsicherheit_auspraegungen.csv').map((a) => a.auspraegung_id)) };
+  const probleme = [];
+  for (const roh of leseCsvRoh('urkunden.csv')) {
+    const r = { ...roh };
+    Object.keys(r).filter((k) => /_unsicher$/.test(k)).forEach((k) => { r[k] = r[k] === 'ja'; });
+    const { fehler, warnungen } = pruefeUnsicherheitTypen(r, vok);
+    if (fehler.length || warnungen.length) probleme.push(`${roh.signatur}: ${[...fehler, ...warnungen].join('; ')}`);
+  }
+  assert.deepEqual(probleme, []);
+  assert.equal(leseCsvRoh('urkunden.csv').filter((r) => r.ausstellungsort_unsicher === 'ja').length, 575);
+  assert.equal(leseCsvRoh('urkunden.csv').filter((r) => r.kategorien_unsicher === 'ja').length, 14);
+});
+
+test('Standardtexte: gültige Schlüssel, und jedes Feld mit Typ ohne eigene Anmerkung in urkunden.csv hat einen Text', () => {
+  const texte = leseCsvRoh('unsicherheit_standardtexte.csv');
+  const ausp = new Set(leseCsvRoh('unsicherheit_auspraegungen.csv').map((a) => a.auspraegung_id));
+  const spalten = {};
+  for (const t of texte) {
+    spalten[t.datei] ??= Object.keys(leseCsvRoh(t.datei)[0] || {});
+    assert.ok(spalten[t.datei].includes(t.feld), `${t.datei}: Spalte ${t.feld} fehlt`);
+    assert.ok(ausp.has(t.auspraegung), `unbekannte Ausprägung ${t.auspraegung}`);
+    assert.ok(t.text.trim(), `${t.datei}/${t.feld}/${t.auspraegung}: Text leer`);
+  }
+  const schluessel = new Set(texte.map((t) => `${t.datei}|${t.feld}|${t.auspraegung}`));
+  assert.equal(schluessel.size, texte.length, 'Schlüssel doppelt');
+  const ohneText = [];
+  for (const r of leseCsvRoh('urkunden.csv')) {
+    const mitAnmerkung = new Set(String(r.unsicherheit_anmerkung || '').split('|').map((a) => /^\s*([^:]+):/.exec(a)?.[1].trim().toLowerCase()).filter(Boolean));
+    for (const e of leseUnsicherheitTypen(r.unsicherheit_typ)) {
+      if (['ausstellungsort', 'kategorien'].includes(e.feld) && !mitAnmerkung.has(e.feld) && !schluessel.has(`urkunden.csv|${e.feld}|${e.auspraegung}`)) ohneText.push(`${r.signatur} ${e.feld}`);
+    }
+  }
+  assert.deepEqual(ohneText, []);
+});
+
+test('Zugängliche Beschreibung der Kachel: Ausstellungsort fehlt → „Im Regest nicht angegeben.“ (Auftrag 14, Punkt 2)', () => {
+  const standardtexte = leseCsvRoh('unsicherheit_standardtexte.csv');
+  const roh = leseCsvRoh('urkunden.csv').find((r) => r.signatur === 'StaKr-0103');
+  const record = { ...roh, unsicherheit_anmerkung: roh.unsicherheit_anmerkung ? roh.unsicherheit_anmerkung.split('|') : [] };
+  const felder = leseUnsicherheitTypen(record.unsicherheit_typ).map((e) => e.feld);
+  const beschreibung = beschreibungFuerFelder(record, 'urkunden.csv', felder, standardtexte);
+  assert.match(beschreibung, /Ausstellungsort: Im Regest nicht angegeben\./);
+  assert.match(beschreibung, /Kategorien: Keine inhaltliche Kategorie zugeordnet\./);
+  // eigene Anmerkung geht vor, fremde Felder werden nicht übernommen
+  const r2 = { unsicherheit_typ: 'ausstellungsort: geographisch/fehlend|bilder: attribut/mehrdeutig', unsicherheit_anmerkung: ['bilder: Zuordnung offen'] };
+  assert.equal(erklaerungFuerFeldAus(r2, 'urkunden.csv', 'ausstellungsort', standardtexte), 'Im Regest nicht angegeben.');
+  assert.equal(erklaerungFuerFeldAus(r2, 'urkunden.csv', 'bilder', standardtexte), 'Zuordnung offen');
 });
 
 test('Keine Typnamen im Code (Typen kommen aus unsicherheit_typen.csv)', () => {

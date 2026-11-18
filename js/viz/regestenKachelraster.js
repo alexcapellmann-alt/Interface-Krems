@@ -82,7 +82,7 @@
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
 import { leiteDatumsPraezisionAb, datumsHinweis } from '../utils/datePrecision.js';
-import { filtereErklaerungFuerFeld, lesbareAnmerkung, feldBezeichnung } from '../utils/uncertainty.js';
+import { lesbareAnmerkung, feldBezeichnung } from '../utils/uncertainty.js';
 import { markiereElement } from '../utils/vollstaendigkeit.js';
 import { erzeugeLiveAnsage } from '../utils/liveAnsage.js';
 import { getZustand, clearZielSignatur } from '../core/state.js';
@@ -100,7 +100,7 @@ import { baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
 import { orteWieImRegest } from '../utils/ortsart.js'; // Auftrag 11
 import { eintraegeAus, lichtAusVorbereitung } from '../utils/lichtAus.js'; // Auftrag 13
 import { setzeLicht, setzeMuster, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
-import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
+import { typName, auspraegungName, erklaerungFuerFeld, beschreibungFuerKachel } from '../core/unsicherheitVokabular.js';
 
 // Auftrag "Geteilter Info-Button", Punkt 3 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
@@ -167,7 +167,7 @@ function baueDurchsuchbarenText(record) {
 function istRecordUnsicher(record) {
   const anmerkung = record.unsicherheit_anmerkung;
   const anmerkungVorhanden = Array.isArray(anmerkung) ? anmerkung.length > 0 : !!(anmerkung && anmerkung.trim() !== '');
-  return !!(record.datum_unsicher || record.orte_unsicher || record.personen_unsicher || anmerkungVorhanden);
+  return !!(record.datum_unsicher || record.orte_unsicher || record.personen_unsicher || record.ausstellungsort_unsicher || record.kategorien_unsicher || anmerkungVorhanden);
 }
 
 // Baut die Klartext-Anzeige für eine unsichere Urkunde (Punkt 6): zeigt ALLE
@@ -225,6 +225,11 @@ function fuegeStyleEin(container) {
     .regk-feld-unsicher { border: 1px dashed var(--unsicher); padding: 1px 4px; border-radius: 3px; }
     .regk-foto-platzhalter { font-style: italic; color: var(--text-muted); }
     .regk-ohne-angabe { font-style: italic; color: var(--text-muted); }
+    /* Auftrag 14, Punkt 2: Erklärung im Modus „Licht aus“ – zugeklappt nur für Bildschirmleser, aufgeklappt sichtbar */
+    .regk-lichtaus-erklaerung { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+      clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+    .regk-karte[aria-expanded="true"] .regk-lichtaus-erklaerung { position: static; width: auto; height: auto; margin: 4px 0;
+      overflow: visible; clip: auto; white-space: normal; font-size: var(--fs-sm); }
     .regk-foto-bereich img { max-width: 100px; max-height: 100px; margin: 2px; cursor: pointer; border-radius: 3px;
       transition: box-shadow .15s ease; }
     .regk-foto-bereich img:hover { box-shadow: 0 0 0 2px var(--accent); }
@@ -274,7 +279,8 @@ function baueOrtsLinks(werte) {
 // filtereErklaerungFuerFeld() gereicht, damit bei mehreren unsicheren Feldern
 // derselben Zeile nur die zu DIESEM Feld passende Erklärung im Tooltip erscheint
 // (Abschnitt 11, v4.2: verbindliches Format "<feldname>: <Erklärung>").
-function baueFeldMitUnsicherheit(inhaltElement, istUnsicher, anmerkung, feldname, container) {
+// Seit 18.11.2026: `record` statt der Anmerkung allein; ohne eigene Erklärung gilt der Standardtext (erklaerungFuerFeld).
+function baueFeldMitUnsicherheit(inhaltElement, istUnsicher, record, feldname, container) {
   const feld = document.createElement('span');
   feld.appendChild(inhaltElement);
   if (!istUnsicher) return feld;
@@ -282,7 +288,7 @@ function baueFeldMitUnsicherheit(inhaltElement, istUnsicher, anmerkung, feldname
   feld.classList.add('regk-feld-unsicher');
   feld.setAttribute('tabindex', '0');
   feld.setAttribute('aria-label', 'Angabe unsicher, Details im Tooltip');
-  const text = filtereErklaerungFuerFeld(anmerkung, feldname) || 'Angabe unsicher';
+  const text = erklaerungFuerFeld(record, LICHT_AUS_DATEI, feldname) || 'Angabe unsicher';
   feld.addEventListener('mouseenter', () => zeigeTooltip(text, feld, container));
   feld.addEventListener('focus', () => zeigeTooltip(text, feld, container));
   feld.addEventListener('mouseleave', versteckeTooltip);
@@ -290,12 +296,12 @@ function baueFeldMitUnsicherheit(inhaltElement, istUnsicher, anmerkung, feldname
   return feld;
 }
 
-function baueListenFeld(label, werte, entityTyp, feldname, unsicher, anmerkung, container, zeigeUnsicherheit) {
+function baueListenFeld(label, werte, entityTyp, feldname, unsicher, record, container, zeigeUnsicherheit) {
   if (!werte || werte.length === 0) return null;
   const liste = Array.isArray(werte) ? werte : [werte];
   const feld = document.createElement('p');
   feld.appendChild(document.createTextNode(`${label}: `));
-  feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks(liste), zeigeUnsicherheit && unsicher, anmerkung, feldname, container));
+  feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks(liste), zeigeUnsicherheit && unsicher, record, feldname, container));
   return feld;
 }
 
@@ -314,7 +320,8 @@ function baueAusstellungsortFeld(record, ausstellungsort, orteAmAusstellungsort,
   const feld = document.createElement('p');
   feld.appendChild(document.createTextNode('Ausstellungsort: '));
   if (ausstellungsort) {
-    feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks([ausstellungsort]), zeigeUnsicherheit && orteAmAusstellungsort && record.orte_unsicher, record.unsicherheit_anmerkung, 'orte', container));
+    const unsicher = record.ausstellungsort_unsicher || (orteAmAusstellungsort && record.orte_unsicher);
+    feld.appendChild(baueFeldMitUnsicherheit(baueOrtsLinks([ausstellungsort]), zeigeUnsicherheit && unsicher, record, record.ausstellungsort_unsicher ? 'ausstellungsort' : 'orte', container));
   } else {
     const leer = document.createElement('span');
     leer.className = 'regk-ohne-angabe';
@@ -339,7 +346,7 @@ function baueDatumFeld(record, container, zeigeUnsicherheit) {
   const hinweis = datumsHinweis(record.datum);
   if (hinweis) inhalt.textContent += ` – ${hinweis}`;
   const feld = document.createElement('p');
-  feld.appendChild(baueFeldMitUnsicherheit(inhalt, zeigeUnsicherheit && record.datum_unsicher, record.unsicherheit_anmerkung, 'datum', container));
+  feld.appendChild(baueFeldMitUnsicherheit(inhalt, zeigeUnsicherheit && record.datum_unsicher, record, 'datum', container));
   return feld;
 }
 
@@ -439,7 +446,16 @@ function baueFotoBereich(record, beobachter) {
 // sichtbar - Farbe kommt NUR als zusätzlicher Hintergrund hinzu, nie als
 // einziges Merkmal).
 function baueKategorienFeld(record) {
-  if (!record.kategorien || record.kategorien.length === 0) return null;
+  // 16.11.2026: ohne Kategorien „nicht angegeben“ wie beim Ausstellungsort (Feld für die Kennzeichnung im Modus)
+  if (!record.kategorien || record.kategorien.length === 0) {
+    const leer = document.createElement('p');
+    leer.appendChild(document.createTextNode('Kategorien: '));
+    const text = document.createElement('span');
+    text.className = 'regk-ohne-angabe';
+    text.textContent = 'nicht angegeben';
+    leer.appendChild(text);
+    return leer;
+  }
   const kategorienListe = Array.isArray(record.kategorien) ? record.kategorien : [record.kategorien];
   const feld = document.createElement('p');
   feld.appendChild(document.createTextNode('Kategorien: '));
@@ -555,7 +571,7 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
   // Nicht-Ziel dieses Auftrags ausgenommen und bleiben unverändert.
 
   const kategorienFeld = baueKategorienFeld(record);
-  if (kategorienFeld) karte.appendChild(kategorienFeld);
+  if (kategorienFeld) { kategorienFeld.dataset.lichtFeld = 'kategorien'; karte.appendChild(kategorienFeld); } // Auftrag 13
 
   if (zeigeUnsicherheit && istRecordUnsicher(record)) {
     const unsicherBereich = baueUnsicherheitBereich(record);
@@ -564,7 +580,9 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
 
   const regestAbsatz = baueRegestBereich(record.regest);
   karte.appendChild(regestAbsatz);
-  karte.appendChild(baueFotoBereich(record, beobachter));
+  const fotoBereich = baueFotoBereich(record, beobachter);
+  fotoBereich.dataset.lichtFeld = 'bilder'; // Auftrag 13
+  karte.appendChild(fotoBereich);
 
   // AUFTRAG "Teil 2g", Punkt 5 (Beschriftung seit Teil 2i "Personen" statt
   // "Genannte Personen", ersetzt die vormalige Filter-Buttons-Zeile oben
@@ -591,7 +609,7 @@ function baueKarte(record, beobachter, container, zeigeUnsicherheit) {
     karte.appendChild(genanntePersonenZeile);
   }
 
-  const orteFeld = baueListenFeld('Weitere Orte', weitereOrte, 'ort', 'orte', record.orte_unsicher, record.unsicherheit_anmerkung, container, zeigeUnsicherheit);
+  const orteFeld = baueListenFeld('Weitere Orte', weitereOrte, 'ort', 'orte', record.orte_unsicher, record, container, zeigeUnsicherheit);
   if (orteFeld) {
     orteFeld.dataset.lichtFeld = 'orte'; // Auftrag 13
     karte.appendChild(orteFeld);
@@ -667,12 +685,14 @@ function baueLazyBeobachter() {
 
 // --- Auftrag 13: Modus „Licht aus“ ------------------------------------------
 // Alle Kacheln bleiben; unsichere leuchten (Bernstein-Rand), die übrigen sind über eine eigene Farbstufe gedimmt (Text
-// hält 4,5:1). Das Muster der Ausprägung steht am betroffenen Feld (Datum, Ausstellungsort, Weitere Orte, Personen); hat
+// hält 4,5:1). Das Muster der Ausprägung steht am betroffenen Feld (Datum, Ausstellungsort, Kategorien, Fotos, Personen, Weitere
+// Orte); hat
 // eine leuchtende Kachel kein sichtbares Feld dazu, trägt die Kachel selbst das Muster. Der Modus filtert immer auf die
 // leuchtenden Kacheln (16.11.2026). Die Zähler der Leiste gelten für die Kacheln nach Kategorie und Suche (ohne „Nur diese“).
 const LICHT_AUS_DATEI = 'urkunden.csv';
-const LICHT_AUS_FELDER = ['datum', 'orte', 'personen', 'ausstellungsort'];
-const LICHT_AUS_HINWEIS_FELDER = [...LICHT_AUS_FELDER, 'kategorien'];
+const ERKLAERUNG_KLASSE = 'regk-lichtaus-erklaerung';
+const LICHT_AUS_FELDER = ['datum', 'orte', 'personen', 'ausstellungsort', 'bilder', 'kategorien'];
+const LICHT_AUS_HINWEIS_FELDER = LICHT_AUS_FELDER;
 
 function lichtAusEinheit(record) {
   if (!instanz.lichtAusEinheiten) instanz.lichtAusEinheiten = new Map();
@@ -693,11 +713,52 @@ function kennzeichneKachel(karte, record) {
   let amFeld = false;
   for (const feld of karte.querySelectorAll('[data-licht-feld]')) {
     const felder = feld.dataset.lichtFeld.split(' ');
-    const aus = wirksam.filter((e) => felder.includes(e.feld)).map((e) => e.auspraegung);
-    if (setzeMuster(feld, aus)) amFeld = true;
+    const treffer = wirksam.filter((e) => felder.includes(e.feld));
+    if (setzeMuster(feld, treffer.map((e) => e.auspraegung))) amFeld = true;
+    // 18.11.2026: Erklärung beim Überfahren (eigene Anmerkung oder Standardtext aus unsicherheit_standardtexte.csv)
+    const erklaerung = [...new Set(treffer.map((e) => erklaerungFuerFeld(record, LICHT_AUS_DATEI, e.feld)).filter(Boolean))].join(' ');
+    if (erklaerung) feld.title = erklaerung; else feld.removeAttribute('title');
   }
   if (wirksam.length && !amFeld) setzeMuster(karte, wirksam.map((e) => e.auspraegung));
   if (wirksam.length) karte.setAttribute('aria-label', `Urkunde ${record.signatur}, unsicher: ${beschreibeEintraege(wirksam, typName, auspraegungName)}`);
+  setzeLichtAusErklaerung(karte, record, wirksam);
+}
+
+// Auftrag 14, Punkt 2: dieselbe Erklärung (eigene Anmerkung, sonst Standardtext) als zugängliche Beschreibung der Kachel
+// (aria-describedby auf einen Absatz in der Kachel). Der Absatz ist zugeklappt nur für Bildschirmleser da und wird sichtbar,
+// sobald die Kachel aufgeklappt ist (Tippen, Klick, Enter). Fokus auf die Kachel zeigt ihn zusätzlich als Hinweis wie das
+// Überfahren eines Felds.
+let erklaerungZaehler = 0;
+function setzeLichtAusErklaerung(karte, record, wirksam) {
+  const beschreibung = beschreibungFuerKachel(record, LICHT_AUS_DATEI, wirksam.map((e) => e.feld));
+  let absatz = karte.querySelector(`.${ERKLAERUNG_KLASSE}`);
+  if (!beschreibung) {
+    absatz?.remove();
+    karte.removeAttribute('aria-describedby');
+    delete karte.dataset.lichtausErklaerung;
+    return;
+  }
+  if (!absatz) {
+    absatz = document.createElement('p');
+    absatz.className = ERKLAERUNG_KLASSE;
+    absatz.id = `regk-lichtaus-erklaerung-${++erklaerungZaehler}`;
+    karte.querySelector('.regk-karte-titel')?.after(absatz);
+  }
+  absatz.textContent = beschreibung;
+  karte.setAttribute('aria-describedby', absatz.id);
+  karte.dataset.lichtausErklaerung = absatz.textContent;
+  if (!karte.dataset.lichtausFokus) {
+    karte.dataset.lichtausFokus = '1';
+    karte.addEventListener('focus', () => {
+      if (karte.dataset.lichtausErklaerung && karte.getAttribute('aria-expanded') !== 'true') zeigeTooltip(karte.dataset.lichtausErklaerung, karte, instanz.container);
+    });
+    // versteckeTooltip() entfernt aria-describedby am Anker; danach wieder auf den eigenen Absatz zeigen
+    karte.addEventListener('blur', () => {
+      versteckeTooltip();
+      const eigener = karte.querySelector(`.${ERKLAERUNG_KLASSE}`);
+      if (eigener) karte.setAttribute('aria-describedby', eigener.id);
+    });
+  }
 }
 
 // Punkt 3 (Kombinationslogik): alle drei Filter (Unsicherheiten-Toggle,

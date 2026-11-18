@@ -7,6 +7,28 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-18 (245) – Auftrag 14: Repo-Prüfung, zugängliche Erklärung der Kachel, feste Markergröße, Bilderwand-Kopf
+
+- Neu `.gitignore` (Systemdateien, Protokolle, `.env`, Arbeitsordner, Excel-Dateien, Arbeitskopien); Bericht `Unsicherheitstypen_2026-11/a14/REPO_PRUEFUNG.md` (Ampel Gelb). E-Mail-Adresse im PROJEKTLOG entfernt; lokale Pfade in `docs/`, zwei CSS-Kommentaren und `.claude/CLAUDE.md` relativ.
+- `js/viz/regestenKachelraster.js`: im Modus `aria-describedby` auf einen Absatz mit der Erklärung je leuchtendem Feld (sichtbar, wenn die Kachel aufgeklappt ist; beim Fokus als Hinweis). `js/utils/uncertainty.js`: reine Funktionen `erklaerungFuerFeldAus`, `beschreibungFuerFelder`; `js/core/unsicherheitVokabular.js` nutzt sie.
+- `js/viz/karte.js`: Skala der Markergröße aus allen Orten des Zeitraums statt aus den im Modus sichtbaren.
+- `js/viz/bilderwand.js`: Kopf ohne `overflow: hidden` (nur die Wolke schneidet ab, `overflow: clip`); der Info-Text scrollt den Kopf nicht mehr, die Laschen bleiben frei (axe `target-size` bei 1366 × 768 und 1280 × 720 behoben).
+- σ-Knopf in Kategoriefluss und Verbindungskarte bleibt: Er wirkt dort (PROJEKTLOG 96, Entscheidung des Autors).
+- `tests/lichtAus.test.mjs`: Test zur zugänglichen Beschreibung. `docs/PRUEFUNGEN.md`: Grenzen der Prüfmethode. `docs/EIGNUNGSMATRIX_UNSICHERHEIT.md` berichtigt.
+
+---
+
+## 2026-11-18 (244) – `ausstellungsort_unsicher`, `kategorien_unsicher`, Typen für Fotos und Kategorien, Standardtexte
+
+- `data/urkunden.csv`: neue Spalten `ausstellungsort_unsicher` (575 `ja`) und `kategorien_unsicher` (14 `ja`), passend zu den Typen; `unsicherheit_typ` ergänzt bei StAK-UrkSt-0004 (`bilder: attribut/mehrdeutig`), StaAKr-0566b und den 13 Urkunden ohne Kategorien (`kategorien: zuordnung/fehlend`). Entscheidung des Autors; sonst keine Zelle geändert (PROJEKTLOG, Datenkorrekturen).
+- Neu `data/unsicherheit_standardtexte.csv` (Datei, Feld, Ausprägung, Text): Erklärung, wenn keine eigene Anmerkung vorliegt; geladen in `js/core/unsicherheitVokabular.js` (`standardText`, `erklaerungFuerFeld`), genutzt in `js/utils/unsicherAbsatz.js` (neue Option `datei`) und beim Überfahren der leuchtenden Felder einer Regesten-Kachel.
+- `js/viz/regestenKachelraster.js`: Zeile „Ausstellungsort“ mit Markierung aus der neuen Spalte; Fotos und Kategorien im Modus „Licht aus“ (Muster am Feld); leere Kategorien „nicht angegeben“. Leiste Regesten: Alle 687 (unverändert), dazu Zuordnung zu Gruppen 14 und Einzelangabe 1.
+- `js/utils/sidebar.js` (Detailansicht Urkunde: neue Spalten, Standardtexte), `js/utils/uncertainty.js` (Feldbezeichnung „Ausstellungsort“). Zeitachse und Bilderwand zählen die neuen Spalten nicht mit (unverändert).
+- `tests/lichtAus.test.mjs`: Zahlen, „Typ und Markierung passen zusammen“ für `urkunden.csv`, Standardtexte (Schlüssel und Abdeckung). Tests 60/60; axe und Browserprüfung ohne Befund.
+- `docs/EIGNUNGSMATRIX_UNSICHERHEIT.md` gegen das Verhalten geprüft (Regesten und Karte filtern, Stammbaum dimmt); PROJEKTLOG 95 Nachtrag, SCHEMA 1 und 13.11.
+
+---
+
 ## 2026-11-16 (243) – „Licht aus“ filtert immer, Ausstellungsort zählt mit; Kachel trennt Ausstellungsort und weitere Orte
 
 - `js/core/typenLeiste.js`, `css/components.css`: Schaltflächen „Licht wieder an (Esc)“ und „Nur diese zeigen“ entfernt. Beendet wird der Modus über den σ-Knopf (Esc bleibt).
@@ -6619,7 +6641,7 @@ Browser beim Laden durchführt, nicht nur eine Syntaxprüfung einzelner
 Dateien) schlug fehl zu reproduzieren - alle Module/Exporte lösten sich
 korrekt auf. Eine Suche nach einer zweiten `constants.js`-Kopie im gesamten
 Benutzerprofil ergab nur eine unabhängige, JS-lose GitHub-Alt-Version des
-Projekts (`Desktop/GitHub/Interface-Krems`, kein `js/`-Ordner vorhanden) -
+Projekts (`Interface-Krems`, früherer Stand, kein `js/`-Ordner vorhanden) -
 nicht die Ursache.
 
 **Auf Rückfrage vom Auftraggeber bestätigt:** derselbe Aufruf funktioniert
@@ -8860,7 +8882,7 @@ Startseiten-Route - ein leerer Hash wurde in `app.js` unconditional auf
 Bestand-Tab. Jetzt zeigt ein leerer Hash die neue Startseite.
 
 **Referenzquelle:** Der im Auftrag erwähnte alte Single-File-Prototyp
-existiert real unter `Desktop/GitHub/Interface-Krems/index.html` (bereits
+existiert real unter `Interface-Krems/index.html` (alter Stand; bereits
 in `css/base.css`s Farbpaletten-Kommentar referenziert) - Struktur/Klassen/
 Texte/Footer-Links/Logo-SVG wurden von dort direkt gelesen statt geraten,
 Inhalte für Hero/Einleitung/Kacheln bewusst angepasst statt wörtlich

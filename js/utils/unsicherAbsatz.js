@@ -12,8 +12,20 @@
 
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { lesbareAnmerkung, leseUnsicherheitTypen, feldBezeichnung } from './uncertainty.js';
-import { typName, auspraegungName } from '../core/unsicherheitVokabular.js'; // Auftrag 13
+import { typName, auspraegungName, standardText } from '../core/unsicherheitVokabular.js'; // Auftrag 13
 import { baueVorschlagFormular, baueVorschlagAufklapper } from '../beteiligung/vorschlagFormular.js';
+
+// Standardtexte für Felder mit Typ, zu denen die Anmerkung nichts sagt (Feldname wie in lesbareAnmerkung übersetzt)
+function standardtexteOhneAnmerkung(record, datei) {
+  if (!datei) return [];
+  const mitAnmerkung = new Set((Array.isArray(record.unsicherheit_anmerkung) ? record.unsicherheit_anmerkung : [record.unsicherheit_anmerkung])
+    .map((a) => /^\s*([^:]+):/.exec(String(a || ''))?.[1].trim().toLowerCase()).filter(Boolean));
+  return leseUnsicherheitTypen(record.unsicherheit_typ)
+    .filter((e) => !mitAnmerkung.has(e.feld.toLowerCase()))
+    .map((e) => ({ feld: e.feld, text: standardText(datei, e.feld, e.auspraegung) }))
+    .filter((e) => e.text)
+    .map((e) => `${feldBezeichnung(e.feld)}: ${e.text}`);
+}
 
 function alsText(wert) {
   return Array.isArray(wert) ? wert.join('; ') : (wert || '');
@@ -29,7 +41,9 @@ function alsText(wert) {
 // Vorschlagsformular (siehe js/beteiligung/vorschlagFormular.js). Ist der Datensatz unsicher,
 // erscheint das Formular im aufgeklappten Feld unter der Anmerkung; sonst liefert die Funktion
 // statt null einen eigenen Knopf „Änderung vorschlagen“. Ohne `vorschlag` (Fuehrungen) wie bisher.
-export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag } = {}) {
+// datei (optional, seit 18.11.2026): Name der Datendatei; dann ergänzt der Absatz für Felder mit Typ, aber ohne eigene
+// Erklärung, den Standardtext aus data/unsicherheit_standardtexte.csv.
+export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag, datei } = {}) {
   const istUnsicher = unsicherFelder.some((f) => record[f]) || Boolean(alsText(record.unsicherheit_anmerkung).trim());
   if (!istUnsicher) return vorschlag ? baueVorschlagAufklapper(vorschlag) : null;
   const wrapper = document.createElement('div');
@@ -42,7 +56,8 @@ export function baueUnsicherheitAbsatz(record, unsicherFelder, { vorschlag } = {
   const text = document.createElement('p');
   text.className = 'unsicher-absatz-text';
   text.hidden = true;
-  text.textContent = lesbareAnmerkung(record.unsicherheit_anmerkung, '; ') || 'Keine weitere Angabe.';
+  text.textContent = [lesbareAnmerkung(record.unsicherheit_anmerkung, '; '), ...standardtexteOhneAnmerkung(record, datei)].filter(Boolean).join('; ')
+    || 'Keine weitere Angabe.';
   // Auftrag 13: Detailansicht unverändert, ergänzt um Typ und Ausprägung je Feld (Anzeigenamen aus den Datendateien)
   const typen = leseUnsicherheitTypen(record.unsicherheit_typ);
   const typText = typen.length

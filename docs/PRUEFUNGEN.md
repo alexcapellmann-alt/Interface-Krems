@@ -46,7 +46,7 @@ Alle Skripte erwarten einen laufenden Server; Adresse über `PRUEF_BASIS`. Für 
 nehmen (der Testserver auf 8845 bedient nur eine Anfrage zugleich):
 
 ```
-python server_gross_klein.py "C:\Users\ali\Desktop\GitHub\Interface-Krems" 8901
+python server_gross_klein.py "..\..\Interface-Krems" 8901
 ```
 
 | Prüfung | Skript (in `Nachbesserung_2026-11-15/tools/`) | Ergebnis |
@@ -81,6 +81,28 @@ Matrix 0 Abstürze, 0 „leer ohne Hinweis“, 0 „stark abweichend“ ohne Hin
 Auftrag: `git archive <commit>` in einen Ordner außerhalb des Repositorys und auf eigenem Port starten. Zuletzt
 gemessen: 57 Tests; axe 163 Zustände, 0 neue Verstöße (Vorbefund Bilderwand bei 768 px Höhe); Sitzung mit und ohne
 Modus bei 1366×768 und 1280×720 ohne Fehler (PROJEKTLOG 95).
+
+**Auftrag 14 (18.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a14/werkzeuge/`:
+- `p2_beschreibung.mjs`: Beschreibung der Kachel im Zugänglichkeitsbaum, Hinweis beim Fokus, Text nach dem Aufklappen.
+- `p3_markergroesse.mjs vorher|nachher`: Markergröße benannter Orte in „Licht an“, im Modus und mit nur „Ortsangabe“.
+- `p4_bilderwand.mjs vorher|nachher`: Bilderwand mit geöffnetem Info-Text bei 1366 × 768 und 1280 × 720, axe mit den
+  Regeln aus WCAG 2.2.
+- `sitzung_modus.mjs`: Kopie von `b_sitzung_modus.mjs` mit Ausgabe nach `a14/regression`.
+
+axe über alle Zustände weiter mit `a13/werkzeuge/b_axe.mjs` (`PRUEF_AUSGABE`). Tests 59 → 60 (`node --test "tests/*.test.mjs"`); axe 161 Zustände in 34 Ansichten mit WCAG-2.2-Regeln, 0 Verstöße (der Bilderwand-Vorbefund ist behoben); Sitzung ohne Modus 39 Ansichten, mit Modus 42 Schritte, je bei 1366 × 768 und 1280 × 720 ohne Fehler und ohne Ersatztext; Zahlen des Modus bestätigt: Regesten 687, Karte 100 von 224, Stammbaum 26 von 75.
+
+**Grenzen der Prüfmethode (für Kapitel 7):**
+- **Feste Fenstergrößen:** Geprüft wird bei festen Fenstergrößen, meist 1366 × 900, 1366 × 768 und 1280 × 720.
+  Befunde, die nur bei anderen Höhen oder Breiten auftreten, bleiben unentdeckt; so war es beim Bilderwand-Kopf, den erst
+  768 px Höhe zeigte.
+- **Regelsätze von axe:** Die Ergebnisse hängen vom gewählten Regelsatz ab. Die Regel `target-size` gehört zu WCAG 2.2
+  und läuft nur mit dem Schlagwort `wcag22aa`. „axe 0 Verstöße“ gilt jeweils für die genannten Größen und Regeln.
+- **Kontraste in SVG:** Sie sind berechnet (Farbwerte gegen Hintergrund), nicht gemessen. axe meldet viele SVG-Texte als
+  „incomplete“.
+- **Erklärung beim Überfahren:** Am einzelnen Feld einer Kachel gibt es sie nur mit der Maus. Tastatur und Touch erreichen
+  dieselbe Erklärung über den Fokus auf die Kachel bzw. das Aufklappen, Bildschirmleser über die Beschreibung der Kachel.
+- **Wirkung des σ-Knopfs:** Gezählt wurde in Auftrag 13 nur eine Art der Kennzeichnung (hell markiert). Kennzeichnungen
+  durch Einblenden oder Stricheln, die erst nach einer Auswahl erscheinen, entgingen der Zählung (PROJEKTLOG 96, Punkt 5).
 
 ## 3. Datenerhebungen (nur lesen)
 

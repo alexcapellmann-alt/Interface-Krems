@@ -993,9 +993,13 @@ function fuegeStyleEin(container) {
   const style = document.createElement('style');
   style.textContent = `
     .bw-wurzel { display: flex; flex-direction: column; height: 100%; min-height: 520px; background: ${FARBE.buehne};
-      color: ${FARBE.text}; border-radius: var(--radius); overflow: hidden; position: relative; }
-    .bw-kopf { position: relative; flex: 0 0 auto; height: clamp(110px, 22vh, 190px); overflow: hidden; }
-    .bw-wolke { position: absolute; inset: 0; }
+      color: ${FARBE.text}; border-radius: var(--radius); overflow: hidden; overflow: clip; position: relative; }
+    /* Auftrag 14, Punkt 4: Der Info-Text (bis 420 px) sitzt im Kopf (110–190 px). Mit overflow: hidden am Kopf scrollte der
+       Browser den Kopf beim Fokus auf den Info-Text um bis zu 49 px; die schrägen Ortsnamen rutschten über die
+       Ansichten-Laschen darüber, und der Info-Text war abgeschnitten. Jetzt schneidet nur die Wolke ab (clip ist nicht
+       scrollbar), der Info-Text darf über die Bühne darunter ragen und scrollt in sich. */
+    .bw-kopf { position: relative; flex: 0 0 auto; height: clamp(110px, 22vh, 190px); }
+    .bw-wolke { position: absolute; inset: 0; overflow: hidden; overflow: clip; }
     .bw-ort { position: absolute; bottom: 10px; transform-origin: 0 100%; transform: rotate(-${WOLKE_WINKEL}deg); white-space: nowrap;
       cursor: pointer; background: none; border: 0; padding: 1px 6px; margin: 0; color: ${FARBE.papier}; font: inherit; font-weight: 700;
       text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; transition: color .2s, opacity .2s;

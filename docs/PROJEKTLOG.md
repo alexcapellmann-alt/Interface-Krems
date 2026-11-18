@@ -14,6 +14,19 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-11-16/18 – `urkunden.csv`: Spalten `ausstellungsort_unsicher` und `kategorien_unsicher`, Typen für Fotos und Kategorien (Entscheidung des Autors)
+
+| Datei | Zeile | Spalte | vorher | nachher |
+|---|---|---|---|---|
+| `urkunden.csv` | alle 1067 | `ausstellungsort_unsicher` (neu, letzte Spalte) | – | `ja` bei 575 Urkunden mit Typ für `ausstellungsort` (571 fehlt, 4 ungenau), sonst `nein` |
+| `urkunden.csv` | alle 1067 | `kategorien_unsicher` (neu, 18.11., letzte Spalte) | – | `ja` bei 14 Urkunden mit Typ für `kategorien`, sonst `nein` |
+| `urkunden.csv` | `StAK-UrkSt-0004` | `unsicherheit_typ` | `ausstellungsort: geographisch/fehlend` | `…\|bilder: attribut/mehrdeutig` (16.11. zunächst `objekt/mehrdeutig`, am 18.11. geändert: die Anmerkung betrifft die Zuordnung der Aufnahmen, nicht Fehlendes) |
+| `urkunden.csv` | `StaAKr-0566b` | `unsicherheit_typ` | `ausstellungsort: geographisch/fehlend` | `…\|kategorien: zuordnung/fehlend` |
+| `urkunden.csv` | StaAKr-Hollenburg-0001, -0003 bis -0006, StaKr-0103, StAK_255b, StaKr-0271a, -0303a, -0511a, StaKr-0035, StaAKr-0778, StaKr-0867a | `unsicherheit_typ` | ohne Eintrag zu Kategorien | `…\|kategorien: zuordnung/fehlend` (18.11.) |
+
+Sonst keine Zelle geändert (Abgleich aller Spalten gegen den Stand 59dac23). Anmerkungen wurden nicht ergänzt; Erklärungen ohne
+eigene Anmerkung kommen aus der neuen Datei `unsicherheit_standardtexte.csv`.
+
 ### 2026-11-15 – `unsicherheit_anmerkung` in fünf Tabellen auf das Format `<feldname>: <Erklärung>` gebracht
 
 Nur der Vorspann geändert, Erklärungstexte wörtlich; 578 Einträge in 553 Datensätzen (`urkunden.csv` 174,
@@ -179,7 +192,7 @@ Schadensmuster.
   erneut gegengeprüft: 0 verbleibende Abweichungen. 1 Zeile geändert.
 
 **Punkt 3 – Vorschaubilder für vier UrkSt-Urkunden ergänzt:**
-Vollbilder aus `C:\Users\ali\Desktop\Master-Vis\fotos\AAA` (von
+Vollbilder aus `Master-Vis\fotos\AAA` (Vorprojekt, außerhalb des Repositorys; von
 monasterium.net, vom Auftraggeber heruntergeladen), Zuordnung eindeutig
 (vier Signatur-Unterordner, je Datei einer Signatur zuordenbar). Erzeugt
 mit einem projektfremden, nicht committeten Python-Skript: längste Seite
@@ -261,6 +274,73 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-18 (96) – Nachbesserungen am Unsicherheits-Modus, Prüfung des Repositorys (Auftrag 14)
+
+Bericht und Belege: `Unsicherheitstypen_2026-11/a14/` (`REPO_PRUEFUNG.md`, Bildschirmfotos `p2_*`, `p3_*`, `p4_*`,
+Messwerte `p3_*.json`, `p4_*.json`, Regression in `regression/`, Werkzeuge in `werkzeuge/`).
+
+1. **Repository (nur lesend, Ampel Gelb):** Arbeitsordner, Quellenauszüge, Excel-Dateien, Schlüssel und Systemdateien
+   liegen weder im Repository noch in der Historie (die Arbeitsordner liegen neben dem Repository). Zur Kenntnis:
+   - private E-Mail-Adresse in diesem Protokoll (seit d9acd3f, ohnehin in den Commit-Angaben sichtbar);
+   - lokale Pfade in `.claude/CLAUDE.md`, `docs/` und zwei CSS-Kommentaren;
+   - `.claude/` ist getrackt;
+   - `docs/` und `tests/` liefert GitHub Pages mit aus, `.claude/` nicht.
+
+   Neu `.gitignore` (Systemdateien, Protokolle, `.env`, Arbeitsordner, Excel-Dateien, Arbeitskopien); keine getrackte
+   Datei fällt darunter. Nach Entscheidung des Autors: E-Mail-Adresse in diesem Protokoll durch „(Adresse entfernt)“
+   ersetzt; lokale Pfade in `docs/`, `css/base.css`, `css/startseite.css` und `.claude/CLAUDE.md` durch relative Angaben
+   ersetzt. Die Historie bleibt unverändert; ältere Commits tragen die Adresse weiter. Entscheidungen des Autors (Gmail-Zeile, `.claude/`, Öffentlichkeit von `docs/`) stehen im
+   Bericht.
+2. **Erklärung zugänglich:** Die Kachel trägt im Modus `aria-describedby` auf einen Absatz mit der Erklärung je leuchtendem
+   Feld. Quelle wie bisher: eigene Anmerkung, sonst Standardtext. Die Logik ist neu rein in `js/utils/uncertainty.js`:
+   `erklaerungFuerFeldAus`, `beschreibungFuerFelder`.
+   - Bildschirmleser lesen die Erklärung beim Fokus auf die Kachel.
+   - Tastatur: Der Fokus zeigt denselben Text als Hinweis; Enter klappt die Kachel auf, der Text steht dann sichtbar darin.
+   - Touch: Tippen klappt die Kachel auf, gewählt wurde also die sichtbare Erklärung im aufgeklappten Zustand.
+   - Grenze: Ein einzelnes Feld ist nicht fokussierbar; den Hinweis am Feld gibt es nur mit der Maus.
+   - Geprüft an StaKr-0103: Beschreibung „Ausstellungsort: Im Regest nicht angegeben. Kategorien: Keine inhaltliche
+     Kategorie zugeordnet.“; nach Blur unverändert.
+   - Behoben: `versteckeTooltip()` entfernt `aria-describedby` am Anker; die Kachel setzt es danach wieder auf den
+     eigenen Absatz.
+3. **Markergröße der Karte:** Die Größe steht für die Zahl aller Urkunden, die den Ort nennen (`aggregation[].anzahl`).
+   Der Zeitregler wählt nur, welche Orte erscheinen. Sie folgt einer Wurzelskala von 5 bis 24 px (`js/viz/karte.js`, `aktualisiereMarker`).
+   - Bisher war der Höchstwert der Skala der größte **sichtbare** Ort. Im Modus fiel er damit auf den größten
+     unsicheren Ort. Mit „Alle“ fiel das nicht auf, weil Krems und Wien selbst leuchten. Mit nur „Ortsangabe“ wuchsen
+     Wiener Neustadt von 10 auf 24 px, Korneuburg von 9 auf 20, Gföhl von 6 auf 9.
+   - Jetzt kommt die Skala aus allen Orten des Zeitraums: gleiche Größe in beiden Zuständen (Messung `p3_nachher.json`).
+     Der Zeitregler ändert die Skala wie bisher.
+4. **Bilderwand bei 768/720 px Höhe:** Der Info-Text (bis 420 px, scrollt in sich) sitzt im Kopf (`clamp(110px, 22vh,
+   190px)`). Ursache war nicht der Info-Text selbst:
+   - Weil der Kopf `overflow: hidden` hatte, scrollte der Browser ihn beim Fokus auf den Info-Text um 49 px.
+   - Die schräge Beschriftung „Mautern an der Donau“ ragte dann mit ihrer Fläche über die Laschen „Zeitachse“ und
+     „Dot Plot“ (bei 1280 × 720 „Dot Plot“ und „Kategoriefluss“).
+   - Der Info-Text selbst war bis auf rund 120 px abgeschnitten.
+
+   Jetzt schneidet nur die Wolke ab (`overflow: clip`, nicht scrollbar). Der Info-Text darf über die Bühne ragen und ist
+   ganz sichtbar. axe mit geöffnetem Info-Text bei 1366 × 768 und 1280 × 720 ohne Befund.
+
+   Gefunden wurde der Befund nur mit den Regeln aus WCAG 2.2 (`wcag22aa`, Regel `target-size`). Frühere Aussagen
+   „axe 0 Verstöße“ galten für die damals geprüften Fenstergrößen und Regelsätze. Das ist eine Grenze der Prüfmethode,
+   für Kapitel 7.
+5. **σ-Knopf in Kategoriefluss und Verbindungskarte: nicht ausgeblendet.** Die Vorprüfung widerlegt die Annahme, der
+   Knopf habe keine Wirkung:
+   - **Kategoriefluss:** Er blendet die Knoten „(ohne Kategorie)“ und „(kein Ort)“ ein (Texte 33 → 35, gestrichelte
+     Elemente 16 → 26).
+   - **Verbindungskarte:** Nach Wahl eines Orts strichelt er die Verbindungen mit unsicherer Ortsangabe (Mautern 4 von 14,
+     Wien 13 von 60, Krems 3 von 32).
+   - **Messfehler in Eintrag 95:** Gezählt wurde dort nur die Klasse für hell markierte Elemente.
+   - **Folge eines Ausblendens:** Die Urkunden ohne Kategorie bzw. ohne Ort wären im Kategoriefluss nicht mehr
+     erreichbar. Das widerspricht Masterprompt Abschnitt 12, „nicht stillschweigend weglassen“.
+   - **Verweis im Infotext:** Der Infotext des Kategorieflusses (`data/infotexte.csv`, `sankey`) verweist ausdrücklich auf
+     „Unsicherheiten anzeigen“. Der Infotext der Verbindungskarte nennt den Knopf nicht.
+   - **Entscheidung des Autors (18.11.2026):** Der Knopf bleibt in beiden Ansichten. Die Berichtigung von Eintrag 95 gilt;
+     die Aussage „ohne Wirkung“ wird in der Arbeit nicht übernommen.
+   - **Nebenbefund:** In der Verbindungskarte hebt das Umschalten von σ die Wahl des Orts auf. Der Autor nimmt ihn als
+     Fehler in Auftrag 15 auf.
+   - Die Typen `geographisch` sind vorhanden (Kategoriefluss 69, Verbindungskarte 161); eine Umstellung auf den Modus
+     ist möglich.
+6. **Regression:** Tests 59 → 60 (`node --test "tests/*.test.mjs"`); axe 161 Zustände in 34 Ansichten mit WCAG-2.2-Regeln, 0 Verstöße (der Bilderwand-Vorbefund ist behoben); Sitzung ohne Modus 39 Ansichten, mit Modus 42 Schritte, je bei 1366 × 768 und 1280 × 720 ohne Fehler und ohne Ersatztext; Zahlen des Modus bestätigt: Regesten 687, Karte 100 von 224, Stammbaum 26 von 75.
+
 ## 2026-11-16 (95) – Unsicherheits-Modus „Licht aus“, Pilot in Regesten, Karte und Stammbaum (Auftrag 13)
 
 **Bestätigung nach Masterprompt §14 (Auftrag 12, ergänzt am 16.11.2026):** Der Autor bestätigt, dass die erweiterte
@@ -323,7 +403,8 @@ Freigabe des Autors (16.11.2026) mit 13 Entscheidungen, umgesetzt wie folgt:
     Gesetzt als `--accent-dunkel`; im Modus gilt `--accent: var(--accent-dunkel) !important`, weil app.js `--accent` als
     Inline-Stil setzt. Keine feste Farbe im Code.
 11. Offener Punkt: In Kategoriefluss und Verbindungskarte hat der σ-Knopf keine sichtbare Wirkung (0 hell gekennzeichnete
-    Elemente, Messung Stufe A und B). Nicht geändert.
+    Elemente, Messung Stufe A und B). Nicht geändert. **Berichtigt in Eintrag 96:** Gezählt wurde nur die Klasse für hell
+    markierte Elemente; der Knopf wirkt in beiden Ansichten auf andere Weise.
 12. Logo auf heller Unterlage; Fehlermarkierung im Modus grau-weiß (`--unvollstaendig`); Methodenhinweise nach
     `geltungsbereich` (Datei/Feld, Ansicht, Bereich), ein Hinweis zu einer Massengruppe steht an deren Schalter.
 13. Commit 8f17b7c (Aufträge 11 und 12) geprüft; alle Prüfungen an der Umsetzung, nicht an der Attrappe.
@@ -356,7 +437,42 @@ Datierung 26 (nur zeitlich befüllt; Identifikation und Beziehung kommen in `fam
 - Zahlenvergleich alter σ-Filter (A2-Messung vorher/nachher): alle 14 übrigen σ-Ansichten gleich; die drei
   Pilotansichten wie vorgesehen anders.
 
-**Offene Punkte:** Kategoriefluss und Verbindungskarte (Punkt 11); die fünf Regesten-Anmerkungen ohne Typ (Punkt 9);
+**Nachtrag 16.11.2026 (nach Rückmeldung zu Auftrag 13):**
+
+- Gegenüberstellung der Mengen in den Regesten (Stand vor den Änderungen dieses Tages):
+
+  | Menge | Zahl | Unterschied |
+  |---|---:|---|
+  | alter σ-Filter (`*_unsicher` = ja oder Anmerkung) | 215 | – |
+  | neuer Modus, „Alle“ ohne Massenangabe | 213 | − StaAKr-0007, -0008, -0876 (Vermerke zum ganzen Datensatz: Dublette, weitere Ausfertigung; kein Typ nötig), − StAK-UrkSt-0004, StaAKr-0566b (Anmerkung zu Fotos bzw. Kategorien, beide Felder nicht im Modus), + StaAKr-0506, -0517, -0518 (Feldlager, nur „Ausstellungsort ungenau“, ohne Markierung) |
+  | neuer Modus mit Massenangabe | 687 | 212 der 215 enthalten (ohne die drei Vermerke), 475 dazu |
+
+  Typ ohne Markierung betraf nicht nur die Feldlager, sondern alle 575 Urkunden mit Typ beim Ausstellungsort: Die
+  Spalte hatte keine Markierung. Entscheidung des Autors: Spalte `ausstellungsort_unsicher` angelegt; Fotos
+  (StAK-UrkSt-0004: Überlieferung, mehrdeutig) und Kategorien (StaAKr-0566b: Zuordnung, fehlt) bekommen einen Typ
+  (Datenkorrekturen oben). Im Modus der Regesten zählen seither auch Fotos und Kategorien; „Alle“ bleibt 687, da beide
+  Urkunden schon „Ausstellungsort fehlt“ tragen. Mit der früheren Schwelle (30 %) wären es 215, dieselbe Zahl wie der
+  alte Filter, aber eine andere Menge. Test: `urkunden.csv` ohne Warnung „Typ ohne Markierung“.
+- Schwelle für Massenangaben: die Tabelle zu 20/25/30/35/40 % steht oben (Punkt 3); seit 16.11.2026 ausgeschaltet
+  (CHANGELOG 243).
+- Bilderwand: „axe ohne Befund“ galt in früheren Prüfungen nur für die dort geprüften Fenstergrößen (Grenze der Methode,
+  für Kapitel 7); Behebung in einem eigenen kleinen Auftrag.
+- 18.11.2026: Die 13 Urkunden ohne Kategorien tragen `kategorien: zuordnung/fehlend`, Spalte `kategorien_unsicher` (14 ja).
+  Alle 13 trugen schon „Ausstellungsort fehlt“: „Alle“ in den Regesten bleibt 687 (gemessen; Zuordnung 14, Einzelangabe 1).
+  Fotos StAK-UrkSt-0004 als Einzelangabe statt Überlieferung; der Erklärtext von Überlieferung bleibt unverändert. Eine
+  Einzelangabe mit nur einem Fall ist für die Arbeit eine Beobachtung: Das Schema kennt Typen, die in den Daten kaum
+  vorkommen. Erklärungen ohne eigene Anmerkung: `unsicherheit_standardtexte.csv` (Detailansicht und Überfahren der Kachel).
+- StaAKr-0521 (Leuven) trägt „Ausstellungsort ungenau“, ist aber kein Feldlager; vorläufig der allgemeine Standardtext.
+  Ob `mehrdeutig` genauer wäre, entscheidet der Autor nach Sichtung des Regests.
+- Zeitachse und Bilderwand zählen `ausstellungsort_unsicher` und `kategorien_unsicher` nicht mit (`istRecordUnsicher` dort
+  unverändert): σ hat dort bis zur Umstellung auf „Licht aus“ die ältere Bedeutung. Beim Umstellen kommen etwa 475 Urkunden
+  hinzu.
+- Schemamangel: `unsicherheit_anmerkung` wird bei StaAKr-0007, -0008 und -0876 für Hinweise zum ganzen Datensatz ohne
+  Unsicherheit mitbenutzt („Doppelt erfasst als …“, „Weitere Ausfertigung …“). Der alte σ-Filter zählte sie deshalb als
+  unsicher. Die Markierung bleibt vorerst, damit sich nichts still ändert; später mit einer eigenen Hinweisspalte beheben.
+
+**Offene Punkte:** Kategoriefluss und Verbindungskarte (Punkt 11, vor Abgabe der Arbeit entscheiden: ausblenden oder
+umstellen); die drei Datensatz-Vermerke ohne Typ (StaAKr-0007, -0008, -0876, so gewollt);
 Identifikations- und Beziehungsangaben im Stammbaum fehlen in den Daten; Vorbefund Bilderwand bei 768 px Höhe; die
 übrigen σ-Ansichten folgen über `lichtAus` in eigenen Aufträgen (Eignungsmatrix als Vorlage).
 
@@ -480,8 +596,9 @@ Wichtigste Befunde (Vorher = Septemberzahlen aus dem Gespräch):
   „Religion“ hat 1 religiösen Inhalt. „Religion“ bei 1 von 315 Beständen (gleich).
 - E7: 1250 ohne Beruf und Sektor, dieselben Einträge; `zuordnung_sicher = nein` 20, davon nur 11 zum Sektor. Spalte
   `Wirtschaftssektor_unsicher` existiert nicht.
-- E8/E9: „S“ = Sonderfälle nach Dietrich (7, mit Seitenangaben); Lang (Gruppe D/E) von Dietrich angezweifelt. Für
-  „(geschaetzt)“ beim Geschlecht gibt es bei Dietrich keine Begründung; die fünf Orte „unklar“ nennt er im Text.
+- E8/E9: „S“ = Sonderfälle nach Dietrich (7, mit Seitenangaben); Lang (Gruppe D/E) von Dietrich angezweifelt. Die Angabe
+  „(geschaetzt)“ beim Geschlecht wird bei Dietrich nicht näher erläutert; die Behandlung als Schätzung nach dem Namen ist
+  eine Projektentscheidung. Die fünf Orte „unklar“ nennt er im Text.
 - E10: keine Beziehung im Stammbaum als unsicher markiert; 43 ohne Eltern = Rand des Ausschnitts.
 - E11: 28 Bestände mit auslesbaren fehlenden Jahrgängen (Sept. 27), sechs Fehlerfälle benannt; 21 Hinweissätze mit einem
   Muster; 8 vorsichtige Herkunftsaussagen (Sept. etwa 10); 17 Verweise auf andere Archive.
@@ -3245,7 +3362,7 @@ verbleibende Abweichungen bei allen 256 Orten.
 
 ### 3. Vorschaubilder der vier UrkSt-Urkunden
 `StAK-UrkSt-0001`, `-0003`, `-0004`, `-0005a`: 13 Vorschaubilder aus den
-Vollbildern in `C:\Users\ali\Desktop\Master-Vis\fotos\AAA` erzeugt (320 px
+Vollbildern in `Master-Vis\fotos\AAA` erzeugt (320 px
 längste Seite, JPEG, EXIF entfernt, Ø 11.101 Byte), `data/urkunden.csv`
 Spalte `bilder` befüllt (Sonderreihenfolge bei `StAK-UrkSt-0004`, nicht
 natürliche Sortierung), `unsicherheit_anmerkung` bei `StAK-UrkSt-0004`
@@ -6396,7 +6513,7 @@ Arbeitsordner auf verlorene `CLAUDE.md`/Anweisungsdateien prüfen) und
 Punkt 3a (welche der vier Bürgerbuch-Ansichten stellen Einzeleinträge dar)
 klären. **Keine Codeänderung in diesem Eintrag.**
 
-### Punkt 2 - alter Arbeitsordner (`C:\Users\ali\Desktop\GI_2.0`)
+### Punkt 2 - alter Arbeitsordner (`GI_2.0`, außerhalb des Repositorys)
 
 Keine `CLAUDE.md` gefunden (`ls` → „No such file or directory"). Kein
 `AGENTS.md`, kein `README.md`. Einziger Treffer: `.claude\launch.json`
@@ -6606,7 +6723,7 @@ Eingriffe, bevor Punkt 2-5 begonnen werden.
 
 **Auftrag (Kurzfassung):** Vier Klärungspunkte vor der Freigabe von 2a-K,
 reine Erhebung/Vorschlag, keine Codeänderung. Ab sofort wird ausschließlich
-in `C:\Users\ali\Desktop\GitHub\Interface-Krems` (Zweig `main`) gearbeitet,
+im Repository `Interface-Krems` (Zweig `main`) gearbeitet,
 der bisherige Ordner `GI_2.0` wird nicht mehr verwendet.
 
 ### Nachtrag (wichtig, erst gegen Ende der Sitzung bemerkt)
@@ -6663,7 +6780,7 @@ Untracked files:
 
 $ git log -1
 commit d247bb209f38c1c7f9bc76a3ad91e6756cedd732
-Author: alexcapellmann-alt <alex.capellmann@gmail.com>
+Author: alexcapellmann-alt <(Adresse entfernt)>
 Date:   Tue Sep 22 09:04:12 2026 +0200
 
     Alpha durch Beta ersetzt
@@ -6676,7 +6793,7 @@ Dateiliste, auch die Etappen davor: Führungen Teil 1/2a, SCHEMA.md-
 Aktualisierung, `literatur.csv`/`ratsprotokolle.csv`) liegt hier nur als
 **uncommitteter Arbeitsstand** vor, nicht als Commit. `server_starten.bat`
 (untracked) verweist zudem noch auf den alten Ordner `GI_2.0` und Port 8000
-(`cd /d C:\Users\ali\Desktop\GI_2.0` / `python -m http.server 8000`) - passt
+(`cd /d …\GI_2.0` / `python -m http.server 8000`) - passt
 nicht mehr zum neuen Arbeitsort, wurde aber wie angewiesen nicht angefasst.
 
 Weisungsgemäß **nichts nachkopiert oder committet** - nur gemeldet, Abgleich
@@ -6767,7 +6884,7 @@ nötig.
 ```
 python nocache_server.py <repo-pfad> <port>
 # Beispiel:
-python nocache_server.py "C:\Users\ali\Desktop\GitHub\Interface-Krems" 8845
+python nocache_server.py "..\Interface-Krems" 8845
 ```
 
 **Port:** frei wählbar, in dieser Sitzung mit 8845 getestet (nicht 8834,
@@ -8726,7 +8843,7 @@ Detailansicht dort zeigt.
 ### Herkunft des Referenz-Screenshots (Selbstauskunft)
 
 Der vom Auftraggeber mitgeschickte Screenshot stammte aus einer Browser-URL
-`file:///C:/Users/ali/Desktop/Master-Vis/index.html`, NICHT aus `GI_2.0`
+`file:///…/Master-Vis/index.html`, NICHT aus `GI_2.0`
 (diesem Projekt) - ein separates, älteres, monolithisches Vorprojekt
 (einzelne sehr große JS-/Python-Änderungsskript-Dateien statt der
 ES-Modul-Struktur hier, siehe `ls Desktop/Master-Vis`). Vor Beginn geprüft,
@@ -9081,11 +9198,11 @@ Auflösungs-Mechanismus, den der Browser beim regulären Laden verwendet -
 kein synthetischer Test.
 
 **Suche nach einer zweiten `constants.js`-Kopie:** vollständige Suche im
-Benutzerprofil (`find "C:\Users\ali" -iname "constants.js"`) ergab nur einen
+Benutzerprofil (`find "<Benutzerprofil>" -iname "constants.js"`) ergab nur einen
 irrelevanten Treffer in einer Chrome-Erweiterung
 (`.../Extensions/.../student-detection/constants.js`, Adobe-Acrobat-
 Erweiterung, thematisch unabhängig). Eine bereits vorhandene, unabhängige
-Alt-Version des Projekts (`Desktop/GitHub/Interface-Krems`) wurde geprüft
+Alt-Version des Projekts (`Interface-Krems`, früherer Stand) wurde geprüft
 und ausgeschlossen - sie enthält KEINEN `js/`-Ordner (flache
 `index.html`+Bild-Assets, eine ältere Single-File-Vorstufe) und kann daher
 nicht die Quelle einer widersprüchlichen `constants.js` sein. `GI_2.0`
@@ -11147,7 +11264,7 @@ konsequenterweise keinen der fünf Links als aktuell - live verifiziert
 Der Auftrag erwähnt einen "Referenz-Screenshot" (nicht im Chat als Bild
 mitgegeben). Statt aus der Textbeschreibung zu raten: `css/base.css`s
 eigener Kopfkommentar verweist bereits auf den Ursprung der Farbpalette
-("Desktop/GitHub/Interface-Krems/index.html, :root-Block") - dieser Pfad
+("Interface-Krems/index.html, :root-Block") - dieser Pfad
 wurde geprüft und existiert tatsächlich auf diesem Rechner (12.372 Zeilen,
 inkl. eingebetteter Bild-Assets `Krems-Urkunde-Friedrich-III-web.jpg`,
 `books-web.jpg`, `körnermarkt.webp`, `netzwerk.png`). Struktur, exakte
@@ -11262,8 +11379,8 @@ müssen die Links auf nicht existierende Pfade zeigen?
 
 **Befund (aktiv geprüft, nicht angenommen):** Im Projektordner (`GI_2.0`)
 existiert kein `assets`-/`docs`-Ordner mit diesen drei Dateien - lokale
-Pfade wären tatsächlich tote Links. Im alten Prototyp (`Desktop/GitHub/
-Interface-Krems/index.html`, Zeile 2016-2018) verweisen dieselben drei
+Pfade wären tatsächlich tote Links. Im alten Prototyp (`Interface-Krems/
+index.html`, Zeile 2016-2018) verweisen dieselben drei
 Footer-Links jedoch bereits nicht auf lokale Dateien, sondern auf reale,
 öffentlich gehostete PDFs auf der offiziellen Stadt-Krems-Website:
 - `https://www.krems.at/fileadmin/user_upload/Archiv_Krems_Archivordnung_publiziert_03_2019.pdf`
@@ -13528,7 +13645,7 @@ bestätigt. Keine Konsolenfehler während des gesamten Durchlaufs.
 deutlich über der 100-Zeilen-Obergrenze für EINE Funktion, aber in ca. 30 kleine
 Funktionen zerlegt - keine einzelne Funktion überschreitet die Grenze).
 
-**Vorlage:** `Desktop/GitHub/Interface-Krems/index.html`, `initTreemap()`
+**Vorlage:** `Interface-Krems/index.html` (alter Prototyp), `initTreemap()`
 (Zeile ~3552 ff.) - Architektur direkt übernommen: Wurzel-Ansicht rendert ALLE
 Bestand-Blätter direkt (nicht aggregierte Kategorie-Kacheln), mit einer separaten
 Kategorie-Umrandung + farbiger Namens-Pille als visueller Overlay-Layer; Klick
@@ -13687,7 +13804,7 @@ freigegeben, siehe Chat).
 **Farb-/Schrift-Herkunft:** Akzentfarbe `#2c4a6e` (+ `#3d6591` als
 Hover-Variante) sowie die übrige Palette (`--bg`/`--surface`/`--border`/
 `--text`/`--text-muted`) 1:1 aus dem alten Single-File-Projekt übernommen
-(`Desktop/GitHub/Interface-Krems/index.html`, `:root`-Block). Kontrast
+(`Interface-Krems/index.html`, `:root`-Block). Kontrast
 rechnerisch geprüft (WCAG-Formel, siehe Snapshot-Artefakt): Akzentfarbe als
 Text 8.34:1 (auf `--bg`) bzw. 9.08:1 (auf `--surface`), weit über der 4.5:1-
 Anforderung - keine Ersatzfarbe nötig. Schriften **Inter**/**Playfair

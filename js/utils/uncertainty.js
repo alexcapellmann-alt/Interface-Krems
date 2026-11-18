@@ -16,6 +16,7 @@
 const FELD_BEZEICHNUNGEN = {
   datum: 'Datierung',
   orte: 'Ort',
+  ausstellungsort: 'Ausstellungsort',
   personen: 'Personen',
   personen_id: 'Personenzuordnung',
   kategorien: 'Kategorien',
@@ -125,4 +126,29 @@ export function pruefeUnsicherheitTypen(record, vokabular) {
     if (!mitTyp.has(feld)) warnungen.push(`${k} ist gesetzt, aber es gibt keinen Typ für „${feld}“`);
   });
   return { fehler, warnungen };
+}
+
+// Auftrag 14 (18.11.2026): Erklärung zu einem Feld aus den Daten – die eigene aus `unsicherheit_anmerkung` (Einträge
+// `<feld>: …`), sonst der Standardtext zu Typ/Ausprägung des Felds (Zeilen aus data/unsicherheit_standardtexte.csv),
+// sonst wie bisher die ganze Anmerkung (filtereErklaerungFuerFeld). Rein, ohne Laden; js/core/unsicherheitVokabular.js
+// reicht die geladenen Standardtexte durch.
+const kleinText = (v) => String(v ?? '').trim().toLowerCase();
+export function erklaerungFuerFeldAus(record, datei, feld, standardtexte = []) {
+  const anmerkung = record?.unsicherheit_anmerkung;
+  const eintraege = (Array.isArray(anmerkung) ? anmerkung : [anmerkung]).map((a) => String(a ?? ''));
+  const eigene = eintraege.filter((a) => a.includes(':') && kleinText(a.slice(0, a.indexOf(':'))) === kleinText(feld))
+    .map((a) => a.slice(a.indexOf(':') + 1).trim());
+  if (eigene.length) return eigene.join(' | ');
+  const t = typFuerFeld(record, feld);
+  const standard = t && standardtexte.find((z) => kleinText(z.datei) === kleinText(datei) && kleinText(z.feld) === kleinText(feld)
+    && kleinText(z.auspraegung) === kleinText(t.auspraegung))?.text;
+  return standard || filtereErklaerungFuerFeld(anmerkung, feld);
+}
+
+// Zugängliche Beschreibung einer Kachel im Modus „Licht aus“: je leuchtendem Feld „<Feldbezeichnung>: <Erklärung>“
+export function beschreibungFuerFelder(record, datei, felder, standardtexte = []) {
+  return [...new Set(felder)].map((feld) => {
+    const text = erklaerungFuerFeldAus(record, datei, feld, standardtexte);
+    return text ? `${feldBezeichnung(feld)}: ${text}` : '';
+  }).filter(Boolean).join(' ');
 }

@@ -914,7 +914,9 @@ function aktualisiereMarker() {
   bereiteLichtAusVor(); // Auftrag 13
   const sichtbareOrte = instanz.lichtAus && options.lichtAus.auswahl?.nurDiese
     ? imZeitraum.filter((ort) => wirksamFuerOrt(ort).length > 0) : imZeitraum;
-  const radiusSkala = d3.scaleSqrt().domain([1, d3.max(sichtbareOrte, (d) => d.anzahl) || 1]).range([5, 24]);
+  // Auftrag 14, Punkt 3: Größe = Zahl aller Urkunden, die den Ort nennen (der Zeitregler wählt nur die Orte). Die Skala kommt aus allen Orten
+  // des Zeitraums, nicht aus den im Modus gefilterten, damit derselbe Ort in „Licht an“ und im Modus gleich groß ist.
+  const radiusSkala = d3.scaleSqrt().domain([1, d3.max(imZeitraum, (d) => d.anzahl) || 1]).range([5, 24]);
   zeichneMarkerFuerOrte(sichtbareOrte, (d) => radiusSkala(d.anzahl), false);
   zeigeLichtAusRandliste();
   meldeLichtAus(imZeitraum);

@@ -1,0 +1,4 @@
+﻿datei;feld;auspraegung;text
+urkunden.csv;ausstellungsort;fehlend;Im Regest nicht angegeben.
+urkunden.csv;ausstellungsort;ungenau;Der Ausstellungsort ist im Regest nur ungefähr angegeben.
+urkunden.csv;kategorien;fehlend;Keine inhaltliche Kategorie zugeordnet.
