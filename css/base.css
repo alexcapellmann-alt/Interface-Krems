@@ -1,7 +1,7 @@
 /* css/base.css
    Design-Grundlage: CSS-Variablen (Farben/Typografie/Abstände), Reset,
    Fokus-Zustand. Farbpalette exakt aus dem alten Single-File-Projekt
-   übernommen (Desktop/GitHub/Interface-Krems/index.html, :root-Block) -
+   übernommen (alter Prototyp Interface-Krems/index.html, :root-Block) -
    Kontrastwerte gegen base/surface geprüft (Nutzer-Zusammenfassung).
    Schriften laut Auftrag: Inter (Fließtext/UI), Playfair Display
    (Überschriften) - werden per <link> in index.html geladen (Abschnitt 2:

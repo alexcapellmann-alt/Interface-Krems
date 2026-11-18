@@ -1,0 +1,32 @@
+# Auftrag 14 (18.11.2026): Was nicht ins öffentliche Repository gehört. Bereits getrackte Dateien bleiben davon
+# unberührt (.gitignore entfernt nichts aus dem Index und nichts aus der Historie).
+
+# Systemdateien
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Abhängigkeiten, Protokolle, temporäre Dateien
+node_modules/
+*.log
+*.tmp
+*~
+
+# Zugangsdaten und lokale Einstellungen
+.env
+.env.*
+.claude/settings.local.json
+
+# Arbeitsordner mit Belegen, Quellenauszügen, Screenshots und Zwischenlisten (liegen heute neben dem Repository;
+# die Zeilen schützen davor, dass ein solcher Ordner versehentlich hineinkopiert und mitcommittet wird)
+quellen_text/
+Vorerhebung_*/
+Unsicherheitstypen_*/
+Nachbesserung_*/
+Pruefung_*/
+
+# Arbeitskopien und Entwurfsdaten (die ausgelieferten Daten liegen als CSV in data/)
+*_merged.csv
+*.xlsx
+*.xls
+~$*

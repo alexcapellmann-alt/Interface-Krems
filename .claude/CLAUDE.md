@@ -2,7 +2,7 @@
 
 ## Arbeitsumgebung und Versionskontrolle
 
-**Arbeitsort:** ausschließlich `C:\Users\ali\Desktop\GitHub\Interface-Krems`,
+**Arbeitsort:** ausschließlich dieses Repository (`Interface-Krems`),
 Zweig `main`. Kein anderer Ordner (insbesondere nicht der frühere
 `GI_2.0`-Ordner) wird verwendet.
 
@@ -29,8 +29,8 @@ löst damit das zuvor wiederholt aufgetretene Problem veralteter
 Testauslieferungen (siehe `docs/PROJEKTLOG.md`, Eintrag 28, Punkt 4). Liegt
 dauerhaft außerhalb des Repositorys:
 
-- Speicherort: `C:\Users\ali\Desktop\GitHub\Interface-Krems-Testserver\nocache_server.py`
-- Start: `python nocache_server.py "C:\Users\ali\Desktop\GitHub\Interface-Krems" 8845`
+- Speicherort: `..\Interface-Krems-Testserver\nocache_server.py` (Ordner neben dem Repository)
+- Start (im Ordner des Testservers): `python nocache_server.py "..\Interface-Krems" 8845`
 - Port: `8845`
 
 Alle Verifikationen laufen künftig über diesen Server, nicht mehr über

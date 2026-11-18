@@ -1,7 +1,7 @@
 /* css/startseite.css
    Startseite (Landingpage): Hero-Karussell, Einleitungstext, Drei-Spalten-
    Kachelbereich, Footer. Strukturell/gestalterisch am alten Single-File-
-   Prototyp orientiert (Desktop/GitHub/Interface-Krems/index.html), Inhalte
+   Prototyp orientiert (Interface-Krems/index.html, alter Stand), Inhalte
    angepasst an das neue Interface (siehe js/core/startseite.js). Nutzt die
    bestehenden Design-Tokens aus base.css (--accent/--border/--space-* etc.)
    statt einer eigenen Farbpalette - nur die Hero-CTA-Farbe ist neu (siehe
