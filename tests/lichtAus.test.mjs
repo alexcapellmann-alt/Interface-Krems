@@ -133,7 +133,7 @@ test('urkunden.csv: Typ und Markierung passen zusammen (ausstellungsort_unsicher
     if (fehler.length || warnungen.length) probleme.push(`${roh.signatur}: ${[...fehler, ...warnungen].join('; ')}`);
   }
   assert.deepEqual(probleme, []);
-  assert.equal(leseCsvRoh('urkunden.csv').filter((r) => r.ausstellungsort_unsicher === 'ja').length, 577); // 18.11.2026: + StaAKr-0155, StAK-UrkKr-0520 (Auftrag 15)
+  assert.equal(leseCsvRoh('urkunden.csv').filter((r) => r.ausstellungsort_unsicher === 'ja').length, 578); // 18.11.2026: + StaAKr-0155, StAK-UrkKr-0520 (Auftrag 15), StaAKr-0564 (Auftrag 16)
   assert.equal(leseCsvRoh('urkunden.csv').filter((r) => r.kategorien_unsicher === 'ja').length, 14);
 });
 

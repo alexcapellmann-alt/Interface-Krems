@@ -7,6 +7,14 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-18 (248) – Auftrag 16 (Teil 0, Punkte 3–5): Datennachträge, Zeitachse, fehlende Bürgen
+
+- `data/urkunden.csv`: Rappottenstein aus StaAKr-0258; Leuven aus StaAKr-0521 und -0564; Ausstellungsort von StaAKr-0564 „Ernberg“ (ungenau). `data/buergerbuch.csv`: fünf Einträge `Name: identifikation/mehrdeutig`, 2461 Einträge `Buergen: beziehung/fehlend`. `data/personenliste.csv`: zwei Zeilen `identifikation/mehrdeutig`. `data/unsicherheit_standardtexte.csv` (Name/mehrdeutig, Buergen/fehlend), `data/methodenhinweise.csv` (`buergschaften`). Entscheidungen des Autors; Skripte und Protokolle in `Unsicherheitstypen_2026-11/a16/`.
+- `js/viz/zeitachse.js`: Fällt die geöffnete Urkunde durch σ heraus, schließt die Sidebar mit Ansage und öffnet sich wieder, sobald die Urkunde sichtbar ist.
+- `tests/lichtAus.test.mjs`: `ausstellungsort_unsicher` 577 → 578. Entwurf des Strahls (Stufe A) ohne Produktivcode. PROJEKTLOG 99.
+
+---
+
 ## 2026-11-18 (247) – Ergänzungen Auftrag 15: Ausstellungsort zweier Urkunden, Gesamt-Sitzung, Berichte
 
 - `data/urkunden.csv`: StaAKr-0155 Ausstellungsort `mehrdeutig`; StAK-UrkKr-0520 Ausstellungsort „Im Feld bei Bocholt in Flandern“ (`ungenau`). `data/unsicherheit_standardtexte.csv`: Zeile Ausstellungsort/mehrdeutig. Entscheidung des Autors; Skript und Protokoll in `Unsicherheitstypen_2026-11/a15/`.

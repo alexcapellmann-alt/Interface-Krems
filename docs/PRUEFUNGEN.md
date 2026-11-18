@@ -110,6 +110,18 @@ Zuletzt (18.11.2026) alle Teile OK; axe 161 Zustände, 0 Verstöße; 60 Tests.
 Port läuft (z. B. 8903). Dort läuft `a13/werkzeuge/b_sigma_vergleich.mjs` (`PRUEF_BASIS`, `PRUEF_AUSGABE`), verglichen mit
 dem echten Stand. So geprüft: Bürgen-Flaggen im Bürgerbuch, 26 Ansichten unverändert (PROJEKTLOG 98).
 
+**Auftrag 16 (18.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a16/werkzeuge/`:
+- `zellen.py`: Zellen einer CSV ändern, ohne andere Zeilen anzufassen; bricht ab, wenn eine Zeile sich nicht verlustfrei
+  neu schreiben lässt.
+- `a16_teil0.py`, `a16_buergen.py`: Datenänderungen mit Protokoll.
+- `a16_zahlen.mjs vorher|nachher`: Ortsliste, Kartenpunkte, Verbindungskarte, Kategoriefluss.
+- `a16_entwurf_strahl.mjs` (`PRUEF_FENSTER`): Attrappe des Strahls in fünf Zuständen mit axe.
+- `a16_kontrast.py <ordner>`: Kontraste der Attrappe am Bildschirmfoto gemessen (Pixel, nicht Farbwerte).
+
+Die Gesamt-Sitzung wertet eine Auswahl jetzt als verloren, wenn sie nach σ ein und aus nicht wiederhergestellt ist; die
+Ausnahme für die Zeitachse ist entfallen. Zuletzt (18.11.2026): 60 Tests, axe 161 Zustände 0 Verstöße, Gesamt-Sitzung
+alle Teile OK; Attrappe Strahl 0 Verstöße in 10 Zuständen, Kontrast mindestens 6,48:1.
+
 **Grenzen der Prüfmethode (für Kapitel 7):**
 - **Feste Fenstergrößen:** Geprüft wird bei festen Fenstergrößen, meist 1366 × 900, 1366 × 768 und 1280 × 720.
   Befunde, die nur bei anderen Höhen oder Breiten auftreten, bleiben unentdeckt; so war es beim Bilderwand-Kopf, den erst

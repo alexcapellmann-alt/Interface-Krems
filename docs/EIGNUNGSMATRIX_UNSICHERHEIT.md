@@ -61,3 +61,11 @@ mit der Begründung „In der Ansicht … gibt es keine Angaben dieser Art.“
 - **Zugänglichkeit der Erklärungen:** Die Erklärung eines leuchtenden Felds steht als Beschreibung der Kachel
   (`aria-describedby`) für Bildschirmleser bereit, erscheint beim Fokus auf die Kachel als Hinweis und beim Aufklappen
   (Tippen, Klick, Enter) als Text in der Kachel. Am einzelnen Feld gibt es sie nur beim Überfahren mit der Maus.
+- **Massentypen außerhalb der Pilotansichten (18.11.2026):** Im Bürgerbuch tragen 2461 von 2791 Einträgen
+  „Beziehung, fehlt“ (fehlende Bürgen). Wird eine Bürgerbuch-Ansicht umgestellt, beträfe der Typ bei „Alle“ 88 % der
+  Einträge. Die Typenauswahl muss das abfangen (Typ abschaltbar, Hinweis in der Leiste), sonst sagt „Alle“ nichts mehr.
+- **Strahl (Entwurf, Auftrag 16):** Fehlende Jahrgänge lassen sich an ihrer Stelle auf der Zeitachse als schraffierte
+  Lücken zeigen (109 Lücken in 28 Beständen). Grenze: Viele kurze Lücken in einem Balken verschmelzen bei kleinem Zoom
+  (Mindestbreite 2 px); die Beschriftung fasst ab vier Lücken zusammen, die volle Liste steht nur in der Beschriftung
+  der Zeile und in der Seitenleiste. Bestände ohne Jahresangabe der Lücken (3) und ohne Laufzeit (18) haben keinen Ort
+  auf der Achse (ganzer Balken schraffiert bzw. Randliste). Umsetzung nach Freigabe, dann Eintrag in Abschnitt 1.

@@ -127,6 +127,7 @@ import { markiereHell } from '../utils/abdunkeln.js'; // Nachbesserung 3, Punkt 
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { rechneSchrittweise } from '../utils/kraefteLayout.js';
 import { markiereSvg } from '../utils/vollstaendigkeit.js';
+import { erzeugeLiveAnsage } from '../utils/liveAnsage.js'; // Auftrag 16, Punkt 3
 
 // Auftrag "Geteilter Info-Button", Punkt 2 - Text wörtlich wie im Auftrag
 // formuliert übernommen (Akzeptanzkriterium: "keine eigenmächtige
@@ -269,6 +270,7 @@ const anzahlKategorien = () => ermittleAlleKategorien().length;
 // automatisch mit, ohne selbst etwas davon zu wissen.
 function oeffneSidebar(record) {
   instanz.ausgewaehltesRecord = record;
+  instanz.ausgeblendetesRecord = null; // Auftrag 16, Punkt 3
   zeigeUrkundenDetail(instanz.sidebar, record);
   aktualisiereHervorhebung();
 }
@@ -276,6 +278,7 @@ function oeffneSidebar(record) {
 function schliesseSidebar() {
   if (!instanz) return;
   instanz.ausgewaehltesRecord = null;
+  instanz.ausgeblendetesRecord = null; // Auftrag 16, Punkt 3 (der Aufrufer beim Ausblenden setzt es danach neu)
   schliesseSidebarModul(instanz.sidebar, instanz.wurzel);
   aktualisiereHervorhebung();
 }
@@ -704,7 +707,12 @@ function zeichneZeitachse() {
   // wie treemap.js' schliesseSidebar()-Aufruf vor jedem Wurzel-/Kategorie-
   // Wechsel).
   if (instanz.ausgewaehltesRecord && !sichtbareRecords.includes(instanz.ausgewaehltesRecord)) {
+    // Auftrag 16, Punkt 3: die Urkunde merken und den Grund ansagen; sobald sie wieder sichtbar ist (z. B. σ aus),
+    // öffnet sich die Sidebar erneut. Schließt der Nutzer sie selbst oder wählt eine andere, gilt das Merken nicht mehr.
+    const ausgeblendet = instanz.ausgewaehltesRecord;
     schliesseSidebar();
+    instanz.ausgeblendetesRecord = ausgeblendet;
+    sageAn(`Urkunde ${ausgeblendet.signatur || ''} ist bei dieser Auswahl ausgeblendet; die Seitenleiste wurde geschlossen und öffnet sich wieder, sobald die Urkunde sichtbar ist.`);
   }
 
   const werkzeugleiste = document.createElement('div');
@@ -903,6 +911,21 @@ function zeichneZeitachse() {
     .attr('role', 'img')
     .attr('aria-label', 'Urkunden ohne auswertbares Jahr');
   if (ohneJahr.length === 0) svgUndatiert.remove();
+
+  // Auftrag 16, Punkt 3: ausgeblendete, gemerkte Urkunde wieder sichtbar -> Sidebar erneut öffnen, Fokus bleibt
+  const gemerkt = instanz.ausgeblendetesRecord;
+  if (gemerkt && sichtbareRecords.includes(gemerkt)) {
+    const vorherFokus = document.activeElement;
+    oeffneSidebar(gemerkt);
+    if (vorherFokus && vorherFokus !== document.body && vorherFokus.isConnected) vorherFokus.focus({ preventScroll: true });
+    sageAn(`Urkunde ${gemerkt.signatur || ''} ist wieder sichtbar; die Seitenleiste ist wieder geöffnet.`);
+  }
+}
+
+function sageAn(text) {
+  if (!instanz) return;
+  if (!instanz.ansage) instanz.ansage = erzeugeLiveAnsage(instanz.container, { verzoegerungMs: 150 });
+  instanz.ansage.ansagen(text);
 }
 
 export function render(container, data, options = {}) {
@@ -987,6 +1010,7 @@ export function destroy() {
   document.removeEventListener('click', behandleDokumentKlick);
   document.removeEventListener('keydown', behandleDokumentTaste);
   instanz.infoButton?.destroy();
+  instanz.ansage?.destroy();
   instanz.container.innerHTML = '';
   instanz = null;
 }

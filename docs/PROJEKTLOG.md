@@ -14,6 +14,23 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-11-18 – Auftrag 16: Rappottenstein, Leuven, Bürgerbuch, Personenliste, Bürgen (Entscheidungen des Autors)
+
+| Datei | Zeile | Spalte | vorher | nachher |
+|---|---|---|---|---|
+| `urkunden.csv` | `StaAKr-0258` | `orte`, `unsicherheit_anmerkung` | … `\|Rappottenstein, Niederösterreich` | ohne Rappottenstein |
+| `urkunden.csv` | `StaAKr-0564` | `orte`, `orte_unsicher`, Anmerkung, Typ | Leuven, Belgien; ja; `orte: geographisch/mehrdeutig` | leer; nein; Typ nur `ausstellungsort: geographisch/ungenau` |
+| `urkunden.csv` | `StaAKr-0564` | `ausstellungsort`, `ausstellungsort_unsicher` | Leuven, Belgien; nein | Ernberg; ja |
+| `urkunden.csv` | `StaAKr-0521` | `orte`, `orte_unsicher`, Anmerkung, Typ | Leuven, Belgien; ja; `orte: …` | leer; nein; nur `ausstellungsort: …` |
+| `buergerbuch.csv` | BB-0148, -0398, -0452, -1675, -1695 | `unsicherheit_typ` | leer | `Name: identifikation/mehrdeutig` |
+| `personenliste.csv` | leopold_behaim, stephan_pranntner | `unsicherheit_typ` | `personen_id: identifikation/ungenau` | `…/mehrdeutig` |
+| `buergerbuch.csv` | 2461 Einträge ohne `Buergen` | `unsicherheit_typ` | – | `…\|Buergen: beziehung/fehlend` |
+
+Dazu `unsicherheit_standardtexte.csv` (Name/mehrdeutig, Buergen/fehlend) und `methodenhinweise.csv` (`buergschaften`).
+Skripte und Protokolle: `Unsicherheitstypen_2026-11/a16/werkzeuge/a16_teil0.py`, `a16_buergen.py`,
+`aenderungsprotokoll_teil0.csv`, `aenderungsprotokoll_buergen.csv`. Die Einträge Leuven und Rappottenstein in `orte.csv`
+bleiben ohne Urkunde stehen (Rückfrage).
+
 ### 2026-11-18 – `urkunden.csv`: Ausstellungsort von StaAKr-0155 und StAK-UrkKr-0520 (Entscheidung des Autors, Auftrag 15)
 
 | Datei | Zeile | Spalte | vorher | nachher |
@@ -287,6 +304,58 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
 
 ---
+
+## 2026-11-18 (99) – Auftrag 16: Nachträge aus Auftrag 15, Zeitachse, Bürgen, Entwurf des Strahls (Stufe A)
+
+Berichte: `Unsicherheitstypen_2026-11/a16/BERICHT_TEIL0_PUNKTE.md` und `BERICHT_STUFE_A.md`.
+
+1. **Teil 0 (Datenkorrekturen oben):**
+   - **Rappottenstein** aus StaAKr-0258 entfernt.
+   - **Ernberg:** nach Rückfrage „Wortlaut je Regest“. Bei StaAKr-0564 ist der Ausstellungsort jetzt „Ernberg“
+     (ungenau); bei 0564 und 0521 wurde Leuven aus `orte` entfernt. Der Auftrag hatte „Im Feld zu Ernberg in Flandern“
+     StaAKr-0564 zugeschrieben; der Text steht aber im Regest von 0521.
+   - **Fünf Bürgerbuch-Einträge** bekommen `Name: identifikation/mehrdeutig`; in zwei Zeilen der Personenliste ist
+     `ungenau` jetzt `mehrdeutig`.
+   - **0.3 ohne Änderung:** Die 7 Verweise stehen schon seit Auftrag 12 in `luecken_hinweise.csv`, ebenso 6 als Herkunft
+     eingeordnete und der Eintrag zum Steiner Archiv (Rückfrage).
+   - **Zahlen:**
+     - Kartenpunkte 224 → 222, Karte im Modus 100 → 98 (Ortsangabe 62 → 60), Verbindungskarte 170 → 169.
+     - Regesten 687 und Stammbaum 26 von 75 unverändert, Ortsliste 254 unverändert.
+     - σ der übrigen Ansichten: Zeitachse 215 → 213, Karte Soziale Gruppen 127 → 124, Kategoriefluss 157 → 158 Elemente;
+       alle anderen unverändert.
+2. **Zeitachse (Punkt 3):**
+   - **Ursache:** Fiel die geöffnete Urkunde durch σ aus der sichtbaren Menge, wurde die Sidebar geschlossen und die
+     Auswahl vergessen.
+   - **Jetzt:** Sie schließt bewusst, mit Ansage. Die Urkunde bleibt gemerkt und öffnet sich wieder, sobald sie sichtbar
+     ist.
+   - **Prüfung:** `p1_zustand_sigma.mjs` wertet jetzt „nach σ ein und aus wiederhergestellt“. Die Ausnahme für die
+     Zeitachse in der Gesamt-Sitzung ist entfallen.
+3. **Lücken im Bürgerbuch (Punkt 4, nur Bericht):**
+   - Keine Einträge 1570, 1572, 1590, 1591, 1593, 1594, 1598, 1599; fast leer 1603, 1619, 1620.
+   - Vorlage S. 20 allgemein, S. 147 „Datumslücke 1619“.
+   - Vorschlag: ein Methodenhinweis zu `buergerbuch.csv/Datum`.
+4. **Fehlende Bürgen (Punkt 5):** 2461 von 2791 Einträgen mit `Buergen: beziehung/fehlend`, ohne Markierungsspalte.
+   - **Bewusste Abweichung von der Ausnahme in der Vorlage:** Die Vorlage (S. 166) gibt an, dass Bürgen nur im besten Fall
+     verzeichnet sind. Der Autor flaggt trotzdem alle Einträge ohne Bürgen. Begründung: Die Lücken sollen sichtbar
+     werden; die Einschränkung der Quelle steht im Standardtext und im Methodenhinweis, damit die Markierung nicht mehr
+     behauptet, als die Quelle hergibt.
+   - Die Einschränkung auf Zeiträume ist als Parameter vorbereitet, nicht benutzt.
+   - σ-Zahlen der Ansichten, die das Bürgerbuch lesen, unverändert.
+   - Bei einer späteren Umstellung einer Bürgerbuch-Ansicht beträfe der Typ 88 % der Einträge (Grenze in der
+     Eignungsmatrix).
+5. **Strahl, Stufe A** (Attrappe über der echten Seite, `a16/a2_entwurf/`):
+   - **Lücken:** schraffierte Lücken im Balken (109 Lücken in 28 Beständen) mit Text daneben (bis drei Lücken mit Jahren,
+     sonst zusammengefasst); 3 Bestände mit Lücken ohne Jahresangabe ganz schraffiert.
+   - **Randliste:** „Ohne Laufzeit (18)“.
+   - **Typenleiste:** Alle 53, Datierung 18, Einzelangabe 15, Überlieferung 31, Herkunft 2.
+   - **Empfehlung:** filtern (35 Balken statt 315).
+   - **Messwerte:** axe mit WCAG 2.2 in fünf Zuständen bei zwei Fenstergrößen ohne Befund. Kontraste am Bild gemessen,
+     kleinster Wert 6,48:1.
+   - **Getrennte Schätzung:** Strahl 10–12, Baum 4–5, Sonne 5–6 Stunden, je plus Regression.
+   - **Datenbefund:** Kammeramtsrechnungen (1516–1782) nennen als fehlend auch 1783–1785, also nach dem Ende der Laufzeit.
+   - Freigabe des Entwurfs offen; Teil 2 (Baum, Sonne) nach Entscheidung des Autors.
+6. **Regression:** Tests 60 → 60. axe 161 Zustände, 0 Verstöße. Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 alle Teile OK,
+   Auswahl beim Umschalten von σ nirgends mehr verloren.
 
 ## 2026-11-18 (98) – Ergänzungen zu Auftrag 15: Datenentscheidungen, Bestandsansichten, Beziehungen, Bürgen
 
