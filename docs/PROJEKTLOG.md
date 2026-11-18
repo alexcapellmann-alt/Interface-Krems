@@ -14,6 +14,20 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-11-18 – `urkunden.csv`: Ausstellungsort von StaAKr-0155 und StAK-UrkKr-0520 (Entscheidung des Autors, Auftrag 15)
+
+| Datei | Zeile | Spalte | vorher | nachher |
+|---|---|---|---|---|
+| `urkunden.csv` | `StaAKr-0155` | `unsicherheit_typ` | `orte: geographisch/mehrdeutig` | `…\|ausstellungsort: geographisch/mehrdeutig` |
+| `urkunden.csv` | `StaAKr-0155` | `ausstellungsort_unsicher` | nein | ja |
+| `urkunden.csv` | `StAK-UrkKr-0520` | `ausstellungsort` | Bógget, Belgien | Im Feld bei Bocholt in Flandern |
+| `urkunden.csv` | `StAK-UrkKr-0520` | `unsicherheit_typ` | `orte: geographisch/mehrdeutig` | `…\|ausstellungsort: geographisch/ungenau` |
+| `urkunden.csv` | `StAK-UrkKr-0520` | `ausstellungsort_unsicher` | nein | ja |
+
+Skript und Protokoll: `Unsicherheitstypen_2026-11/a15/werkzeuge/a15_umsetzung.py`, `a15/aenderungsprotokoll.csv`. Dazu in
+`unsicherheit_standardtexte.csv` die Zeile Ausstellungsort/mehrdeutig. StaAKr-0258 und StaAKr-0564 unverändert
+(Entscheidung offen).
+
 ### 2026-11-16/18 – `urkunden.csv`: Spalten `ausstellungsort_unsicher` und `kategorien_unsicher`, Typen für Fotos und Kategorien (Entscheidung des Autors)
 
 | Datei | Zeile | Spalte | vorher | nachher |
@@ -273,6 +287,99 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
 
 ---
+
+## 2026-11-18 (98) – Ergänzungen zu Auftrag 15: Datenentscheidungen, Bestandsansichten, Beziehungen, Bürgen
+
+Bericht: `Unsicherheitstypen_2026-11/a15/BERICHT_ERGAENZUNGEN.md`.
+
+1. **Entscheidungen zum Prüfblatt umgesetzt** (Datenkorrekturen oben):
+   - StaAKr-0155: Ausstellungsort `mehrdeutig`.
+   - StAK-UrkKr-0520: Feldlager-Text, `ungenau`.
+   - Neuer Standardtext Ausstellungsort/mehrdeutig, zum Gegenlesen.
+   - Zahlen des Modus vorher und nachher gleich (Regesten 687, Ortsangabe 617; Karte 100 von 224; Stammbaum 26 von 75).
+   - Offen: StaAKr-0258, StaAKr-0564.
+   - Spalte `hinweis` nicht angelegt, der Schemamangel bleibt (PL 95, Nachtrag).
+   - Kategoriefluss: Die 56 mehrdeutigen Orte sollen nach der Umstellung leuchten.
+2. **Sitzungsbedienung:** `a15/werkzeuge/sitzung_gesamt.mjs` führt die Sitzungen ohne und mit Modus sowie die beiden
+   Prüfungen der Auswahl beim Umschalten von σ zusammen aus und meldet OK oder FEHLER je Teil (PRUEFUNGEN).
+3. **Bestandsansichten (Vorbereitung Auftrag 16):** `a15/UMSTELLUNG_BERICHT.md`, Teil A.
+   - **Strahl:** Fehlende Jahrgänge (31 Bestände, 28 mit Jahren) als schraffierte Lücken im Balken mit Hinweis
+     „Jahrgänge … nicht überliefert“; 3 Bestände ohne Intervall mit Rahmen „fehlt“; 18 ohne Laufzeit in einer Randliste.
+   - **Baum und Sonne:** Muster am Feld, abdunkeln statt filtern (Flächen sonst verändert).
+   - **Aufwand:** Farbstellen G: Strahl 6, Sonne 9, Baum 2. Schätzung 23–27 Stunden.
+4. **Beziehungen im Bestandsverzeichnis** (nur Liste, `a15/beziehungen_bestaende.csv`):
+   - 171 Stellen: 137 beziehung (verwandte Verzeichnungseinheiten, Vorgänger und Nachfolger, Verweise auf andere Stellen),
+     33 herkunft, 1 Fehltreffer.
+   - Die 17 Verweise auf andere Archive aus der Vorerhebung sind einzeln eingeordnet: 7 beziehung, 9 herkunft (darunter
+     die 3 Stellen zum zerstörten Steiner Archiv), 1 Fehltreffer.
+5. **Fehlende Bürgen:**
+   - **Vorlage (Hellerschmid 2018):** S. 20 Nachträge aus anderen Quellen, einzelne Jahre fehlen; S. 22 Bürgen in Fußnoten;
+     S. 166 Bürgen nur „im besten Fall“ angegeben, ordentliche Aufnahme zumeist mit Bürgen.
+   - **Datenstand:** 330 von 2791 Einträgen mit Bürgen (12 %), nur 1541–1621; in den 1530er, 1590er und 1600er Jahren keiner.
+   - **Ergebnis der Regel des Autors:** Die Vorlage sagt ausdrücklich, dass Bürgen nicht immer angegeben sind.
+     Empfehlung: nicht alle 2461 flaggen, höchstens 1550–1589 und 1610–1619 (1712 Einträge), sonst Methodenhinweis.
+   - **Messung an einer Kopie mit allen 2461 Flaggen (`Buergen: beziehung/fehlend`):** σ-Zahlen in allen 26 gemessenen
+     Ansichten unverändert. `unsicherheit_typ` wirkt nur im Modus „Licht aus“ und in der Detailansicht.
+   - Keine Datenänderung vor Freigabe.
+6. **Zweifelsformulierungen (optional, `a15/p6d_zweifel.csv`):** 169 Treffer, keine bezweifelte Beziehung. 5 Kandidaten
+   für `identifikation` im Bürgerbuch (BB-0148, -0398, -0452, -1675, -1695), bisher ohne Typ.
+7. **Regression:** Tests 60 → 60. axe 161 Zustände in 34 Ansichten mit WCAG-2.2-Regeln, 0 Verstöße. Gesamt-Sitzung bei
+   1366 × 768 und 1280 × 720 alle Teile OK: ohne Modus 39 Ansichten, mit Modus 42 Schritte, ohne Fehler und Ersatztext;
+   Auswahl beim Umschalten nur in der bekannten Zeitachse verloren; Verbindungskarte Wien bestanden.
+
+## 2026-11-18 (97) – Verbindungskarte, offene Datenfragen, Material für Kapitel 7 (Auftrag 15)
+
+Belege und Berichte: `Unsicherheitstypen_2026-11/a15/`. Dort liegen:
+- `pruefblatt_daten.csv` und `BERICHT_DATEN.md`;
+- `UMSTELLUNG_BERICHT.md` und `DATEIKOEPFE_BERICHT.md`;
+- die Messungen `p1_*.json`;
+- `regression/` und `werkzeuge/`.
+
+1. **Auswahl beim Umschalten von σ:**
+   - **Ursache:** Die Ansichten bauen beim Umschalten ganz neu auf (`resize()` ruft die Zeichenfunktion).
+     - **Verbindungskarte:** Der gewählte Ort lag in einer lokalen Variable der alten Zeichnung, die Sidebar wurde neu
+       angelegt. Die alte Leaflet-Karte wurde nicht abgebaut, je Umschalten blieben 2 Listener an window hängen.
+     - **Karte Soziale Gruppen:** gleiches Bild; dazu setzte der Neuaufbau Vergrößerung und Hervorhebung absichtlich
+       zurück.
+   - **Behoben:** Der Zustand liegt jetzt an einer Stelle in der Instanz (`instanz.fixiert` bzw. `vergroessert`,
+     `hervorhebung`, `sidebarInhalt`) und wird nach dem Neuaufbau wieder angewandt; die Sidebar öffnet erneut, der Fokus
+     bleibt. Die alte Karte wird vor dem Neuaufbau abgebaut. In der Karte Soziale Gruppen setzt nur ein Neuaufbau aus
+     anderem Grund (Fenstergröße) den Zustand zurück.
+   - **Urkunden-Netzwerk:** Die Auswahl ging beim zweiten Umschalten verloren. Ursache war der zentrale
+     Sidebar-Umschalter (`js/utils/sidebarUmschalter.js`): Er hielt den σ-Knopf für den Auslöser der beim Neuaufbau
+     wieder geöffneten Sidebar und fing den nächsten σ-Klick ab, um die Sidebar zu schließen. Behoben zentral: Klicks in
+     `.werkzeugleiste-unsicherheit` zählen nie als Auslöser.
+   - **Nur gemeldet:** In der Zeitachse filtert σ die Urkunden. Eine sichere Urkunde fällt dabei heraus, ihre Sidebar
+     schließt sich und kehrt nach dem Ausschalten nicht zurück. Das ist ein anderes Fehlerbild (gefilterter Datensatz);
+     unsichere Urkunden bleiben gewählt.
+   - **Akzeptanz (`p1_verbindungskarte_wien.mjs`):** Bei 1366 × 768 und 1280 × 720 bleibt Wien über vier σ-Klicks gewählt
+     und die Sidebar offen. Von 57 Verbindungen sind mit σ 13 gestrichelt, ohne σ 0. Listener 19 → 19, keine Fehler.
+   - **Übersicht über alle Ansichten mit σ (`p1_zustand_sigma.mjs`, vorher/nachher):** Auswahl oder Sidebar verloren
+     vorher in 4 Ansichten (Zeitachse, Urkunden-Netzwerk, Verbindungskarte, Karte Soziale Gruppen), nachher nur noch in
+     der Zeitachse (s. o.). In Treemap, Sunburst, Kategoriefluss und Streamgraph ließ sich mit dem einfachen Klick keine
+     Auswahl herstellen; dort ist nichts festgestellt.
+2. **Offene Datenfragen (Stufe A, nur lesend):** Prüfblatt mit 10 Zeilen.
+   - **Berichtigung meiner Aussage aus der Rückmeldung zu Auftrag 13:** StaAKr-0521 *ist* ein Feldlager („Im Feld zu
+     Ernberg in Flandern“); Leuven steht nur in `orte`.
+   - **StaAKr-0258:** Rappottenstein ist in keinem Regest genannt, die Herkunft der Zuordnung ist nicht dokumentiert,
+     Empfehlung „entfernen“.
+   - **Fünf Zuordnungen des Ausstellungsorts:** je mit Empfehlung, StAK-UrkKr-0520 als fünftes Feldlager.
+   - **Spalte `hinweis`:** betrifft 9 Zeilen in 3 Dateien, Aufwand 2–3 Stunden.
+   - **Standardtext Kategorien:** Empfehlung, ihn so zu lassen.
+   - **Übersicht der Typen:** „Beziehung“ kommt nirgends vor.
+
+   Keine Datenänderung vor der Rückgabe.
+3. **Material für Kapitel 7:** `docs/KAPITEL7_MATERIAL.md`, jede Aussage mit Verweis; zwei Stellen ausdrücklich „nicht
+   dokumentiert“ (Herkunft der Bestandskategorien, Prüfung ohne Kartenkacheln). Dabei aufgefallen: Die Formulierung in
+   `docs/PRUEFUNGEN.md` „Kontraste in SVG nur berechnet“ war zu grob. Nachbesserung 6 hat die „incomplete“-Texte am Element
+   nachgerechnet (PL 87); die Stelle ist berichtigt.
+4. **Umstellung Kategoriefluss und Verbindungskarte:** Bericht mit Elementen, Typen und Aufwand. Die Farbstellen aus
+   Auftrag 13: Kategoriefluss 3 G, 1 U; Verbindungskarte 1 G. Schätzung 6–8 bzw. 4–6 Stunden plus 2–3 Stunden Regression.
+   Empfehlung: zuerst die Verbindungskarte. Offene Frage: Sollen die 56 mehrdeutigen Orte im Kategoriefluss leuchten?
+   Heute zeigt der Knopf sie dort nicht.
+5. **Dateikopf-Kommentare:** Die zehn längsten haben 103 bis 457 Zeilen (`bipartiteFlowMap.js`: 47 % der Datei).
+   Überwiegend Änderungsgeschichte je Auftrag; Vorschlag kürzen, Entscheidung durch den Autor.
+6. **Regression:** Tests 60 → 60 (`node --test "tests/*.test.mjs"`); axe 161 Zustände in 34 Ansichten mit WCAG-2.2-Regeln, 0 Verstöße; Sitzung ohne Modus 39 Ansichten, mit Modus 42 Schritte, je bei 1366 × 768 und 1280 × 720 ohne Fehler und ohne Ersatztext; Zahlen des Modus unverändert (Regesten 687, Karte 100 von 224, Stammbaum 26 von 75); keine Datenänderung.
 
 ## 2026-11-18 (96) – Nachbesserungen am Unsicherheits-Modus, Prüfung des Repositorys (Auftrag 14)
 

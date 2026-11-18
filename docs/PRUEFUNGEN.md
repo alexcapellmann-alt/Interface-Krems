@@ -91,14 +91,34 @@ Modus bei 1366×768 und 1280×720 ohne Fehler (PROJEKTLOG 95).
 
 axe über alle Zustände weiter mit `a13/werkzeuge/b_axe.mjs` (`PRUEF_AUSGABE`). Tests 59 → 60 (`node --test "tests/*.test.mjs"`); axe 161 Zustände in 34 Ansichten mit WCAG-2.2-Regeln, 0 Verstöße (der Bilderwand-Vorbefund ist behoben); Sitzung ohne Modus 39 Ansichten, mit Modus 42 Schritte, je bei 1366 × 768 und 1280 × 720 ohne Fehler und ohne Ersatztext; Zahlen des Modus bestätigt: Regesten 687, Karte 100 von 224, Stammbaum 26 von 75.
 
+**Auftrag 15 (18.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a15/werkzeuge/`:
+- `p1_zustand_sigma.mjs vorher|nachher`: je Ansicht mit σ eine Auswahl herstellen, σ zweimal umschalten, Sidebar,
+  Markierungen und Listener vergleichen.
+- `p1_verbindungskarte_wien.mjs`: Akzeptanz Verbindungskarte (Wien, vier σ-Klicks, zwei Fenstergrößen).
+- `sitzung_modus.mjs`: Kopie mit Ausgabe nach `a15/regression`.
+
+Tests 60 → 60 (`node --test "tests/*.test.mjs"`); axe 161 Zustände in 34 Ansichten mit WCAG-2.2-Regeln, 0 Verstöße; Sitzung ohne Modus 39 Ansichten, mit Modus 42 Schritte, je bei 1366 × 768 und 1280 × 720 ohne Fehler und ohne Ersatztext; Zahlen des Modus unverändert (Regesten 687, Karte 100 von 224, Stammbaum 26 von 75); keine Datenänderung. Gesammelte Befunde für das Kapitel zur Prüfmethode: `docs/KAPITEL7_MATERIAL.md`.
+
+**Gesamt-Sitzung (seit 18.11.2026):** `Unsicherheitstypen_2026-11/a15/werkzeuge/sitzung_gesamt.mjs` mit
+`PRUEF_BASIS=http://127.0.0.1:8901/`. Je Fenstergröße (Standard 1366x768 und 1280x720) die Sitzung ohne Modus
+(`t2_sitzung.mjs`) und mit Modus (`sitzung_modus.mjs`), dazu einmal die Auswahl beim Umschalten von σ über alle Ansichten
+(`p1_zustand_sigma.mjs`) und die Verbindungskarte Wien (`p1_verbindungskarte_wien.mjs`). Ausgabe
+`regression/sitzung_gesamt/zusammenfassung.txt` mit OK oder FEHLER je Teil; bekannte Ausnahme: Zeitachse (PROJEKTLOG 97).
+Zuletzt (18.11.2026) alle Teile OK; axe 161 Zustände, 0 Verstöße; 60 Tests.
+
+**Messung an einer Datenkopie:** Vorhergesagte Folgen einer Datenänderung werden an einer Kopie geprüft, die auf eigenem
+Port läuft (z. B. 8903). Dort läuft `a13/werkzeuge/b_sigma_vergleich.mjs` (`PRUEF_BASIS`, `PRUEF_AUSGABE`), verglichen mit
+dem echten Stand. So geprüft: Bürgen-Flaggen im Bürgerbuch, 26 Ansichten unverändert (PROJEKTLOG 98).
+
 **Grenzen der Prüfmethode (für Kapitel 7):**
 - **Feste Fenstergrößen:** Geprüft wird bei festen Fenstergrößen, meist 1366 × 900, 1366 × 768 und 1280 × 720.
   Befunde, die nur bei anderen Höhen oder Breiten auftreten, bleiben unentdeckt; so war es beim Bilderwand-Kopf, den erst
   768 px Höhe zeigte.
 - **Regelsätze von axe:** Die Ergebnisse hängen vom gewählten Regelsatz ab. Die Regel `target-size` gehört zu WCAG 2.2
   und läuft nur mit dem Schlagwort `wcag22aa`. „axe 0 Verstöße“ gilt jeweils für die genannten Größen und Regeln.
-- **Kontraste in SVG:** Sie sind berechnet (Farbwerte gegen Hintergrund), nicht gemessen. axe meldet viele SVG-Texte als
-  „incomplete“.
+- **Kontraste in SVG:** axe meldet viele Texte über Karte und SVG als „incomplete“. Nachbesserung 6 hat sie am Element
+  nachgerechnet (227 Texte, 225 bestanden; PROJEKTLOG 87). Die Kontraste der Muster und Linien im Modus „Licht aus“
+  sind aus den Farbwerten berechnet, die Farbfehlsicht an Bildern simuliert; gemessen am Bildschirm wurde nichts.
 - **Erklärung beim Überfahren:** Am einzelnen Feld einer Kachel gibt es sie nur mit der Maus. Tastatur und Touch erreichen
   dieselbe Erklärung über den Fokus auf die Kachel bzw. das Aufklappen, Bildschirmleser über die Beschreibung der Kachel.
 - **Wirkung des σ-Knopfs:** Gezählt wurde in Auftrag 13 nur eine Art der Kennzeichnung (hell markiert). Kennzeichnungen

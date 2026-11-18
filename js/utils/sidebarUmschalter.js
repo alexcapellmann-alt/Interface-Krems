@@ -13,8 +13,11 @@
 const FELD = 'a, button, [role="button"], [role="option"], [tabindex], tr, li, g, path, circle, rect';
 const ausloeser = new WeakMap(); // Sidebar -> { element, datum }
 
+// Auftrag 15, Punkt 1: Der σ-Knopf (.werkzeugleiste-unsicherheit) öffnet keine Sidebar. Baut eine Ansicht nach seinem
+// Klick neu auf und öffnet dabei die Sidebar der bestehenden Auswahl wieder, galt er sonst als deren Auslöser, und der
+// nächste σ-Klick schloss die Sidebar, statt σ umzuschalten (Urkunden-Netzwerk).
 function feldVon(ziel) {
-  if (!(ziel instanceof Element) || ziel.closest('.bestand-sidebar, canvas')) return null;
+  if (!(ziel instanceof Element) || ziel.closest('.bestand-sidebar, canvas, .werkzeugleiste-unsicherheit')) return null;
   return ziel.closest(FELD);
 }
 

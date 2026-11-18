@@ -7,6 +7,24 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-18 (247) – Ergänzungen Auftrag 15: Ausstellungsort zweier Urkunden, Gesamt-Sitzung, Berichte
+
+- `data/urkunden.csv`: StaAKr-0155 Ausstellungsort `mehrdeutig`; StAK-UrkKr-0520 Ausstellungsort „Im Feld bei Bocholt in Flandern“ (`ungenau`). `data/unsicherheit_standardtexte.csv`: Zeile Ausstellungsort/mehrdeutig. Entscheidung des Autors; Skript und Protokoll in `Unsicherheitstypen_2026-11/a15/`.
+- `tests/lichtAus.test.mjs`: `ausstellungsort_unsicher` 575 → 577.
+- Ohne Code- oder Datenänderung: Berichte zu Bestandsansichten, Beziehungen im Bestandsverzeichnis, fehlenden Bürgen (mit Messung an einer Kopie) und Zweifelsformulierungen. PROJEKTLOG 98.
+
+---
+
+## 2026-11-18 (246) – Auftrag 15: Auswahl bleibt beim Umschalten von σ, Material für Kapitel 7
+
+- `js/viz/verbindungskarte.js`: gewählter Ort in `instanz.fixiert`, nach Neuaufbau mit Sidebar wiederhergestellt; alte Leaflet-Karte wird vor dem Neuaufbau abgebaut (Listener).
+- `js/viz/bipartiteFlowMap.js`: Vergrößerung, Hervorhebung und Sidebar überstehen das Umschalten von σ; alte Karte wird abgebaut.
+- `js/utils/sidebarUmschalter.js`: Klicks auf den σ-Knopf gelten nie als Auslöser einer Sidebar (Urkunden-Netzwerk verlor sonst beim zweiten Umschalten die Auswahl).
+- Neu `docs/KAPITEL7_MATERIAL.md` (Befunde mit Verweisen). `docs/PRUEFUNGEN.md`: Werkzeuge Auftrag 15, Stelle zu SVG-Kontrasten berichtigt.
+- Berichte ohne Code- oder Datenänderung in `Unsicherheitstypen_2026-11/a15/`: Prüfblatt Datenfragen, Umstellung Kategoriefluss/Verbindungskarte, Dateikopf-Kommentare. PROJEKTLOG 97.
+
+---
+
 ## 2026-11-18 (245) – Auftrag 14: Repo-Prüfung, zugängliche Erklärung der Kachel, feste Markergröße, Bilderwand-Kopf
 
 - Neu `.gitignore` (Systemdateien, Protokolle, `.env`, Arbeitsordner, Excel-Dateien, Arbeitskopien); Bericht `Unsicherheitstypen_2026-11/a14/REPO_PRUEFUNG.md` (Ampel Gelb). E-Mail-Adresse im PROJEKTLOG entfernt; lokale Pfade in `docs/`, zwei CSS-Kommentaren und `.claude/CLAUDE.md` relativ.

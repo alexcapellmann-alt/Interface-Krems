@@ -226,6 +226,8 @@ async function zeichneVerbindungskarte() {
   // Info-Button wird bei jedem Redraw zerstört/neu erzeugt, siehe karte.js'
   // identisches Muster/identische Begründung.
   if (instanz.infoButton) instanz.infoButton.destroy();
+  // Auftrag 15, Punkt 1: die Leaflet-Karte des vorigen Aufbaus abbauen (sonst blieben ihre Listener an window hängen)
+  if (instanz.karte) { instanz.karte.remove(); instanz.karte = null; }
   container.innerHTML = '';
   fuegeStyleEin(container);
 
@@ -295,7 +297,7 @@ async function zeichneVerbindungskarte() {
   const namenGruppe = svgUeberlagerung.append('g').attr('class', 'verbindungskarte-namen').attr('pointer-events', 'none');
   function zeichneObenauf() {
     obenaufGruppe.selectAll('*').remove();
-    const aktiv = fokus || fixiert;
+    const aktiv = fokus || instanz.fixiert;
     const original = aktiv ? ortsKnoten.filter((o) => o.name === aktiv).node() : null;
     if (!original) return;
     const kopie = original.cloneNode(false);
@@ -315,7 +317,9 @@ async function zeichneVerbindungskarte() {
     .call((a) => markiereSvg(a, (o) => o.ortRecord)); // Nachbesserung 3, Punkt 3
 
   let fokus = null; // Name des hervorgehobenen Ortes (Zeigen/Tastatur)
-  let fixiert = null; // per Klick festgehaltener Ort
+  // Auftrag 15, Punkt 1: der per Klick festgehaltene Ort steht in instanz.fixiert (nicht in dieser Zeichnung), damit er
+  // einen Neuaufbau (σ-Knopf, Fenstergröße) übersteht. Fällt der Ort weg, wird die Auswahl aufgehoben.
+  if (instanz.fixiert && !beteiligteOrte.some((o) => o.name === instanz.fixiert)) instanz.fixiert = null;
 
   const pos = (name) => positionVonKnoten(name, ortsVerzeichnis, karte);
   // leicht gebogener Bogen, immer gleich herum gekrümmt (unabhängig von der Richtung, wie in der Bilderwand)
@@ -331,7 +335,7 @@ async function zeichneVerbindungskarte() {
   }
 
   function zeichneHervorhebung() {
-    const aktiv = fokus || fixiert;
+    const aktiv = fokus || instanz.fixiert;
     const verbunden = new Map((verbindungenJeOrt.get(aktiv) || []).map((v) => [v.ort, v.paar]));
     ortsKnoten
       .classed('ist-aktiv', (o) => o.name === aktiv)
@@ -384,11 +388,11 @@ async function zeichneVerbindungskarte() {
     element.addEventListener('blur', () => { fokus = null; versteckeTooltip(); zeichneHervorhebung(); });
     const aktiviere = (event) => {
       event?.stopPropagation();
-      if (fixiert === o.name) {
-        fixiert = null;
+      if (instanz.fixiert === o.name) {
+        instanz.fixiert = null;
         schliesseSidebar(instanz.sidebar, mapDiv);
       } else {
-        fixiert = o.name;
+        instanz.fixiert = o.name;
         zeigeUrkundenSidebar(instanz.sidebar, o.name, ortRecordsMap.get(o.name) || []);
       }
       zeichneHervorhebung();
@@ -402,9 +406,15 @@ async function zeichneVerbindungskarte() {
     });
   });
   // Klick auf die freie Karte oder Schließen der Sidebar löst die festgehaltene Hervorhebung
-  karte.on('click', () => { if (fixiert) { fixiert = null; zeichneHervorhebung(); } });
-  instanz.sidebar.schliessenBtn.addEventListener('click', () => { fixiert = null; zeichneHervorhebung(); });
+  karte.on('click', () => { if (instanz.fixiert) { instanz.fixiert = null; zeichneHervorhebung(); } });
+  instanz.sidebar.schliessenBtn.addEventListener('click', () => { instanz.fixiert = null; zeichneHervorhebung(); });
 
+  // Neuaufbau mit bestehender Auswahl: Sidebar wieder öffnen, der Fokus bleibt, wo er war (z. B. auf dem σ-Knopf)
+  if (instanz.fixiert) {
+    const vorherFokus = document.activeElement;
+    zeigeUrkundenSidebar(instanz.sidebar, instanz.fixiert, ortRecordsMap.get(instanz.fixiert) || []);
+    if (vorherFokus && vorherFokus !== document.body && vorherFokus.isConnected) vorherFokus.focus({ preventScroll: true });
+  }
   zeichneHervorhebung();
   karte.on('zoom move', aktualisierePositionen);
 }
@@ -418,7 +428,7 @@ export function render(container, data, options = {}) {
   // `:has()`-Sichtbarkeitsregel in fuegeStyleEin() - dasselbe Muster wie
   // karte.js' `karte-viz-container`.
   container.classList.add('verbindungskarte-viz-container');
-  instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options }, karte: null, infoButton: null, sidebar: null };
+  instanz = { container, records: data, options: { showUncertainty: true, width: null, height: null, ...options }, karte: null, infoButton: null, sidebar: null, fixiert: null };
   zeichneVerbindungskarte();
 }
 

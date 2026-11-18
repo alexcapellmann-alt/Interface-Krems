@@ -644,13 +644,13 @@ async function zeichneFlowMap() {
   // Info-Button wird bei jedem Redraw zerstört/neu erzeugt, siehe karte.js'
   // identisches Muster/identische Begründung.
   if (instanz.infoButton) instanz.infoButton.destroy();
+  // Auftrag 15, Punkt 1: die Leaflet-Karte des vorigen Aufbaus abbauen (sonst blieben ihre Listener an window hängen)
+  if (instanz.karte) { instanz.karte.remove(); instanz.karte = null; }
   container.innerHTML = '';
   fuegeStyleEin(container);
-  // Punkt 2/3 (siehe Dateikopf-Kommentar): beide Klick-Zustände werden bei
-  // jedem Redraw zurückgesetzt - dasselbe Prinzip wie das vorige Modul die
-  // `auswahl` bei jedem zeichneFlowMap()-Aufruf zurücksetzte.
-  instanz.vergroessert = null;
-  instanz.hervorhebung = null;
+  // Punkt 2/3 (siehe Dateikopf-Kommentar): Vergrößerung, Hervorhebung und Inhalt der Sidebar stehen in `instanz`.
+  // Seit Auftrag 15 (Punkt 1) überstehen sie den Neuaufbau durch den σ-Knopf; resize() setzt sie nur bei anderen
+  // Änderungen (Fenstergröße) zurück.
 
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'bipartiteflowmap-werkzeugleiste';
@@ -718,7 +718,7 @@ async function zeichneFlowMap() {
   // Muster wie verbindungskarte.js.
   fuegeSidebarStyleEin(container);
   instanz.sidebar = baueSidebarGeruest(container);
-  instanz.sidebar.schliessenBtn.addEventListener('click', () => schliesseSidebar(instanz.sidebar, mapDiv));
+  instanz.sidebar.schliessenBtn.addEventListener('click', () => { instanz.sidebarInhalt = null; schliesseSidebar(instanz.sidebar, mapDiv); });
 
   const ortsVerzeichnis = await ladeOrtsVerzeichnis();
   if (!instanz) return; // destroy() kann während des await aufgerufen worden sein
@@ -836,6 +836,7 @@ async function zeichneFlowMap() {
     const aktiviere = () => {
       instanz.vergroessert = ort.name;
       aktualisiereRadien();
+      instanz.sidebarInhalt = { ort: ort.name };
       zeigeUrkundenSidebar(instanz.sidebar, ort.name, ortRecords.get(ort.name) || []);
     };
     element.addEventListener('click', aktiviere);
@@ -856,6 +857,7 @@ async function zeichneFlowMap() {
     instanz.vergroessert = d.data.ort;
     aktualisiereRadien();
     const schluessel = `${d.data.ort}|||${d.data.gruppe}`;
+    instanz.sidebarInhalt = { ort: d.data.ort, gruppe: d.data.gruppe };
     zeigeUrkundenSidebar(instanz.sidebar, `${d.data.ort} – ${labelFuerGruppe(d.data.gruppe)}`, ortGruppeRecords.get(schluessel) || []);
   });
 
@@ -908,6 +910,21 @@ async function zeichneFlowMap() {
   }
   aktualisierePositionen();
   karte.on('zoom move', aktualisierePositionen);
+
+  // Auftrag 15, Punkt 1: Zustand aus `instanz` nach einem Neuaufbau wieder anwenden; der Fokus bleibt, wo er war
+  if (instanz.vergroessert && !ortRecords.has(instanz.vergroessert)) instanz.vergroessert = null;
+  aktualisiereRadien();
+  aktualisiereHervorhebung();
+  const inhalt = instanz.sidebarInhalt;
+  if (inhalt) {
+    const vorherFokus = document.activeElement;
+    if (inhalt.gruppe) {
+      zeigeUrkundenSidebar(instanz.sidebar, `${inhalt.ort} – ${labelFuerGruppe(inhalt.gruppe)}`, ortGruppeRecords.get(`${inhalt.ort}|||${inhalt.gruppe}`) || []);
+    } else {
+      zeigeUrkundenSidebar(instanz.sidebar, inhalt.ort, ortRecords.get(inhalt.ort) || []);
+    }
+    if (vorherFokus && vorherFokus !== document.body && vorherFokus.isConnected) vorherFokus.focus({ preventScroll: true });
+  }
 }
 
 export function render(container, data, options = {}) {
@@ -928,7 +945,7 @@ export function render(container, data, options = {}) {
     familienRecords: data.familien || [],
     options: { showUncertainty: true, width: null, height: null, ...options },
     karte: null, infoButton: null, sidebar: null, cluster: null,
-    vergroessert: null, hervorhebung: null
+    vergroessert: null, hervorhebung: null, sidebarInhalt: null
   };
   zeichneFlowMap();
 }
@@ -939,6 +956,9 @@ export function render(container, data, options = {}) {
 // nachgezogen werden, Zoom-/Pan-Stand wird dabei bewusst zurückgesetzt.
 export function resize(neueOptionen = {}) {
   if (!instanz) return;
+  // Auftrag 15, Punkt 1: nur der σ-Knopf (bzw. „Licht aus“) behält Vergrößerung, Hervorhebung und Sidebar
+  const nurUnsicherheit = Object.keys(neueOptionen).length > 0 && Object.keys(neueOptionen).every((k) => k === 'showUncertainty' || k === 'lichtAus');
+  if (!nurUnsicherheit) { instanz.vergroessert = null; instanz.hervorhebung = null; instanz.sidebarInhalt = null; }
   instanz.options = { ...instanz.options, ...neueOptionen };
   zeichneFlowMap();
 }

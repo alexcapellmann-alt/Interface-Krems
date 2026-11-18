@@ -2,3 +2,4 @@
 urkunden.csv;ausstellungsort;fehlend;Im Regest nicht angegeben.
 urkunden.csv;ausstellungsort;ungenau;Der Ausstellungsort ist im Regest nur ungefähr angegeben.
 urkunden.csv;kategorien;fehlend;Keine inhaltliche Kategorie zugeordnet.
+urkunden.csv;ausstellungsort;mehrdeutig;Der Name im Regest lässt sich keinem Ort sicher zuordnen.
