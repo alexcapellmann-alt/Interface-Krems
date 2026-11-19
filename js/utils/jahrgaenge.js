@@ -31,6 +31,18 @@ export const jahreAlsText = (intervalle) => intervalle.map(([von, bis]) => (von 
 // Intervalle, die außerhalb der Laufzeit liegen (ganz oder teilweise)
 export const ausserhalbDerLaufzeit = (intervalle, von, bis) => intervalle.filter(([a, b]) => a < von || b > bis);
 
+// Auftrag 18: Die Laufzeit ist die überlieferte Spanne; Lücken davor oder danach sind zulässig (SCHEMA) und werden
+// in Worten genannt, weil sie auf der Achse oft nur wenige Pixel breit sind. `kurz` für den Text neben dem Balken.
+export function textAusserhalb(intervalle, von, bis, kurz = false) {
+  if (!Number.isFinite(von) || !Number.isFinite(bis)) return '';
+  const davor = intervalle.filter(([a]) => a < von);
+  const danach = intervalle.filter(([, b]) => b > bis);
+  const teile = [];
+  if (davor.length) teile.push(`${jahreAlsText(davor)} ${kurz ? 'vor Beginn' : 'vor dem Beginn der Laufzeit'}`);
+  if (danach.length) teile.push(`${jahreAlsText(danach)} ${kurz ? 'nach Ende' : 'nach dem Ende der Laufzeit'}`);
+  return teile.join(', ');
+}
+
 // Kurztext neben dem Balken: bis `bisZu` Lücken mit Jahren, sonst zusammengefasst. `fehltWort` kommt aus dem Vokabular
 // (Anzeigename der Ausprägung „fehlend“), damit der Code keine Ausprägungsnamen enthält.
 export function kurztextLuecken(intervalle, fehltWort, bisZu = 3) {

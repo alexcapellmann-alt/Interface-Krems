@@ -46,7 +46,7 @@ import { BESTAND_DATEI, BESTAND_HINWEIS_FELDER, bestandEinheit, baueMusterFehlt 
 import { setzeLicht, musterAus, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
 import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
 import { feldBezeichnung } from '../utils/uncertainty.js';
-import { zerlegeJahrgaenge, kurztextLuecken, volltextLuecken } from '../utils/jahrgaenge.js';
+import { zerlegeJahrgaenge, kurztextLuecken, volltextLuecken, textAusserhalb } from '../utils/jahrgaenge.js';
 import {
   baueSidebarGeruest,
   oeffneSidebar as oeffneSidebarModul,
@@ -142,8 +142,13 @@ function lichtAusTexte(blatt, wirksam) {
   const voll = [];
   const luecken = lueckenFuer(blatt, wirksam);
   if (luecken && luecken.length) {
-    kurz.push(kurztextLuecken(luecken, auspraegungName('fehlend')));
-    voll.push(volltextLuecken(luecken));
+    const ausserhalbKurz = textAusserhalb(luecken, blatt.von, blatt.bis, true);
+    const ausserhalbVoll = textAusserhalb(luecken, blatt.von, blatt.bis);
+    // Auftrag 18: Liegt eine Lücke außerhalb der Laufzeit, entfällt im Kurztext die Zahl der Jahrgänge (Platz am Rand);
+    // sie steht im Volltext.
+    const kurzBasis = ausserhalbKurz && luecken.length > 3 ? `${luecken.length} Lücken` : kurztextLuecken(luecken, auspraegungName('fehlend'));
+    kurz.push(kurzBasis + (ausserhalbKurz ? `, ${ausserhalbKurz}` : ''));
+    voll.push(volltextLuecken(luecken) + (ausserhalbVoll ? `, davon ${ausserhalbVoll}` : ''));
   } else if (luecken) {
     // Auftrag 17: Lücken ohne Jahresangabe – der ganze Balken ist schraffiert, der Text sagt, dass der Umfang fehlt
     kurz.push('Umfang nicht angegeben');

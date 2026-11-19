@@ -135,7 +135,9 @@ Eintrag in `unsicherheit_typ` leuchten. Die Daten bleiben unverändert; das Zusa
 Felder `zeitraum_von`, `zeitraum_bis`, `fehlende_jahrgaenge`, `umfang`, `form_inhalt` und `bestandsgeschichte`
 (`js/utils/bestandLichtAus.js`). `fehlende_jahrgaenge` wird in Einzeljahre und Spannen zerlegt (`js/utils/jahrgaenge.js`;
 Schreibweise `1519-1526|1620`). Nicht lesbare Teile werden übergangen und von der Datenprüfung gemeldet. Lücken außerhalb
-der Laufzeit zeichnet der Strahl an ihrer Stelle; heute ein Fall (Kammeramtsrechnungen 1.2.2.2.1., 1783–1785).
+der Laufzeit (zulässig, siehe `fehlende_jahrgaenge` unten) zeichnet der Strahl an ihrer Stelle und nennt sie in Kurztext,
+Beschriftung und Hinweis („1783–1785 nach Ende“ bzw. „nach dem Ende der Laufzeit“); heute ein Fall (Kammeramtsrechnungen
+1.2.2.2.1., 1783–1785).
 Methodenhinweis `buergerbuch_luecken` (Entwurf) gilt für `buergerbuch.csv/Datum`.
 
 **Fehlende Bürgen im Bürgerbuch (seit 18.11.2026, PROJEKTLOG 99):** Einträge ohne Wert in `Buergen` tragen
@@ -205,10 +207,10 @@ Die früher hier geplante Tabelle für Ratsprotokolle wird nicht mehr gebraucht;
 | `zitierweise` | Text | nein | für Sidebar |
 | `umfang` | Text (Rohangabe) | nein | |
 | `umfang_lfm` | Zahl | empfohlen (Kachelgröße) | |
-| `zeitraum_von` / `zeitraum_bis` | Zahl (Jahr) | **Pflicht** (Gantt-Diagramm) | |
+| `zeitraum_von` / `zeitraum_bis` | Zahl (Jahr) | **Pflicht** (Gantt-Diagramm) | Laufzeit: die überlieferte Spanne des Bestands (erstes und letztes erhaltenes Jahr), nicht die Zeit, in der die Behörde oder Stelle bestand (Festlegung 19.11.2026, PROJEKTLOG 101). |
 | `zeitraum_text` | Text | nein | |
 | `bkk_kategorie` | Text | empfohlen | Oberkategorie nach Becker |
-| `fehlende_jahrgaenge` | Liste (Pipe-getrennt) | nein | seit 15.11.2026 (Auftrag 12): fehlende Jahrgänge laut Bestandsbeschreibung, Schreibweise `1519-1526|1656-1662`; leer bei Beständen ohne Angabe. Bei drei Beständen steht nur eine Erklärung in der Anmerkung (Liste ohne Angabe, Überlieferungslücken ohne Jahre, fehlende Blätter). |
+| `fehlende_jahrgaenge` | Liste (Pipe-getrennt) | nein | seit 15.11.2026 (Auftrag 12): fehlende Jahrgänge laut Bestandsbeschreibung, Schreibweise `1519-1526|1656-1662`; leer bei Beständen ohne Angabe. Intervalle vor dem Beginn oder nach dem Ende der Laufzeit sind zulässig, weil die Laufzeit nur die überlieferte Spanne nennt (Beispiel: Kammeramtsrechnungen 1.2.2.2.1., Laufzeit 1516–1782, fehlend unter anderem 1783–1785; PROJEKTLOG 101). Bei drei Beständen steht nur eine Erklärung in der Anmerkung (Liste ohne Angabe, Überlieferungslücken ohne Jahre, fehlende Blätter). |
 | `bkk_unterkategorie` | Text | nein | |
 | `daten_unsicher` | ja/nein | – | ersetzt die frühere, verworfene Buchstaben-Codierung (A/B1/B2/D/F/G) |
 | `unsicherheit_anmerkung` | Text | nein | erklärt die Art der Unsicherheit, für Hover-Tooltip |

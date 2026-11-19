@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { leseCsvRoh } from './hilfen.mjs';
-import { zerlegeJahrgaenge, kurztextLuecken, volltextLuecken, anzahlJahrgaenge, ausserhalbDerLaufzeit } from '../js/utils/jahrgaenge.js';
+import { zerlegeJahrgaenge, kurztextLuecken, volltextLuecken, anzahlJahrgaenge, ausserhalbDerLaufzeit, textAusserhalb } from '../js/utils/jahrgaenge.js';
 import { bestandEinheit, BESTAND_FELDER } from '../js/utils/bestandLichtAus.js';
 import { lichtAusVorbereitung, zaehleFuerLeiste, LEERE_AUSWAHL } from '../js/utils/lichtAus.js';
 
@@ -40,8 +40,14 @@ test('Bestandsansichten: Zahlen des Modus auf den Daten (Entwurf Auftrag 16)', (
   // Lücken ohne Jahresangabe: Typ am Feld, aber keine Jahre
   const ohneJahre = bestaende.filter((r) => /fehlende_jahrgaenge:/.test(r.unsicherheit_typ) && !zerlegeJahrgaenge(r.fehlende_jahrgaenge).intervalle.length);
   assert.equal(ohneJahre.length, 3);
-  // Datenbefund (PROJEKTLOG 100): genau ein Bestand nennt Lücken außerhalb seiner Laufzeit
+  // Genau ein Bestand nennt Lücken außerhalb seiner Laufzeit (PROJEKTLOG 100). Zulässig, weil die Laufzeit die überlieferte
+  // Spanne ist (SCHEMA, Auftrag 18); der Strahl nennt sie in Worten.
   const ausserhalb = mitLuecken.filter((x) => jahr(x.r.zeitraum_von) !== null && ausserhalbDerLaufzeit(x.l, jahr(x.r.zeitraum_von), jahr(x.r.zeitraum_bis)).length);
   assert.deepEqual(ausserhalb.map((x) => `${x.r.kuerzel} ${ausserhalbDerLaufzeit(x.l, jahr(x.r.zeitraum_von), jahr(x.r.zeitraum_bis)).map((i) => i.join('-'))}`), ['1.2.2.2.1. 1783-1785']);
+  const kammeramt = zerlegeJahrgaenge(ausserhalb[0].r.fehlende_jahrgaenge).intervalle;
+  assert.equal(textAusserhalb(kammeramt, 1516, 1782), '1783–1785 nach dem Ende der Laufzeit');
+  assert.equal(textAusserhalb(kammeramt, 1516, 1782, true), '1783–1785 nach Ende');
+  assert.equal(textAusserhalb([[1500, 1501]], 1510, 1600), '1500–1501 vor dem Beginn der Laufzeit');
+  assert.equal(textAusserhalb([[1550, 1551]], 1510, 1600), '');
   assert.ok(BESTAND_FELDER.includes('fehlende_jahrgaenge'));
 });
