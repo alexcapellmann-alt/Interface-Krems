@@ -1,67 +1,14 @@
-// js/viz/parallelKoordinaten.js
-// FOLGEAUFTRAG "Parallelkoordinaten neu konzipieren (Verlassenschaften)":
-// kompletter Neuaufbau nach einem extern erarbeiteten, gegen die echten Daten
-// verifizierten Konzept - ersetzt die bisherige 8-Achsen-Fassung aus (49)
-// vollständig. Kernunterschiede zur Vorfassung:
-//   - Zwei separate, feste Achsenfolgen statt einer einzigen (Punkt 1/5):
-//     "Vermögensprofil" (Realvermögen, vier Vermögensanteile, Gesamtvermögen)
-//     und "Forderungs-/Schuldenprofil" (Realvermögen, SchzG, SchvG,
-//     Gesamtvermögen) - umschaltbar, kein Drag zum Neuanordnen (Nicht-Ziel).
-//   - Realvermögen jetzt LOGARITHMISCH (vorher linear) - Vorgabe des neuen
-//     Konzepts.
-//   - Standardfarbe ist JETZT "keine" (alle Linien neutral grau) statt
-//     Vermögensgruppe - Farbcodierung ist ein bewusst separater Umschalter
-//     (Punkt 3), Hover/Klick-Hervorhebung (Punkt 2) funktioniert unabhängig
-//     davon immer.
-//   - Klick fixiert jetzt eine Linien-Hervorhebung (bleibt ohne Maus
-//     bestehen, Klick auf freie Fläche löst sie) - GENAU DASSELBE Hover/
-//     Fixierungs-Muster wie familienbaum.js/sankey.js (siehe
-//     aktualisiereHighlight() unten, 1:1 an sankey.js' gleichnamige Funktion
-//     angelehnt: `instanz.auswahl` (fixiert) hat immer Vorrang vor
-//     `instanz.hover` (temporär), ein Klick auf dieselbe bereits fixierte
-//     Linie löst die Fixierung wieder, Escape UND ein Klick auf die leere
-//     Fläche tun dasselbe).
-//   - Punkt 4 (AUSDRÜCKLICHE Kehrtwende gegenüber (49)): der eine
-//     unvollständige Datensatz (VI-0004, Nicolaus Grollickh) wird jetzt OHNE
-//     jeden Hinweistext ausgeschlossen - (49) hatte dort noch einen knappen
-//     Transparenz-Hinweis ("1 von 68...") gezeigt, dieser Auftrag verlangt
-//     wörtlich das Gegenteil ("ohne jeden Hinweistext... keine Erwähnung der
-//     Zahl 67/68"). Kein Widerspruch zu Abschnitt 12 ("nie stillschweigend
-//     ausblenden") - das ist eine bewusste, im aktuellen Auftrag explizit
-//     getroffene Design-Entscheidung, keine übersehene Lücke.
-//
-// Detail-Anzeige (Punkt 2, "Tooltip/Fixierung zeigt: Name, Beruf, Ort, Jahr,
-// exakte Werte aller [Achsen]"): weiterhin js/utils/sidebar.js' generische
-// baueSidebarGeruest()/oeffneSidebar()/schliesseSidebar() (wie in (49)) -
-// Klick fixiert JETZT zusätzlich die Linien-Hervorhebung UND öffnet die
-// Sidebar gemeinsam (schalteAuswahl() unten), Schließen der Sidebar löst
-// ebenfalls beides zusammen.
-//
-// SchzG/SchvG (Punkt 5): dieser Auftrag klärt ihre volle Bedeutung
-// ("Schulden zum Gut" / "Schulden vom Gut") - anders als in (49)/(50), wo sie
-// mangels gesicherter Kenntnis bewusst unaufgelöst blieben. Hier jetzt direkt
-// übernommen (vom Auftrag geliefert, keine eigene Vermutung).
-//
-// Kein Brushing/Drag-Neuanordnung (Nicht-Ziel, wörtlich) - nur Hover/Fokus-
-// Hervorhebung, Klick-Fixierung, Farb-/Ansicht-Umschalter.
-//
-// FOLGEAUFTRAG "Parallelkoordinaten-Anpassung + neue Visualisierung
-// 'Vermögensschichtung'", Teil A - drei Ergänzungen zum obigen, bereits
-// umgesetzten Auftrag:
-//   A1: Standardfarbe ist jetzt NICHT MEHR "keine", sondern Vermögensgruppe -
-//     mit einer eigenen ORDINALEN Rot-Gelb-Grün-Skala statt der bisherigen
-//     nominalen baueKategorieFarbSkala()-Regenbogenverteilung (A-E ist eine
-//     echte Rangordnung, siehe js/utils/vermoegensgruppenFarben.js für die
-//     volle Begründung inkl. A*/S-Sonderbehandlung). Die drei übrigen
-//     Farbfelder (Geschlecht/Ort/Jahrzehnt) bleiben unverändert bei der
-//     bisherigen nominalen Skala - nur Vermögensgruppe ist jetzt ein
-//     Sonderfall, siehe farbeFuerRecord()/baueLegende() unten.
-//   A2: die bisherige einzelne "Nulllinie" bei Gesamtvermögen ist jetzt Teil
-//     einer allgemeineren Liste `referenzlinien` (ACHSE_GESAMTVERMOEGEN
-//     unten) - vier von Dietrich definierte Kategorie-Schwellenwerte
-//     (0/500/1.000/3.000 fl.), jede einzeln beschriftet ("A/B" etc.) statt
-//     nur eines unbeschrifteten Null-Strichs.
-//   A3: INFO_TEXT um einen Quellen-/Bias-Hinweis ergänzt (siehe dort).
+// js/viz/parallelKoordinaten.js – Ansicht „Parallelkoordinaten“ der Verlassenschaften
+// Zweck: je Inventar eine Linie über zwei umschaltbare, feste Achsenfolgen (Vermögensprofil; Forderungs- und
+//   Schuldenprofil); Realvermögen logarithmisch, Referenzlinien an den Gruppengrenzen nach Dietrich.
+// Eingabe: `data` = verlassenschaftsinventare.csv (Felder über utils/verlassenschaftenFelder.js); VI-0004 ist
+//   unvollständig und ausgeschlossen.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md).
+// Abhängigkeiten: D3 v7, utils/verlassenschaftenFelder.js, utils/vermoegensgruppenFarben.js, utils/kategorieFarben.js,
+//   utils/sidebar.js, utils/tooltip.js, utils/infoButton.js, utils/vollstaendigkeit.js, beteiligung/bezuege.js.
+// Bedienung: Umschalter für Achsenfolge und Farbe; Hover hebt hervor, Klick fixiert und öffnet die Seitenleiste,
+//   Escape oder Klick ins Leere löst. Hintergrund: docs/MODULNOTIZEN.md, Abschnitt parallelKoordinaten.js.
+
 import { ACHSEN_SCHRIFTGROESSE } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueKategorieFarbSkala } from '../utils/kategorieFarben.js';
@@ -248,7 +195,7 @@ function farbeFuerRecord(record) {
 }
 
 // Punkt 2: 1:1 an sankey.js' gleichnamige Funktion angelehnt (siehe
-// Dateikopf-Kommentar) - einzige Stelle, die tatsächlich Opazität/
+// docs/MODULNOTIZEN.md) - einzige Stelle, die tatsächlich Opazität/
 // Linienstärke/Vordergrund auf die Linien anwendet, arbeitet auf der bereits
 // gezeichneten `instanz.linienAuswahl` statt eines Neuaufbaus (kein Flackern
 // bei jedem Hover). `aktiv = instanz.auswahl || instanz.hover` - eine
@@ -477,7 +424,7 @@ function zeichneParallelKoordinaten() {
 
   const ansichtKey = instanz.ansicht;
   const achsen = ANSICHTEN[ansichtKey].achsen;
-  // Punkt 4 (bewusst OHNE jeden Hinweistext, siehe Dateikopf-Kommentar):
+  // Punkt 4 (bewusst OHNE jeden Hinweistext, siehe docs/MODULNOTIZEN.md):
   // VI-0004 wird hier still herausgefiltert.
   const vollstaendig = records.filter((r) => istVollstaendig(r, achsen));
 
@@ -529,7 +476,7 @@ function zeichneParallelKoordinaten() {
     'Hover hebt eine Linie hervor, Klick fixiert die Hervorhebung und öffnet die Detailansicht.'
   );
 
-  // Punkt 2 (siehe Dateikopf-Kommentar): Klick auf die freie Fläche löst
+  // Punkt 2 (siehe docs/MODULNOTIZEN.md): Klick auf die freie Fläche löst
   // eine fixierte Auswahl - unterste Ebene, dasselbe Muster wie sankey.js.
   svg.append('rect').attr('width', breite).attr('height', svgHoehe).attr('fill', 'transparent')
     .on('click', raeumeAuswahlAuf);
@@ -591,7 +538,7 @@ export function render(container, data, options = {}) {
   instanz = {
     container, chartContainer, records: data, options: { width: null, height: null, ...options },
     // Teil A1 (Folgeauftrag): Standard ist jetzt "vermoegensgruppe" statt
-    // "keine" - siehe Dateikopf-Kommentar.
+    // "keine" - siehe docs/MODULNOTIZEN.md.
     ansicht: 'vermoegensprofil', farbModus: 'vermoegensgruppe', hover: null, auswahl: null, farbSkala: null, linienAuswahl: null
   };
   infotextFuerModul('parallelKoordinaten').then((cfg) => {

@@ -1,66 +1,14 @@
-// js/utils/sidebar.js
-// Gemeinsame Detail-Sidebar für Bestandsverzeichnis-Visualisierungen, die
-// einzelne Bestände anklickbar machen. Ursprünglich lokal in treemap.js
-// entstanden (Gerüst, Inhalt-Aufbau, Fokus-Handling), bei der Sunburst-
-// Sidebar-Integration hierher ausgelagert, um Duplikation zu vermeiden -
-// dieselbe Motivation wie bei js/utils/kategorieFarben.js. Reine
-// Verschiebung, keine Verhaltensänderung (per Test gegen die Treemap
-// verifiziert, siehe CHANGELOG).
-//
-// BEWUSST KEINE Annahme über die Geometrie/Interaktionslogik des
-// aufrufenden Moduls (rechteckige Kachel, Bogen-Segment oder sonstige
-// Form) - dieses Modul kennt nur: einen Container, einen Datensatz
-// (`record`) und eine kleine Konfiguration (Kategoriename/-farbe,
-// anzuzeigende Felder). Vorbereitet für icicle.js/circlePacking.js, ohne
-// diese in diesem Auftrag inhaltlich zu ändern (siehe CHANGELOG - welche
-// Anpassung dort nötig wird, ist dort dokumentiert).
-//
-// Fokus-Handling bleibt Aufgabe des AUFRUFENDEN Moduls: schliesseSidebar()
-// nimmt ein "fokusZielFallback"-Element entgegen, auf das der Fokus
-// zurückspringt, falls er sich beim Schließen INNERHALB der Sidebar befand
-// (verhindert Verwaisen auf <body>, siehe CHANGELOG - ursprünglich in der
-// Treemap-Sidebar behobener Bug). Ebenso bleibt das Verdrahten des
-// Schließen-Buttons beim Aufrufer, da der jeweils passende Fallback
-// (z. B. treemap.js' svgBereich) zum Zeitpunkt des Sidebar-Aufbaus noch
-// nicht feststeht (die Modul-Instanz existiert erst danach) - baueSidebarGeruest()
-// gibt den Button zurück, statt ihn selbst zu verdrahten.
-//
-// SCHEMA.md, Spalten "für Sidebar" markiert - Feldliste bewusst als
-// Parameter gestaltet (nicht hart codiert): STANDARD_SIDEBAR_FELDER ist der
-// bisher für alle Module identische Standard, ein zukünftiges Modul kann
-// aber eine eigene Liste übergeben, ohne diese Datei zu ändern.
-//
-// AUFTRAG "Sidebar-Liste – Regest-Vorschauzeile & Inline-Detailansicht":
-// erweitert die bestehende, schlanke Urkunden-Liste (baueUrkundenListeInhalt(),
-// s. u.) um eine Regest-Vorschauzeile pro Eintrag UND um eine neue, ebenfalls
-// Urkunden-spezifische Detailansicht (baueUrkundenDetailInhalt()) samt
-// eigener Fotogalerie - für Module, die per Klick auf einen Listeneintrag
-// bisher wegnavigiert sind (damals nur kalenderHeatmap.js) und stattdessen
-// jetzt innerhalb derselben Sidebar zwischen Liste und Detail wechseln
-// sollen. baueSidebarGeruest() liefert dafür zusätzlich einen (standardmäßig
-// verstecktem) "← Zurück"-Button.
-//
-// AUFTRAG "Sidebar-Lightbox & app-weite Vereinheitlichung": zwei Ergänzungen.
-// (1) Das Hauptfoto der Detailansicht ist jetzt anklickbar und öffnet die
-// bereits bestehende, geteilte Lightbox (js/utils/lightbox.js, dieselbe wie
-// im Regesten-Kachelraster) - siehe baueFotogalerie(). (2) Die komplette
-// Öffnen-Orchestrierung (welcher Modus - Liste oder Detail -, Zurück-Klick,
-// Scroll-Position, Fokus, aria-hidden/.offen) ist jetzt selbst Teil dieser
-// Datei (zeigeUrkundenSidebar()/zeigeUrkundenDetail(), s.u.), NICHT mehr nur
-// die reinen Inhalts-Bausteine - vorher musste jeder Aufrufer (kalenderHeatmap.js)
-// diese Logik selbst nachbauen, obwohl sie für JEDES Modul mit
-// Urkunden-Sidebar identisch sein soll ("1 Ergebnis -> Detail, mehrere ->
-// Liste"). zeigeUrkundenSidebar()/zeigeUrkundenDetail() sind daher die
-// einzigen Einstiegspunkte, die ein Aufrufer noch braucht - baueSidebarGeruest()
-// verdrahtet den Zurück-Button jetzt selbst (nicht mehr Aufgabe des
-// Aufrufers, anders als schliessenBtn: dessen fokusZielFallback ist pro
-// Modul unterschiedlich und bleibt daher Aufgabe des Aufrufers), und
-// schliesseSidebar() setzt den Listen-/Zurück-Zustand beim Schließen
-// automatisch zurück. Migriert (siehe CHANGELOG/PROJEKTLOG für die
-// Bestandsaufnahme): kalenderHeatmap.js (bereits korrekt, jetzt auf die
-// neuen Einstiegspunkte verschlankt), zeitachse.js und dotPlot.js (beide
-// hatten eine eigene, ältere, Foto-lose Parallel-Implementierung, siehe
-// jeweiliger Dateikopf-Kommentar dort).
+// js/utils/sidebar.js – gemeinsame Seitenleiste (Bestand und Urkunden)
+// Zweck: Gerüst, Inhalt und Öffnen/Schließen der Detail-Seitenleiste; für Urkunden auch Liste, Detail mit Fotos und Zurück.
+// Eingabe: Container, Datensatz bzw. Datensätze, Konfiguration (Kategoriename und -farbe, Feldliste).
+// Schnittstelle: baueSidebarGeruest(container), oeffneSidebar(), schliesseSidebar(instanz, fokusZielFallback),
+//   baueSidebarInhalt(), zeigeUrkundenSidebar(instanz, titel, records) (ein Treffer: Detail, mehrere: Liste),
+//   zeigeUrkundenDetail(), baueUrkundenListeInhalt(), baueUrkundenDetailInhalt(), fuegeSidebarStyleEin(),
+//   STANDARD_SIDEBAR_FELDER.
+// Abhängigkeiten: utils/lightbox.js, utils/bilder.js, utils/kategorieFarben.js, utils/urkundenKategorieFarben.js,
+//   utils/unsicherAbsatz.js, utils/genanntePersonen.js, utils/ortsart.js, beteiligung/bezuege.js (Vorschlagsformular).
+// Barrierefreiheit: geschlossen inert, geöffnet bedienbar; beim Schließen springt der Fokus auf das vom Aufrufer genannte
+//   Element zurück. Hintergrund: docs/MODULNOTIZEN.md, Abschnitt sidebar.js.
 
 import { passendeTextfarbe } from './kategorieFarben.js';
 import { farbeFuerUrkundenKategorie } from './urkundenKategorieFarben.js'; // AUFTRAG C2
@@ -150,7 +98,7 @@ export function baueSidebarInhalt(record, { kategorieName, kategorieFarbe, felde
 // onEintragKlick(record): wird bei Klick/Enter/Leertaste auf einen
 // Listeneintrag aufgerufen - reiner Baustein, kennt selbst kein "Modus"-
 // Konzept (dieselbe Bewusst-keine-Navigations-/Router-Kopplung wie beim
-// Rest dieser generischen Bausteine, siehe Dateikopf-Kommentar "BEWUSST
+// Rest dieser generischen Bausteine, siehe docs/MODULNOTIZEN.md "BEWUSST
 // KEINE Annahme über die Geometrie/Interaktionslogik des aufrufenden
 // Moduls"). Der eigentliche Modus-Wechsel (Liste -> Detail) passiert seit
 // dem Auftrag "Sidebar-Lightbox & app-weite Vereinheitlichung" NICHT mehr
@@ -383,7 +331,7 @@ function baueUrkundenKategorienFeld(record) {
 // aber lokal gehaltene Parallel-Implementierung (zeitachse.js'
 // baueUrkundenSidebarInhalt(), dotPlot.js' gleichnamige Funktion - beide
 // OHNE Fotogalerie/Lightbox) - jetzt auf DIESE Funktion umgestellt (siehe
-// jeweiliger Dateikopf-Kommentar dort), statt einer dritten/vierten
+// jeweiliger docs/MODULNOTIZEN.md dort), statt einer dritten/vierten
 // Parallel-Implementierung. kalenderHeatmap.js nutzte sie bereits.
 //
 // Auftrag "Sidebar-Lightbox & app-weite Vereinheitlichung", Punkt 0
@@ -515,7 +463,7 @@ export function zeigeUrkundenSidebar(sidebarInstanz, titel, records) {
 }
 
 // Gibt {sidebar, titel, koerper, schliessenBtn, zurueckBtn} zurück - der
-// Aufrufer verdrahtet schliessenBtn selbst (siehe Dateikopf-Kommentar zum
+// Aufrufer verdrahtet schliessenBtn selbst (siehe docs/MODULNOTIZEN.md zum
 // Fokus-Fallback); zurueckBtn verdrahtet sich seit dem Auftrag "Sidebar-
 // Lightbox & app-weite Vereinheitlichung" selbst (zurueckZurUrkundenListe()
 // oben) - sein Verhalten ist immer identisch, anders als schliessenBtns
@@ -618,7 +566,7 @@ export function oeffneSidebar(sidebarInstanz, record, konfiguration) {
 
 // fokusZielFallback (optional): Element, das den Fokus bekommt, falls er
 // sich beim Schließen INNERHALB der Sidebar befand - verhindert Verwaisen
-// auf <body> (siehe Dateikopf-Kommentar).
+// auf <body> (siehe docs/MODULNOTIZEN.md).
 //
 // Auftrag "Sidebar-Lightbox & app-weite Vereinheitlichung": setzt zusätzlich
 // den Listen-/Zurück-Zustand zurück (sidebarInstanz._urkundenListe,

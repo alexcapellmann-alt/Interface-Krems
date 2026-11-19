@@ -1,83 +1,15 @@
-// js/viz/regestenKachelraster.js
-// Regesten-Kachelraster: Primäransicht der Urkunden-Seite (Abschnitt 4.2). Modul-
-// Interface siehe Abschnitt 5: render(container, data, options) / destroy() / resize().
-//
-// Erwartete `data`: das flache `records`-Array aus dataLoader.js für urkunden.csv.
-// Rein lesend - erstellt eigene DOM-Struktur (HTML, nicht SVG - Karten mit Fotos,
-// Freitext und interaktiven Namen/Orten passen besser zu HTML als zu SVG), verändert
-// keinen übergebenen Record.
-//
-// Fotoanzeige: siehe js/utils/bilder.js (Dateinamen stehen direkt in
-// urkunden.csv, `foto_ordner`+`bilder`, kein Manifest mehr). Fotos werden
-// trotzdem lazy geladen (IntersectionObserver), um bei ~1068 Urkunden nicht
-// alle Bilder sofort zu laden (Abschnitt 2: Lazy Loading) - das bezieht sich
-// auf das Laden der BILDDATEIEN selbst (per Browser, sobald das <img> im
-// DOM hängt), nicht auf das Ermitteln der Dateinamen (das ist jetzt
-// synchron, da schon in `record.bilder` vorhanden).
-//
-// Kontext-erhaltender Wechsel (Abschnitt 4.2/7): Personen- und Ortsnamen sind Links mit
-// ?datensatz=<typ>:<id> zur Personen- bzw. Ortsliste (js/utils/genanntePersonen.js). Der frühere,
-// nie ausgewertete Entity-Filter in state.js ist seit Nachbesserung 1 (2026-11-15) entfernt.
-//
-// KORREKTUR (Auftrag "Korrektur: Mindestgrößen-Platzhalter nicht für
-// Kachelraster", siehe CHANGELOG): der im Folgeauftrag "Geteilte Viewport-
-// Utilities" testweise ergänzte Mindestgrößen-Platzhalter (js/utils/
-// bildschirmHinweis.js) wurde hier wieder entfernt - das Kachelraster ist
-// ein reines, bereits reflow-fähiges CSS-Grid (siehe .regk-raster,
-// auto-fill/minmax) und soll genau das auf schmalen Bildschirmen auch
-// nutzen dürfen, statt komplett durch einen Platzhalter blockiert zu
-// werden. Der Mindestgrößen-Platzhalter gilt ab sofort nur noch für Canvas-/
-// SVG-Diagramm-Module mit fester Interaktionslogik (Zoom/Pan/Force-Layout,
-// z.B. zeitachse.js), nicht für Karten-/Listen-basierte, reflow-fähige
-// Module wie dieses hier.
-//
-// AUFTRAG "Kachel-Klick statt 'mehr/weniger anzeigen'-Button": der frühere
-// eigene Button (mit Text "mehr anzeigen"/"weniger anzeigen") entfällt
-// vollständig - Klick auf die GESAMTE Kachelfläche klappt den Regest-Text
-// jetzt auf/zu (siehe baueKarte()), weiterhin pro Kachel unabhängig, kein
-// Akkordeon. Zwei Ausnahmen bleiben von diesem Kachel-weiten Klick
-// unberührt (eigenes event.stopPropagation() bzw. Fokus-Ziel-Prüfung, siehe
-// dortige Kommentare): Fotos (öffnen weiterhin nur die Lightbox) und
-// Personen-/Ortsnamen (lösten damals nur den Entity-Filter aus, deren
-// Zielansicht laut Nicht-Ziel weiterhin nicht existiert). Neues Chevron-Icon
-// (baueChevron()) zeigt den Auf-/Zuklapp-Zustand visuell an.
-//
-// AUFTRAG "Geteilter Info-Button mit Erklär-Popover": dieses Modul hatte
-// bisher keinen vergleichbaren Bedienhinweis - reine Ergänzung. Info-Button
-// (js/utils/infoButton.js) oben rechts im Werkzeugleisten-Bereich, neben der
-// Filterleiste (siehe .regk-werkzeugleiste in fuegeStyleEin()/render()).
-//
-// AUFTRAG "Kalender-Heatmap-Korrekturen, Sidebar-Umbau, Kategorie-Umbenennung",
-// Punkt 4: Klick auf einen Eintrag in der neuen schlanken Sidebar-Urkunden-
-// Liste (js/utils/sidebar.js' baueUrkundenListeInhalt(), aktuell genutzt von
-// kalenderHeatmap.js) navigiert hierher und übergibt per state.js'
-// zielSignatur (einmaliger Kanal, siehe dortiger Kommentar) die Ziel-Urkunde.
-// render() liest sie EINMAL und löscht sie sofort wieder (clearZielSignatur())
-// - sonst würde ein späterer, regulärer Aufruf dieses Moduls fälschlich
-// erneut isolieren.
-//
-// KORREKTUR (Auftrag "Kalender-Legende zurück, Sidebar-Navigation isolieren,
-// Expand-Umrandung", Punkt 3, siehe CHANGELOG): vorher wurde aus der Ziel-
-// Signatur nur eine PASSENDE SEITE im ungefilterten Datensatz berechnet - die
-// Zielkachel klappte dadurch unter allen anderen (unveränderten) Kacheln auf,
-// Nutzer mussten sie ggf. erst auf der Seite finden/scrollen. Jetzt wird die
-// Signatur stattdessen programmatisch in den bestehenden Suchschlitz
-// eingetragen (filterleiste.js' setzeSuchbegriff(), "so als hätte man sie
-// eingetippt") - die bestehende Suchlogik (ermittleGefilterteRecords())
-// filtert dadurch von selbst auf die exakte/teilstring-passende(n) Urkunde(n),
-// keine separate Positions-/Seitenberechnung mehr nötig. zeichneKachelraster()
-// klappt die (jetzt garantiert auf Seite 1 sichtbare) Zielkachel weiterhin per
-// echtem karte.click() auf (unverändert) und scrollt sie in den sichtbaren
-// Bereich - instanz.zielSignatur wird danach gelöscht, damit ein späterer,
-// unabhängiger Redraw (z.B. weitere Sucheingabe) nicht erneut aufklappt.
-//
-// KLEINAUFTRAG "Kachelraster – Paginierung auch unten": zweite, identische
-// Paginierungsleiste unterhalb des Kachelrasters ergänzt (bauePaginierung()
-// bekommt einen `position`-Parameter "oben"/"unten", nur für aria-label/
-// Rand-Abstand relevant) - dieselbe, bereits in personenliste.js etablierte
-// Zwei-Leisten-Konvention: beide Leisten werden bei jedem Seitenwechsel aus
-// demselben instanz.aktuelleSeite komplett neu gebaut (zeichneKachelraster(),
-// s.u.), sind dadurch immer synchron, ohne eigenen Abgleichs-Code.
+// js/viz/regestenKachelraster.js – Ansicht „Regesten“ (Kachelraster, Primäransicht der Urkunden)
+// Zweck: je Urkunde eine Kachel mit Signatur, Datum, Kategorien, Fotos und aufklappbarem Regest; Suche, Filter,
+//   Paginierung oben und unten.
+// Eingabe: `data` = urkunden.csv (signatur, datum, regest, kategorien, personen, orte, ausstellungsort, foto_ordner,
+//   bilder, Unsicherheitsfelder); Datensätze werden nicht verändert.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   Modus „Licht aus“ über options.lichtAus; liest einmalig die zielSignatur aus core/state.js.
+// Abhängigkeiten: utils/bilder.js, utils/genanntePersonen.js, core/filterleiste.js, utils/sidebar.js (Lightbox),
+//   utils/infoButton.js, utils/lichtAus.js, utils/lichtAusDarstellung.js.
+// Bedienung: Klick oder Enter auf die Kachel klappt das Regest auf (Chevron zeigt den Zustand); Fotos öffnen die Lightbox,
+//   Namen führen zur Personen- bzw. Ortsliste. HTML-Raster, bricht um; kein Hinweis „größerer Bildschirm“.
+// Hintergrund: docs/MODULNOTIZEN.md, Abschnitt regestenKachelraster.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ermittleBildUrls, wendeBildFehlerbehandlungAn } from '../utils/bilder.js';
@@ -905,7 +837,7 @@ function zeichneKachelraster() {
     instanz.aktuelleSeite, gesamtSeiten, seiteRecords.length, gefilterteRecords.length, istIrgendeinFilterAktiv(), 'unten'
   ));
 
-  // Punkt 4 (Sidebar-Navigation, siehe Dateikopf-Kommentar): dank der
+  // Punkt 4 (Sidebar-Navigation, siehe docs/MODULNOTIZEN.md): dank der
   // Suchschlitz-basierten Isolierung (statt Positions-/Seitenberechnung) ist
   // die Zielkachel bereits garantiert unter den gerade gefilterten
   // seiteRecords - karte.click() nutzt weiterhin den in baueKarte() bereits
@@ -952,7 +884,7 @@ export function render(container, data, options = {}) {
   // Record verändert".
   const suchtextByRecord = new Map(data.map((record) => [record, baueDurchsuchbarenText(record)]));
 
-  // Punkt 4 (siehe Dateikopf-Kommentar): einmaliger Konsum von state.js'
+  // Punkt 4 (siehe docs/MODULNOTIZEN.md): einmaliger Konsum von state.js'
   // zielSignatur.
   const zielSignatur = getZustand().zielSignatur;
   clearZielSignatur();
@@ -986,7 +918,7 @@ export function render(container, data, options = {}) {
     instanz.infoButton = erzeugeInfoButton(infoButtonContainer, cfg);
   });
 
-  // Punkt 3 (siehe Dateikopf-Kommentar): setzeSuchbegriff() löst denselben
+  // Punkt 3 (siehe docs/MODULNOTIZEN.md): setzeSuchbegriff() löst denselben
   // onChange()-Pfad wie eine echte Eingabe aus (filterZustand/Seite 1/
   // zeichneKachelraster()) - der abschließende zeichneKachelraster()-Aufruf
   // im else-Zweig ist daher nur für den regulären Fall ohne Ziel-Signatur

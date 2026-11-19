@@ -497,3 +497,425 @@ eine feste Grid-Zeile (42). Gemeinsamer Kern ist `erzeugeFlyoutPanel()`, darauf 
 - Ein Klick auf einen Punkt öffnet `zeigeUrkundenDetail()` aus `sidebar.js` mit Fotos.
 - Den Info-Knopf erzeugt `render()` nur einmal in einem eigenen Container. Er hängt Listener an `document`; ein Neubau bei
   jedem Zeichnen hätte sie vervielfacht.
+
+---
+
+## js/utils/vizIcons.js – Symbole der Ansichten (Galerie, Flyouts)
+
+Eine kleine schematische SVG-Grafik je Ansicht. Sie hat keinen Bezug zu echten Daten, ist rein dekorativ (`aria-hidden`) und
+nutzt `currentColor`, übernimmt also die Textfarbe der Kachel.
+- **Aufbau:** Die Markup-Zeichenketten aller Symbole liegen in `IKONEN`; `erzeugeVizIcon(ansichtId)` baut daraus das
+  `<svg>`. Es ist eine gemeinsame Datei statt einer Datei je Symbol, nach dem Muster von `beschriftung.js` und
+  `tooltip.js`.
+- **Leitgedanke:** Ähnliche Diagrammfamilien unterscheiden sich in der Zusammensetzung, nicht in der Farbe, weil die
+  Symbole einfarbig sind.
+  - **Punktreihen:** Zeitachse (Linie mit Punkten), Dot Plot (lose Reihen), Swimlanes (durchgehende Bahnen).
+  - **Geschichtete Flächen:** Streamgraph (wellig), Ridgeline (gestapelte Silhouetten), Horizon (gerade Bänder).
+  - **Fluss zwischen Spalten:** Sankey (2 Spalten, kreuzende Bänder), Alluvial (3 Spalten), Karte Soziale Gruppen (gerade
+    Linien mit Kartennadel).
+  - **Matrix und Netz:**
+    - Adjazenzmatrix: gefüllte Zellen;
+    - Korrelationsmatrix: Kreise verschiedener Größe;
+    - Chord: Kreis mit Sehnen;
+    - Arc: Linie mit Bögen;
+    - Personennetzwerk: loses Netz, keine Spalten, kein Raster.
+  - **Karten:** Karte (Umriss mit Punkten), Verbindungskarte (Umriss mit gestricheltem Bogen).
+  - **Bestand (dieselbe Hierarchie):** Treemap (verschachtelte Rechtecke), Sonne (Ringsegmente), Icicle (sich teilende
+    Balkenreihen), Circle Packing (verschachtelte Kreise). Der Strahl ist zeitbasiert: waagrechte Balken auf einer Achse.
+  - **Weitere:**
+    - Vermögensschichtung: drei Gruppen gestapelter Rechtecke;
+    - Marimekko Verlassenschaften: wie Marimekko, aber mit gestricheltem obersten Segment für den nicht erfassten Rest;
+    - Trellis: acht Mini-Balkendiagramme;
+    - Bump Chart: gerade, sich kreuzende Linien, im Unterschied zu den Kurven von Sankey;
+    - Stammbaum: senkrechte Balken auf senkrechter Achse, im Unterschied zum Strahl;
+    - Personenliste: Listensymbol;
+    - Bubble Chart: lose Kreise ohne Rahmenkreis, im Unterschied zu Circle Packing.
+
+---
+
+## js/viz/trellis.js – Trellis (Bürgerbuch)
+
+**Inhalt:** Ein kleines Histogramm je Wirtschaftssektor: x = Jahr, y = Zahl der Bürgeraufnahmen. Alle Felder teilen eine
+y-Skala, damit der Vergleich fair ist. „Beruf nicht angegeben“ (damals 1 250 von 2 791 Einträgen) ist ein eigenes,
+sichtbares Feld.
+- **Herkunft:** Das Modul ist vom Urkunden-Modul übernommen; Daten und Feldnamen kommen aus `buergerbuchZeit.js` statt
+  `urkundenZeit.js`.
+- **Auflösung:** ein Balken je Jahr (`BIN_GROESSE_JAHRE = 1`). Das Bürgerbuch umfasst nur rund 90 Jahre (1535–1625), die
+  Urkunden über 700; dort waren es 50-Jahres-Fenster.
+- **Ohne Jahr:** Das Bürgerbuch hat bei allen Einträgen ein auswertbares Datum, darum gibt es kein Feld „Undatiert“.
+  `teileNachJahr()` liefert für den Fall künftiger Lücken trotzdem ein (leeres) `ohneJahr`.
+- **Beschriftung:** Es gibt nur Sektortitel, keine Achsenbeschriftungen.
+  - Die Titel haben 15 px (`SEKTOR_TITEL_SCHRIFTGROESSE`) und werden mit `ermittleBeschriftungstext()` aus `beschriftung.js`
+    nach Feldbreite und Schriftgröße gekürzt, statt fest nach 30 Zeichen.
+  - Jedes Feld hat einen 1-px-Rahmen in `var(--border)`.
+- **Größe:** Aus der verfügbaren Fläche (`ermittleVerfuegbareBreite()` und `ermittleVerfuegbareHoehe()` aus
+  `viewportGroesse.js`) werden Spalten und Zeilen so gewählt, dass jedes Feld nahe am Seitenverhältnis `FACET_ZIEL_ASPEKT`
+  bleibt (`ermittleSpaltenzahl()`). Unter `MIN_FACET_*` scrollt die Seite.
+- Der Infotext steht in `data/infotexte.csv` (`trellis`).
+
+---
+
+## js/viz/regestenKachelraster.js – Regesten-Kachelraster
+
+Die Primäransicht der Urkunden.
+- **Aufbau:** HTML statt SVG, weil Kacheln mit Fotos, Freitext und bedienbaren Namen dazu besser passen. Das Raster
+  (`.regk-raster`, `auto-fill`/`minmax`) bricht von selbst um. Darum gibt es hier bewusst keinen Hinweis
+  „größerer Bildschirm“; der gilt nur für Diagramme mit Zoom, Verschieben oder Force-Layout.
+- **Fotos:** Die Dateinamen stehen in `urkunden.csv` (`foto_ordner`, `bilder`; `js/utils/bilder.js`). Die Bilder laden
+  träge über `IntersectionObserver`.
+- **Kachel:** Ein Klick auf die ganze Kachel klappt das Regest auf und zu, je Kachel unabhängig, ohne Akkordeon; ein
+  Chevron (`baueChevron()`) zeigt den Zustand.
+  - Ausnahmen: Fotos öffnen die Lightbox. Personen- und Ortsnamen sind Verweise `?datensatz=<typ>:<id>` zur Personen- bzw.
+    Ortsliste (`js/utils/genanntePersonen.js`).
+  - Der frühere Filter nach Einzelpersonen in `state.js` ist seit 15.11.2026 entfernt.
+- **Paginierung:** zwei gleiche Leisten, oben und unten (`bauePaginierung(…, position)`), wie in der Personenliste. Beide
+  entstehen bei jedem Seitenwechsel neu aus `instanz.aktuelleSeite`.
+- **Ziel-Urkunde (`zielSignatur` in `state.js`, einmaliger Kanal):**
+  - `render()` liest sie einmal und löscht sie. Die Signatur kommt in den Suchschlitz (`setzeSuchbegriff()` aus
+    `filterleiste.js`), die Zielkachel klappt per `click()` auf und wird ins Bild gerollt.
+  - Die Kalender-Heatmap befüllt den Kanal nicht mehr (siehe Abschnitt kalenderHeatmap.js), der Mechanismus bleibt.
+- **Weiteres:** Den Info-Knopf gibt es neben der Filterleiste. Den Modus „Licht aus“ beschreibt
+  `docs/EIGNUNGSMATRIX_UNSICHERHEIT.md`.
+
+---
+
+## js/viz/marimekkoVerlassenschaften.js – Marimekko der Verlassenschaften
+
+**Inhalt:** fünf Spalten für die Vermögensgruppen A–E. Die Breite folgt dem Realvermögen der Gruppe, die Segmente zeigen
+die Zusammensetzung des Realvermögens. Die Gruppen A* und S gehören nicht zur Achse. Datensätze ohne auswertbares
+Realvermögen (damals nur VI-0004, Gruppe S) werden übersprungen.
+- **Eigene Datei:** `marimekko.js` der Urkunden (Jahrhundert × Kategorie, Zählung) bleibt bestehen. Die Datenmodelle
+  unterscheiden sich: hier geldgewichtete Anteile mit einem fünften Segment.
+- **Berechnung:** live aus den Datensätzen (`ermittleGruppenDaten()`), nicht als Tabelle im Code.
+  - Je Person wird `Realvermoegen_fl` mit dem Anteil gewichtet und über die Gruppe summiert; das ist nicht der Durchschnitt
+    der Einzelprozente.
+  - Die Rechnung deckte sich damals mit der vorab gelieferten Tabelle.
+  - Die Felder kommen aus `js/utils/verlassenschaftenFelder.js`.
+- **Segmente:**
+  - **Farben:** Grundstücke, Bargeld, Wertgegenstände, beruflicher Sonderbestand und übrige Mobilien haben je eine eigene,
+    gedeckte Farbe (`SEGMENT_FARBEN`). Die Segmente sind nominal, deshalb nicht die ordinale Gruppenpalette aus
+    `vermoegensgruppenFarben.js`.
+  - **Übrige Mobilien:** Das fünfte Segment ist die Differenz zur Gruppensumme. Es ist keine Datenlücke, sondern
+    entspricht der Behandlung in der Vorlage (Dietrich, Kap. VII.III, S. 39–40): Textilien, Geschirr, Möbel, qualitativ
+    behandelt.
+  - Dafür steht der Schlüssel `mobilien` (früher `rest`) mit einer zurückhaltenden Vollfarbe (`#6b7a8f`), ohne Schraffur.
+- **Beschriftung:** Gruppe und „n=…“ unter jeder Spalte.
+  - Hinweis je Segment: Bezeichnung, Prozent und Gulden. Der Betrag ist die gewichtete Teilsumme, nicht aus dem Prozentwert
+    zurückgerechnet.
+  - Dazu eine Farblegende in der Kopfzeile.
+
+---
+
+## js/config/constants.js – technische Konstanten
+
+Hier stehen nur technische Werte, die laut Masterprompt im Code stehen dürfen. Archivarische Inhalte kommen aus
+`data/*.csv`.
+- **`CAT_COLORS`:** die Farben der 16 Kategorien von `urkunden.csv`.
+  - Erzeugt wie `baueKategorieFarbSkala()` in `kategorieFarben.js`: Farbton gleichmäßig über den Kreis, Helligkeit im
+    Wechsel, alphabetische Liste als stabile Grundlage.
+  - Jede Farbe ist mit `garantiereKontrast()` auf 4,5:1 nachjustiert; die Textfarbe wählen die Module mit
+    `passendeTextfarbe()`.
+  - Die Kategorien wurden mit einem RFC-4180-gerechten Parser gezählt; eine einfache Trennung am Semikolon lieferte wegen
+    eingebetteter Anführungszeichen Unsinn.
+  - Damals gemessen (alle ab 4,5:1): Politik 4,51, Stadt und Raum 4,71, Kultur 4,79, Rechtswesen 4,81, `default` 4,91,
+    Gesundheit 4,98, Wirtschaft 5,08, Vermögen und Finanzen 5,22; die übrigen 6,70 bis 11,39.
+  - Seit Auftrag C2 kommen die Kategoriefarben in den Ansichten aus `js/utils/urkundenKategorieFarben.js`.
+- **`default` und `__unbekannt__`:** derselbe Grauton. `default` bleibt für den Rückfall
+  `CAT_COLORS[k] || CAT_COLORS.default`, `__unbekannt__` ist der sprechende Name.
+- **`ACHSEN_SCHRIFTGROESSE` (14 px, entspricht `--fs-sm`):** einheitliche Achsenbeschriftung. Sie ist eine JS-Konstante,
+  weil die Module sie meist als SVG-Attribut setzen (`.attr('font-size', …)`), und dort wird `var()` nicht aufgelöst.
+- **`UNSICHERHEIT_SYMBOL` (σ) und `UNSICHERHEIT_SYMBOL_LABEL`:** Zeichen und Name der Unsicherheitskennzeichnung.
+
+---
+
+## js/core/bereichsLeiste.js – Bereichs-Leiste der Visualisierungen
+
+Die Leiste ist im Tab Visualisierungen dauerhaft sichtbar und dient zur Wahl des Archivalientyps. Sie hat die frühere
+einmalige Kachelauswahl ersetzt; `kachelauswahl.js` ist gelöscht. Optisch ist sie eine Ebene unter der Hauptnavigation:
+klickbare Links, der aktive mit `aria-current`.
+- **Unterebene von „Visualisierungen“:**
+  - Die Leiste beginnt genau unter dem Linktext „Visualisierungen“. `synchronisiereXPosition()` misst die Lage, statt einen
+    festen Pixelwert zu setzen.
+  - Schrift `var(--fs-sm)` (87,5 % der Hauptnavigation), Grund `var(--bg)` statt `var(--surface)`.
+  - `.bereichs-leiste-huelle` bricht mit negativen Rändern (Höhe des Innenabstands von `#app-content`) aus dem Innenabstand
+    aus. So schließt sie randlos an den Kopf an; ihr Schatten setzt den des Kopfs fort. Die Grid-Zeile wird dadurch nicht
+    höher (Kommentar bei `.bereichs-leiste-huelle`).
+- **Baustein:** kennt weder `router.js` noch die Ansichtsmodule. `options.onAuswahl(archivalientyp)` entscheidet die
+  Navigation.
+- **Flyouts:**
+  - Jeder Eintrag außer dem aktiven bekommt über `options.verankereVizFlyout` ein eigenes Flyout. Das entscheidet `app.js`.
+  - Der aktive Eintrag hat schon das mitlaufende Flyout aus `app.js` (`stelleVizFlyoutSicher()`); ein zweites hätte doppelt
+    reagiert.
+- **`erzeugeBereichsLeistenVorschau()`:** eine schlanke Fassung ohne Hülle und ohne Positionsabgleich, für das
+  Hover-Flyout „Visualisierungen“ der Hauptnavigation. Sie nutzt dieselben Pillen aus `baueBereichsPillen()`.
+
+---
+
+## js/viz/bumpChart.js – Bump Chart (Bürgerbuch)
+
+**Inhalt:** je Wirtschaftssektor eine Linie über die Jahrzehnte, y = Rang nach Zahl der Bürgeraufnahmen im Jahrzehnt
+(Rang 1 = häufigster Sektor). Das Diagramm beantwortet „wer liegt vorn“, nicht „wie viele“ (das zeigt `trellis.js`).
+Daten über `buergerbuchZeit.js`.
+- **Rang:**
+  - Nur Sektoren mit mindestens einer Aufnahme im Jahrzehnt bekommen einen Rang. Ohne Aufnahme gibt es eine Lücke in der
+    Linie, keinen letzten Rang.
+  - „Beruf nicht angegeben“ wird normal mitgezählt.
+  - Bei Gleichstand entscheidet das Alphabet. Das ist eine reine Darstellungsregel; die Quelle gibt dazu nichts her.
+- **Beschriftung am Linienende:**
+  - Jedes Etikett steht zuerst auf der Höhe des letzten eigenen Rangs, das ist nicht immer 1620.
+  - `ordneLabelsAn()` sortiert nach y und schiebt bei zu wenig Abstand nach unten, ohne Überlappung bei jeder Datenlage.
+  - Weil sich nur y verschiebt, zeigt eine dünne Führungslinie vom echten Linienende zum Etikett die Zuordnung. Vorher
+    hingen Etiketten früh endender Sektoren (Gesundheit, Gastgewerbe u. a.) „in der Luft“.
+- **Unsicherheit:** roter Ring um einen Punkt, wenn eine zugehörige Aufnahme ein unsicheres Datum oder einen unsicheren
+  Beruf hat (`istZeitEintragUnsicher()`), über den Unsicherheitsknopf.
+- **Hervorhebung:** Hover hebt eine Linie hervor, ein Klick friert sie ein, ein zweiter Klick oder ein Klick auf die freie
+  Fläche löst sie (wie im Stammbaum).
+
+---
+
+## js/viz/personenliste.js – Personenliste
+
+**Inhalt:** sortier- und durchsuchbare Tabelle aller Personen aus `personenliste.csv` (Urkunden und Bürgerbuch).
+`data` ist das kombinierte Objekt aus `personen.datenDatei` (Familien, Personenliste, Urkunden, Bürgerbuch, seit
+27.10.2026 auch die Verlassenschaftsinventare).
+- Die Bausteine zum Auflösen und Anzeigen von Nennungen (`ermittle…FuerPerson()`, `zeigePersonenNennungen()`,
+  `baueInventar…Inhalt()`, `zurueckZurKombiniertenListe()`) sind exportiert und werden von `buergerinnen.js` (Führung) und
+  `ortsliste.js` mitgenutzt.
+- `oeffneDatensatz(personenId)` dient dem Einstieg über `?datensatz=person:<id>` (`datensatzAufruf.js`).
+
+**Seitenleiste je Person (`zeigePersonenNennungen()`):**
+- **Auflösung:** `nennung_in_urkunden` (Signaturen) wird über `signatur` in `urkunden.csv` aufgelöst, `nennung_in_buergerbuch`
+  (etwa BB-2454) über `id` in `buergerbuch.csv`.
+- **Inventare:** Inventar-Nennungen werden ebenso aufgelöst, mit eigenem Abschnitt in der Liste.
+- **Anzeige:** Genau ein Treffer öffnet die Detailansicht; mehrere zeigen eine Liste mit den Abschnitten „In Urkunden“ und
+  „Im Bürgerbuch“.
+  - Das ist hier nachgebaut, weil `zeigeUrkundenSidebar()` nur Urkunden kennt.
+  - Ein eigener Zurück-Handler ergänzt den von `sidebar.js`, ohne ihn zu ersetzen.
+- **Bausteine:** Urkunden über `baueUrkundenDetailInhalt()` und `baueUrkundenListeInhalt()` aus `sidebar.js`. Für das
+  Bürgerbuch gibt es eigene Bausteine (`baueBuergerbuchDetailInhalt()`, `baueBuergerbuchListeInhalt()`) nach deren Form;
+  vorher gab es keine Bürgerbuch-Seitenleiste.
+- **Datenlage damals:** Keine Zeile hatte beide Nennungen zugleich (1 458 Urkunden, 2 658 Bürgerbuch). Der kombinierte Fall
+  ist trotzdem gebaut und mit einem künstlichen Datensatz geprüft.
+
+**Unsicherheit:**
+- In `personenliste.csv` gilt `unsicherheit_anmerkung` für die ganze Zeile; es gibt keine Begleitfelder `*_unsicher`.
+- `buergerbuch.csv` hat echte Begleitfelder (`Datum_unsicher`, `Beruf_unsicher`, `orte_unsicher`), siehe
+  `istBuergerbuchUnsicher()`.
+- Das σ-Zeichen in unsicheren Zeilen nutzt `--fuehrung-unsicher` (seit Auftrag 19 `#886b1f`, 4,62:1 auf `--bg`).
+
+---
+
+## js/fuehrungen/fuehrungStation.js – Station einer Führung
+
+**Navigation:**
+- Die Pfeile wechseln die Station mit `history.replaceState()`. Das erzeugt keinen Verlaufseintrag und löst kein
+  `hashchange` aus. Die Zurück-Taste des Browsers verlässt deshalb die Führung, statt Station für Station zurückzugehen.
+- Der Einstieg aus der Galerie, „Zurück zur Übersicht“ und der Abschluss (`…/ende`) sind normale Verweise (`href` aus
+  `baueHash()`) und erzeugen einen Verlaufseintrag.
+- Der Stand der Führung wird gemerkt (`speichereZustand()` aus `fuehrungFortsetzen.js`).
+
+**Bildschirmfüllendes Layout (ohne `dvh`):**
+- **Ursache des früheren Überlaufs:** Es fehlte jede Höhenbegrenzung von `.fuehrungen-bereich` bis zu den Inhalten. Die
+  Messtabelle steht in PROJEKTLOG.
+- **Aufbau:** dasselbe Flex-Prinzip wie die „Vollbild-Korrektur“ in `css/layout.css`.
+  - `.fuehrung-station` ist eine Flex-Zeile (Hauptspalte und Navigationssäule).
+  - Die Hauptspalte ist eine Flex-Spalte: Kopf `flex: 0 0 auto`, Inhalt `flex: 1 1 auto; min-height: 0`.
+  - **`min-height: 0` auf jeder Ebene ist der eigentliche Kniff;** sonst wachsen Flex-Kinder über den Platz hinaus.
+- **Inneres Scrollen:** `.fuehrung-beleg` und `.fuehrung-erzaehltext` scrollen innen (`overflow-y: auto`, `tabindex="0"` für
+  die Tastatur). Der Scrollbalken bleibt sichtbar.
+- **Schmale Fenster** (`--fuehrung-umbruch`): Die Höhenbegrenzung fällt weg, die Station scrollt wie normaler Inhalt.
+- **200 % Zoom oder niedrige Fenster:** Es gibt bewusst kein `overflow: hidden`. Reicht die Höhe nicht, wächst die Seite;
+  nichts wird abgeschnitten (WCAG 1.4.4, 1.4.10).
+
+**Navigationssäule:** eine eigene Flex-Spalte neben Kopf und Inhalt, nicht `fixed` oder `absolute`.
+- Weil alle Stationen gleich hoch sind, stehen „hoch“, der Fortschritt und „runter“ bzw. „Zur Übersicht“ überall an derselben
+  Stelle.
+- Auf schmalen Fenstern wird die Säule zu einer `position: sticky`-Leiste am unteren Rand.
+
+---
+
+## js/viz/parallelKoordinaten.js – Parallelkoordinaten (Verlassenschaften)
+
+**Aufbau (Neukonzeption nach einem extern geprüften Konzept, ersetzt die frühere Fassung mit 8 Achsen):**
+- **Zwei feste Achsenfolgen zum Umschalten**, ohne Umordnen durch Ziehen:
+  - „Vermögensprofil“: Realvermögen, vier Vermögensanteile, Gesamtvermögen.
+  - „Forderungs- und Schuldenprofil“: Realvermögen, SchzG („Schulden zum Gut“), SchvG („Schulden vom Gut“), Gesamtvermögen.
+- **Achsen:** Das Realvermögen ist logarithmisch skaliert. Auf der Achse Gesamtvermögen stehen beschriftete Referenzlinien an
+  den Gruppengrenzen nach Dietrich (0, 500, 1 000, 3 000 fl.; `referenzlinien`).
+- **Farbe:** Standard ist die Vermögensgruppe mit einer eigenen ordinalen Skala aus `js/utils/vermoegensgruppenFarben.js`,
+  weil A–E eine Rangfolge ist. Geschlecht, Ort und Jahrzehnt behalten die nominale Skala (`farbeFuerRecord()`,
+  `baueLegende()`).
+- **Hervorhebung:** wie in `sankey.js` (`aktualisiereHighlight()`).
+  - Die fixierte Auswahl (`instanz.auswahl`) geht vor Hover (`instanz.hover`).
+  - Ein Klick auf dieselbe Linie, ein Klick ins Leere oder Escape löst sie.
+  - Der Klick öffnet zugleich die Seitenleiste mit Name, Beruf, Ort, Jahr und allen Achsenwerten (`schalteAuswahl()`).
+    Schließen der Seitenleiste löst auch die Hervorhebung.
+- **Ausgeschlossener Datensatz:** VI-0004 ist unvollständig und wird ohne Hinweistext ausgeschlossen. Das war eine
+  ausdrückliche Entscheidung des Auftrags, eine Abkehr vom früheren Hinweis „1 von 68“.
+- **Infotext:** Er enthält einen Hinweis auf Quelle und Verzerrung.
+
+---
+
+## js/utils/sidebar.js – gemeinsame Seitenleiste
+
+Die Seitenleiste entstand in `treemap.js` und wurde unverändert hierher ausgelagert. Sie kennt keine Geometrie des
+Aufrufers, nur einen Container, einen Datensatz und eine kleine Konfiguration.
+
+**Bestandsverzeichnis:**
+- `baueSidebarInhalt()` und `oeffneSidebar()` bauen den Inhalt.
+- Die Feldliste ist ein Parameter. `STANDARD_SIDEBAR_FELDER` ist der Standard (Spalten „für Sidebar“ in SCHEMA).
+
+**Urkunden:**
+- **Einstiege:** `zeigeUrkundenSidebar(instanz, titel, records)` zeigt bei einer Urkunde die Detailansicht, bei mehreren
+  eine Liste. `zeigeUrkundenDetail()` zeigt eine einzelne Urkunde.
+- **Inhalt:**
+  - `baueUrkundenListeInhalt()`: Liste mit einer Vorschauzeile aus dem Regest;
+  - `baueUrkundenDetailInhalt()`: Detail mit Fotogalerie; das Hauptfoto öffnet die gemeinsame Lightbox (`lightbox.js`).
+- Diese Datei steuert Liste oder Detail, Zurück, Bildlauf, Fokus, `aria-hidden` und `.offen` selbst.
+- Darauf umgestellt: Kalender-Heatmap, Zeitachse, Dot Plot.
+
+**Fokus und Schließen:**
+- `baueSidebarGeruest()` verdrahtet den Zurück-Knopf selbst. Den Schließen-Knopf gibt sie zurück, weil das Fokusziel nach
+  dem Schließen je Modul verschieden ist.
+- `schliesseSidebar(instanz, fokusZielFallback)` setzt den Fokus zurück, wenn er in der Seitenleiste lag. So verwaist er
+  nicht auf `<body>`. Den Listenzustand setzt die Funktion dabei zurück.
+- Geschlossen ist die Seitenleiste `inert`, geöffnet bedienbar (Auftrag D).
+
+---
+
+## js/viz/korrelationsmatrix.js – Korrelationsmatrix (Verlassenschaften)
+
+**Inhalt:** Rangkorrelation nach Spearman zwischen den acht Vermögenskennzahlen der Verlassenschaftsinventare. Die
+Kennzahlen sind dieselben wie in `parallelKoordinaten.js`, mit gemeinsamer Definition in `verlassenschaftenFelder.js`
+(`VERMOEGENS_VARIABLEN`).
+- Früher stand die Matrix bei den Urkunden; dort gibt es aber keine mehreren stetigen Werte je Datensatz.
+- Unterschied zur Adjazenzmatrix: Dort zählt eine Zelle Ko-Nennungen, hier ist sie ein Zusammenhangsmaß zweier Zahlen über
+  den ganzen Bestand.
+
+**Berechnung:**
+- **Spearman statt Pearson:** Die Stichprobe ist klein (67), und es gibt Ausreißer. So erreicht der Anteil SchvG an den
+  Aktiva bei einer Person 780,49 %.
+  - Umgesetzt als Pearson-Korrelation der Ränge, mit Durchschnittsrang bei Bindungen. Das ist die Standarddefinition, keine
+    Näherung.
+- **Fehlende Werte:** Sie werden paarweise ausgeschlossen. Der unvollständige Datensatz VI-0004 fehlt in allen acht
+  Kennzahlen, darum ist N überall 67. N steht im Hinweis je Zelle.
+
+**Darstellung:**
+- Das Vorzeichen muss sichtbar sein, darum gibt es zwei technische Farben: Blau `#1a4d8f` positiv, Rot `#c0392b` negativ.
+- Ein Klick auf eine Zelle öffnet ein Streudiagramm der beiden Kennzahlen (`oeffneScatterplot()`).
+  - Es ist ein schlankes Overlay nach dem Muster von `lightbox.js`: einmal erzeugt im `<body>`, wiederverwendet; Escape oder
+    ein Klick außerhalb schließt.
+  - Es ist nicht ausgelagert, weil nur dieses Modul es braucht.
+- Die Achsen tragen die vollen Feldnamen (`label`). In `verlassenschaftenFelder.js` bleiben SchzG und SchvG abgekürzt.
+  `parallelKoordinaten.js` nennt die aufgelöste Bedeutung aus einem späteren Auftrag.
+
+---
+
+## js/viz/streamgraph.js – Streamgraph (Bürgerbuch)
+
+**Inhalt:** Die Bürgeraufnahmen je Wirtschaftssektor über die Zeit als geschichtete Fläche (`d3.stackOffsetWiggle`). Sie
+zeigt, wie sich die Sektoren relativ zueinander verändern.
+- Es ist die dritte Sicht auf dieselbe Frage, neben `trellis.js` (absolute Zahl je Jahr) und `bumpChart.js` (Rang je
+  Jahrzehnt).
+- Die frühere Fassung zeigte die Urkunden. `id` und Pfad blieben gleich, Zuordnung und Inhalt sind neu.
+
+**Daten und Achsen:**
+- Daten über `buergerbuchZeit.js`. Es gibt kein Feld „Undatiert“, weil alle Einträge ein Datum haben.
+- x = Jahr, ein Jahr je Schritt (`BIN_GROESSE_JAHRE = 1`), wie im Trellis und damit direkt vergleichbar.
+- 16 Sektoren einschließlich „Beruf nicht angegeben“. Jeder Eintrag hat genau einen Sektor (`ermittleSektor()`), darum ist
+  die Summe je Jahr genau die Zahl der Einträge.
+
+**Farbe und Bedienung:**
+- **Farben:** `baueSektorFarbSkala()` aus `buergerbuchZeit.js`, dieselben Farben wie in Trellis und Bump Chart.
+- **Legende:** in der Kopfzeile, 16 Einträge in der Reihenfolge von `ermittleSektorenSortiertNachHaeufigkeit()`. Ohne sie
+  wäre die Hervorhebung nicht zuzuordnen.
+- **Hervorhebung:** wie im Bump Chart (`hoverSektor`, eingefroren `frozenSektor`, `aktualisiereHervorhebung()`). Die aktive
+  Fläche ist voll deckend und hat einen Rand, die anderen treten zurück.
+- **Unsicherheit:** ein kleiner roter Punkt am oberen Rand jedes Segments (Jahr und Sektor) mit einer unsicheren Angabe
+  (`istZeitEintragUnsicher()`: `Datum_unsicher`, `Beruf_unsicher`), über `options.showUncertainty`. Eine Fläche hat keinen
+  sinnvollen gestrichelten Teil.
+
+---
+
+## js/viz/sunburst.js – Sonne (Bestand)
+
+Datengrundlage wie die Treemap: `js/utils/bestandsHierarchie.js` mit vier Ebenen (Gesamtbestand, Kategorie,
+Unterkategorie, Bestand). Kategoriefarben kommen aus `kategorieFarben.js`, die Winkel sind nach der Wurzel skaliert, mit
+Mindestwinkel, Beschriftung und Zoom wie in der Treemap.
+- **Zwei Navigationszustände** (`instanz.aktuelleKategorieDaten`, wie in der Treemap):
+  - **Übersicht:** drei Ringe zugleich (Kategorie innen, Unterkategorie, Bestand außen). „Ohne Kategorie“ bleibt auf allen
+    Ringen eine eigene Gruppe.
+    - Ein Klick auf ein beliebiges Segment öffnet die Kategorie-Ansicht der zugehörigen Kategorie
+      (`kategorieDatenVonKnoten()` über `d.ancestors()`). Er wählt nie direkt einen Bestand aus.
+    - Das Zentrum ist reine Information.
+  - **Kategorie-Ansicht:** zwei Ringe, Unterkategorien innen und Bestände außen; das Zentrum führt zurück.
+    - Ein Klick auf einen Bestand öffnet oder schließt die Seitenleiste.
+    - Ein Klick auf eine Unterkategorie bewirkt nichts: kein Zeiger, kein Klick, aber Hinweis bei Hover und Fokus. Es gibt
+      keinen einzelnen Datensatz und keine tiefere Ebene.
+- **Ausnahme vom Zwei-Ebenen-Prinzip** von Treemap und Circle Packing (wie Icicle): Ringe lassen zusätzliche Ebenen zu, ohne
+  die äußeren unlesbar zu machen.
+- Modus „Licht aus“ seit Auftrag 17: Abdunkeln, Bernstein-Rahmen, Schraffur (`docs/EIGNUNGSMATRIX_UNSICHERHEIT.md`,
+  Abschnitt 1b).
+
+---
+
+## js/utils/statischeKarte.js – Kartengrundlage für Verbindungskarte und Karte Soziale Gruppen
+
+- **Karte:** `baueStatischeKarte()` liefert eine normal bedienbare Leaflet-Karte (Mausrad zoomt, Ziehen verschiebt). Der
+  Name „statisch“ stammt aus der ersten Fassung, in der der Ausschnitt fest war. Umbenannt wurde nicht, um alle Importe
+  unverändert zu lassen.
+- **Positionen:** `projiziere()` (`latLngToContainerPoint()`) gilt nur bis zur nächsten Kartenbewegung. Die Aufrufer setzen
+  ihre SVG-Elemente bei `karte.on('zoom move', …)` neu; dieser Baustein kennt sie nicht.
+- **`erzeugeUeberlagerungsSvg()`:** baut die SVG-Ebene mit `OVERLAY_Z_INDEX` (450).
+  - Ohne eigenes `z-index` lag ein positioniertes Element unter Leaflets `.leaflet-map-pane` (400). Die Linien waren kurz
+    sichtbar und verschwanden, sobald die Kacheln geladen waren.
+  - 450 liegt über den Kacheln und unter Werkzeugleiste und Info-Knopf der Aufrufer (900).
+- **Nutzer:** `verbindungskarte.js`, `bipartiteFlowMap.js`.
+
+---
+
+## js/utils/bestandsHierarchie.js – Hierarchie des Bestandsverzeichnisses
+
+- **Aufbau:** Aus den flachen Datensätzen von `bestandsverzeichnis.csv` entsteht die Struktur Gesamtbestand →
+  `bkk_kategorie` → `bkk_unterkategorie` → Bestand (`baueBestandsHierarchie()`). Die Datensätze werden dabei nicht
+  verändert.
+- **Nutzer:** Treemap, Sonne, Icicle, Circle Packing und der Strahl (Kategorie-Gruppierung und -Farbe). Eine Änderung an
+  `baueBestandsHierarchie()`, `kategorieVonKnoten()` oder `baueTooltipText()` wirkt auf alle.
+- **Fehler mit der festen Tiefe:**
+  - `kategorieVonKnoten()` erkannte die Kategorie früher an `depth === 1`.
+  - Die Zoomansichten verwurzeln die Hierarchie aber neu: Dort ist Tiefe 1 die Unterkategorie, bei Circle Packing
+    (`baueFlacheBestaende()`) sogar der Bestand.
+  - Reproduziert wurde das an „Steuerbücher“.
+- **Lösung:** Jeder Knoten trägt `ebenenTyp` (`EBENENTYP_KATEGORIE`, `…_UNTERKATEGORIE`, `…_BESTAND`), auch in neu
+  zusammengesetzten Hierarchien.
+  - `kategorieVonKnoten()` sucht über `d.ancestors()` nach `ebenenTyp === 'kategorie'`.
+  - Dieselbe Funktion und `baueKnotenTooltipText()` ersetzen frühere lokale Kopien in Sonne, Icicle und Circle Packing.
+- **Weitere Funktionen:** `parseUmfangLfm()`, `nurUnsichereBestaende()`, `zeigeKeineUnsicherenBestaende()`,
+  `findeBestandImBaum()`; Konstante `OHNE_KATEGORIE`.
+
+---
+
+## js/utils/vizPlatzhalter.js – Fabrik für Ansichten ohne Inhalt (derzeit ungenutzt)
+
+- **Zweck:** `baueVizPlatzhalterModul()` erzeugt ein Modul mit vollständiger Schnittstelle (`render`, `resize`, `destroy`),
+  aber ohne Inhalt. Es entstand für die damals neuen Bereiche Bürgerbuch, Verlassenschaften und Personen.
+  - Info-Knopf und Filterleiste sind echt aufgebaut und bedienbar.
+  - Die Fläche bemisst `viewportGroesse.js`.
+  - Das Gerüst der Seitenleiste wird gebaut, aber nicht befüllt. Die Urkunden-Detailansicht passt nicht zu den anderen
+    Datensätzen.
+- **Bewusst nicht eingebunden:** `bildschirmHinweis.js`. Ohne dichten Inhalt wäre der Hinweis „größerer Bildschirm“ eine
+  Attrappe.
+- **Stand 19.11.2026:** Keine Datei importiert dieses Modul mehr, weil alle Bereiche echte Ansichten haben. Ob es entfernt
+  wird, entscheidet Alexander (PROJEKTLOG 102).
+
+---
+
+## js/utils/zoomSteuerung.js – Zoom-Knöpfe (−, ⟷, +)
+
+- **Zweck:** gemeinsame Knopfgruppe für Ansichten mit Zeitachsen-Zoom, ausgelagert aus `ganttDiagramm.js` und `dotPlot.js`.
+- **Baustein:** `erzeugeZoomSteuerung(container)` baut nur DOM und Aussehen und gibt die drei Knöpfe zurück. Die
+  Klick-Handler hängt der Aufrufer an, erst nach dem SVG-Aufbau, weil das Zoomverhalten vorher nicht existiert.
+- **Barrierefreiheit:** Jeder Knopf hat `title` und `aria-label`; die Gruppe trägt `role="group"` mit `aria-label`.
+- **Rahmen:** Die Gruppe hat einen gemeinsamen Rahmen mit Trennlinien (`border-left`).
+  - In Ruhe ist er `var(--text-muted)`. `var(--border)` war gegen `--bg` und `--surface` praktisch unsichtbar.
+  - Bei Hover oder Fokus eines Knopfs wechselt er per `:has()` auf `var(--accent)`.

@@ -1,45 +1,8 @@
-// js/utils/vizPlatzhalter.js
-// AUFTRAG "Neue Kacheln Bürgerbuch/Verlassenschaften/Personen": gemeinsame
-// Fabrik für Visualisierungsmodule, die das Modul-Interface (Abschnitt 5:
-// render(container,data,options)/resize(optionen)/destroy()) bereits
-// vollständig erfüllen, aber noch keinen tatsächlichen Visualisierungsinhalt
-// haben - Nicht-Ziel des Auftrags: "keine tatsächlichen Visualisierungsinhalte
-// ... nur Kacheln, Routing, leeres Gerüst". Analog zu js/core/app.js'
-// renderPlatzhalterTab() (dort für ganze Tabs ohne Datentabelle/Modul:
-// Führungen/Literatur/Über), hier aber auf MODUL-Ebene, weil jeder neue
-// Archivalientyp-Bereich technisch ein eigenes render/resize/destroy braucht,
-// um an js/core/ansichtWechseln.js anzudocken (siehe archivalienRegistry.js).
-//
-// "Technisch vorbereitet" (Auftrag Punkt 2, wörtlich) heißt hier: Info-Button
-// und Filterleiste werden TATSÄCHLICH aufgebaut und sind bedienbar (auch wenn
-// das Filtern noch nichts sichtbar verändert, da es ja keine Liste zum
-// Filtern gibt) - kein reiner Text-Platzhalter ohne echte Bausteine.
-// viewportGroesse.js bemisst die Platzhalterfläche (echte, nicht nur
-// dekorative Verwendung).
-//
-// js/utils/bildschirmHinweis.js BEWUSST NICHT eingebunden: dessen einziger
-// Zweck ("Diese Ansicht ist für größere Bildschirme optimiert") setzt
-// tatsächlich dichten, raumgreifenden Visualisierungsinhalt voraus, den es
-// hier per Auftrag noch nicht gibt - ein Aufruf ohne echten Grund wäre reine
-// Attrappe (Abschnitt 12: Funktionalität nie nur vortäuschen). Wird ergänzt,
-// sobald das erste echte Modul in einem der drei neuen Bereiche tatsächlich
-// mehr Raum braucht.
-//
-// js/utils/sidebar.js-Anschluss: baueSidebarGeruest()/fuegeSidebarStyleEin()
-// werden aufgebaut (Gerüst existiert im DOM, korrekt geschlossen), aber NICHT
-// befüllt - zeigeUrkundenSidebar()/zeigeUrkundenDetail() bauen eine hart auf
-// das Urkunden-Schema (Signatur/Datum/Regest/Kategorien/Orte/Personen)
-// zugeschnittene Detailansicht (baueUrkundenDetailInhalt()) und passen
-// fachlich NICHT zu Bürgerbuch-/Verlassenschaften-/Personen-Datensätzen - sie
-// hier aufzurufen wäre falsch, nicht nur verfrüht, da es zudem noch gar keine
-// anklickbaren Einzel-Datensätze gibt. Die vom Auftrag als Option genannte
-// Umbenennung zu einer datenquellen-neutralen Funktion würde daher NICHT
-// ausreichen, ohne auch baueUrkundenDetailInhalt()s feste Feldliste selbst
-// auf eine konfigurierbare (STANDARD_SIDEBAR_FELDER-ähnliche) Struktur
-// umzustellen - eine größere Änderung an sidebar.js UND deren drei
-// bestehenden Aufrufern (kalenderHeatmap.js/zeitachse.js/dotPlot.js), die
-// dieser rein gerüstbildende Auftrag nicht rechtfertigt. Zurückmeldung dazu
-// siehe Abschluss-Selbstauskunft/PROJEKTLOG - bewusst NICHT umbenannt.
+// js/utils/vizPlatzhalter.js – Fabrik für Ansichten mit vollständiger Schnittstelle, aber ohne Inhalt
+// Schnittstelle: baueVizPlatzhalterModul({ … }) → { render, resize, destroy } mit echtem Info-Knopf, Filterleiste und
+//   leerem Seitenleisten-Gerüst.
+// Stand 19.11.2026: von keiner Datei mehr importiert (alle Bereiche haben echte Ansichten); Entscheidung über Entfernen
+//   offen. Hintergrund: docs/MODULNOTIZEN.md, Abschnitt vizPlatzhalter.js.
 
 import { erzeugeFilterleiste } from './filterleiste.js';
 import { erzeugeInfoButton } from './infoButton.js';
@@ -146,7 +109,7 @@ export function baueVizPlatzhalterModul({
       const filterleiste = erzeugeFilterleiste(filterContainer, {
         suchPlaceholder,
         kategorien: ermittleKategorien(data),
-        onChange: () => {} // noch nichts zu filtern - Infrastruktur bewusst bereits verdrahtet, siehe Dateikopf-Kommentar
+        onChange: () => {} // noch nichts zu filtern - Infrastruktur bewusst bereits verdrahtet, siehe docs/MODULNOTIZEN.md
       });
       const infoButton = erzeugeInfoButton(infoContainer, {
         text: infoText,

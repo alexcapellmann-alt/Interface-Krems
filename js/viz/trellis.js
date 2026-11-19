@@ -1,89 +1,12 @@
-// js/viz/trellis.js
-// AUFTRAG "Bürgerbuch – Trellis (Umzug), Bump Chart (Neubau), Bipartiter
-// Graph (Umzug)", Punkt 1 - UMZUG von Urkunden zu Bürgerbuch (data/
-// buergerbuch.csv statt data/urkunden.csv, siehe archivalienRegistry.js).
-// Kein inhaltlicher Neubau: Kernidee (ein Mini-Histogramm je Kategorie/
-// Sektor, gemeinsame y-Skala für fairen Vergleich) bleibt identisch zum
-// bisherigen Urkunden-Modul, nur die Datengrundlage/Feldnamen wechseln
-// (js/utils/buergerbuchZeit.js statt js/utils/urkundenZeit.js, siehe dortiger
-// Dateikopf-Kommentar zur bewussten Trennung der beiden Utility-Dateien).
-//
-// Soll-Zustand (Auftrag, wörtlich): "Ein kleines Diagramm pro
-// Wirtschaftssektor (X = Jahr, Y = Anzahl Bürgeraufnahmen). 'Beruf nicht
-// angegeben' (1.250 von 2.791 Einträgen) erscheint als eigenes, sichtbares
-// Panel, nicht ausgeblendet."
-//
-// Designentscheidung X-Achse (bitte bei Bedarf zurückmelden): das bisherige
-// Urkunden-Modul band Jahre in 50-Jahres-Fenster (BIN_GROESSE_JAHRE=50), weil
-// urkunden.csv 736 Jahre (1108-1844) abdeckt - zu viele Einzeljahre für ein
-// kleines Facet. Bürgerbuch.csv deckt dagegen nur 91 Jahre ab (1535-1625,
-// live geprüft), UND der Auftrag nennt wörtlich "X = Jahr" (nicht
-// "Zeitfenster", wie es beim ebenfalls in diesem Auftrag entstehenden
-// bumpChart.js explizit "Jahrzehnt" heißt) - deshalb hier bewusst ECHTE
-// Jahresauflösung (ein Balken je Kalenderjahr, BIN_GROESSE_JAHRE=1) statt
-// einer erneuten Mehrjahres-Bin, plus eine breitere Facet-Fläche
-// (FACET_BREITE 220→260) für minimal mehr Platz pro Jahresbalken.
-//
-// Undatierte Einträge: anders als bei Urkunden (wo jahresloses Datum real
-// vorkommt und eine eigene "Undatiert"-Kachel bekommt) hat data/
-// buergerbuch.csv bei ALLEN 2791 Zeilen ein auswertbares Datum (live
-// geprüft, 0 leere/unauswertbare Werte) - eine eigene "Undatiert"-Kachel
-// entfällt deshalb hier ersatzlos (nicht: übersehen). js/utils/
-// buergerbuchZeit.js' teileNachJahr() bleibt trotzdem robust für den
-// theoretischen Fall künftiger unvollständiger Datenpflege (liefert dann
-// ein leeres, aber technisch vorhandenes ohneJahr-Array).
-//
-// Punkt 1 (Info-Button, Auftrag: "Vorschlag machen, ich gebe frei"): der
-// Info-Text war zunächst ein Vorschlag (seither freigegeben, seit AUFTRAG
-// "Archivspezifische Texte..." aus data/infotexte.csv, modul_id "trellis").
-//
-// AUFTRAG "Bürgerbuch-Trellis – größere Beschriftung, dünner Rahmen je
-// Panel": Punkt 1 (Beschriftung vergrößern) - der Auftrag nennt "Sektor-Titel
-// UND Achsenbeschriftungen"; dieses Modul zeichnet bislang aber gar keine
-// separaten Achsen-Tick-Beschriftungen (nur den Sektor-Titel und eine
-// unbeschriftete Baseline, siehe zeichneEinFacet()) - es gibt hier also
-// nichts an "Achsenbeschriftungen" zu vergrößern, das nicht bereits der
-// Sektor-Titel wäre (siehe Selbstauskunft im Chat, transparent gemeldet statt
-// stillschweigend neue Achsenbeschriftungen zu ergänzen, was über den
-// Auftrag "größere Beschriftung" hinausgehen würde). SEKTOR_TITEL_SCHRIFTGROESSE
-// 11→15px (Faktor ≈1,36, im Auftrag als Richtwert 1,3-1,4× vorgegeben,
-// identische Konvention zu früheren Schriftgrößen-Aufträgen, siehe CHANGELOG).
-// Damit bei der bei größerer Schrift schneller drohenden Titel-Überlappung/
-// -Abschneidung (Auftrag: "ohne dass Titel... überlappen oder abgeschnitten
-// werden") KEIN reiner Zeichen-Zähl-Wert (bisher fix "30 Zeichen") verwendet
-// wird, der bei kleineren Facetten (MIN_FACET_BREITE, siehe unten) zu lang
-// werden könnte, wird die bereits geteilte, schriftgrößen- und
-// breitenabhängige Kürzungsformel aus beschriftung.js (Auftrag
-// "Beschriftungs-Kürzung mit Ellipse", bislang für Treemap/Sunburst/Icicle/
-// Circle-Packing genutzt) hier ein fünftes Mal eingebunden - misst nicht die
-// echte Textbreite, sondern nutzt dieselbe etablierte Heuristik
-// (0,57 × Schriftgröße pro Zeichen), passt sich aber - anders als der
-// bisherige feste "30 Zeichen"-Wert - korrekt an SEKTOR_TITEL_SCHRIFTGROESSE
-// und die tatsächliche facetBreite an.
-//
-// Punkt 2 (dünner Rahmen je Panel): jedes Facet bekommt einen 1px-Rahmen in
-// derselben gedeckten Rand-Farbe wie der Rest der Oberfläche (`var(--border,
-// #ddd8cf)`, identisches Muster zu sunburst.js) - bewusst kein eigener,
-// kräftigerer Farbton, damit der Rahmen abgrenzt, aber nicht dominiert
-// (Akzeptanzkriterium: "kein zu kräftiger/dominanter Rahmen").
-//
-// AUFTRAG "Bipartiter Graph → Urkunden (Sankey), Personennetzwerk →
-// Bürgerbuch, plus Trellis/Bump-Chart-Korrekturen", Punkt 3 (Trellis
-// vergrößern) - Root Cause der bisherigen "sehr klein/gestaucht"-Wahrnehmung:
-// die Panelgröße (FACET_BREITE/FACET_HOEHE) war fest codiert, NUR die
-// Spaltenzahl passte sich der Breite an - die Höhe blieb rein inhaltsgetrieben
-// (`zeilenAnzahl * FACET_HOEHE`), unabhängig davon, wie viel Bildschirmhöhe
-// tatsächlich zur Verfügung stand (dasselbe Muster, das bei dotPlot.js vor
-// dessen eigenem Vollbild-Auftrag bestand). Fix: js/utils/viewportGroesse.js'
-// bereits etablierte `ermittleVerfuegbareBreite()`/`ermittleVerfuegbareHoehe()`
-// liefern die TATSÄCHLICH verfügbare Fläche (Container-Breite bzw. Rest der
-// Bildschirmhöhe unterhalb der Werkzeugleiste) - Spalten-/Zeilenzahl wird
-// daraus so gewählt, dass das Seitenverhältnis der einzelnen Panels nahe an
-// einem für ein Histogramm gut lesbaren Ziel-Verhältnis (`FACET_ZIEL_ASPEKT`)
-// bleibt (`ermittleSpaltenzahl()`), FACET_BREITE/-HOEHE ergeben sich danach
-// aus verfügbarer Fläche ÷ Spalten/Zeilen (mit MIN_FACET_*-Untergrenze für
-// sehr kleine Bildschirme - danach greift wie bei allen Vollbild-Modulen der
-// etablierte Seiten-Scroll-Fallback statt eines erzwungenen Unterschreitens).
+// js/viz/trellis.js – Ansicht „Trellis“ des Bürgerbuchs
+// Zweck: ein kleines Histogramm je Wirtschaftssektor (x = Jahr, ein Balken je Jahr; y = Bürgeraufnahmen, gemeinsame
+//   Skala); „Beruf nicht angegeben“ als eigenes, sichtbares Feld.
+// Eingabe: `data` = buergerbuch.csv (Datum über utils/buergerbuchZeit.js, Beruf bzw. Sektor, Unsicherheitsfelder).
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md).
+// Abhängigkeiten: D3 v7, utils/buergerbuchZeit.js, utils/beschriftung.js, utils/viewportGroesse.js, utils/infoButton.js,
+//   utils/tooltip.js.
+// Verhalten: Felder füllen die verfügbare Fläche (Seitenverhältnis nahe FACET_ZIEL_ASPEKT), darunter scrollt die Seite;
+//   Sektortitel werden nach Breite gekürzt. Hintergrund: docs/MODULNOTIZEN.md, Abschnitt trellis.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import {
@@ -99,7 +22,7 @@ import { ermittleVerfuegbareBreite, ermittleVerfuegbareHoehe } from '../utils/vi
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 
 const BIN_GROESSE_JAHRE = 1;
-// Untergrenze statt fester Größe (siehe Dateikopf-Kommentar) - die
+// Untergrenze statt fester Größe (siehe docs/MODULNOTIZEN.md) - die
 // tatsächliche Panelgröße ergibt sich aus der verfügbaren Bildschirmfläche
 // und wächst dort deutlich darüber hinaus (Auftrag: "deutlich größere
 // Panels"). Die bisherigen 260×150 bleiben als Mindestwert erhalten, damit
@@ -115,7 +38,7 @@ const FACET_ZIEL_ASPEKT = 1.73;
 // SEKTOR_TITEL_SCHRIFTGROESSE) genug vertikalen Raum hat, ohne die
 // Baseline/Balken darunter zu berühren.
 const FACET_INNENRAND = { oben: 26, unten: 22, links: 6, rechts: 6 };
-// Punkt 1 (siehe Dateikopf-Kommentar): 11→15px, Faktor ≈1,36.
+// Punkt 1 (siehe docs/MODULNOTIZEN.md): 11→15px, Faktor ≈1,36.
 const SEKTOR_TITEL_SCHRIFTGROESSE = 15;
 
 let instanz = null; // { container, wurzel, records, options, infoButton } – ein aktiver Trellis pro Modul-Ladung
@@ -150,7 +73,7 @@ function ermittleSpaltenzahl(anzahlPanels, verfuegbareBreite, verfuegbareHoehe) 
 function zeichneEinFacet(svg, sektor, farbe, matrixZeile, bins, xSkala, ySkala, facetBreite, facetHoehe, container, zeigeUnsicherheit) {
   const innenHoehe = facetHoehe - FACET_INNENRAND.oben - FACET_INNENRAND.unten;
 
-  // Punkt 2 (siehe Dateikopf-Kommentar): dünner, dezenter Rahmen um das
+  // Punkt 2 (siehe docs/MODULNOTIZEN.md): dünner, dezenter Rahmen um das
   // gesamte Panel (Titel + Plot-Fläche), nicht nur um die Balken.
   svg.append('rect')
     .attr('x', 0).attr('y', 0).attr('width', facetBreite).attr('height', facetHoehe)
@@ -226,7 +149,7 @@ function zeichneTrellis() {
   // (Werkzeugleiste bleibt; Meldung regelt Auftrag B2).
   if (sektoren.length === 0) return;
 
-  // Punkt 3 (siehe Dateikopf-Kommentar): verfügbare Breite/Höhe JETZT messen
+  // Punkt 3 (siehe docs/MODULNOTIZEN.md): verfügbare Breite/Höhe JETZT messen
   // - plotBereich ist gerade wieder im DOM eingehängt (append() oben) und
   // bereits nach der Werkzeugleiste bemessen (flex:1 1 auto gegenüber deren
   // flex:0 0 auto), dieselbe Reihenfolge-Abhängigkeit wie bei dotPlot.js.

@@ -1,63 +1,13 @@
-// js/viz/streamgraph.js
-// AUFTRAG "Streamgraph → Bürgerbuch (Wirtschaftssektoren über die Zeit)":
-// UMZUG von urkunden.ansichten nach buergerbuch.ansichten (Registry-Zuordnung
-// UND Dateiinhalt komplett neu gebaut - derselbe Präzedenzfall wie
-// parallelKoordinaten.js' Umzug von Urkunden zu Verlassenschaften, siehe
-// dortiger Dateikopf-Kommentar: `id`/`modulPfad` bleiben unverändert
-// `streamgraph`/`../viz/streamgraph.js`, nur die Zuordnung UND der Inhalt
-// ändern sich). Dritte Darstellung derselben Frage (Verteilung der
-// Bürgeraufnahmen je Wirtschaftssektor über die Zeit) neben trellis.js
-// (Kleinmultiples, absolute Anzahl je Jahr) und bumpChart.js
-// (Rangverschiebung je Jahrzehnt) - hier als organisch geschichtete Fläche
-// (d3.stackOffsetWiggle), zeigt die RELATIVE Größenveränderung der Sektoren
-// im Fluss der Zeit (Info-Text, wörtlich).
-//
-// Datengrundlage/Utility: js/utils/buergerbuchZeit.js (dieselbe wie
-// trellis.js/bumpChart.js/personennetzwerk.js) statt der bisherigen
-// urkundenZeit.js - "Undatiert"-Sonderbereich (zeichneUnbekanntBereich())
-// deshalb ENTFALLEN, nicht übersehen: buergerbuchZeit.js' eigener
-// Dateikopf-Kommentar dokumentiert bereits 0 von 2791 Zeilen mit
-// unauswertbarem Datum (robust für künftige Datenlücken, aber aktuell ohne
-// sichtbare Fläche) - derselbe bereits etablierte Präzedenzfall wie
-// trellis.js' Wegfall der "Undatiert"-Kachel.
-//
-// Punkt 1 (Achsen/Daten): X-Achse Jahr (echte Jahresauflösung,
-// BIN_GROESSE_JAHRE=1 - dieselbe Designentscheidung wie trellis.js: 91 Jahre
-// Gesamtspanne sind wenig genug für Einzeljahre, UND diese Auflösung macht
-// Streamgraph/Trellis direkt vergleichbar, da beide dieselben Jahres-Bins
-// zeigen, nur anders angeordnet). Alle 16 Sektoren (inkl. "Beruf nicht
-// angegeben") als eigene Schicht - JEDER Bürgerbucheintrag hat genau einen
-// Sektor (ermittleSektor() liefert nie null), die Stack-Summe entspricht
-// deshalb je Jahr exakt der Eintragszahl (kein Unsicherheitsproblem wie bei
-// Urkunden-Kategorien, die mehrfach oder gar nicht zugeordnet sein können -
-// siehe Dateikopf-Kommentar des alten Urkunden-Streamgraphs/urkundenZeit.js).
-// Farbe: baueSektorFarbSkala() aus buergerbuchZeit.js wiederverwendet -
-// identische Funktion wie in trellis.js/bumpChart.js, dieselben `records`
-// liefern deshalb IDENTISCHE Farben je Sektor über alle drei Module hinweg
-// (Akzeptanzkriterium "Farben konsistent mit Trellis/Bump Chart").
-//
-// Legende (nicht explizit beauftragt, aber ohne sie wäre die Hervorhebung
-// aus Punkt 2 nicht sinnvoll nutzbar: eine hervorgehobene Fläche ohne
-// erkennbare Farbe-zu-Sektor-Zuordnung sagt dem Betrachter nichts) - dieselbe
-// "immer sichtbare Identifikation" wie bumpChart.js' Endbeschriftungen neben
-// jeder Linie, hier als kompakte Farblegende in der Kopfzeile (16 Einträge,
-// dieselbe Reihenfolge wie ermittleSektorenSortiertNachHaeufigkeit()).
-//
-// Punkt 2 (Interaktion): Hover/Klick-Hervorhebung 1:1 nach bumpChart.js'
-// bereits etablierter Drei-Zustände-Logik (hoverSektor temporär, frozenSektor
-// eingefroren durch Klick, Klick auf freie Fläche setzt zurück,
-// aktualisiereHervorhebung() zentral) - hier auf Flächen statt Linien
-// übertragen: aktive Fläche volle Deckkraft + Randlinie, übrige Flächen
-// treten durch reduzierte Deckkraft zurück (Auftrag, wörtlich: "kräftigere
-// Füllung/Rand ... andere treten zurück").
-//
-// Unsicherheits-Kennzeichnung: wie im alten Urkunden-Streamgraph ein kleiner
-// roter Punkt am oberen Rand jedes Jahr/Sektor-Segments mit mindestens einer
-// unsicheren Angabe (istZeitEintragUnsicher() in buergerbuchZeit.js prüft
-// Datum_unsicher/Beruf_unsicher) - eine Fläche hat keinen sinnvollen
-// "gestrichelten" Teilbereich, derselbe Punkt-statt-Rand-Kompromiss wie
-// zuvor, nur jetzt über den app-weiten "Unsicherheiten anzeigen"-Knopf
-// (options.showUncertainty) gesteuert wie bei trellis.js/bumpChart.js.
+// js/viz/streamgraph.js – Ansicht „Streamgraph“ des Bürgerbuchs
+// Zweck: Bürgeraufnahmen je Wirtschaftssektor über die Zeit als geschichtete Fläche (x = Jahr), relative Veränderung
+//   der 16 Sektoren; Farben wie in Trellis und Bump Chart, Legende in der Kopfzeile.
+// Eingabe: `data` = buergerbuch.csv (Datum, Beruf bzw. Sektor, Datum_unsicher, Beruf_unsicher) über
+//   utils/buergerbuchZeit.js.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   options.showUncertainty zeigt rote Punkte an Segmenten mit unsicheren Angaben.
+// Abhängigkeiten: D3 v7, utils/buergerbuchZeit.js, utils/tooltip.js, utils/infoButton.js, utils/abdunkeln.js.
+// Bedienung: Hover hebt eine Fläche hervor, Klick friert sie ein, Klick ins Leere löst sie.
+// Hintergrund: docs/MODULNOTIZEN.md, Abschnitt streamgraph.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
@@ -121,7 +71,7 @@ function baueSektorTooltip(sektor, summe, gesamt) {
 }
 
 // Dieselbe Drei-Zustände-Logik wie bumpChart.js' aktualisiereHervorhebung()
-// (siehe Dateikopf-Kommentar), hier auf Flächen statt Linien angewendet.
+// (siehe docs/MODULNOTIZEN.md), hier auf Flächen statt Linien angewendet.
 function aktualisiereHervorhebung() {
   const { flaechenAuswahl, hoverSektor, frozenSektor } = instanz;
   if (!flaechenAuswahl) return;
@@ -286,7 +236,7 @@ function zeichneStreamgraph() {
       if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); schalteHervorhebung(d.key); }
     });
 
-  // Unsicherheits-Marker (siehe Dateikopf-Kommentar) - ein Punkt am oberen
+  // Unsicherheits-Marker (siehe docs/MODULNOTIZEN.md) - ein Punkt am oberen
   // Rand jedes Jahr/Sektor-Segments mit mindestens einer unsicheren Angabe.
   const markerDaten = [];
   reihen.forEach((reihe) => {

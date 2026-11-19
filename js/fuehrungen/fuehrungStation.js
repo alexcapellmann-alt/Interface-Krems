@@ -1,69 +1,13 @@
-// js/fuehrungen/fuehrungStation.js
-// AUFTRAG "Führungen, Teil 2a", Punkt 1+4+6: Einzelstationsansicht samt
-// Navigation. Stationswechsel über die Pfeile aktualisieren den Hash
-// ERSETZEND (Punkt 1, Auftrag wörtlich: "damit die Browser-Zurück-Taste die
-// Führung verlässt, statt Station für Station zurückzugehen") - gelöst über
-// `history.replaceState()` (löst KEIN `hashchange` aus) statt
-// router.js' `navigiereZu()` (erzeugt IMMER einen neuen Verlaufseintrag,
-// siehe dortiger Kommentar) - deshalb KEINE Änderung an router.js nötig,
-// wie im Auftrag zur Rückmeldung vorgesehen falls doch nötig gewesen wäre.
-// Nur der Ersteinstieg Galerie -> Station 1 UND "Zurück zur Übersicht"
-// bleiben normale, verlaufs-erzeugende Navigation (`navigiereZu()`).
-//
-// KORREKTURAUFTRAG "Führungen, Teil 2a-K – Bildschirmfüllendes Layout und
-// Präsentationsnavigation":
-//
-// Punkt 0 (Ist-Zustand, siehe PROJEKTLOG für die volle Messtabelle):
-// Hauptursache des Überlaufs war NICHT eine einzelne zu große Komponente,
-// sondern das Fehlen JEDER Höhenbegrenzung - `.fuehrungen-bereich` (in
-// `app.js`) nahm keine Grid-Fläche ein (siehe `css/layout.css`s neue Regel)
-// und `.fuehrung-station-inhalt`/`.fuehrung-beleg` wuchsen ungebremst mit
-// ihrem Inhalt (vor allem dem unskalierten Urkundenfoto). Deshalb reicht
-// eine reine Bildskalierung NICHT - es brauchte eine komplette
-// Höhenverteilung von oben (`.fuehrungen-bereich`, `css/layout.css`) bis
-// unten (einzelne Scroll-Container).
-//
-// Punkt 1 (bildschirmfüllend, KEIN `dvh`): dasselbe, bereits im Projekt
-// etablierte Flexbox-Prinzip wie `css/layout.css`s "VOLLBILD-KORREKTUR"
-// (body als Flex-Spalte, `#app-content` als einziger wachsender Bereich) -
-// bewusst KEIN `dvh`/fester `calc(100vh - Xpx)`, aus demselben dort
-// genannten Grund (Header/Footer können durch `flex-wrap` ihre Höhe ändern).
-// `.fuehrung-station` ist jetzt selbst eine Flex-ZEILE (Hauptspalte +
-// Navigationssäule, siehe Punkt 2), die Hauptspalte eine Flex-SPALTE (Kopf
-// `flex:0 0 auto`, Inhalt `flex:1 1 auto; min-height:0`) - `min-height:0`
-// auf JEDER Ebene ist hier der eigentliche Kniff (Flex-Items wachsen sonst
-// per Default-`min-height:auto` über den zugeteilten Platz hinaus, siehe
-// `layout.css`-Kommentar zum selben, dort bereits einmal dokumentierten
-// CSS-Verhalten). `.fuehrung-beleg`/`.fuehrung-erzaehltext` bekommen dadurch
-// eine ECHTE Höhenbegrenzung und scrollen bei Bedarf INTERN
-// (`overflow-y:auto`, `tabindex=0` für Tastatur-Erreichbarkeit) - der
-// native Scrollbalken bleibt sichtbar (keine `scrollbar-width:none`-o.ä.
-// Unterdrückung), das erfüllt "Scrollbare Bereiche müssen erkennbar sein"
-// ohne zusätzliches Ausblendverlauf-Overlay. Mobil (`--fuehrung-umbruch`,
-// dieselbe Breakpoint-Variable wie für die Beleg/Text-Spalten aus Teil 2a)
-// wird die Höhenbegrenzung per Media Query wieder aufgehoben - Station
-// verhält sich dort wie normaler, seitenscrollender Inhalt (Auftrag
-// wörtlich). Rückfall bei 200%-Zoom/sehr niedriger Fensterhöhe (WCAG 1.4.4/
-// 1.4.10): bewusst KEIN `overflow:hidden` auf `.fuehrungen-bereich`/`body`
-// gesetzt - wird der Inhalt trotz aller internen Scroll-Container insgesamt
-// zu hoch (z.B. weil selbst die Mindesthöhen aller Teile zusammen den
-// Viewport übersteigen), wächst die Seite wie gehabt ganz normal (Standard-
-// Flex-Verhalten von `body`, unverändert seit der VOLLBILD-KORREKTUR) -
-// nichts wird abgeschnitten.
-//
-// Punkt 2 (vertikale Navigationssäule): ehemals zwei horizontale Pfeile
-// NACH dem Inhalt - jetzt eine feste, dritte Flex-Spalte NEBEN Kopf+Inhalt
-// (nicht `position:fixed`/`absolute` - ein echtes Flex-Geschwister
-// überlagert per Definition nichts und braucht keine gesonderte
-// Platzreservierung, siehe Dateikopf-Kommentar). Da die Säule dadurch
-// automatisch die GESAMTE Stationshöhe einnimmt (Punkt 1 macht diese Höhe
-// je Station identisch), stehen Pfeil-hoch (oben), Fortschritt (vertikal
-// zentriert) und Pfeil-runter/"Zur Übersicht" (unten) auf JEDER Station an
-// exakt derselben Pixel-Position - eine Folge von Punkt 1, kein separater
-// Positionierungs-Mechanismus nötig. Mobil wird dieselbe Säule per Media
-// Query zu einer `position:sticky`-Leiste am unteren Rand (bleibt beim
-// Scrollen der Station sichtbar, ohne fremden Content zu verdecken - sticky
-// braucht anders als `fixed` keine manuelle Platzreservierung).
+// js/fuehrungen/fuehrungStation.js – Einzelstation einer Führung samt Navigation
+// Zweck: eine Station (Kopf, Beleg, Erzähltext) bildschirmfüllend mit senkrechter Navigationssäule (hoch, Fortschritt,
+//   runter bzw. „Zur Übersicht“); auf schmalen Fenstern normal scrollend mit Leiste am unteren Rand.
+// Eingabe: Führung und Station aus fuehrungen/fuehrungenDaten.js (data/fuehrungen.csv und Belege).
+// Schnittstelle: render(container, fuehrung, initialeNr).
+// Abhängigkeiten: core/router.js (baueHash), fuehrungen/belegDarstellung.js, fuehrungHinweisBox.js, fuehrungFortsetzen.js,
+//   utils/unsicherheitHinweis.js, utils/viewportGroesse.js, utils/sidebar.js (Stile), css/layout.css.
+// Verhalten: Stationswechsel ersetzen den Hash (history.replaceState), die Browser-Zurück-Taste verlässt die Führung;
+//   Beleg und Text scrollen innen (tabindex="0"); kein overflow:hidden, bei 200 % Zoom wächst die Seite.
+// Hintergrund (Höhenverteilung, min-height: 0): docs/MODULNOTIZEN.md, Abschnitt fuehrungStation.js.
 
 import { baueFuehrungHinweisBox } from './fuehrungHinweisBox.js'; // AUFTRAG D, Punkt 4
 import { baueHash } from '../core/router.js';
@@ -156,7 +100,7 @@ function baueInhaltsBereich(station) {
   return bereich;
 }
 
-// Punkt 1 (siehe Dateikopf-Kommentar): `tabindex=0` macht den Bereich per
+// Punkt 1 (siehe docs/MODULNOTIZEN.md): `tabindex=0` macht den Bereich per
 // Tastatur fokussierbar (Voraussetzung dafür, dass native Pfeiltasten-/
 // Bild-auf-ab-Scrollbedienung überhaupt greifen kann) - `istTastaturZielGesperrt()`
 // unten erkennt genau diese Klasse und lässt die Stations-Tastatursteuerung
@@ -241,7 +185,7 @@ function baueNavPfeil(label, symbol, aktiv, onKlick) {
   return btn;
 }
 
-// Punkt 2 (siehe Dateikopf-Kommentar): drei Elemente von oben nach unten -
+// Punkt 2 (siehe docs/MODULNOTIZEN.md): drei Elemente von oben nach unten -
 // Pfeil-hoch, Fortschritt ("2 / 4"), Pfeil-runter bzw. auf der letzten
 // Station "Zur Übersicht" (gleich großer, beschrifteter Button statt Pfeil).
 function baueNavigation(fuehrung, aktuelleNr, geheZu) {
@@ -409,7 +353,7 @@ export function render(container, fuehrung, initialeNr) {
   return {
     destroy: () => document.removeEventListener('keydown', tastaturHandler),
     // app.js' zentrale, 200ms-debouncte resize()-Verdrahtung (siehe
-    // Dateikopf-Kommentar) - misst bei jeder Fenstergrößenänderung neu, u.a.
+    // docs/MODULNOTIZEN.md) - misst bei jeder Fenstergrößenänderung neu, u.a.
     // damit ein Wechsel über/unter MOBIL_UMBRUCH_PX (Drehen eines Tablets,
     // Verkleinern des Fensters) sofort zwischen fester Höhe und normalem
     // Seitenscrollen umschaltet.

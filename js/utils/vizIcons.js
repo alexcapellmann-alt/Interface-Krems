@@ -1,95 +1,10 @@
-// js/utils/vizIcons.js
-// AUFTRAG "Navigation – Permanente Bereichs-Leiste & Visualisierungs-Galerie
-// (Pilot: Urkunden)", Punkt 3: eine kleine, generische SVG-Grafik je
-// Diagrammtyp, die dessen Struktur schematisch andeutet - UNABHÄNGIG von
-// echten Projektdaten (Auftrag, wörtlich). Icon-Konzept siehe Selbstauskunft/
-// Vorschau-Widget im damaligen Chat (Freigabe erhalten).
-//
-// Baustein-Muster (Abschnitt 5): eine Funktion (erzeugeVizIcon()) baut ein
-// <svg>-Element aus einer je Ansicht-ID hinterlegten, rein statischen
-// Markup-Zeichenkette (IKONEN unten) - kein Bezug zu echten Datensätzen, rein
-// dekorativ (aria-hidden). `currentColor` für alle Formen, damit die Icons
-// automatisch die Textfarbe der jeweiligen Kachel übernehmen (Light/Dark-
-// Modus-tauglich ohne eigene Farblogik, siehe visualisierungsGalerie.js).
-//
-// Absichtlich EIN gemeinsames Modul statt 21 Einzeldateien (Auftrag nennt
-// zwar "Icon-Bausteine" im Plural, gemeint ist aber "ein Icon-Vorschlag je
-// Modul", nicht zwingend 21 Dateien) - entspricht der im Projekt etablierten
-// "eine gemeinsame Utility-Datei" Konvention (vgl. beschriftung.js,
-// tooltip.js) statt Datei-Fragmentierung ohne inhaltlichen Mehrwert.
-//
-// Unterscheidbarkeits-Leitprinzip (siehe Selbstauskunft): ähnliche
-// Diagrammfamilien bekommen bewusst UNTERSCHIEDLICHE Kompositionsmerkmale,
-// nicht nur unterschiedliche Farben (die Icons sind ohnehin einfarbig):
-// - Punktreihen: Zeitachse (eine Linie, Punkte darauf) vs. Dot Plot (lose
-//   Punktreihen ohne Linie) vs. Swimlanes (durchgezogene Balken-"Bahnen").
-// - Geschichtete Flächen: Streamgraph (organisch wellig) vs. Ridgeline
-//   (gestapelte Bergsilhouetten) vs. Horizon Chart (gerade geschichtete
-//   Bänder).
-// - Fluss zwischen Spalten: Sankey (2 Spalten, kreuzende Bänder) vs. Alluvial
-//   (3 Spalten) vs. Bipartite Flow Map (2 Spalten, gerade Linien + kleiner
-//   Karten-Pin als Geo-Hinweis).
-// - Matrix/Netzwerk: Adjazenzmatrix (Raster, gefüllte Zellen) vs.
-//   Korrelationsmatrix (Raster, unterschiedlich große Kreise) vs. Chord
-//   (Kreis mit Sehnen) vs. Arc (eine Linie mit Bögen darüber).
-// - Karten: Karte (Umriss + Punkte) vs. Verbindungskarte (Umriss +
-//   gestrichelter Verbindungsbogen).
-//
-// FOLGEAUFTRAG "...Galerie-Muster für Bestand", Punkt 2: fünf neue Icons für
-// die Bestandsvisualisierungen - alle fünf zeigen dieselbe Hierarchie
-// (Kategorie -> Unterkategorie -> Bestand), aber mit klar unterschiedlicher
-// geometrischer Kodierung, damit sie trotz gemeinsamer Datengrundlage nicht
-// verwechselbar sind:
-// - Treemap: verschachtelte Rechtecke unterschiedlicher Größe (Fläche).
-// - Sunburst: dieselbe Hierarchie radial (konzentrische Ringsegmente).
-// - Icicle: dieselbe Hierarchie als gestapelte, sich nach unten aufteilende
-//   Balkenreihen (Breite = Unterteilung, nicht Fläche wie bei Treemap).
-// - Circle Packing: dieselbe Hierarchie als ineinander verschachtelte Kreise
-//   statt Rechtecke.
-// - Gantt-Diagramm fällt aus dieser Hierarchie-Familie heraus (zeitbasiert,
-//   nicht hierarchisch) - horizontale Balken unterschiedlicher Länge auf
-//   einer Zeitachse, klar vom Vier-Formen-Hierarchie-Satz unterscheidbar.
-//
-// FOLGEAUFTRAG "Parallelkoordinaten-Anpassung + neue Visualisierung
-// 'Vermögensschichtung'": ein neues Icon für die neue Visualisierung
-// (`vermoegensschichtung`) - Auftrags-Vorschlag "Drei kleine Gruppen
-// gestapelter Rechtecke unterschiedlicher Höhe nebeneinander" direkt
-// übernommen (Andeutung der drei Kleinmultiples-Panels, jedes mit
-// unterschiedlich hohen Balken).
-//
-// FOLGEAUFTRAG "Marimekko für Verlassenschaften": eigenes Icon
-// `marimekkoVerlassenschaften`, bewusst UNTERSCHEIDBAR vom bestehenden
-// `marimekko`-Icon (beide zeigen unterschiedlich breite gestapelte Spalten,
-// dasselbe Grundmotiv der Diagrammfamilie) - hier zusätzlich ein gestricheltes
-// (nicht gefülltes) oberstes Segment je Spalte, als Andeutung des
-// "Rest/nicht erfasst"-Schraffur-Segments, das dieses Modul (anders als das
-// bestehende marimekko.js) tatsächlich zeichnet.
-//
-// FOLGEAUFTRAG "Galerie+Flyout für Bürgerbuch und Personen": sechs neue
-// Icons (fünf beauftragt, plus `bubbleChart` selbst ergänzt - siehe
-// archivalienRegistry.js' Kommentar dort zur fehlenden Kachel-Text-Vorgabe;
-// ohne eigenes Icon würde es in der jetzt öffentlichen Personen-Galerie mit
-// dem generischen Drei-Punkte-Fallback auffallen):
-// - Trellis: acht Mini-Balkendiagramme im Raster (Klein-Multiples).
-// - Bump Chart: zwei Punktspalten mit sich kreuzenden geraden Linien
-//   (Rangfolge-Wechsel) - bewusst GERADE Linien statt Kurven, damit es sich
-//   von Sankey/Alluvial (kreuzende KURVEN) unterscheidet.
-// - Personennetzwerk: unregelmäßiges Knoten-Kanten-Netzwerk - bewusst KEINE
-//   feste Spaltenstruktur (anders als bipartiteFlowMap) und KEIN Raster
-//   (anders als adjazenzmatrix), da es hier um ein echtes, "loses" Netzwerk
-//   geht, nicht um eine geordnete Beziehungsmatrix.
-// - Habsburg-Zeitleistenbaum: eine senkrechte Stammlinie mit unterschiedlich
-//   langen, versetzten vertikalen Balken (Herrschaftszeiten) - bewusst
-//   VERTIKALE Balken auf einer VERTIKALEN Achse, zur klaren Abgrenzung von
-//   Gantt-Diagramm (horizontale Balken auf horizontaler Achse).
-// - Personenliste: schlichtes Listen-Symbol (Aufzählungspunkt + Zeile je
-//   Reihe) - bewusst das einzige rein textbasierte/tabellarische Icon im
-//   Satz, analog zu regestenKachelraster's Kachel-Charakter, aber als
-//   Liste statt als Karten-Raster.
-// - Bubble Chart: lose geclusterte, unterschiedlich große Kreise OHNE
-//   umschließenden Rahmenkreis - Abgrenzung zu Bestands-circlePacking
-//   (das bewusst EINEN äußeren Rahmenkreis je Kategorie zeigt, um die
-//   Hierarchie anzudeuten): bubbleChart.js ist flach/nicht-hierarchisch.
+// js/utils/vizIcons.js – schematische Symbole der Ansichten (Galerie, Flyouts)
+// Zweck: je Ansicht-ID ein kleines, einfarbiges SVG, das die Struktur des Diagramms andeutet; ohne Bezug zu Daten.
+// Eingabe: Ansicht-ID (wie in js/config/archivalienRegistry.js).
+// Schnittstelle: erzeugeVizIcon(ansichtId) → <svg> (aria-hidden, currentColor); unbekannte IDs bekommen ein Ersatzsymbol.
+// Abhängigkeiten: keine. Genutzt von core/visualisierungsGalerie.js und core/visualisierungsTabs.js.
+// Gestaltung: ähnliche Diagrammfamilien unterscheiden sich in der Zusammensetzung, nicht in der Farbe;
+//   Übersicht je Familie in docs/MODULNOTIZEN.md, Abschnitt vizIcons.js.
 
 const IKONEN = {
   regestenKachelraster: '<rect x="4" y="4" width="16" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><rect x="24" y="4" width="16" height="14" rx="2"/><line x1="27" y1="8" x2="37" y2="8"/><rect x="44" y="4" width="16" height="14" rx="2"/><line x1="47" y1="8" x2="57" y2="8"/><rect x="4" y="22" width="16" height="14" rx="2"/><line x1="7" y1="26" x2="17" y2="26"/><rect x="24" y="22" width="16" height="14" rx="2"/><line x1="27" y1="26" x2="37" y2="26"/><rect x="44" y="22" width="16" height="14" rx="2"/><line x1="47" y1="26" x2="57" y2="26"/>',

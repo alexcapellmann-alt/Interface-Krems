@@ -1,64 +1,12 @@
-// js/viz/korrelationsmatrix.js
-// AUFTRAG "Parallelkoordinaten & Korrelationsmatrix → Verlassenschaften":
-// zeigte bisher Pearson-Korrelationen zwischen fünf Urkunden-Kennzahlen -
-// strukturell ungeeignet (Urkunden haben keine mehreren kontinuierlichen
-// Zahlenwerte je Datensatz). Jetzt umgebaut auf data/verlassenschaftsinventare.csv
-// (siehe archivalienRegistry.js: von `urkunden.ansichten` nach
-// `verlassenschaften.ansichten` verschoben) und auf dieselben acht
-// Vermögenskennzahlen wie parallelKoordinaten.js (js/utils/verlassenschaftenFelder.js,
-// EINE gemeinsame Feld-/Skalentyp-Definition statt zweier paralleler, siehe
-// dortiger Dateikopf-Kommentar).
-//
-// Spearman statt Pearson (Auftrag, wörtlich: "wegen der kleinen Stichprobe
-// (67) und der bekannten Ausreißer"): live verifiziert, `Anteil SchvG an
-// Aktiva (%)` erreicht bei einer Person 780,49 % - ein einzelner Ausreißer
-// dieser Größenordnung verzerrt eine Pearson-Korrelation stark (empfindlich
-// gegen Extremwerte), eine Rang-Korrelation ist robust dagegen. Umsetzung:
-// Spearman = Pearson-Korrelation der RÄNGE (mit Durchschnittsrang bei
-// Bindungen) - mathematisch die Standarddefinition, keine Näherung.
-//
-// Unterschied zu adjazenzmatrix.js: dort zählt eine Zelle KO-NENNUNGEN zwischen
-// zwei kategorialen Entitäten (Personen), hier ein statistischer
-// Zusammenhangs-Koeffizient zwischen zwei NUMERISCHEN Variablen über den ganzen
-// Bestand - andere Fragestellung, andere Berechnung.
-//
-// FARB-AUSNAHME (bereits einmal bestätigt, unverändert übernommen): Eine
-// Korrelationsmatrix muss das VORZEICHEN zeigen (positiver vs. negativer
-// Zusammenhang), nicht nur die Stärke - deshalb weiterhin zwei bereits im
-// Projekt etablierte technische Farben (Kartenblau #1a4d8f/Unsicherheits-Rot
-// #c0392b) statt einer neuen Farbskala.
-//
-// Fehlende Werte werden paarweise ausgeschlossen (nur Zeilen mit Werten in
-// BEIDEN Variablen fließen in dieses eine Zellenpaar ein) - der einzige
-// unvollständige Datensatz dieser Tabelle (VI-0004, siehe
-// parallelKoordinaten.js' Dateikopf-Kommentar) fehlt ALLEN acht Kennzahlen
-// gleichermaßen (nicht nur einer einzelnen), daher zeigt live jede Zelle
-// einheitlich N=67, nicht unterschiedliche N je Feldpaar - siehe
-// Live-Verifikation in der Selbstauskunft. Stichprobengröße N steht mit im
-// Tooltip - das ist die
-// bereits etablierte Transparenz-Lösung für fehlende Werte bei DIESEM
-// Modultyp (anders als parallelKoordinaten.js, das einzelne Datensätze
-// zeichnet und deshalb einen eigenen Hinweistext braucht).
-//
-// NEU in diesem Auftrag: Klick auf eine Zelle öffnet ein Streudiagramm der
-// beiden gewählten Variablen (Punkt 2, "macht den abstrakten
-// Korrelationswert konkret nachvollziehbar") - eigenes, schlankes Overlay
-// (oeffneScatterplot() unten), NICHT js/utils/lightbox.js wiederverwendet
-// (das ist auf Fotos/<img> zugeschnitten, hier wird ein SVG-Diagramm
-// gebraucht) - aber IM SELBEN, bereits etablierten Architekturmuster
-// (lazy erzeugtes Singleton-Overlay im <body>, wiederverwendet über alle
-// Öffnungen hinweg, Escape/Klick-außerhalb schließt) wie lightbox.js selbst,
-// siehe dortiger Dateikopf-Kommentar zur Begründung dieses Musters. Bewusst
-// NICHT nach js/utils/ ausgelagert: nur dieses eine Modul braucht es
-// (anders als lightbox.js/sidebar.js, die von mehreren Modulen geteilt
-// werden) - eine Auslagerung ohne zweiten Aufrufer wäre verfrühte
-// Abstraktion.
-//
-// Achsenbeschriftung mit vollen Feldnamen (Punkt 2, Akzeptanzkriterium):
-// VARIABLEN[].label aus js/utils/verlassenschaftenFelder.js - "SchzG"/
-// "SchvG" bleiben dort BEWUSST unaufgelöst (deren volle Bedeutung ist nicht
-// zweifelsfrei bekannt, siehe dortiger Kommentar und Selbstauskunft im Chat
-// - Auftrag ausdrücklich: "Abkürzung beibehalten statt zu raten").
+// js/viz/korrelationsmatrix.js – Ansicht „Korrelationsmatrix“ der Verlassenschaften
+// Zweck: Rangkorrelation (Spearman) zwischen den acht Vermögenskennzahlen; Vorzeichen in zwei Farben, N im Hinweis;
+//   Klick auf eine Zelle öffnet ein Streudiagramm der beiden Kennzahlen.
+// Eingabe: `data` = verlassenschaftsinventare.csv (VERMOEGENS_VARIABLEN aus utils/verlassenschaftenFelder.js); fehlende
+//   Werte paarweise ausgeschlossen.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md).
+// Abhängigkeiten: D3 v7, utils/verlassenschaftenFelder.js, utils/tooltip.js, utils/infoButton.js.
+// Bedienung: das Streudiagramm ist ein Overlay im <body> (Escape oder Klick außerhalb schließt).
+// Hintergrund (warum Spearman, Farben): docs/MODULNOTIZEN.md, Abschnitt korrelationsmatrix.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { VERMOEGENS_VARIABLEN, wertFuerVariable, baueSkalaFuerVariable } from '../utils/verlassenschaftenFelder.js';
@@ -68,7 +16,7 @@ import { infotextFuerModul } from '../core/archivKonfiguration.js';
 // Punkt 3 ("Info-Button-Texte... bitte Vorschläge machen, ich gebe frei"):
 // Vorschlag, noch nicht freigegeben. Nennt SchzG/SchvG bewusst nur beim
 // Namen, ohne ihre Bedeutung zu erklären - die ist nicht zweifelsfrei
-// bekannt (siehe Dateikopf-Kommentar oben).
+// bekannt (siehe docs/MODULNOTIZEN.md oben).
 
 let instanz = null; // { container, records, options, infoButton } – eine aktive Korrelationsmatrix pro Modul-Ladung
 
@@ -157,7 +105,7 @@ function baueLegende(container) {
 
 // ---- Streudiagramm-Overlay (Punkt 2) ----------------------------------
 // Lazy erzeugtes Singleton im <body>, dasselbe Architekturmuster wie
-// js/utils/lightbox.js (siehe Dateikopf-Kommentar), aber bewusst lokal in
+// js/utils/lightbox.js (siehe docs/MODULNOTIZEN.md), aber bewusst lokal in
 // diesem Modul gehalten statt nach js/utils/ ausgelagert (nur ein
 // Aufrufer). z-index 900: BEWUSST unter dem geteilten Tooltips z-index 1000
 // (js/utils/tooltip.js) gewählt, damit der Hover-Tooltip auf den

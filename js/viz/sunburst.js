@@ -1,60 +1,15 @@
-// js/viz/sunburst.js
-// Sunburst des Gesamtbestands (Abschnitt 4.1, 9). Modul-Interface siehe Abschnitt 5:
-// render(container, data, options) / destroy() / resize(). Gleiche Datengrundlage
-// wie treemap.js, siehe js/utils/bestandsHierarchie.js.
-//
-// Überarbeitung (siehe CHANGELOG.md für Datum/Details): auf denselben
-// funktionalen/gestalterischen Stand wie treemap.js gebracht - Kategorie-
-// Farbcodierung (aus js/utils/kategorieFarben.js importiert, NICHT dupliziert),
-// sqrt-Winkelskalierung, Mindestwinkel-Korrektur, Beschriftung, Zoom-Interaktion.
-//
-// ZWEI NAVIGATIONSZUSTÄNDE bleiben bestehen (Übersicht/Kategorie-Ansicht,
-// instanz.aktuelleKategorieDaten hält den Zustand, exakt dasselbe Namens-/
-// Architekturmuster wie treemap.js' aktuelleKategorieDaten) - GEÄNDERT hat
-// sich, WIE VIELE Ebenen pro Zustand gleichzeitig als Ring sichtbar sind,
-// siehe Auftrag "Sunburst – Rückkehr zur 3-Ebenen-Ansicht":
-//
-// BEWUSSTE MODUL-SPEZIFISCHE AUSNAHME vom 2-Ebenen-Prinzip von treemap.js/
-// circlePacking.js (siehe CHANGELOG, analog zu icicle.js' bereits
-// bestehender Ausnahme): die radiale Geometrie erlaubt zusätzliche
-// konzentrische Ringe ohne Lesbarkeitsverlust der äußeren Ringe - anders als
-// bei Treemap/Circle Packing, wo eine dritte verschachtelte Ebene die
-// äußeren Kacheln/Kreise auf Kosten der Lesbarkeit verkleinern würde. Übersicht
-// (Ebene 1) zeigt DREI gleichzeitig sichtbare, konzentrische Ringe (Kategorie
-// innen, Unterkategorie mittig, Bestand außen; "ohne Kategorie" bleibt auf
-// allen drei Ringen konsistent eine dauerhafte eigene Gruppe). Klick auf JEDES
-// Segment in JEDEM der drei Ringe zoomt einheitlich in die Kategorie-Ansicht
-// der jeweils zugehörigen Kategorie (kategorieDatenVonKnoten() läuft dafür
-// über d.ancestors() bis zur Tiefe 1, analog zu icicle.js) - ein Klick wählt
-// NIE direkt einen Einzelbestand aus, dasselbe bereits für Treemap/Icicle
-// etablierte Prinzip "Ring-1-Klick öffnet eine Kategorie, wählt nicht direkt
-// aus".
-//
-// Kategorie-Ansicht (Ebene 2) zeigt - ANDERS als icicle.js, wo die
-// Unterkategorie-Zeile beim Zoom wieder verschwindet - weiterhin ZWEI Ringe:
-// Unterkategorien dieser einen Kategorie innen, deren Einzelbestände außen;
-// die Kategorie-Ebene selbst wird zum Zentrum (unverändert, Klick dort
-// navigiert zurück zu Ebene 1). Klick auf ein Bestand-Segment öffnet/
-// schließt (Toggle) die Sidebar wie bisher. Klick auf ein Unterkategorie-
-// Segment bleibt hier bewusst OHNE Wirkung (kein Zeigercursor, kein Klick-/
-// Tastatur-Handler, aber weiterhin per Hover/Fokus mit Tooltip erreichbar) -
-// dieselbe "reine Information, kein Klick-Ziel"-Konvention, die dieses Modul
-// bereits für das Zentrum in der Übersicht etabliert hat (siehe dortiger
-// Kommentar in zeichneZentrum(): "vermeidet genau die ... Verwechslung
-// 'sieht klickbar aus, ist es aber nicht'"). Eine Unterkategorie-Gruppe hat
-// keinen einzelnen `record` für die Sidebar (die Detailansicht ist strikt
-// pro Bestand konzipiert, siehe sidebar.js' Nicht-Ziel "keine Änderung am
-// Sidebar-Wrapper-Muster") und es gibt - anders als bei Kategorien - keine
-// weitere Zoom-Ebene darunter, in die ein Klick sinnvoll führen könnte: die
-// Kategorie-Ansicht IST bereits die tiefste Navigationsebene dieses Moduls.
-//
-// treemap.js/circlePacking.js bleiben unverändert beim 2-Ebenen-Modell -
-// diese Ausnahme gilt (wie bei icicle.js) ausschließlich für Sunburst.
-//
-// bestandsHierarchie.js liefert weiterhin dieselbe volle 4-Ebenen-Struktur
-// (Gesamtbestand -> Kategorie -> Unterkategorie -> Bestand), unverändert seit
-// der Icicle-Etappe (Root-Cause-Check, siehe CHANGELOG) - keine Änderung an
-// dieser Datei nötig.
+// js/viz/sunburst.js – Ansicht „Sonne“ des Gesamtbestands
+// Zweck: Kategorien, Unterkategorien und Bestände als Ringe; Übersicht mit drei Ringen, Kategorie-Ansicht mit zwei;
+//   Farbe nach Kategorie, Winkel nach der Wurzel skaliert mit Mindestwinkel.
+// Eingabe: `data` = bestandsverzeichnis.csv, Hierarchie über utils/bestandsHierarchie.js (umfang_lfm, bkk_kategorie,
+//   bkk_unterkategorie, unsicherheit_typ).
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   Modus „Licht aus“ über options.lichtAus (abdunkeln, seit Auftrag 17).
+// Abhängigkeiten: D3 v7, utils/bestandsHierarchie.js, utils/kategorieFarben.js, utils/beschriftung.js, utils/sidebar.js,
+//   utils/tooltip.js, utils/lichtAus.js, utils/lichtAusDarstellung.js, utils/bestandLichtAus.js.
+// Bedienung: Klick auf ein Segment der Übersicht öffnet die Kategorie, in der Kategorie öffnet ein Bestand die
+//   Seitenleiste; Unterkategorien und Zentrum sind nur Information (Hinweis bei Fokus).
+// Hintergrund: docs/MODULNOTIZEN.md, Abschnitt sunburst.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { baueBestandsHierarchie, baueTooltipText, OHNE_KATEGORIE, findeBestandImBaum, nurUnsichereBestaende, zeigeKeineUnsicherenBestaende } from '../utils/bestandsHierarchie.js';
@@ -598,8 +553,8 @@ function zeichneSunburst() {
   instanz.lichtAus = options.lichtAus ? lichtAusVorbereitung(wurzel.leaves().map((b) => bestandEinheit(b.data.record)), options.lichtAus.auswahl) : null;
   const leuchtet = (knoten) => (instanz.lichtAus ? knoten.leaves().some((b) => b.data.record && instanz.lichtAus.wirksam(bestandEinheit(b.data.record)).length > 0) : false);
 
-  // Auftrag "Sunburst – Rückkehr zur 3-Ebenen-Ansicht" (siehe Dateikopf-
-  // Kommentar): Übersicht zeigt DREI konzentrische Ringe gleichzeitig
+  // Auftrag "Sunburst – Rückkehr zur 3-Ebenen-Ansicht" (siehe docs/MODULNOTIZEN.md
+  //): Übersicht zeigt DREI konzentrische Ringe gleichzeitig
   // (Kategorie/Unterkategorie/Bestand); Kategorie-Ansicht zeigt ZWEI
   // (Unterkategorie/Bestand) - die Kategorie-Ebene selbst wird dort zum
   // Zentrum (siehe zeichneZentrum(), unverändert). Jeder Ring bekommt eine
@@ -632,7 +587,7 @@ function zeichneSunburst() {
     bestandKnoten.forEach((k) => { k.y0 = bestandBand[0]; k.y1 = bestandBand[1]; });
     ringe = [
       // Schritt 4: Unterkategorie-Ring bleibt in der Zoomansicht bewusst
-      // OHNE Klick-Wirkung (siehe Dateikopf-Kommentar für die Begründung) -
+      // OHNE Klick-Wirkung (siehe docs/MODULNOTIZEN.md für die Begründung) -
       // Bestand-Ring wählt wie bisher aus (Sidebar-Toggle).
       { knoten: unterkategorieKnoten, art: 'unterkategorie', klick: 'inert' },
       { knoten: bestandKnoten, art: 'bestand', klick: 'waehlen' }
@@ -714,7 +669,7 @@ function zeichneSunburst() {
       .data(knoten)
       .join('g')
       .attr('class', `sunburst-segment sunburst-segment-${art}`)
-      // Schritt 4/Dateikopf-Kommentar: der inerte Unterkategorie-Ring der
+      // Schritt 4/docs/MODULNOTIZEN.md: der inerte Unterkategorie-Ring der
       // Zoomansicht bekommt bewusst KEIN tabindex (nicht per Tastatur
       // fokussierbar) - dieselbe "reine Information, kein Klick-Ziel"-
       // Konvention wie das Zentrum in der Übersicht (siehe zeichneZentrum(),

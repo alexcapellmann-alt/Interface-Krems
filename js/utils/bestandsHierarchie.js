@@ -1,47 +1,11 @@
-// js/utils/bestandsHierarchie.js
-// Gemeinsame Hierarchie-Aufbereitung für alle Bestandsverzeichnis-Visualisierungen
-// (Abschnitt 13, DRY). Baut aus den flachen bestandsverzeichnis.csv-Records (aus dataLoader.js)
-// die Struktur Gesamtbestand -> bkk_kategorie -> bkk_unterkategorie -> einzelner
-// Bestand auf (vier Ebenen, siehe docs/SCHEMA.md-Korrektur), ohne die übergebenen
-// Records zu verändern (Abschnitt 5).
-//
-// REGRESSIONSSCHUTZ (Abschnitt 13): Diese Datei wird von FÜNF Modulen genutzt –
-// treemap.js, sunburst.js, icicle.js, circlePacking.js UND ganttDiagramm.js (das
-// zwar keinen value-Größenwert nutzt, aber sehr wohl baueBestandsHierarchie() für
-// die Kategorie-Gruppierung/-Färbung importiert, siehe render()). Eine Änderung an
-// baueBestandsHierarchie(), kategorieVonKnoten() oder baueTooltipText() wirkt sich
-// auf alle fünf aus.
-//
-// kategorieVonKnoten()/baueKnotenTooltipText() (neu, Unterkategorie-Ebene):
-// ersetzen je eine vormals in sunburst.js/icicle.js/circlePacking.js dupliziert
-// vorhandene, depth-basierte lokale Kopie - die ging bei der Einführung der
-// vierten Ebene, unbemerkt, still von falschen Annahmen aus.
-//
-// BUGFIX (Auftrag "Falsche Kategorie im Tooltip in Zoomansichten", siehe
-// CHANGELOG): kategorieVonKnoten() verließ sich ursprünglich auf `depth === 1`,
-// um die Kategorie-Ebene zu erkennen - korrekt, SOLANGE die Hierarchie stets
-// ab Gesamtbestand aufgebaut wird (dort: 0=Gesamtbestand, 1=Kategorie,
-// 2=Unterkategorie, 3=Bestand). Sunburst/Icicle/Treemap bauen ihre
-// Kategorie-Zoomansicht aber über `d3.hierarchy(aktuelleKategorieDaten)` NEU
-// VERWURZELT auf (0=Kategorie, 1=Unterkategorie, 2=Bestand) - dort lieferte
-// `depth === 1` fälschlich die UNTERKATEGORIE. Circle Packing verwurzelt in
-// seiner Zoomansicht zusätzlich noch FLACHER (baueFlacheBestaende(): Kategorie
-// direkt über den Bestand-Blättern, keine Unterkategorie-Zwischenebene,
-// 0=Kategorie, 1=Bestand) - dort lieferte `depth === 1` fälschlich den
-// BESTAND selbst als "Kategorie". Live an "Steuerbücher"
-// (bkk_kategorie="Vermögen und Finanzen", bkk_unterkategorie="Öffentliches
-// Vermögen") reproduziert und nach dem Fix erneut verifiziert, siehe
-// CHANGELOG/PROJEKTLOG.
-//
-// Fix: jeder Knoten trägt jetzt ein stabiles, tiefenUNABHÄNGIGES
-// `ebenenTyp`-Attribut ('kategorie' | 'unterkategorie' | 'bestand', siehe
-// EBENENTYP_*-Konstanten unten) - vergeben beim Aufbau in
-// baueBestandsHierarchie() UND (wo die Hierarchie modul-lokal neu
-// zusammengesetzt wird, siehe circlePacking.js' baueFlacheBestaende())
-// explizit mitgegeben. kategorieVonKnoten() sucht über d.ancestors() (schließt
-// den Knoten selbst ein) nach `ebenenTyp === 'kategorie'` statt nach einer
-// festen Tiefe - bleibt dadurch korrekt, unabhängig davon, ob/wie/wo die
-// Hierarchie neu verwurzelt wird.
+// js/utils/bestandsHierarchie.js – Hierarchie des Bestandsverzeichnisses für Treemap, Sonne, Icicle, Circle Packing, Strahl
+// Zweck: aus bestandsverzeichnis.csv (bkk_kategorie, bkk_unterkategorie, umfang_lfm) die Struktur Gesamtbestand →
+//   Kategorie → Unterkategorie → Bestand; jeder Knoten trägt ebenenTyp (unabhängig von der Tiefe).
+// Schnittstelle: baueBestandsHierarchie(records, mindestgroesse), kategorieVonKnoten(d), baueKnotenTooltipText(d),
+//   baueTooltipText(blatt), parseUmfangLfm(), nurUnsichereBestaende(), zeigeKeineUnsicherenBestaende(),
+//   findeBestandImBaum(), OHNE_KATEGORIE, EBENENTYP_*.
+// Achtung: Änderungen wirken auf alle fünf Bestandsansichten. Datensätze werden nicht verändert.
+// Hintergrund (Fehler mit fester Tiefe in Zoomansichten): docs/MODULNOTIZEN.md, Abschnitt bestandsHierarchie.js.
 
 import { lesbareAnmerkung } from './uncertainty.js';
 import { mitUnvollstaendigHinweis } from './vollstaendigkeit.js';
@@ -50,7 +14,7 @@ export const OHNE_KATEGORIE = '(ohne Kategorie)';
 const OHNE_UNTERKATEGORIE = '(ohne Unterkategorie)';
 const MINDESTGROESSE = 10;
 
-// Tiefenunabhängige Ebenen-Kennzeichnung (siehe Dateikopf-Kommentar,
+// Tiefenunabhängige Ebenen-Kennzeichnung (siehe docs/MODULNOTIZEN.md,
 // Bugfix "Falsche Kategorie im Tooltip in Zoomansichten") - exportiert, damit
 // Module, die eine eigene, lokal neu zusammengesetzte Teilhierarchie bauen
 // (aktuell nur circlePacking.js' baueFlacheBestaende(), siehe dortiger
@@ -138,7 +102,7 @@ export function zeigeKeineUnsicherenBestaende(ziel) {
 // Bestand-Ebene) die zugehörige Top-Level-Kategorie - robust über
 // d.ancestors() (schließt d selbst ein) nach `ebenenTyp === EBENENTYP_KATEGORIE`,
 // unabhängig davon, wie viele Ebenen dazwischen liegen UND unabhängig davon,
-// ob/wo die Hierarchie neu verwurzelt wurde (siehe Dateikopf-Kommentar,
+// ob/wo die Hierarchie neu verwurzelt wurde (siehe docs/MODULNOTIZEN.md,
 // Bugfix "Falsche Kategorie im Tooltip in Zoomansichten" - vormals per fester
 // `depth === 1`, das brach in jeder Zoomansicht). Fallback auf `d.data.name`
 // selbst, falls wider Erwarten kein Kategorie-Vorfahre gefunden wird (z.B. ein

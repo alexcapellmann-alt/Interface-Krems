@@ -1,73 +1,13 @@
-// js/viz/bumpChart.js
-// AUFTRAG "Bürgerbuch – Trellis (Umzug), Bump Chart (Neubau), Bipartiter
-// Graph (Umzug)", Punkt 2 - NEUBAU. Zeigt je Wirtschaftssektor eine Linie
-// über die Jahrzehnte, y-Position = Rang nach Anzahl Bürgeraufnahmen in
-// diesem Jahrzehnt (Rang 1 = häufigster Sektor) - ein "Bump Chart"/"Rang-
-// Zeitreihe", verwandt mit, aber bewusst NICHT identisch zu trellis.js
-// (dort: absolute Anzahl je Jahr, hier: RELATIVER Rang je Jahrzehnt -
-// beantwortet eine andere Frage: nicht "wie viele", sondern "wer liegt
-// vorn").
-//
-// Datengrundlage/Utility: js/utils/buergerbuchZeit.js (dieselbe wie
-// trellis.js/bipartiterGraph.js, siehe dortiger Dateikopf-Kommentar zur
-// bewussten Trennung von urkundenZeit.js).
-//
-// Rang-Berechnung: nur Sektoren mit mindestens einer Bürgeraufnahme in einem
-// gegebenen Jahrzehnt bekommen dort einen Rang (Sektoren mit 0 Aufnahmen in
-// einem Jahrzehnt erscheinen als LÜCKE in ihrer Linie, nicht als
-// "letzter Rang mit 0" - eine Null-Aufnahme ist keine reale Platzierung).
-// "Beruf nicht angegeben" wird dabei reguär mitgerankt (Auftrag, wörtlich:
-// "wird mitgerankt, nicht ausgeblendet") - keine Sonderbehandlung. Bei
-// Gleichstand (identische Anzahl) entscheidet die alphabetische Reihenfolge
-// des Sektornamens (deterministisch, reproduzierbar - eine reine
-// Darstellungsentscheidung ohne fachliche Aussage über eine "echte"
-// Rangfolge bei Gleichstand, die die Quelle nicht hergibt).
-//
-// Beschriftung (Akzeptanzkriterium "keine überlappenden Labels"): jedes Label
-// wird zunächst an der y-Position des letzten Jahrzehnts platziert, in dem
-// der jeweilige Sektor einen Rang hatte (meist, aber nicht immer das letzte
-// Jahrzehnt insgesamt - z. B. "Kirche & Religion" hat ihre letzte Nennung im
-// Jahrzehnt 1610, nicht 1620, live geprüft). Da SEHR WOHL mehrere Sektoren
-// mit unterschiedlichem letzten Jahrzehnt rechnerisch auf denselben y-Wert
-// fallen könnten (Rang ist nur INNERHALB eines Jahrzehnts eindeutig, nicht
-// jahrzehntübergreifend), läuft danach ein einfacher, deterministischer
-// Kollisions-Ausgleich (siehe ordneLabelsAn()): alle Kandidaten werden nach
-// y sortiert und bei Unterschreiten des Mindestabstands nach unten verschoben
-// - garantiert für JEDE Datenlage überlappungsfreie Labels, nicht nur für die
-// aktuell vorliegende (dieselbe "für jede Datenlage, nicht nur den Zufallsfall"
-// -Denkweise wie familienbaum.js' loeseUeberlappungGlobal()).
-//
-// ROOT CAUSE (Folgeauftrag "Bump-Chart: Endbeschriftungen korrekt zuordnen"):
-// der Nudge oben verschiebt NUR die y-Position eines Labels, niemals seine
-// x-Position (bleibt bei xSkala des Sektors EIGENEM letzten Jahrzehnts, siehe
-// oben) - bei Sektoren mit wenigen/unregelmäßigen Nennungen (Gesundheit,
-// Gastgewerbe & Getränke, Verwaltung/Recht/Bildung, Sonstige
-// Dienstleistungen, Kirche & Religion: alle fünf enden VOR dem letzten
-// Jahrzehnt 1620, live geprüft) kollidierten ihre ursprünglichen y-Werte mit
-// dicht benachbarten Rangpositionen anderer, länger laufender Sektoren -
-// der Ausgleich schob sie dadurch spürbar nach unten, WÄHREND ihre x-Position
-// unverändert bei ihrem eigenen (früheren) Jahrzehnt blieb. Ergebnis: das
-// Label hing sichtbar "in der Luft" neben/unter dem eigentlichen Linienende,
-// ohne jede visuelle Verbindung dorthin. Fix (siehe zeichneBumpChart()):
-// eine dünne Führungslinie vom TATSÄCHLICHEN Linienende (echte x/y-Position
-// des letzten Rang-Punkts) zum ggf. verschobenen Label - bei keiner
-// Verschiebung ist sie nur wenige Pixel lang (praktisch unsichtbar), bei
-// starker Verschiebung macht sie die Zuordnung eindeutig nachvollziehbar.
-//
-// Unsicherheit: ein Datenpunkt (Sektor×Jahrzehnt) bekommt einen roten Ring,
-// wenn mindestens eine der zugrundeliegenden Bürgeraufnahmen ein unsicheres
-// Datum oder einen unsicheren Beruf hat (istZeitEintragUnsicher() in
-// buergerbuchZeit.js) - dieselbe Konvention wie trellis.js' Balkenrand, hier
-// auf einzelne Rang-Punkte übertragen, sichtbar/versteckbar über denselben
-// app-weiten "Unsicherheiten anzeigen"-Knopf.
-//
-// Hervorhebung (Auftrag: "Muster wie Familienbaum"): Hover hebt eine Linie
-// TEMPORÄR hervor (übrige Linien abgeblendet), ein Klick FRIERT diese
-// Hervorhebung ein (bleibt nach mouseleave bestehen, erneuter Klick auf
-// dieselbe Linie löst sie wieder), Klick auf die freie Fläche setzt zurück -
-// exakt dieselbe Drei-Zustände-Logik wie familienbaum.js'
-// aktualisiereHervorhebung()/Klick-Frieren, hier auf Sektor-Linien statt
-// Familienbeziehungen übertragen.
+// js/viz/bumpChart.js – Ansicht „Bump Chart“ des Bürgerbuchs
+// Zweck: je Wirtschaftssektor eine Linie über die Jahrzehnte, y = Rang nach Bürgeraufnahmen im Jahrzehnt (wer liegt
+//   vorn); ohne Aufnahme eine Lücke statt eines letzten Rangs; Gleichstand alphabetisch.
+// Eingabe: `data` = buergerbuch.csv (Datum, Beruf bzw. Sektor, Datum_unsicher, Beruf_unsicher) über
+//   utils/buergerbuchZeit.js.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   options.showUncertainty zeigt rote Ringe an Punkten mit unsicheren Aufnahmen.
+// Abhängigkeiten: D3 v7, utils/buergerbuchZeit.js, utils/tooltip.js, utils/infoButton.js.
+// Bedienung: Hover hebt eine Linie hervor, Klick friert sie ein, Klick ins Leere löst sie; Etiketten am Linienende
+//   überlappen nie, Führungslinien zeigen die Zuordnung. Hintergrund: docs/MODULNOTIZEN.md, Abschnitt bumpChart.js.
 
 import { ACHSEN_SCHRIFTGROESSE } from '../config/constants.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
@@ -110,7 +50,7 @@ function fuegeStyleEin(container) {
 }
 
 // Rangberechnung je Jahrzehnt: nur Sektoren mit anzahl>0 bekommen einen Rang
-// (siehe Dateikopf-Kommentar). Gibt eine Map sektor -> [{binIndex, rang,
+// (siehe docs/MODULNOTIZEN.md). Gibt eine Map sektor -> [{binIndex, rang,
 // anzahl}] zurück (nur die Jahrzehnte, in denen der Sektor tatsächlich
 // vorkommt - LÜCKEN werden hier implizit erzeugt, indem sie einfach fehlen).
 function berechneRaenge(matrix, sektoren) {
@@ -126,8 +66,8 @@ function berechneRaenge(matrix, sektoren) {
   return ranglisten;
 }
 
-// Kollisions-Ausgleich für die rechten Endbeschriftungen (siehe Dateikopf-
-// Kommentar) - sortiert nach y, verschiebt bei Unterschreiten des
+// Kollisions-Ausgleich für die rechten Endbeschriftungen (siehe docs/MODULNOTIZEN.md
+//) - sortiert nach y, verschiebt bei Unterschreiten des
 // Mindestabstands die jeweils UNTERE Beschriftung nach unten. Rein additiv
 // (nie nach oben), damit die Reihenfolge der Beschriftungen untereinander
 // stabil der Reihenfolge ihrer ursprünglichen y-Position entspricht.
@@ -202,7 +142,7 @@ function zeichneBumpChart() {
   );
 
   // Klick auf die freie Fläche setzt eine eingefrorene Hervorhebung zurück
-  // (Dateikopf-Kommentar) - der Hintergrund-Rect liegt UNTER allen Serien,
+  // (docs/MODULNOTIZEN.md) - der Hintergrund-Rect liegt UNTER allen Serien,
   // ein Klick auf eine Serie selbst stoppt die Ereignis-Weiterleitung (siehe
   // unten) und erreicht diesen Handler deshalb nie.
   svg.insert('rect', ':first-child')
@@ -273,8 +213,8 @@ function zeichneBumpChart() {
     .on('mouseleave blur', () => versteckeTooltip());
 
   // Führungslinie vom TATSÄCHLICHEN Linienende (d.endPunkt, unverschoben) zum
-  // ggf. per ordneLabelsAn() nach unten verschobenen Label (siehe Dateikopf-
-  // Kommentar "ROOT CAUSE") - macht die Zuordnung auch bei starker
+  // ggf. per ordneLabelsAn() nach unten verschobenen Label (siehe docs/MODULNOTIZEN.md
+  // "ROOT CAUSE") - macht die Zuordnung auch bei starker
   // Verschiebung eindeutig nachvollziehbar. Bei keiner Verschiebung (die
   // meisten Sektoren, die bis zum letzten Jahrzehnt durchlaufen) ist sie nur
   // wenige Pixel lang und praktisch unsichtbar - dieselbe Farbe wie die

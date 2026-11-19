@@ -1,79 +1,13 @@
-// js/viz/marimekkoVerlassenschaften.js
-// AUFTRAG "Marimekko für Verlassenschaften (Vermögensgruppe x
-// Realvermögens-Zusammensetzung)".
-//
-// Neue Datei statt Umwidmung von js/viz/marimekko.js (Auftrag bat um eine
-// kurze Einschätzung, siehe Selbstauskunft im Chat): marimekko.js ist unter
-// `urkunden.ansichten` weiterhin aktiv (Jahrhundert x Kategorie, Spaltenbreite
-// = Urkundenzahl, Live-Zählung über urkundenZeit.js) - eine Umwidmung hätte
-// entweder diese bestehende, funktionierende Ansicht ersatzlos entfernt oder
-// beide Datenmodelle (Zählungs-Stapel je Kategorie vs. geld-gewichtete
-// Prozent-Zusammensetzung je Vermögensgruppe, inkl. eigenem fünften Segment
-// und anderer Formel für die Spaltenbreite) in einer Datei verschränkt -
-// strukturell zwei verschiedene Diagramme trotz gemeinsamem Diagrammtyp-Namen
-// ("Marimekko"). Eine neue, eigene Datei ist hier der geringere Aufwand UND
-// das geringere Risiko (keine Regression an der bestehenden Urkunden-Ansicht).
-//
-// Zahlen: der Auftrag liefert eine "vorab berechnete, verifizierte" Tabelle
-// (bitte 1:1 übernehmen). LIVE gegen data/verlassenschaftsinventare.csv
-// nachgerechnet (siehe Selbstauskunft im Chat, Methode: `Realvermoegen_fl`
-// je Person mit ihrem jeweiligen Anteils-Prozentsatz gewichtet, dann über die
-// Gruppe aufsummiert - NICHT der einfache Durchschnitt der Einzelprozente,
-// exakt wie im Auftrag beschrieben) - deckt sich für alle fünf Gruppen A-E
-// exakt mit der gelieferten Tabelle. Bewusst NICHT als hartcodierte Tabelle
-// übernommen, sondern weiterhin LIVE aus den Records berechnet
-// (ermittleGruppenDaten() unten, dieselbe Begründung/Präzedenzfall wie
-// vermoegensschichtung.js: Abschnitt 2 verlangt archivarische Inhalte
-// ausschließlich aus data/*.csv, nicht im Code verdoppelt - die
-// Live-Berechnung IST die verifizierte Tabelle, nur ohne Duplizierung).
-// Felder/Spaltennamen aus js/utils/verlassenschaftenFelder.js wiederverwendet
-// (dieselbe Single-Source-of-Truth wie parallelKoordinaten.js/
-// korrelationsmatrix.js).
-//
-// Gruppen A*/S bewusst NICHT Teil der x-Achse (Auftrag, wörtlich: "X-Achse:
-// 5 Spalten A-E") - anders als vermoegensschichtung.js (dort alle sieben
-// Werte inkl. A*/S in eigener Achsen-Reihenfolge, siehe dortiger
-// Dateikopf-Kommentar). Records ohne auswertbares Realvermögen (aktuell nur
-// VI-0004, Gruppe S, ohnehin außerhalb A-E) werden robust übersprungen.
-//
-// Punkt 1 (Farbe): alle fünf Bestandteile (Grundstücke/Bargeld/
-// Wertgegenstände/Beruflicher Sonderbestand/Übrige Mobilien) bekommen je eine
-// eigene, gedeckte Flächenfarbe (SEGMENT_FARBEN unten) - eine neue, eigene
-// kleine Farbpalette (nicht js/utils/vermoegensgruppenFarben.js's ordinale
-// Rot-Gelb-Grün-Skala: die ist für die GRUPPEN A-E als Rangfolge gedacht, hier
-// geht es dagegen um fünf NOMINALE, gleichrangige Vermögensbestandteile -
-// andere Bedeutung, andere Skala nötig). "Übrige Mobilien" (siehe FOLGEAUFTRAG
-// unten) ist bewusst KEINE Schraffur mehr, sondern eine eigene, nur farblich
-// zurückhaltendere Vollfarbe.
-//
-// Punkt 2 (Beschriftung): Gruppenbezeichnung + "n=…" unterhalb jeder Spalte
-// (analog zur Bucket-Beschriftung in marimekko.js, hier zweizeilig wegen der
-// zusätzlichen n-Angabe). Hover pro Segment zeigt Bezeichnung, exakten
-// Prozentwert UND Gulden-Betrag (baueSegmentTooltip()) - der Betrag ist die
-// bereits im Rahmen der Live-Berechnung ermittelte gewichtete Teilsumme,
-// nicht separat aus der Prozentzahl zurückgerechnet (vermeidet doppelte
-// Rundung). Eine Farblegende (nicht explizit beauftragt, aber ohne sie wäre
-// die Segmentfarbe ohne Hover nicht decodierbar - dieselbe Begründung wie die
-// Legenden in parallelKoordinaten.js/vermoegensschichtung.js) ergänzt die
-// Kopfzeile.
-//
-// FOLGEAUFTRAG "Marimekko – fünftes Segment neu benennen und interpretieren":
-// nach Rücksprache mit der Quelle (Dietrich, Kapitel VII.III, S. 39-40) ist
-// das fünfte Segment KEINE Datenlücke, sondern eine bewusste methodische
-// Entscheidung des Autors - "übrige Mobilien" (Textilien, Geschirr, Möbel
-// u.a.), qualitativ statt quantitativ behandelt. Der bisherige Schlüssel
-// `rest` heißt jetzt `mobilien` (durchgängig umbenannt, inkl. aller darauf
-// verweisenden Funktionen/Konstanten - reine Namens-/Bedeutungsänderung,
-// siehe Nicht-Ziel-Vorgabe: die BERECHNUNG selbst, also welcher Betrag/Anteil
-// diesem Segment zugeordnet wird, bleibt unverändert die Differenz zur
-// Gruppen-RV-Summe). Darstellung von grauer Schraffur (signalisiert in
-// Datenvisualisierungs-Konventionen typischerweise "fehlend/platzhalter") auf
-// eine fünfte, eigene VOLLFARBE umgestellt (`#6b7a8f`, gedecktes Blaugrau) -
-// dieselbe visuelle Behandlung wie die vier Hauptkategorien (durchgezogene
-// Fläche, weißer Rand), nur farblich zurückhaltender/neutraler gehalten, um
-// weiterhin von den vier "harten" Dietrich-Kategorien unterscheidbar zu
-// bleiben, ohne wie eine unbekannte/fehlende Kategorie zu wirken
-// (Akzeptanzkriterium, wörtlich).
+// js/viz/marimekkoVerlassenschaften.js – Ansicht „Marimekko“ der Verlassenschaften
+// Zweck: fünf Spalten für die Vermögensgruppen A–E (Breite nach Realvermögen), Segmente für die Zusammensetzung:
+//   Grundstücke, Bargeld, Wertgegenstände, beruflicher Sonderbestand, übrige Mobilien (Differenz zur Gruppensumme).
+// Eingabe: `data` = verlassenschaftsinventare.csv (Felder über utils/verlassenschaftenFelder.js: Vermögensgruppe,
+//   Realvermoegen_fl und Anteile); Berechnung live aus den Datensätzen, keine Tabelle im Code.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md).
+// Abhängigkeiten: D3 v7, utils/verlassenschaftenFelder.js, utils/tooltip.js, utils/infoButton.js.
+// Bedienung: Hinweis je Segment mit Prozent und Gulden; Farblegende in der Kopfzeile.
+// Hintergrund (Gewichtung, fünftes Segment nach Dietrich, S. 39–40): docs/MODULNOTIZEN.md, Abschnitt
+//   marimekkoVerlassenschaften.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
@@ -103,7 +37,7 @@ const SEGMENT_LABEL = {
 };
 
 // Gedeckte, klar unterscheidbare Flächenfarben (Punkt 1, siehe
-// Dateikopf-Kommentar) - einzeln gegen WCAG nicht geprüft, da auf den
+// docs/MODULNOTIZEN.md) - einzeln gegen WCAG nicht geprüft, da auf den
 // Segmenten selbst kein Text sitzt (nur Hover-Tooltip, siehe tooltip.js).
 // `mobilien` bewusst zurückhaltender/neutraler (gedecktes Blaugrau) als die
 // vier "harten" Dietrich-Kategorien, aber eine eigene Vollfarbe wie diese.
@@ -132,7 +66,7 @@ function formatiereProzent(anteil) {
   return `${anteil.toFixed(1).replace('.', ',')} %`;
 }
 
-// Live-Aggregation (siehe Dateikopf-Kommentar): je Person wird ihr
+// Live-Aggregation (siehe docs/MODULNOTIZEN.md): je Person wird ihr
 // Realvermögen MIT dem jeweiligen Anteils-Prozentsatz gewichtet, erst danach
 // über die Gruppe aufsummiert - das entspricht "gewichtet nach tatsächlichem
 // Realvermögen, nicht Durchschnitt der Einzelprozente" (Auftrag, wörtlich).
