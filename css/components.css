@@ -995,7 +995,11 @@ html, body, .app-header, .app-footer, #app-content, .regk-karte, .lichtaus-leist
 :root[data-modus="unsicherheit"] .lichtaus-strich[data-muster="doppelt"] { stroke-width: 8px; }
 :root[data-modus="unsicherheit"] .lichtaus-strich-innen { stroke: var(--lichtaus-bg); stroke-width: 2px; vector-effect: non-scaling-stroke; pointer-events: none; }
 :root[data-modus="unsicherheit"] g.familienbaum-person.lichtaus-gedimmt > :is(rect, path, circle) { opacity: var(--lichtaus-gedimmt); }
-:root[data-modus="unsicherheit"] g.familienbaum-person.lichtaus-gedimmt > text { fill: var(--lichtaus-gedimmt-text); }
+/* Auftrag 20: Namen liegen auf ihrem gedimmten Kästchen, nicht auf dem Grund; #8f9aa5 erreichte dort nur 2,75–3,48:1.
+   #bfc5cc ist derselbe Farbton, so weit aufgehellt, dass er auf jeder gedimmten Füllung 4,5:1 hält. Durch die gedimmten
+   Kästchen scheint der Stadtplan; ein schmaler Saum in der Grundfarbe (6 Baum-Einheiten, wächst mit dem Zoom) hält
+   Straßenlinien und Beschriftungen von der Schrift fern. */
+:root[data-modus="unsicherheit"] g.familienbaum-person.lichtaus-gedimmt > text { fill: #bfc5cc; stroke: var(--lichtaus-bg); stroke-width: 6px; stroke-linejoin: round; paint-order: stroke; }
 :root[data-modus="unsicherheit"] :is(.familienbaum-eltern-kind-linien, .familienbaum-ehe-linien, .familienbaum-ehe-symbole) { opacity: var(--lichtaus-gedimmt); }
 :root[data-modus="unsicherheit"] .familienbaum-jahresachse text { fill: var(--text); }
 :root[data-modus="unsicherheit"] .familienbaum-jahresachse :is(line, path) { stroke: var(--text-muted); }

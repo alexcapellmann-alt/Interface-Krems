@@ -609,6 +609,33 @@ function ermittleRegierungszeit(person) {
   return { yTop: jahrZuY(von), yBottom: jahrZuY(bis) };
 }
 
+// Auftrag 20: Ein Name auf dem goldenen Abschnitt der Regierungszeit ist dunkel (7,2:1; Weiß auf Gold nur 2,42:1).
+// Überdeckt das Gold den Namen nur zum Teil, liegt über ihm eine dunkle Kopie, beschnitten auf den goldenen Abschnitt;
+// der übrige Teil behält die Schriftfarbe zur Familienfarbe. Flächen und Farben der Kästchen bleiben unverändert.
+function faerbeNamenAufGold(knotenGruppen) {
+  const dunkel = passendeTextfarbe(GOLD_FARBE);
+  knotenGruppen.filter((d) => ermittleRegierungszeit(d.person)).each(function goldName(d) {
+    const g = d3.select(this);
+    const name = g.select('text.familienbaum-name');
+    const gold = g.select('rect.familienbaum-regierung');
+    let t = name.node().getBBox();
+    if (!t.height) { // nicht gezeichnet (verborgener Container): Ausdehnung aus der Schriftgröße
+      const mitte = +name.attr('y');
+      t = { x: -instanz.kastenBreite / 2, width: instanz.kastenBreite, y: mitte - SCHRIFTGROESSE * 0.56, height: SCHRIFTGROESSE * 1.12 };
+    }
+    const y0 = +gold.attr('y'); const y1 = y0 + +gold.attr('height');
+    if (y1 <= t.y || y0 >= t.y + t.height) return;
+    if (y0 <= t.y && y1 >= t.y + t.height) { name.attr('fill', dunkel); return; }
+    const id = `familienbaum-gold-${String(d.id).replace(/[^\w-]/g, '_')}`;
+    g.append('clipPath').attr('id', id).append('rect')
+      .attr('x', t.x - 2).attr('y', y0).attr('width', t.width + 4).attr('height', y1 - y0);
+    const kopie = name.node().cloneNode(true);
+    this.appendChild(kopie);
+    d3.select(kopie).attr('class', 'familienbaum-name-gold').attr('fill', dunkel)
+      .attr('clip-path', `url(#${id})`).attr('aria-hidden', 'true').attr('pointer-events', 'none');
+  });
+}
+
 // Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
 function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
   const zoomInhalt = svg.append('g').attr('class', 'familienbaum-zoom-inhalt');
@@ -730,6 +757,7 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
     .attr('font-weight', SCHRIFTGEWICHT)
     .attr('fill', (d) => passendeTextfarbe(istDurchHeirat(d) ? HEIRAT_FARBE : farbeFuerFamilie(d.person.familie)))
     .text((d) => ermittleKurzname(d.person.name));
+  faerbeNamenAufGold(knotenGruppen);
 
   // Ehe-Symbol über den Kästchen (überlappt deren Ränder bei nebeneinanderstehenden Partnern), mit weißem Hof
   const eheSymbolSel = zoomInhalt.append('g').attr('class', 'familienbaum-ehe-symbole')
