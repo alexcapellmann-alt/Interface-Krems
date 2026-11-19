@@ -1,69 +1,14 @@
-// js/viz/personenliste.js
-// Personenliste: sortier- und durchsuchbare Tabelle des vollständigen
-// Personenregisters (personenliste.csv - Urkunden UND Bürgerbuch, siehe SCHEMA.md).
-// Modul-Interface siehe Abschnitt 5.
-//
-// AUFTRAG "Personenliste – Sidebar mit den tatsächlichen Urkunden/
-// Bürgerbuch-Einträgen": `data` ist jetzt NICHT mehr das flache
-// personenliste.csv-Array allein, sondern das kombinierte
-// `{familien, personenliste, urkunden, buergerbuch}`-Objekt (`personen`-Typ
-// in archivalienRegistry.js, `datenSchluessel` bei dieser Ansicht dafür
-// entfernt - dasselbe Muster wie chordDiagramm.js, das ebenfalls mehr als
-// eine Quelle gleichzeitig braucht) - `buergerbuch.csv` ist dabei eine NEUE,
-// vierte Quelle in `personen.datenDatei` (vorher nur familien/personenliste/
-// urkunden). Klick auf eine Personen-Zeile löst `nennung_in_urkunden`
-// (Signatur(en), pipe-getrennt bei mehreren) über `urkunden.csv`s
-// `signatur` und `nennung_in_buergerbuch` (ID(s) wie "BB-2454") über
-// `buergerbuch.csv`s `id` auf und zeigt die tatsächlich gefundenen
-// Einträge in der etablierten Sidebar (js/utils/sidebar.js) - siehe
-// zeigePersonenNennungen() weiter unten für die volle Fallunterscheidung.
-//
-// Gegenprüfung der Auftrags-Prämisse "Bürgerbuch-Sidebar-Nutzung ... in
-// personennetzwerk.js": personennetzwerk.js zeigt Bürgschaftsbeziehungen
-// als reines Kraft-Netzwerk mit Tooltips - es hat KEINE Sidebar und keine
-// Bürgerbuch-Detaildarstellung (grep-bestätigt: keine einzige Erwähnung von
-// "sidebar" in dieser Datei). Es gibt also keine bestehende Bürgerbuch-
-// Sidebar-Darstellung im Projekt, auf die sich "analog" beziehen ließe -
-// baueBuergerbuchDetailInhalt()/baueBuergerbuchListeInhalt() unten sind
-// deshalb NEU, orientieren sich aber an Form/CSS-Klassen der bestehenden
-// Urkunden-Äquivalente aus sidebar.js (baueUrkundenDetailInhalt()/
-// baueUrkundenListeInhalt(), hier importiert und für den Urkunden-Teil
-// unverändert wiederverwendet - "bestehendes Muster wiederverwenden" gilt
-// dort, wo es tatsächlich existiert).
-//
-// Datenlage-Befund (Transparenz, Auftrag erwähnt "Person kommt in beiden
-// Quellen vor" als Möglichkeit): in den aktuellen Daten hat KEINE einzige
-// der 4116 personenliste.csv-Zeilen gleichzeitig `nennung_in_urkunden` UND
-// `nennung_in_buergerbuch` befüllt (`quelle` ist immer eindeutig "Urkunden"
-// ODER "Bürgerbuch", 1458 + 2658 = 4116) - der kombinierte Listen-Zweig
-// unten ist trotzdem vollständig implementiert (Akzeptanzkriterium verlangt
-// korrektes Verhalten, keine Annahme über künftige Datenpflege) und wurde
-// mangels echtem Beispiel per Konsole/synthetischem Datensatz getestet,
-// siehe Selbstauskunft im Chat.
-//
-// Interaktion (Auftrag, wörtlich "bestehendes, etabliertes Muster
-// wiederverwenden"): genau 1 Treffer INSGESAMT (Urkunden + Bürgerbuch
-// zusammengezählt) öffnet direkt die volle Detailansicht (Urkunden- oder
-// Bürgerbuch-Form, je nachdem), mehrere öffnen eine kompakte Liste mit
-// Klick-durch zur jeweiligen Detailansicht - dieselbe "1 -> Detail, mehrere
-// -> Liste"-Konvention wie zeigeUrkundenSidebar() in sidebar.js, hier aber
-// lokal nachgebaut (nicht direkt zeigeUrkundenSidebar() aufgerufen), weil
-// diese Funktion NUR Urkunden-Listen kennt und die geforderte, klar
-// getrennte "In Urkunden:"/"Im Bürgerbuch:"-Zwei-Abschnitte-Liste (bei
-// gleichzeitigen Treffern in beiden Quellen) nicht abbilden kann -
-// sidebar.js selbst bleibt dabei UNVERÄNDERT (Betroffene Dateien laut
-// Auftrag: nur personenliste.js), der eigene, zweite Klick-Listener auf
-// `zurueckBtn` (siehe unten) ergänzt sidebar.js' bereits vorhandenen,
-// dort für `_urkundenListe` zuständigen Listener, ohne ihn zu ersetzen -
-// dieser bleibt für den (hier nie befüllten) `_urkundenListe`-Fall ein
-// harmloses No-Op.
-//
-// unsicherheit_anmerkung bezieht sich bei personenliste.csv selbst auf die
-// ganze Zeile (keine `<feldname>_unsicher`-Begleitfelder, siehe SCHEMA.md) -
-// anders als bei urkunden.csv wird deshalb nicht pro Feld, sondern pro
-// Zeile markiert. buergerbuch.csv hat dagegen echte `<feldname>_unsicher`-
-// Felder (Datum_unsicher/Beruf_unsicher/orte_unsicher) - siehe
-// istBuergerbuchUnsicher() unten, analog zu sidebar.js' istUrkundeUnsicher().
+// js/viz/personenliste.js – Ansicht „Personenliste“
+// Zweck: sortier- und durchsuchbare Tabelle aller Personen (Urkunden und Bürgerbuch), Paginierung oben und unten;
+//   Klick auf eine Person zeigt ihre Nennungen in der Seitenleiste (ein Treffer: Detail, mehrere: Liste nach Quelle).
+// Eingabe: `data` = {familien, personenliste, urkunden, buergerbuch, verlassenschaftsinventare}; personenliste.csv
+//   (personen_id, name, nennung_in_urkunden, nennung_in_buergerbuch, Inventar-Nennungen, quelle, unsicherheit_*).
+// Schnittstelle: render, resize, destroy wie alle Ansichten (docs/SCHEMA.md); oeffneDatensatz(personenId) für
+//   ?datensatz=person:<id>; exportiert ermittleUrkundenFuerPerson, ermittleBuergerbuchFuerPerson,
+//   ermittleInventareFuerPerson, zeigePersonenNennungen, Inventar-Bausteine (genutzt von buergerinnen.js, ortsliste.js).
+// Abhängigkeiten: utils/sidebar.js (Urkunden-Bausteine), utils/tooltip.js, utils/infoButton.js, utils/abdunkeln.js.
+// Barrierefreiheit: Zeilen per Tab erreichbar (role="button", Enter und Leertaste), Sortierköpfe als Knöpfe.
+// Hintergrund (Auflösung der Nennungen, Unsicherheit je Zeile): docs/MODULNOTIZEN.md, Abschnitt personenliste.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
@@ -212,7 +157,7 @@ let instanz = null; // { container, records, options, sortierung, suchbegriff, a
 // AUFTRAG "Personenliste – Sidebar...": hält die zuletzt gezeigte
 // kombinierte Liste (Name + aufgelöste Urkunden-/Bürgerbuch-Records) für die
 // Zurück-Navigation aus einer Detailansicht - Modul-weiter Zustand analog zu
-// `instanz` selbst (siehe Dateikopf-Kommentar zum zweiten, eigenen
+// `instanz` selbst (siehe docs/MODULNOTIZEN.md zum zweiten, eigenen
 // `zurueckBtn`-Listener), in destroy() zurückgesetzt.
 let sidebarListenZustand = null;
 // 2026-10-28: Ziel des Knopfs „In der Personenliste zeigen“ (nur wenn die Sidebar aus einer anderen Ansicht
@@ -583,7 +528,7 @@ function fuegeStyleEin(container) {
        σ-Symbol in derselben Warnfarbe wie das übrige Interface
        (--fuehrung-unsicher, amber statt Rot - dieselbe Variable wie
        js/utils/unsicherAbsatz.js). */
-    .pl-zeile-unsicher-symbol { color: var(--fuehrung-unsicher, #8a6d1f); font-weight: 700; margin-right: 4px; }
+    .pl-zeile-unsicher-symbol { color: var(--fuehrung-unsicher, #886b1f); font-weight: 700; margin-right: 4px; }
     .pl-paginierung { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; }
     .pl-paginierung-oben { margin-bottom: 8px; }
     .pl-paginierung-unten { margin-top: 8px; }
@@ -908,7 +853,7 @@ function zeichnePersonenliste() {
   // AUFTRAG "Personenliste - Sidebar...": einmalig aufgebaut (nicht bei
   // jedem zeichneTabelle()-Aufruf neu), dieselbe Konvention wie
   // verbindungskarte.js/bipartiteFlowMap.js' Sidebar-Aufbau. Der eigene,
-  // ZUSÄTZLICHE zurueckBtn-Listener (siehe Dateikopf-Kommentar) ergänzt
+  // ZUSÄTZLICHE zurueckBtn-Listener (siehe docs/MODULNOTIZEN.md) ergänzt
   // sidebar.js' bereits eingebauten Listener, statt ihn zu ersetzen.
   instanz.sidebar = baueSidebarGeruest(container);
   instanz.sidebar.schliessenBtn.addEventListener('click', () => schliesseSidebar(instanz.sidebar, container));
@@ -923,7 +868,7 @@ export function render(container, data, options = {}) {
   }
   // AUFTRAG "Personenliste - Sidebar...": `data` ist jetzt das kombinierte
   // `{familien, personenliste, urkunden, buergerbuch, verlassenschaften}`-
-  // Objekt (siehe Dateikopf-Kommentar) - `data.personenliste` bleibt das
+  // Objekt (siehe docs/MODULNOTIZEN.md) - `data.personenliste` bleibt das
   // flache, von dieser Tabelle angezeigte Array, `urkunden`/`buergerbuch`/
   // `verlassenschaften` (Teil 2h, Punkt 4b) werden hier EINMALIG zu
   // Nachschlage-Maps (Signatur/ID -> Record) aufbereitet statt bei jedem

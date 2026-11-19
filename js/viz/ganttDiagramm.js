@@ -459,14 +459,40 @@ function positioniereLichtAus(zeilenAuswahl, xSkala) {
     const g = d3.select(this);
     g.select('rect.gantt-hof').attr('x', x0 - 3).attr('width', breite + 6);
     let ende = x0 + breite;
+    let anfang = x0;
     g.selectAll('rect.gantt-luecke').each(function luecke([von, bis]) {
       const xa = xSkala(von);
       const w = Math.max(LUECKEN_MINDESTBREITE, xSkala(bis + 1) - xa);
       d3.select(this).attr('x', xa).attr('width', w);
       ende = Math.max(ende, xa + w);
+      anfang = Math.min(anfang, xa);
     });
-    g.select('text.gantt-luecken-text').attr('x', ende + 10);
+    const text = this.querySelector('text.gantt-luecken-text');
+    if (text) setzeKurztext(text, anfang, ende);
   });
+}
+
+// Auftrag 19: Der Kurztext muss ganz sichtbar sein. Er steht rechts neben dem Balken; reicht der Platz bis zum Rand der
+// Zeichenfläche nicht, steht er links vor dem Balkenanfang (rechtsbündig), dort ist die Zeile frei. Reicht auch das nicht,
+// wird er gekürzt: erst auf den ersten Teil vor einem Trenner, dann zeichenweise, jeweils mit „…“. Der volle Text steht
+// immer in der Beschriftung der Zeile und im Hinweis.
+const KURZTEXT_ABSTAND = 10;
+const KURZTEXT_RANDPUFFER = 4;
+function setzeKurztext(text, anfang, ende) {
+  const voll = text.getAttribute('data-voll') || text.textContent;
+  const svg = text.ownerSVGElement;
+  const flaeche = svg.getBoundingClientRect();
+  const passt = () => { const r = text.getBoundingClientRect(); return r.left >= flaeche.left + KURZTEXT_RANDPUFFER && r.right <= flaeche.right - KURZTEXT_RANDPUFFER; };
+  const rechts = (inhalt) => { text.textContent = inhalt; text.setAttribute('text-anchor', 'start'); text.setAttribute('x', ende + KURZTEXT_ABSTAND); return passt(); };
+  const links = (inhalt) => { text.textContent = inhalt; text.setAttribute('text-anchor', 'end'); text.setAttribute('x', anfang - KURZTEXT_ABSTAND); return passt(); };
+  if (rechts(voll) || links(voll)) { text.removeAttribute('data-gekuerzt'); return; }
+  text.setAttribute('data-gekuerzt', 'ja');
+  const erster = voll.split(/, | · /)[0];
+  if (erster !== voll && (rechts(`${erster} …`) || links(`${erster} …`))) return;
+  for (let n = erster.length - 1; n > 0; n -= 1) {
+    const kurz = `${erster.slice(0, n).trimEnd()}…`;
+    if (rechts(kurz) || links(kurz)) return;
+  }
 }
 
 function aktualisierePositionen(balkenAuswahl, textAuswahl, xSkala) {
@@ -507,7 +533,7 @@ function kennzeichneLichtAus(zeilen) {
     const { kurz, voll } = lichtAusTexte(d, wirksam);
     if (kurz) {
       g.append('text').attr('class', 'gantt-luecken-text').attr('y', ZEILENHOEHE / 2).attr('dy', '0.35em')
-        .attr('font-size', 12).attr('aria-hidden', 'true').text(kurz);
+        .attr('font-size', 12).attr('aria-hidden', 'true').attr('data-voll', kurz).text(kurz);
     }
     g.attr('aria-label', `${d.data.name}, ${d.von}–${d.bis}, unsicher: ${voll || beschreibeEintraege(wirksam, typName, auspraegungName)}, Details anzeigen`);
   });

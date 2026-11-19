@@ -27,7 +27,7 @@
 // Bedeutung (ein Wort ist keiner einzelnen Urkunden-Kategorie zugeordnet). Für die Lesbarkeit abgedunkelt
 // (lesbareTextfarbe()); die Deckkraft nach Häufigkeit bleibt. Vorher einheitlich CAT_COLORS.default.
 // 2026-10-28 (Wunsch des Autors, „farblich etwas deutlicher“): Palettenfarben gesättigter (WORT_SAETTIGUNG) und
-// Deckkraft 0,8–1 statt 0,5–1.
+// Deckkraft 0,8–1 statt 0,5–1. Seit Auftrag 19 ist diese Abstufung in deckende Farben vorgemischt (deckendeWortfarbe()).
 //
 // AUFTRAG F: archivspezifische Filter aus data/wortwolke_filter.csv (optional,
 // siehe docs/SCHEMA.md 13.7). Reihenfolge: Ein Wort entfällt, wenn es selbst oder
@@ -36,13 +36,25 @@
 // Datei, ist sie leer oder unbrauchbar, zählt die Wolke wie vorher (nur die
 // allgemeinen Füllwörter unten). Der Info-Button nennt die angewendeten Filter.
 
-import { BESTAND_PALETTE, lesbareTextfarbe } from '../utils/kategorieFarben.js';
+import { BESTAND_PALETTE, lesbareTextfarbe, wcagKontrast } from '../utils/kategorieFarben.js';
 
 const WORT_SAETTIGUNG = 1.45;
 function wortFarbe(i) {
   const farbe = d3.hsl(BESTAND_PALETTE[i % BESTAND_PALETTE.length]);
   farbe.s = Math.min(1, farbe.s * WORT_SAETTIGUNG);
   return lesbareTextfarbe(farbe.formatHex());
+}
+// Auftrag 19: keine Transparenz auf Text. Die Abstufung nach Häufigkeit (früher fill-opacity 0,8–1) ist vorgemischt:
+// Wortfarbe und Grund werden gemischt, danach wird nur so weit abgedunkelt (Farbton bleibt), bis das Wort sein Ziel
+// erreicht – 4,5:1, ab 24 px Schrift 3:1 (großer Text nach WCAG).
+const WORT_GRUND = '#f7f5f0';
+const GROSSER_TEXT_PX = 24;
+function deckendeWortfarbe(hex, deckkraft, schriftPx) {
+  const f = d3.rgb(hex); const g = d3.rgb(WORT_GRUND);
+  const farbe = d3.hsl(d3.rgb(deckkraft * f.r + (1 - deckkraft) * g.r, deckkraft * f.g + (1 - deckkraft) * g.g, deckkraft * f.b + (1 - deckkraft) * g.b).formatHex());
+  const ziel = schriftPx >= GROSSER_TEXT_PX ? 3 : 4.5;
+  for (let schritt = 0; schritt < 60 && wcagKontrast(farbe.formatHex(), WORT_GRUND) < ziel; schritt += 1) farbe.l = Math.max(0, farbe.l - 0.01);
+  return farbe.formatHex();
 }
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
@@ -256,7 +268,7 @@ function platziereWoerter(woerter, breite, hoehe, canvasKontext) {
 function fuegeStyleEin(container) {
   const style = document.createElement('style');
   style.textContent = `.wortwolke-werkzeugleiste { display: flex; justify-content: flex-end; margin-bottom: 6px; }
-    .wolken-wort { cursor: pointer; }
+    .wolken-wort { cursor: pointer; paint-order: stroke; stroke: ${WORT_GRUND}; stroke-width: 3px; stroke-linejoin: round; } /* Auftrag 19: Saum in Grundfarbe, damit die Linien der Hintergrundkarte die Schrift nicht berühren */
     .wolken-wort:hover, .wolken-wort:focus-visible { text-decoration: underline; outline: none; }
     .wolken-wort.ausgewaehlt { font-weight: 700; text-decoration: underline; }`;
   container.appendChild(style);
@@ -319,8 +331,7 @@ function zeichneWortwolke() {
     .attr('x', (w) => w.x).attr('y', (w) => w.y)
     .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
     .attr('font-size', (w) => w.schriftgroesse)
-    .attr('fill', (w, i) => wortFarbe(i))
-    .attr('fill-opacity', (w) => opazitaetSkala(w.anzahl))
+    .attr('fill', (w, i) => deckendeWortfarbe(wortFarbe(i), opazitaetSkala(w.anzahl), w.schriftgroesse))
     .text((w) => w.text)
     .attr('role', 'button')
     .attr('aria-label', (w) => `${w.text}, ${nennungen(w.anzahl)} in ${anzahl(w.urkunden.length, 'Urkunde', 'Urkunden')}, Urkunden anzeigen`)

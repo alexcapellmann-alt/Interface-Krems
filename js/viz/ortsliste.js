@@ -92,7 +92,7 @@ function fuegeStyleEin(container) {
     .ol-tabelle th, .ol-tabelle td { border-bottom: 1px solid #ddd; padding: 4px 8px; text-align: left; }
     .ol-tabelle th { cursor: pointer; user-select: none; background: #f4f4f4; position: sticky; top: 0; }
     .ol-sortier-pfeil { margin-left: 4px; font-size: 10px; color: #555; }
-    .ol-unsicher-symbol { color: var(--fuehrung-unsicher, #8a6d1f); font-weight: 700; margin-right: 4px; }
+    .ol-unsicher-symbol { color: var(--fuehrung-unsicher, #886b1f); font-weight: 700; margin-right: 4px; }
     .ol-paginierung { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; }
     .ol-paginierung-oben { margin-bottom: 8px; }
     .ol-paginierung-unten { margin-top: 8px; }

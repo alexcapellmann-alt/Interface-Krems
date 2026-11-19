@@ -172,7 +172,7 @@
      app-weite FEHLER-Konvention) noch `--fuehrung-fehler` (amber, die
      Prüfregel-Konvention aus 2a) wiederverwendet, sonst wäre die geforderte
      Unterscheidung nicht mehr gegeben. */
-  --fuehrung-unsicher: #8a6d1f;
+  --fuehrung-unsicher: #886b1f; /* Auftrag 19: vorher #8a6d1f, auf --bg nur 4,49:1; jetzt 4,62:1 (kleinster Schritt) */
   --fuehrung-unsicher-bg: #fdf6e3;
 
   /* AUFTRAG "Teil 2g", Punkt 2: eigene "Bühnen"-Farbpalette für die
@@ -877,8 +877,16 @@ svg .datensatz-unvollstaendig { stroke: var(--unvollstaendig) !important; stroke
 /* Nachbesserung 3, Punkt 4: „Unsicherheiten anzeigen“ dunkelt den Hintergrund ab, unsichere Elemente bleiben hell
    (js/utils/abdunkeln.js). Der Ansichtscontainer bekommt .unsicherheit-abgedunkelt (app.js); unsichere Elemente
    tragen .unsicher-hell (Module). Bedienelemente, Seitenleiste, Legenden, Hinweise und Dialoge sind ausgenommen. */
-.unsicherheit-abgedunkelt { --abgedunkelt-grund: #dedad1; --abgedunkelt-deckkraft: 0.28; background-color: var(--abgedunkelt-grund); transition: background-color .2s; }
-.unsicherheit-abgedunkelt svg:not([data-eigenes-abdunkeln]) :is(rect, circle, ellipse, path, line, polyline, polygon, text, image):not(.unsicher-hell, .unsicher-hell *, .datensatz-unvollstaendig):not(button *, .bestand-sidebar *, .leaflet-control *, [role="dialog"] *, [class*="legende"] *, [class*="werkzeugleiste"] *, [class*="info-button"] *) { opacity: var(--abgedunkelt-deckkraft); }
+.unsicherheit-abgedunkelt { --abgedunkelt-grund: #dedad1; --abgedunkelt-deckkraft: 0.28; --abgedunkelt-text: #58544c; background-color: var(--abgedunkelt-grund); transition: background-color .2s; }
+.unsicherheit-abgedunkelt svg:not([data-eigenes-abdunkeln]) :is(rect, circle, ellipse, path, line, polyline, polygon, image):not(.unsicher-hell, .unsicher-hell *, .datensatz-unvollstaendig):not(button *, .bestand-sidebar *, .leaflet-control *, [role="dialog"] *, [class*="legende"] *, [class*="werkzeugleiste"] *, [class*="info-button"] *) { opacity: var(--abgedunkelt-deckkraft); }
+/* Auftrag 19: Text wird nicht über die Deckkraft gedimmt (Regel aus Auftrag 13). Nicht betroffener Text in SVG (Achsen,
+   Beschriftungen, Gruppen- und Personennamen) tritt über eine eigene Farbstufe zurück: --abgedunkelt-text, 5,4:1 auf
+   --abgedunkelt-grund. Ein Saum (paint-order) nimmt die Grundfarbe an, damit die Schrift auf eigenem Grund steht. */
+.unsicherheit-abgedunkelt svg:not([data-eigenes-abdunkeln]) text:not(.unsicher-hell, .unsicher-hell *, .datensatz-unvollstaendig):not(button *, .bestand-sidebar *, .leaflet-control *, [role="dialog"] *, [class*="legende"] *, [class*="werkzeugleiste"] *, [class*="info-button"] *) { fill: var(--abgedunkelt-text); }
+.unsicherheit-abgedunkelt svg:not([data-eigenes-abdunkeln]) text[paint-order]:not(.unsicher-hell, .unsicher-hell *, .datensatz-unvollstaendig) { stroke: var(--abgedunkelt-grund); }
+/* Auftrag 19: Leaflets Linkfarbe (#0078a8) erreicht auf dem halbdurchsichtigen Kasten der Kartenquelle (80 % Weiß über
+   der Karte) nur 4,49:1 und weniger, je nach Kacheln. #005b7f hält 4,5:1 auch über schwarzem Grund (Kasten dann #ccc). */
+.leaflet-container .leaflet-control-attribution a { color: #005b7f; }
 .unsicherheit-abgedunkelt .leaflet-tile-pane { filter: brightness(0.6) saturate(0.6); }
 .unsicherheit-abgedunkelt .leaflet-container { background-color: #cfcabf; }
 .unsicherheit-abgedunkelt :is(tbody tr, .regk-karte):not(.unsicher-hell, .datensatz-unvollstaendig):not(.bestand-sidebar *) { opacity: 0.4; }
