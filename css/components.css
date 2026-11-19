@@ -991,3 +991,47 @@ html, body, .app-header, .app-footer, #app-content, .regk-karte, .lichtaus-leist
 :root[data-modus="unsicherheit"] :is(.familienbaum-eltern-kind-linien, .familienbaum-ehe-linien, .familienbaum-ehe-symbole) { opacity: var(--lichtaus-gedimmt); }
 :root[data-modus="unsicherheit"] .familienbaum-jahresachse text { fill: var(--text); }
 :root[data-modus="unsicherheit"] .familienbaum-jahresachse :is(line, path) { stroke: var(--text-muted); }
+
+/* Strahl im Modus „Licht aus“ (Auftrag 17): Flächen der Ansicht im dunklen Thema, Lichthof, Lücken, Randliste */
+:root[data-modus="unsicherheit"] .gantt-zebra { fill: var(--lichtaus-surface); }
+:root[data-modus="unsicherheit"] .gantt-namensspalte-zeile:nth-child(even) { background: var(--lichtaus-surface); }
+:root[data-modus="unsicherheit"] .gantt-namensspalte-zeile.gantt-hervorgehoben { background: color-mix(in srgb, var(--licht) 22%, var(--lichtaus-bg)); box-shadow: inset 3px 0 0 var(--licht); }
+:root[data-modus="unsicherheit"] .gantt-namensspalte-zeile.gantt-ausgewaehlt { background: color-mix(in srgb, var(--licht) 30%, var(--lichtaus-bg)); box-shadow: inset 4px 0 0 var(--licht); }
+:root[data-modus="unsicherheit"] .gantt-modus-schalter { border-color: var(--lichtaus-rand); }
+:root[data-modus="unsicherheit"] .gantt-modus-schalter button { background: var(--lichtaus-surface); color: var(--lichtaus-text); }
+:root[data-modus="unsicherheit"] .gantt-modus-schalter button + button { border-left-color: var(--lichtaus-rand); }
+:root[data-modus="unsicherheit"] .gantt-modus-schalter button[aria-pressed="true"] { background: var(--lichtaus-text); color: var(--lichtaus-bg); }
+:root[data-modus="unsicherheit"] rect.gantt-balken { stroke: var(--lichtaus-bg); }
+:root[data-modus="unsicherheit"] g.lichtaus-licht > rect.gantt-balken { stroke: var(--lichtaus-bg); stroke-width: 2px; }
+:root[data-modus="unsicherheit"] rect.gantt-hof { fill: none; stroke: var(--licht); stroke-width: 2px; pointer-events: none; }
+:root[data-modus="unsicherheit"] rect.gantt-hof[data-muster="gestrichelt"] { stroke-dasharray: 6 4; }
+:root[data-modus="unsicherheit"] rect.gantt-hof[data-muster="gepunktet"] { stroke-dasharray: 0.1 5; stroke-linecap: round; stroke-width: 3px; }
+:root[data-modus="unsicherheit"] rect.gantt-hof[data-muster="doppelt"] { stroke-width: 4px; }
+:root[data-modus="unsicherheit"] .lichtaus-muster-grund { fill: var(--lichtaus-bg); }
+:root[data-modus="unsicherheit"] .lichtaus-muster-strich { stroke: var(--licht); stroke-width: 2.2px; }
+:root[data-modus="unsicherheit"] rect.gantt-luecke { stroke: var(--licht); stroke-width: 1px; pointer-events: none; }
+:root[data-modus="unsicherheit"] rect.gantt-balken.gantt-balken-fehlt { fill: url(#gantt-muster-fehlt); }
+:root[data-modus="unsicherheit"] text.gantt-luecken-text { fill: var(--lichtaus-text); pointer-events: none; }
+.gantt-lichtaus-kopf { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-2) var(--space-4); margin: var(--space-1) 0 var(--space-2); }
+.gantt-lichtaus-zahl { margin: 0; font-weight: 600; color: var(--text); min-height: 32px; display: flex; align-items: center; }
+.gantt-randliste { border: 1px solid var(--lichtaus-rand, var(--border)); border-radius: var(--radius); padding: 0 var(--space-3); color: var(--text); background: var(--lichtaus-surface, var(--surface)); }
+.gantt-randliste > summary { min-height: 32px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.gantt-randliste[open] > summary { border-bottom: 1px solid var(--lichtaus-rand, var(--border)); }
+.gantt-randliste ul { margin: var(--space-1) 0 var(--space-2); padding: 0; list-style: none; columns: 2; column-gap: var(--space-4); }
+.gantt-randliste button { min-height: 24px; padding: 2px 4px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; }
+:root[data-modus="unsicherheit"] .gantt-namensspalte-zeile:is(.gantt-hervorgehoben, .gantt-ausgewaehlt) .gantt-namensspalte-name { color: var(--lichtaus-text) !important; }
+
+/* Baum und Sonne im Modus „Licht aus“ (Auftrag 17): abdunkeln statt filtern, Lichthof mit Muster, lichte Schraffur für „fehlt“ */
+:root[data-modus="unsicherheit"] g.lichtaus-gedimmt > :is(rect.bestand-rand, path) { opacity: var(--lichtaus-gedimmt); }
+:root[data-modus="unsicherheit"] g.lichtaus-gedimmt > text, :root[data-modus="unsicherheit"] g.lichtaus-gedimmt > text tspan { fill: var(--lichtaus-gedimmt-text); }
+:root[data-modus="unsicherheit"] g.lichtaus-licht > rect.bestand-rand { stroke: var(--lichtaus-bg); stroke-width: 3px; }
+:root[data-modus="unsicherheit"] rect.lichtaus-rahmen, :root[data-modus="unsicherheit"] path.lichtaus-rahmen { fill: none; stroke: var(--licht); stroke-width: 2px; }
+:root[data-modus="unsicherheit"] :is(rect, path).lichtaus-rahmen[data-muster="gestrichelt"] { stroke-dasharray: 6 4; }
+:root[data-modus="unsicherheit"] :is(rect, path).lichtaus-rahmen[data-muster="gepunktet"] { stroke-dasharray: 0.1 5; stroke-linecap: round; stroke-width: 3px; }
+:root[data-modus="unsicherheit"] :is(rect, path).lichtaus-rahmen[data-muster="doppelt"] { stroke-width: 4px; }
+:root[data-modus="unsicherheit"] :is(rect, path).lichtaus-schraffur { opacity: .45; }
+:root[data-modus="unsicherheit"] rect.lichtaus-textgrund { fill: var(--lichtaus-bg); }
+:root[data-modus="unsicherheit"] text.lichtaus-beschriftung { fill: var(--lichtaus-text); }
+:root[data-modus="unsicherheit"] g.sunburst-segment.lichtaus-gedimmt > path { opacity: var(--lichtaus-gedimmt); }
+:root[data-modus="unsicherheit"] g.sunburst-segment.lichtaus-gedimmt text { fill: var(--lichtaus-gedimmt-text); }
+:root[data-modus="unsicherheit"] g.sunburst-segment.lichtaus-licht > path.sunburst-pfad { stroke: var(--lichtaus-bg); stroke-width: 3px; }

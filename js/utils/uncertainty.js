@@ -24,7 +24,13 @@ const FELD_BEZEICHNUNGEN = {
   name: 'Name',
   beruf: 'Beruf',
   wirtschaftssektor: 'Wirtschaftssektor',
-  umfang: 'Umfang'
+  umfang: 'Umfang',
+  // Auftrag 17: Felder des Bestandsverzeichnisses im Strahl
+  form_inhalt: 'Inhalt',
+  bestandsgeschichte: 'Bestandsgeschichte',
+  fehlende_jahrgaenge: 'Fehlende Jahrgänge',
+  zeitraum_von: 'Laufzeit (Beginn)',
+  zeitraum_bis: 'Laufzeit (Ende)'
 };
 
 export function feldBezeichnung(feldname) {

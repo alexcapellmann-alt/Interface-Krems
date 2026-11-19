@@ -59,6 +59,10 @@ import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { mitTextfeldern } from '../utils/textwert.js';
+import { lichtAusVorbereitung } from '../utils/lichtAus.js'; // Auftrag 17
+import { setzeLicht, musterAus, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
+import { BESTAND_DATEI, BESTAND_HINWEIS_FELDER, bestandEinheit, baueMusterFehlt } from '../utils/bestandLichtAus.js';
 
 // AUFTRAG B1 (Prüfbericht Punkt 3): "|" macht im Loader jedes Feld zur Liste,
 // auch Freitext - diese Felder werden hier als Text (Liste mit " | ") verarbeitet,
@@ -74,6 +78,10 @@ const AUSWAHL_FARBE = '#e07820';
 // AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
 // aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
 const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
+// Auftrag 17: Modus „Licht aus“ im Baum. Einheit = Bestand (Kachel). Der Baum dunkelt ab, statt zu filtern (Filtern würde
+// die Flächen aller übrigen Bestände verändern). Betroffene Kacheln: Lichthof (dunkler Rand, Bernstein-Rahmen) mit dem
+// Muster der Ausprägung; „fehlt“ zusätzlich als lichte Schraffur über der Kachel. Texte aus dem Vokabular.
+const MUSTER_ID_BAUM = 'treemap-muster-fehlt';
 const MIN_SCHRIFTGROESSE = 11; // Richtwert 10-11px, siehe Auftrag
 
 // Größenberechnung (Punkt 2): eigener, viel kleinerer Mindestwert als der
@@ -549,7 +557,54 @@ function zeichneEineKachel(gruppe, knoten, kategorieName, zeigeUnsicherheit) {
       .text(WARN_SYMBOL);
   }
 
-  return platziereAutoFitText(gruppe, knoten.data.name, breite, hoehe, textFarbe);
+  kennzeichneKachelLichtAus(gruppe, knoten, breite, hoehe);
+  const ergebnis = platziereAutoFitText(gruppe, knoten.data.name, breite, hoehe, textFarbe);
+  hinterlegeBeschriftung(gruppe);
+  return ergebnis;
+}
+
+// Auftrag 17 (gemessen: Schrift auf der Schraffur im ungünstigsten Pixel nur 2,4:1): auf leuchtenden Kacheln liegt die
+// Beschriftung auf einer dunklen Unterlage, damit sie unabhängig von Schraffur und Kategoriefarbe 4,5:1 hält
+function hinterlegeBeschriftung(gruppe) {
+  if (!instanz.lichtAus || !gruppe.classed('lichtaus-licht')) return;
+  gruppe.selectAll('text').each(function unterlage() {
+    if (this.getAttribute('aria-hidden') === 'true' || !this.textContent.trim()) return;
+    const box = this.getBBox();
+    if (!box.width) return;
+    d3.select(this).classed('lichtaus-beschriftung', true);
+    gruppe.insert('rect', () => this).attr('class', 'lichtaus-textgrund').attr('x', box.x - 2).attr('y', box.y - 2)
+      .attr('width', box.width + 4).attr('height', box.height + 4).attr('rx', 2).attr('pointer-events', 'none').attr('aria-hidden', 'true');
+  });
+}
+
+// Auftrag 17: Kachel im Modus „Licht aus“ – leuchtend mit Muster oder abgedunkelt (CSS), Beschriftung für Hilfsmittel
+function kennzeichneKachelLichtAus(gruppe, knoten, breite, hoehe) {
+  if (!instanz.lichtAus) return;
+  const wirksam = instanz.lichtAus.wirksam(bestandEinheit(knoten.data.record));
+  setzeLicht(gruppe.node(), wirksam.length > 0);
+  if (!wirksam.length) return;
+  const muster = musterAus(wirksam.map((e) => e.auspraegung));
+  if (muster === 'geist') {
+    gruppe.append('rect').attr('class', 'lichtaus-schraffur').attr('width', breite).attr('height', hoehe).attr('rx', 3)
+      .attr('fill', `url(#${MUSTER_ID_BAUM})`).attr('pointer-events', 'none').attr('aria-hidden', 'true');
+  }
+  gruppe.append('rect').attr('class', 'lichtaus-rahmen').attr('x', 1.5).attr('y', 1.5)
+    .attr('width', Math.max(breite - 3, 0)).attr('height', Math.max(hoehe - 3, 0)).attr('rx', 3)
+    .attr('data-muster', muster || null).attr('pointer-events', 'none').attr('aria-hidden', 'true');
+  // Die Kachel ist bedienbar (Klick öffnet Kategorie bzw. Bestand); mit Rolle darf sie eine eigene Beschriftung tragen
+  gruppe.attr('role', 'button').attr('aria-label', `${knoten.data.name}, unsicher: ${beschreibeEintraege(wirksam, typName, auspraegungName)}`);
+}
+
+function meldeLichtAus(wurzel) {
+  const optionen = instanz?.options.lichtAus;
+  if (!optionen || !instanz.lichtAus) return;
+  optionen.melde?.({
+    einheiten: wurzel.leaves().map((b) => bestandEinheit(b.data.record)),
+    massengruppen: instanz.lichtAus.massengruppen,
+    felder: { [BESTAND_DATEI]: BESTAND_HINWEIS_FELDER },
+    nurDieseMoeglich: false,
+    nurDieseGrund: 'Im Baum würden herausgefilterte Bestände die Flächen aller übrigen verändern; betroffene Bestände leuchten, die übrigen treten zurück.'
+  });
 }
 
 // Wurzel-Ansicht: eine Bestand-Kachel innerhalb ihrer Kategorie-Gruppe. Klick
@@ -654,6 +709,10 @@ function zeichneTreemap() {
     ? (hierarchieDaten.children.find((k) => k.name === aktuelleKategorieDaten.name) || aktuelleKategorieDaten)
     : hierarchieDaten;
   const anzeigeDaten = zeigeUnsicherheit ? nurUnsichereBestaende(basisDaten) : basisDaten;
+  // Auftrag 17: Modus vorbereiten (alle Bestände der Ansicht, kein Filter)
+  const optionenLichtAus = options.lichtAus;
+  instanz.lichtAus = optionenLichtAus && anzeigeDaten
+    ? lichtAusVorbereitung(d3.hierarchy(anzeigeDaten).leaves().map((b) => bestandEinheit(b.data.record)), optionenLichtAus.auswahl) : null;
   if (!anzeigeDaten) {
     zeigeKeineUnsicherenBestaende(svgBereich);
     return;
@@ -682,12 +741,14 @@ function zeichneTreemap() {
   const defs = svg.append('defs');
   baueSchraffurPattern(defs);
   baueOhneKategorieMuster(defs);
+  if (instanz.lichtAus) baueMusterFehlt(defs, MUSTER_ID_BAUM); // Auftrag 17
 
   if (inKategorieAnsicht) {
     zeichneKategorieAnsicht(svg, wurzel, aktuelleKategorieDaten.name, zeigeUnsicherheit, svgBereich);
   } else {
     zeichneWurzelAnsicht(svg, wurzel, svgBereich, zeigeUnsicherheit);
   }
+  meldeLichtAus(wurzel); // Auftrag 17
 }
 
 export function render(container, data, options = {}) {

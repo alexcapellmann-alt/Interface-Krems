@@ -40,7 +40,13 @@ import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ACHSEN_SCHRIFTGROESSE, UNSICHERHEIT_SYMBOL } from '../config/constants.js';
 import { markiereSvg, markiereElement } from '../utils/vollstaendigkeit.js';
 import { baueBestandsHierarchie, baueTooltipText, kategorieVonKnoten, OHNE_KATEGORIE, parseUmfangLfm } from '../utils/bestandsHierarchie.js';
-import { baueBestandFarbSkala, OHNE_KATEGORIE_FARBE, lesbareTextfarbe } from '../utils/kategorieFarben.js';
+import { baueBestandFarbSkala, OHNE_KATEGORIE_FARBE, lesbareTextfarbe, hellGenugAufDunkel } from '../utils/kategorieFarben.js';
+import { lichtAusVorbereitung } from '../utils/lichtAus.js'; // Auftrag 17
+import { BESTAND_DATEI, BESTAND_HINWEIS_FELDER, bestandEinheit, baueMusterFehlt } from '../utils/bestandLichtAus.js';
+import { setzeLicht, musterAus, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
+import { feldBezeichnung } from '../utils/uncertainty.js';
+import { zerlegeJahrgaenge, kurztextLuecken, volltextLuecken } from '../utils/jahrgaenge.js';
 import {
   baueSidebarGeruest,
   oeffneSidebar as oeffneSidebarModul,
@@ -104,6 +110,14 @@ const ZOOM_SCALE_EXTENT = [1, 20];
 const KATEGORIE_ZEILE = 46;
 const KATEGORIE_RAND = 6;        // Abstand des Bandes zum Zeilenrand
 const UEBERGANG_MS = 650;        // Dauer des animierten Wechsels Einzelbestände <-> Kategorien
+// Auftrag 17: Modus „Licht aus“ im Strahl. Einheit = Bestand (Balken bzw. Eintrag der Randliste „Ohne Laufzeit“).
+// Felder mit Typ aus bestandsverzeichnis.csv; Anzeigetexte kommen aus dem Vokabular (keine Typnamen im Code). Im Modus
+// filtert der Strahl auf die betroffenen Bestände; die Zeitachse behält die Spanne aller Bestände. Fehlende Jahrgänge
+// erscheinen als schraffierte Flächen an ihrer Stelle auf der Achse (auch außerhalb der Laufzeit, wenn die Daten es so
+// angeben), Bestände ohne Laufzeit stehen in einer zugeklappten Randliste.
+const LUECKEN_FELD = 'fehlende_jahrgaenge';
+const LUECKEN_MINDESTBREITE = 2;
+const MUSTER_ID = 'gantt-muster-fehlt';
 const MODUS_BESTAENDE = 'bestaende';
 const MODUS_KATEGORIEN = 'kategorien';
 
@@ -111,6 +125,37 @@ let instanz = null; // { container, wurzel, sidebar, mitZeitraum, ohneZeitraum, 
 
 function istUnsicher(blatt, zeigeUnsicherheit) {
   return zeigeUnsicherheit && blatt.data.record.daten_unsicher;
+}
+
+const lichtAusEinheit = (blatt) => bestandEinheit(blatt.data.record);
+const wirksamFuer = (blatt) => (instanz?.lichtAus ? instanz.lichtAus.wirksam(lichtAusEinheit(blatt)) : []);
+
+// Lücken eines Bestands, wenn der Typ am Feld `fehlende_jahrgaenge` gerade leuchtet
+function lueckenFuer(blatt, wirksam) {
+  if (!wirksam.some((e) => e.feld === LUECKEN_FELD)) return null;
+  return zerlegeJahrgaenge(blatt.data.record[LUECKEN_FELD]).intervalle;
+}
+
+// Kurztext rechts neben dem Balken und Volltext für Bildschirmleser/Hinweis
+function lichtAusTexte(blatt, wirksam) {
+  const kurz = [];
+  const voll = [];
+  const luecken = lueckenFuer(blatt, wirksam);
+  if (luecken && luecken.length) {
+    kurz.push(kurztextLuecken(luecken, auspraegungName('fehlend')));
+    voll.push(volltextLuecken(luecken));
+  } else if (luecken) {
+    // Auftrag 17: Lücken ohne Jahresangabe – der ganze Balken ist schraffiert, der Text sagt, dass der Umfang fehlt
+    kurz.push('Umfang nicht angegeben');
+    voll.push(`${feldBezeichnung(LUECKEN_FELD)}: Umfang nicht angegeben`);
+  }
+  wirksam.filter((e) => e.feld !== LUECKEN_FELD && !(Number.isFinite(blatt.von) && e.feld.startsWith('zeitraum')))
+    .forEach((e) => {
+      const t = `${feldBezeichnung(e.feld)} ${auspraegungName(e.auspraegung)}`;
+      kurz.push(t);
+      voll.push(t);
+    });
+  return { kurz: [...new Set(kurz)].join(' · '), voll: [...new Set(voll)].join('; ') };
 }
 
 function farbeFuerBlatt(blatt, kategorieFarbSkala) {
@@ -168,7 +213,9 @@ function baueGanttTooltipText(blatt) {
   const zeitraumZeile = Number.isFinite(blatt.von)
     ? `Zeitraum: ${blatt.von}–${blatt.bis}`
     : 'Zeitraum: keine Angabe';
-  return `${zeitraumZeile}\n${baueTooltipText(blatt)}`;
+  const wirksam = wirksamFuer(blatt);
+  const zusatz = wirksam.length ? `\nUnsicher: ${lichtAusTexte(blatt, wirksam).voll || beschreibeEintraege(wirksam, typName, auspraegungName)}` : '';
+  return `${zeitraumZeile}\n${baueTooltipText(blatt)}${zusatz}`;
 }
 
 function wireTooltip(auswahl, container) {
@@ -399,6 +446,24 @@ function zeichneAchse(achseGruppe, xSkala) {
 // Zoom-/Pan-Tick). Getrennt von der einmaligen Erzeugung der Elemente
 // (zeichneBalken()), da beim Zoomen nur Attribute aktualisiert werden -
 // kein erneutes .join() nötig.
+function positioniereLichtAus(zeilenAuswahl, xSkala) {
+  if (!zeilenAuswahl) return;
+  zeilenAuswahl.each(function positioniere(d) {
+    const x0 = xSkala(d.von);
+    const breite = Math.max(xSkala(d.bis) - xSkala(d.von), MINDESTBALKENBREITE_PX);
+    const g = d3.select(this);
+    g.select('rect.gantt-hof').attr('x', x0 - 3).attr('width', breite + 6);
+    let ende = x0 + breite;
+    g.selectAll('rect.gantt-luecke').each(function luecke([von, bis]) {
+      const xa = xSkala(von);
+      const w = Math.max(LUECKEN_MINDESTBREITE, xSkala(bis + 1) - xa);
+      d3.select(this).attr('x', xa).attr('width', w);
+      ende = Math.max(ende, xa + w);
+    });
+    g.select('text.gantt-luecken-text').attr('x', ende + 10);
+  });
+}
+
 function aktualisierePositionen(balkenAuswahl, textAuswahl, xSkala) {
   balkenAuswahl
     .attr('x', (d) => xSkala(d.von))
@@ -414,6 +479,32 @@ function aktualisierePositionen(balkenAuswahl, textAuswahl, xSkala) {
       .attr('x', x0 + breite / 2)
       .attr('display', passtHinein ? null : 'none')
       .text(passtHinein ? text : '');
+  });
+}
+
+// Auftrag 17: leuchtende Balken mit Lichthof, Lücken als Flächen, Kurztext daneben, volle Beschriftung für Hilfsmittel
+function kennzeichneLichtAus(zeilen) {
+  if (!instanz.lichtAus) return;
+  zeilen.each(function kennzeichne(d) {
+    const wirksam = wirksamFuer(d);
+    setzeLicht(this, wirksam.length > 0);
+    if (!wirksam.length) return;
+    const g = d3.select(this);
+    const muster = musterAus(wirksam.map((e) => e.auspraegung));
+    g.insert('rect', 'rect.gantt-balken').attr('class', 'gantt-hof').attr('y', -3).attr('height', ZEILENHOEHE + 6).attr('rx', 4)
+      .attr('data-muster', muster || null).attr('aria-hidden', 'true');
+    const luecken = lueckenFuer(d, wirksam);
+    if (luecken && !luecken.length) g.select('rect.gantt-balken').classed('gantt-balken-fehlt', true);
+    if (luecken && luecken.length) {
+      g.selectAll('rect.gantt-luecke').data(luecken).join((enter) => enter.insert('rect', 'text'))
+        .attr('class', 'gantt-luecke').attr('y', 0).attr('height', ZEILENHOEHE).attr('fill', `url(#${MUSTER_ID})`).attr('aria-hidden', 'true');
+    }
+    const { kurz, voll } = lichtAusTexte(d, wirksam);
+    if (kurz) {
+      g.append('text').attr('class', 'gantt-luecken-text').attr('y', ZEILENHOEHE / 2).attr('dy', '0.35em')
+        .attr('font-size', 12).attr('aria-hidden', 'true').text(kurz);
+    }
+    g.attr('aria-label', `${d.data.name}, ${d.von}–${d.bis}, unsicher: ${voll || beschreibeEintraege(wirksam, typName, auspraegungName)}, Details anzeigen`);
   });
 }
 
@@ -539,11 +630,20 @@ function zeichneZebraStreifen(svg, anzahlZeilen, breite, zeilenHoehe = ZEILE_GES
     .join('rect')
     .attr('x', 0).attr('y', (i) => i * zeilenHoehe)
     .attr('width', breite).attr('height', zeilenHoehe)
+    .attr('class', (i) => (i % 2 === 0 ? null : 'gantt-zebra'))
     .attr('fill', (i) => (i % 2 === 0 ? 'transparent' : '#f7f6f2'));
 }
 
 // Seit 2026-10-28 (Wunsch des Autors): Kategorienamen in ihrer Farbe statt farbiger Kästchen davor - für die
 // Lesbarkeit so weit abgedunkelt, dass sie auf hellem Grund mindestens 4,5:1 Kontrast haben
+// Auftrag 17: im Modus „Licht aus“ dieselbe Kategoriefarbe, so weit aufgehellt, dass sie auf den dunklen Flächen 4,5:1 hält
+function textfarbeFuer(farbe) {
+  if (!instanz?.lichtAus) return lesbareTextfarbe(farbe);
+  const s = getComputedStyle(document.documentElement);
+  const gruende = ['--lichtaus-bg', '--lichtaus-surface'].map((v) => s.getPropertyValue(v).trim()).filter(Boolean);
+  return gruende.length ? hellGenugAufDunkel(lesbareTextfarbe(farbe), gruende) : lesbareTextfarbe(farbe);
+}
+
 function baueLegende(legendeContainer, kategorienNamen, kategorieFarbSkala, hatOhneKategorie) {
   legendeContainer.innerHTML = '';
   const eintraege = kategorienNamen.map((name) => [name, kategorieFarbSkala(name)]);
@@ -552,7 +652,7 @@ function baueLegende(legendeContainer, kategorienNamen, kategorieFarbSkala, hatO
     const eintrag = document.createElement('span');
     eintrag.className = 'gantt-legende-eintrag';
     eintrag.textContent = name;
-    eintrag.style.color = lesbareTextfarbe(farbe);
+    eintrag.style.color = textfarbeFuer(farbe);
     legendeContainer.appendChild(eintrag);
   });
 }
@@ -581,7 +681,7 @@ function baueNamensspalte(namensspalte, alleZeilen, container) {
     const name = document.createElement('span');
     name.className = 'gantt-namensspalte-name';
     name.textContent = blatt.data.name;
-    name.style.color = lesbareTextfarbe(farbeFuerBlatt(blatt, instanz.kategorieFarbSkala)); // 2026-10-28: in der Farbe der Kategorie
+    name.style.color = textfarbeFuer(farbeFuerBlatt(blatt, instanz.kategorieFarbSkala)); // 2026-10-28: in der Farbe der Kategorie
     zeile.appendChild(name);
     if (!Number.isFinite(blatt.von)) {
       const badge = document.createElement('span');
@@ -965,6 +1065,53 @@ function baueModusSchalter(ziel) {
 }
 
 // Länge begründet (über 100 Zeilen, Masterprompt §13.3; Nachbesserung 8): zeichnet die ganze Ansicht in einem Durchgang (Maße, Skalen, Achsen, Elemente, Beschriftung, Interaktion); die Schritte teilen viele lokale Größen, eine Zerlegung bräuchte lange Parameterlisten ohne Gewinn an Lesbarkeit.
+// Auftrag 17: feste Zeile „53 von 315 Beständen betroffen“ und die zugeklappte Randliste „Ohne Laufzeit (N)“
+function baueLichtAusKopf(werkzeugleiste) {
+  const alle = instanz.alleMitZeitraum.length + instanz.alleOhneZeitraum.length;
+  const betroffen = instanz.mitZeitraum.length + instanz.lichtAusOhneZeitraum.length;
+  const kopf = document.createElement('div');
+  kopf.className = 'gantt-lichtaus-kopf';
+  const zahl = document.createElement('p');
+  zahl.className = 'gantt-lichtaus-zahl';
+  zahl.textContent = `${betroffen} von ${alle} Beständen betroffen`;
+  kopf.appendChild(zahl);
+  const ohne = instanz.lichtAusOhneZeitraum;
+  if (ohne.length) {
+    const details = document.createElement('details');
+    details.className = 'gantt-randliste';
+    if (instanz.randlisteOffen) details.open = true;
+    details.addEventListener('toggle', () => { if (instanz) instanz.randlisteOffen = details.open; });
+    const summary = document.createElement('summary');
+    summary.textContent = `Ohne Laufzeit (${ohne.length})`;
+    const liste = document.createElement('ul');
+    ohne.forEach((blatt) => {
+      const li = document.createElement('li');
+      const knopf = document.createElement('button');
+      knopf.type = 'button';
+      knopf.textContent = blatt.data.name;
+      const { voll } = lichtAusTexte(blatt, wirksamFuer(blatt));
+      knopf.setAttribute('aria-label', `${blatt.data.name}, ohne Laufzeit${voll ? `, unsicher: ${voll}` : ''}, Details anzeigen`);
+      knopf.addEventListener('click', () => waehleBestand(blatt));
+      li.appendChild(knopf);
+      liste.appendChild(li);
+    });
+    details.append(summary, liste);
+    kopf.appendChild(details);
+  }
+  werkzeugleiste.after(kopf);
+}
+
+function meldeLichtAus() {
+  const optionen = instanz?.options.lichtAus;
+  if (!optionen || !instanz.lichtAus) return;
+  optionen.melde?.({
+    einheiten: [...instanz.alleMitZeitraum, ...instanz.alleOhneZeitraum].map(lichtAusEinheit),
+    massengruppen: instanz.lichtAus.massengruppen,
+    felder: { [BESTAND_DATEI]: BESTAND_HINWEIS_FELDER },
+    nurDieseMoeglich: true
+  });
+}
+
 function zeichneGantt() {
   const { container, wurzel, mitZeitraum, ohneZeitraum, kategorienNamen, kategorieFarbSkala, options } = instanz;
   const zeigeUnsicherheit = options.showUncertainty;
@@ -1045,6 +1192,7 @@ function zeichneGantt() {
   koerper.append(namensspalte, zeitbereich);
 
   wurzel.append(werkzeugleiste, kopfzeile, koerper);
+  if (instanz.lichtAus) baueLichtAusKopf(werkzeugleiste);
 
   const hatOhneKategorie = [...mitZeitraum, ...ohneZeitraum].some((b) => kategorieVonKnoten(b) === OHNE_KATEGORIE);
   if (!kategorieModus) baueLegende(legende, kategorienNamen, kategorieFarbSkala, hatOhneKategorie);
@@ -1112,10 +1260,15 @@ function zeichneGantt() {
     'die Zeitachse, Strg+Mausrad bzw. Trackpad-Zoomgeste zoomt.'
   );
 
+  if (instanz.lichtAus) {
+    baueMusterFehlt(svg.append('defs'), MUSTER_ID); // Schraffur wie das Muster „fehlt“ (Farben über CSS-Klassen)
+  }
   zeichneZebraStreifen(svg, alleZeilen.length, zeitbereichBreite);
   const balkenGruppe = svg.append('g');
   const { balken, texte, zeilen: balkenZeilen } = zeichneBalken(balkenGruppe, mitZeitraum, kategorieFarbSkala, container, zeigeUnsicherheit);
+  kennzeichneLichtAus(balkenZeilen);
   aktualisierePositionen(balken, texte, xSkalaBasis);
+  positioniereLichtAus(instanz.lichtAus ? balkenZeilen : null, xSkalaBasis);
 
   const ohneZeitraumGruppe = svg.append('g');
   const ohneZeitraumZeilen = zeichneOhneZeitraumMarker(ohneZeitraumGruppe, ohneZeitraum, mitZeitraum.length, kategorieFarbSkala, container, zeigeUnsicherheit);
@@ -1135,7 +1288,7 @@ function zeichneGantt() {
     svgAuswahl: svg,
     xSkalaBasis,
     achseGruppe,
-    aktualisiere: (x) => aktualisierePositionen(balken, texte, x),
+    aktualisiere: (x) => { aktualisierePositionen(balken, texte, x); positioniereLichtAus(instanz.lichtAus ? balkenZeilen : null, x); },
     breite: zeitbereichBreite,
     hoehe: Math.max(gesamtHoehe, 1)
   });
@@ -1226,6 +1379,7 @@ export function render(container, data, options = {}) {
     schliesseSidebarModul(instanz.sidebar, zielElement);
   });
   zeichneGantt();
+  meldeLichtAus(); // Auftrag 17
 }
 
 export function resize(neueOptionen = {}) {
@@ -1233,11 +1387,25 @@ export function resize(neueOptionen = {}) {
   instanz.options = { ...instanz.options, ...neueOptionen };
   wendeUnsicherheitsFilterAn();
   zeichneGantt();
+  meldeLichtAus(); // Auftrag 17
 }
 
 // Wunsch des Autors (2026-10-28): „Unsicherheiten anzeigen“ zeigt nur die unsicher markierten Bestände
 // (Einzelbestände wie Kategorien); die Zeitachse behält die Spanne aller Bestände.
 function wendeUnsicherheitsFilterAn() {
+  // Auftrag 17: im Modus „Licht aus“ nur die betroffenen Bestände; die ohne Laufzeit stehen in der Randliste
+  const optionen = instanz.options.lichtAus;
+  instanz.lichtAus = optionen
+    ? lichtAusVorbereitung([...instanz.alleMitZeitraum, ...instanz.alleOhneZeitraum].map(lichtAusEinheit), optionen.auswahl) : null;
+  if (instanz.lichtAus) {
+    const betroffen = (b) => wirksamFuer(b).length > 0;
+    instanz.mitZeitraum = instanz.alleMitZeitraum.filter(betroffen);
+    instanz.ohneZeitraum = [];
+    instanz.lichtAusOhneZeitraum = instanz.alleOhneZeitraum.filter(betroffen);
+    instanz.kategorieZeilen = baueKategorieZeilen(instanz.mitZeitraum, instanz.lichtAusOhneZeitraum);
+    return;
+  }
+  instanz.lichtAusOhneZeitraum = [];
   const filter = instanz.options.showUncertainty ? (b) => b.data.record.daten_unsicher : () => true;
   instanz.mitZeitraum = instanz.alleMitZeitraum.filter(filter);
   instanz.ohneZeitraum = instanz.alleOhneZeitraum.filter(filter);

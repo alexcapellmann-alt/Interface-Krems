@@ -1442,7 +1442,11 @@ function baueImpressum() {
 function handleRouteChange() {
   const route = aktuelleRoute();
   aktualisiereNavHervorhebung(route.tab);
-  if (route.tab !== 'visualisierungen') beendeLichtAusUeberall(); // Auftrag 13: Startseite, Bestand, Führungen, Literatur, Über
+  // Auftrag 13/17: Der Modus endet auf Startseite, Führungen, Literatur und Über, beim Wechsel zwischen Bestand und
+  // Visualisierungen und auf Seiten ohne Ansicht (Übersicht der Visualisierungen, Bestandsgalerie). Zwischen zwei für
+  // „Licht aus“ freigegebenen Ansichten desselben Bereichs entscheidet modusNachWechsel() beim Zeichnen.
+  const lichtAusBereich = route.tab === 'visualisierungen' || route.tab === 'bestand';
+  if (!lichtAusBereich || aktuellerKontext?.tab !== route.tab || !route.segmente.length) beendeLichtAusUeberall();
   aktualisiereSeitenueberschrift(route); // AUFTRAG D, Punkt 1
   // Wunsch des Autors: die Fußzeile (`footer_text`) seit 2026-10-25 nur noch auf der Startseite, seit
   // 2026-10-27 auch dort nicht mehr (die Startseite hat ihre eigene Fußzeile, `footer_hinweis`).

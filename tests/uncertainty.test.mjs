@@ -25,7 +25,8 @@ test('Rückfall ohne passendes Feld: ganzer Text statt nichts', () => {
 
 test('lesbare Feldnamen, unbekannte bleiben roh', () => {
   assert.equal(lesbareAnmerkung(['orte: A', 'datum: B']), 'Ort: A | Datierung: B');
-  assert.equal(lesbareAnmerkung('zeitraum_von: x'), 'zeitraum_von: x');
+  assert.equal(lesbareAnmerkung('laufnummer: x'), 'laufnummer: x');
+  assert.equal(lesbareAnmerkung('zeitraum_von: x'), 'Laufzeit (Beginn): x'); // seit Auftrag 17 bekannt
   assert.equal(lesbareAnmerkung('Doppelt erfasst als A: B'), 'Doppelt erfasst als A: B');
   assert.equal(feldBezeichnung('constructor'), 'constructor');
   assert.equal(feldBezeichnung('Beruf'), 'Beruf');

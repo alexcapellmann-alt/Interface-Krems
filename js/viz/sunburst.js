@@ -76,6 +76,10 @@ import { istUnvollstaendig, UNVOLLSTAENDIG_KLASSE } from '../utils/vollstaendigk
 import { infotextFuerModul } from '../core/archivKonfiguration.js';
 import { ermittleBeschriftungstext } from '../utils/beschriftung.js';
 import { UNSICHERHEIT_SYMBOL } from '../config/constants.js';
+import { lichtAusVorbereitung } from '../utils/lichtAus.js'; // Auftrag 17
+import { setzeLicht, musterAus, beschreibeEintraege } from '../utils/lichtAusDarstellung.js';
+import { typName, auspraegungName } from '../core/unsicherheitVokabular.js';
+import { BESTAND_DATEI, BESTAND_HINWEIS_FELDER, bestandEinheit, baueMusterFehlt } from '../utils/bestandLichtAus.js';
 
 // Auftrag "Sunburst – Rückkehr zur 3-Ebenen-Ansicht": Text aktualisiert, um
 // den jetzt sichtbaren dritten (Unterkategorie-)Ring zu beschreiben - reine
@@ -121,6 +125,10 @@ const MINDESTGROESSE_ROH_SUNBURST = 0.05;
 // AUFTRAG "Teil 2f", Punkt 1: keine lokale Kopie mehr - zentrale Konstante
 // aus config/constants.js, unter demselben lokalen Namen weiterverwendet.
 const WARN_SYMBOL = UNSICHERHEIT_SYMBOL;
+// Auftrag 17: Modus „Licht aus“ in der Sonne. Einheit = Bestand (äußerer Ring). Abdunkeln statt Filtern (Filtern würde
+// die Winkel aller übrigen Segmente verändern). Betroffene Bestände: Bernstein-Rahmen mit dem Muster der Ausprägung,
+// „fehlt“ zusätzlich als lichte Schraffur; Kategorie- und Unterkategorie-Segmente ohne betroffenen Bestand treten zurück.
+const MUSTER_ID_SONNE = 'sunburst-muster-fehlt';
 const AUSWAHL_FARBE = '#e07820'; // dieselbe Farbe wie treemap.js' Auswahl-Hervorhebung
 const FOKUS_STROKE_BREITE = 3;
 
@@ -142,7 +150,7 @@ function istUnsicherenKnoten(d, zeigeUnsicherheit) {
 function randStilFuerSegment({ istAusgewaehlt, istUnsicher, ohneKategorie, blatt = false }) {
   if (istAusgewaehlt) return { stroke: AUSWAHL_FARBE, breite: 2, dasharray: null };
   // 2026-10-28: kein roter Strichrahmen mehr für unsichere Bestände (der Filter zeigt ohnehin nur sie)
-  return { stroke: '#ffffff', breite: blatt ? 0.35 : 1, dasharray: ohneKategorie ? '4,3' : null };
+  return { stroke: 'var(--surface, #ffffff)', breite: blatt ? 0.35 : 1, dasharray: ohneKategorie ? '4,3' : null }; // Auftrag 17: Variable statt fester Farbe
 }
 
 // Punkt A: der browserseitige Standard-Fokusrahmen (:focus-visible in
@@ -191,7 +199,7 @@ function baueSchraffurPattern(defs) {
     .attr('width', 8).attr('height', 8)
     .append('path')
     .attr('d', 'M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4')
-    .attr('stroke', '#aaaaaa')
+    .attr('stroke', 'var(--text-muted, #aaaaaa)') // Auftrag 17: Variable statt fester Farbe
     .attr('stroke-width', 1.5)
     .attr('opacity', 0.45);
 }
@@ -204,7 +212,7 @@ function baueOhneKategorieMuster(defs) {
     .attr('id', 'sunburst-ohne-kategorie-muster')
     .attr('patternUnits', 'userSpaceOnUse')
     .attr('width', 6).attr('height', 6);
-  muster.append('circle').attr('cx', 3).attr('cy', 3).attr('r', 1).attr('fill', '#ffffff').attr('opacity', 0.55);
+  muster.append('circle').attr('cx', 3).attr('cy', 3).attr('r', 1).attr('fill', 'var(--surface, #ffffff)').attr('opacity', 0.55); // Auftrag 17
 }
 
 // Post-Layout-Korrektur: kein Segment darf unter mindestWinkelRad fallen
@@ -514,11 +522,13 @@ function zeichneZentrum(svg, container, gesamtAnzahl) {
       .attr('dy', '-0.2em')
       .attr('font-size', 11)
       .attr('font-weight', 700)
+      .attr('fill', 'var(--text, #1a1a1a)') // Auftrag 17: im dunklen Thema hell (vorher ohne Farbe = schwarz)
       .text(gesamtAnzahl);
     gruppe.append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '1em')
       .attr('font-size', 9)
+      .attr('fill', 'var(--text, #1a1a1a)')
       .text('Bestände');
     return;
   }
@@ -584,6 +594,9 @@ function zeichneSunburst() {
   }
   const wurzel = d3.hierarchy(anzeigeDaten).sum((d) => Math.sqrt(d.value || 0)).sort((a, b) => b.value - a.value);
   d3.partition().size([2 * Math.PI, aussenRadius])(wurzel);
+  // Auftrag 17: Modus vorbereiten (alle Bestände der Ansicht, kein Filter)
+  instanz.lichtAus = options.lichtAus ? lichtAusVorbereitung(wurzel.leaves().map((b) => bestandEinheit(b.data.record)), options.lichtAus.auswahl) : null;
+  const leuchtet = (knoten) => (instanz.lichtAus ? knoten.leaves().some((b) => b.data.record && instanz.lichtAus.wirksam(bestandEinheit(b.data.record)).length > 0) : false);
 
   // Auftrag "Sunburst – Rückkehr zur 3-Ebenen-Ansicht" (siehe Dateikopf-
   // Kommentar): Übersicht zeigt DREI konzentrische Ringe gleichzeitig
@@ -680,6 +693,7 @@ function zeichneSunburst() {
   const defs = svg.append('defs');
   baueSchraffurPattern(defs);
   baueOhneKategorieMuster(defs);
+  if (instanz.lichtAus) baueMusterFehlt(defs, MUSTER_ID_SONNE); // Auftrag 17
 
   // Eine gemeinsame Zeichenschleife für alle Ringe statt getrennter, fast
   // identischer Blöcke - "art" bestimmt Farbe/Beschriftung/Tooltip, "klick"
@@ -786,6 +800,8 @@ function zeichneSunburst() {
         tooltipFn = () => (beschriftet === 'voll' ? kategorieName : `${kategorieName} (${d.leaves().length} Bestände)`);
       }
 
+      if (instanz.lichtAus) kennzeichneSegmentLichtAus(gruppe, d, bogen, leuchtet(d));
+
       wireFokusHighlight(gruppe, pfad, ruheZustand);
 
       if (klick === 'waehlen') {
@@ -810,12 +826,55 @@ function zeichneSunburst() {
       // Zeigercursor (siehe Kommentar bei ringe-Aufbau oben) - der Hover-
       // Tooltip bleibt trotzdem informativ nutzbar.
 
+      if (instanz.lichtAus && !d.children && gruppe.classed('lichtaus-licht') && gruppe.attr('aria-label')) {
+        gruppe.attr('aria-label', `${gruppe.attr('aria-label')}, unsicher: ${beschreibeEintraege(instanz.lichtAus.wirksam(bestandEinheit(d.data.record)), typName, auspraegungName)}`);
+      }
       wireTooltip(gruppe, tooltipFn, svgBereich);
     });
   });
 
   const gesamtAnzahl = wurzel.leaves().length;
   zeichneZentrum(svg, svgBereich, inKategorieAnsicht ? null : gesamtAnzahl);
+  meldeLichtAus(wurzel); // Auftrag 17
+}
+
+// Auftrag 17: Bestand-Segment leuchtend (Rahmen mit Muster, Schraffur bei „fehlt“) oder abgedunkelt; innere Ringe nur
+// abgedunkelt, wenn darunter kein betroffener Bestand liegt
+function kennzeichneSegmentLichtAus(gruppe, d, bogen, enthaeltBetroffene) {
+  if (d.children) { setzeLicht(gruppe.node(), enthaeltBetroffene ? null : false); return; }
+  const wirksam = d.data.record ? instanz.lichtAus.wirksam(bestandEinheit(d.data.record)) : [];
+  setzeLicht(gruppe.node(), wirksam.length > 0);
+  if (!wirksam.length) return;
+  const muster = musterAus(wirksam.map((e) => e.auspraegung));
+  const vorBeschriftung = () => gruppe.select('g').node();
+  if (muster === 'geist') {
+    gruppe.insert('path', vorBeschriftung).attr('class', 'lichtaus-schraffur').attr('d', bogen(d)).attr('fill', `url(#${MUSTER_ID_SONNE})`)
+      .attr('pointer-events', 'none').attr('aria-hidden', 'true');
+  }
+  gruppe.insert('path', vorBeschriftung).attr('class', 'lichtaus-rahmen').attr('d', bogen(d)).attr('data-muster', muster || null)
+    .attr('pointer-events', 'none').attr('aria-hidden', 'true');
+  // Beschriftung auf dunkler Unterlage (wie im Baum, gemessen nötig wegen der Schraffur)
+  gruppe.selectAll('text').each(function unterlage() {
+    if (this.getAttribute('aria-hidden') === 'true' || !this.textContent.trim()) return;
+    const box = this.getBBox();
+    if (!box.width) return;
+    d3.select(this).classed('lichtaus-beschriftung', true);
+    d3.select(this.parentNode).insert('rect', () => this).attr('class', 'lichtaus-textgrund').attr('x', box.x - 2).attr('y', box.y - 2)
+      .attr('width', box.width + 4).attr('height', box.height + 4).attr('rx', 2).attr('transform', this.getAttribute('transform'))
+      .attr('pointer-events', 'none').attr('aria-hidden', 'true');
+  });
+}
+
+function meldeLichtAus(wurzel) {
+  const optionen = instanz?.options.lichtAus;
+  if (!optionen || !instanz.lichtAus) return;
+  optionen.melde?.({
+    einheiten: wurzel.leaves().filter((b) => b.data.record).map((b) => bestandEinheit(b.data.record)),
+    massengruppen: instanz.lichtAus.massengruppen,
+    felder: { [BESTAND_DATEI]: BESTAND_HINWEIS_FELDER },
+    nurDieseMoeglich: false,
+    nurDieseGrund: 'In der Sonne würden herausgefilterte Bestände die Winkel aller übrigen verändern; betroffene Bestände leuchten, die übrigen treten zurück.'
+  });
 }
 
 export function render(container, data, options = {}) {
