@@ -7,6 +7,16 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-19 (250) – Auftrag 18: Aufräumen vor dem Einfrieren
+
+- `js/utils/jahrgaenge.js` (`textAusserhalb()`), `js/viz/ganttDiagramm.js`: Lücken vor oder nach der Laufzeit werden in Kurztext, Beschriftung und Hinweis genannt („1783–1785 nach Ende“); nur Text, keine neue Darstellung.
+- `docs/SCHEMA.md`: Laufzeit ist die überlieferte Spanne; fehlende Jahrgänge außerhalb der Laufzeit sind zulässig.
+- Dateiköpfe gekürzt (nur Kommentare, Syntaxbaum unverändert): `js/viz/bipartiteFlowMap.js`, `familienbaum.js`, `dotPlot.js`, `karte.js`, `kalenderHeatmap.js`, `chordDiagramm.js`, `verbindungskarte.js`, `zeitachse.js`, `js/core/app.js`, `js/core/visualisierungsTabs.js`; Inhalte in `docs/MODULNOTIZEN.md` (neu).
+- `tests/bestandLichtAus.test.mjs`: Fall außerhalb der Laufzeit als zulässig; Prüfung von `textAusserhalb()`. Tests unverändert 62.
+- Messungen der offenen axe-Fälle und Repo-Prüfung außerhalb des Repositorys (PROJEKTLOG 101).
+
+---
+
 ## 2026-11-19 (249) – Auftrag 17: Strahl, Baum und Sonne im Modus „Licht aus“
 
 - `js/core/app.js`: Der Modus endet auch beim Wechsel zwischen Bestand und Visualisierungen und auf Seiten ohne Ansicht; zwischen Strahl, Baum und Sonne bleibt er.

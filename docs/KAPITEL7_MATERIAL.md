@@ -20,6 +20,8 @@ außerhalb des Repositorys in den Arbeitsordnern (`Nachbesserung_2026-11-15/`, `
 | Die Wirkung des σ-Knopfs wurde in Auftrag 13 nur über eine Art der Kennzeichnung (hell markiert) gezählt. Kennzeichnungen durch Einblenden oder Stricheln entgingen der Zählung. | PL 96, Punkt 5; PR |
 | Messungen am Bildschirmfoto treffen leicht Fremdes: einen beim Fokus erscheinenden Hinweis-Kasten, Bereiche außerhalb des Fensters, die Kantenglättung von Buchstaben, Strichlücken eines gestrichelten Rahmens. Auffällige Werte (1,0 im Strahl, 1,11 in der Sonne) waren so entstanden und wurden am Bild belegt, nicht angenommen. | PL 100, Punkt 6; PR (Grenzen der Prüfmethode) |
 | Kontraste von Schrift auf Schraffur: Ohne Unterlage hielt die Beschriftung im Baum im ungünstigsten Pixel nur 2,4:1; erst die Messung am Bild zeigte das. | PL 100, Punkt 4 |
+| Die 8 464 offenen axe-Fälle (Auftrag 18) gehen vor allem auf Text in SVG zurück (über 3 800, axe kann dort den Grund nicht bestimmen), auf Hintergrundbilder und Verläufe. In einer geschichteten Stichprobe mit 321 gewerteten Elementen bestanden 97,5 %. Die 8 Durchfälle betreffen alle dieselben vier Ursachen. Eine Stichprobe belegt keine Vollständigkeit; Elemente außerhalb des Bildes und Text über den Kartenkacheln blieben ungemessen. | PL 101, Punkt 3; PR (Grenzen der Prüfmethode) |
+| Messen am Bild braucht eine Gegenprobe: Die ersten Fassungen des Werkzeugs blendeten mit dem Text auch den eigenen Hintergrund aus und lasen dadurch Werte um 1:1. Erst ein Selbsttest an bekannten Farben (4,48 / 4,54 / 9,08 / 2,31) machte die Messung belastbar. | PL 101, Punkt 3 |
 
 ## 2. Entscheidungen mit Begründung und Folgen
 
@@ -37,6 +39,7 @@ außerhalb des Repositorys in den Arbeitsordnern (`Nachbesserung_2026-11-15/`, `
 | Standardtexte statt gleichlautender Anmerkungen | Erklärungen für Felder ohne eigene Anmerkung stehen einmal je Datei, Feld und Ausprägung in `data/unsicherheit_standardtexte.csv`. | SCH 13.11; CL 244 |
 | Kleine Segmente der Sonne: Betroffene Bestände sind in der Übersicht bis 1,3 px schmal; dort trägt nur der Rahmen, nicht das Muster der Ausprägung. | PL 100, Punkt 5; EM, Abschnitt 1b |
 | Filtern im Strahl, Abdunkeln in Baum und Sonne: Filtern würde dort die Flächen bzw. Winkel aller übrigen Bestände ändern. | PL 100, Punkte 3–5; EM, Abschnitt 1b |
+| Laufzeit eines Bestands = überlieferte Spanne (Festlegung des Autors, 19.11.2026) | Fehlende Jahrgänge dürfen davor oder danach liegen. Die Kammeramtsrechnungen (Laufzeit 1516–1782, fehlend unter anderem 1783–1785) sind damit kein Fehler. Weil die Lücke hinter dem Balkenende nur etwa 3 px breit ist, nennt der Strahl sie in Worten („1783–1785 nach Ende“). | PL 101, Punkt 1; `docs/SCHEMA.md` |
 
 ## 3. Datenqualität und Herkunft
 
@@ -51,7 +54,7 @@ außerhalb des Repositorys in den Arbeitsordnern (`Nachbesserung_2026-11-15/`, `
 | Ausstellungsort: 496 Werte aus dem Regest (427 direkt, 65 über eine Zuordnungstabelle, 4 Feldlager als Text), 571 leer. Fünf Zuordnungen als prüfbedürftig gemeldet. | PL 94; `Unsicherheitstypen_2026-11/a12/BERICHT_STUFE_A.md`; `a15/pruefblatt_daten.csv`, Fall 3 |
 | StaAKr-0258 hängt an Rappottenstein, das Regest nennt den Ort nicht; Herkunft der Zuordnung **nicht dokumentiert** (seit dem ersten Datenstand). | PL 93 (B1); `a15/pruefblatt_daten.csv`, Fall 2 |
 | Lücken im Bürgerbuch: In den Daten haben die Jahre 1570, 1572, 1590, 1591, 1593, 1594, 1598 und 1599 keinen Eintrag. Die Vorlage nennt Lücken allgemein (S. 20) und eine Datumslücke 1619 (S. 147); ob Aufnahmen fehlen oder die Überlieferung, sagt sie nicht. | PL 100, Punkt 1; `data/methodenhinweise.csv` (`buergerbuch_luecken`) |
-| Kammeramtsrechnungen (1.2.2.2.1.): Das Bestandsverzeichnis nennt fehlende Jahrgänge bis 1785, die Laufzeit endet 1782; der Widerspruch steht in der Vorlage. Kein anderer Bestand nennt Lücken außerhalb der Laufzeit. | PL 100, Punkt 2; `tests/bestandLichtAus.test.mjs` |
+| Kammeramtsrechnungen (1.2.2.2.1.): Das Bestandsverzeichnis nennt fehlende Jahrgänge bis 1785, die Laufzeit endet 1782. Zuerst als Widerspruch in der Vorlage gemeldet; nach der Festlegung, dass die Laufzeit die überlieferte Spanne ist, kein Fehler (siehe Abschnitt 2). Kein anderer Bestand nennt Lücken außerhalb der Laufzeit. | PL 100, Punkt 2; PL 101, Punkt 1; `tests/bestandLichtAus.test.mjs` |
 | Fehlende Bürgen: 330 von 2791 Einträgen nennen einen Bürgen (1541–1621); laut Vorlage sind Bürgen nur im besten Fall angegeben. Die Einträge ohne Bürgen sind trotzdem markiert, mit dieser Einschränkung im Standardtext. | PL 99, Punkt 4; `data/methodenhinweise.csv` (`buergschaften`) |
 
 ## 4. Korrigierte Fehlannahmen

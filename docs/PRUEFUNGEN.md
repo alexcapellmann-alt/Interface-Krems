@@ -135,6 +135,19 @@ alle Teile OK; Attrappe Strahl 0 Verstöße in 10 Zuständen, Kontrast mindesten
 
 axe in 161 Zuständen 0 Verstöße (unvollständig wie bisher: Farbkontrast 8462, Zielgröße 2); Modus-Zustände von Strahl, Baum und Sonne bei 1366 × 768 und 1280 × 720 ohne axe-Befund und ohne Fehler; Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 mit und ohne Modus OK (mit Modus 0 Regelverstöße, Modus bei Ankunft nur von Pilot zu Pilot), Auswahl beim Umschalten von σ und Verbindungskarte Wien OK; Tests 62/62.
 
+**Auftrag 18 (19.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a18/werkzeuge/`:
+- `ast_vergleich.mjs`: vergleicht JS-Dateien als Syntaxbaum ohne Kommentare (acorn), CSS ohne Kommentare und Leerraum; gegen
+  einen Git-Stand oder einen Ordner mit Kopien.
+- `koepfe_messen.py`, `kopf_ersetzen.py`, `verweise_ersetzen.py`: Länge der Dateiköpfe; Kopf ersetzen, ohne den Code zu
+  berühren; Verweise auf den eigenen Kopf umstellen.
+- `a18_axe_incomplete.mjs` und `a18_axe_auswertung.py`: offene axe-Fälle nach Ursache und Ansicht, geschichtete Stichprobe am
+  Element (zwei Bilder: mit und mit durchsichtiger Schrift); Selbsttest `a18_selbsttest.mjs`.
+- `a18_kammeramt.mjs` (Texte des Strahls zu den Kammeramtsrechnungen, Kurztexte über dem Rand), `a18_zahlen.mjs` (Zahlen der
+  Ansichten im Modus).
+
+Ergebnis der Stichprobe: 321 gewertete Proben in 34 Ansichten, 313 bestanden (97,5 %), 8 nicht bestanden (PROJEKTLOG 101,
+Punkt 3).
+
 **Grenzen der Prüfmethode (für Kapitel 7):**
 - **Feste Fenstergrößen:** Geprüft wird bei festen Fenstergrößen, meist 1366 × 900, 1366 × 768 und 1280 × 720.
   Befunde, die nur bei anderen Höhen oder Breiten auftreten, bleiben unentdeckt; so war es beim Bilderwand-Kopf, den erst
@@ -145,6 +158,13 @@ axe in 161 Zuständen 0 Verstöße (unvollständig wie bisher: Farbkontrast 8462
   erscheint; Bereiche außerhalb des Fensters; die Kantenglättung von Buchstaben und Rahmen; Strichlücken. Die Werkzeuge
   (Auftrag 17) prüfen das und werten solche Punkte nicht. Ein auffälliger Wert wird am Bild belegt, nicht als Messfehler
   angenommen.
+- **Stichprobe der offenen axe-Fälle (Auftrag 18)** sagt nichts über die Gesamtheit aus.
+  - Gemessen wurde je Zustand und Ursache ein Element, nicht zufällig über alle Fälle. Häufige Elemente (Achsen,
+    Beschriftungen) kommen in mehreren Zuständen vor.
+  - Elemente außerhalb des Bildes (106 Proben, meist Beschriftungen in gescrollten Grafiken) blieben ungemessen.
+  - Die Kartenkacheln lädt die Prüfung nicht (keine Anfragen nach außen). Text über der Karte wurde darum gegen den leeren
+    Kartengrund gemessen, nicht gegen die Kacheln.
+  - Nur zwei Fensterhöhen (768, 900) bei 1366 px Breite.
 - **Kontraste in SVG:** axe meldet viele Texte über Karte und SVG als „incomplete“. Nachbesserung 6 hat sie am Element
   nachgerechnet (227 Texte, 225 bestanden; PROJEKTLOG 87). Die Kontraste der Muster und Linien im Modus „Licht aus“
   sind aus den Farbwerten berechnet, die Farbfehlsicht an Bildern simuliert; gemessen am Bildschirm wurde nichts.

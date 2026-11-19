@@ -317,6 +317,103 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-19 (101) – Auftrag 18: Aufräumen vor dem Einfrieren
+
+Belege: `Unsicherheitstypen_2026-11/a18/` (Werkzeuge in `werkzeuge/`, Tabellen `koepfe.csv`,
+`axe_incomplete_stichprobe.csv`, `axe_incomplete_gruppen.csv`, Bilder der Stichprobe in `axe_incomplete/bilder/`).
+Vorab committet und gepusht: der Stand nach Auftrag 17 in drei Commits (19faf87, a6b6ada, 45d7c44).
+
+1. **Teil 0, Laufzeit und fehlende Jahrgänge:**
+   - **Festlegung des Autors:** „Laufzeit“ (`zeitraum_von`/`zeitraum_bis`) ist die überlieferte Spanne. Fehlende Jahrgänge
+     dürfen davor oder danach liegen. Der Befund bei den Kammeramtsrechnungen (1.2.2.2.1., Laufzeit 1516–1782, fehlend
+     unter anderem 1783–1785) ist damit kein Fehler; die Daten bleiben unverändert. Eingetragen in `docs/SCHEMA.md`.
+   - **Datenformat-Test:** Er prüft `fehlende_jahrgaenge` nicht gegen die Laufzeit und beanstandet den Fall nicht.
+     `tests/bestandLichtAus.test.mjs` hält ihn als zulässig fest.
+   - **Strahl, vorher:** Er zeichnete die Lücke hinter dem Balkenende (bei 1280 × 720 etwa 3 px breit), nannte sie aber nur
+     in der Liste aller Jahre. Dass sie nach dem Ende der Laufzeit liegt, sagte kein Text. Der Kurztext lautete
+     „15 Lücken (25 Jahrgänge)“.
+   - **Behoben, nur Text:** Kurztext „15 Lücken, 1783–1785 nach Ende“; Beschriftung und Hinweis „…, davon 1783–1785 nach
+     dem Ende der Laufzeit“. Dafür gibt es `textAusserhalb()` in `js/utils/jahrgaenge.js`.
+     - Die Zahl der Jahrgänge entfällt im Kurztext nur in diesem Fall; der volle Kurztext ragte über den Rand.
+     - Gemessen: Der Text endet bei x = 1178 (Rand 1264) bzw. x = 1241 (Rand 1350).
+   - **Befund aus Auftrag 17, nicht behoben** (dieser Auftrag ändert keine Darstellung): Bei fünf Beständen ragt der
+     Kurztext über den rechten Rand des Strahls und wird abgeschnitten, um 2 bis 94 px.
+     - Betroffen sind Gemeinderechnungen Hollenburg, Robert Streibel, Gemeindearchiv Angern, Plakatsammlung und Bühne am
+       Hohen Markt.
+     - Ursache: Der Text steht immer rechts neben dem Balken (`js/viz/ganttDiagramm.js`, Zeile 468).
+     - Beschriftung und Hinweis enthalten den vollen Text.
+     - Bei Hollenburg doppelt sich der Text („Umfang nicht angegeben · Umfang fehlt“).
+2. **Teil 1, Dateiköpfe:**
+   - **Gekürzt:** die zehn längsten Köpfe, von 102–456 auf 11–14 Zeilen. Betroffen sind `bipartiteFlowMap.js`,
+     `familienbaum.js`, `dotPlot.js`, `karte.js`, `kalenderHeatmap.js`, `chordDiagramm.js`, `app.js`,
+     `verbindungskarte.js`, `visualisierungsTabs.js` und `zeitachse.js`. Zusammen sind es 1 870 Kopfzeilen weniger.
+   - **Neuer Kopf:** Zweck, Eingabe (CSV und Spalten), Schnittstelle, Abhängigkeiten, Bedienung und Besonderheiten.
+   - **`docs/MODULNOTIZEN.md`** (neu): je Datei ein Abschnitt mit dem heutigen Verhalten, den Gründen und den Lehren aus
+     gefundenen Fehlern.
+     - Die Auftragsgeschichte steht dort nur als Verweis auf CHANGELOG und PROJEKTLOG.
+     - Der Wortlaut der alten Köpfe bleibt in der Versionsgeschichte (`git show 45d7c44:<datei>`).
+   - **Kopf gegen Code geprüft:**
+     - In `chordDiagramm.js` beschrieb der Kopf noch die Zuordnung zu Gruppen über Wortlisten. Seit dem 27.10.2026 kommt sie
+       aus `personenliste.csv` (`soziale_gruppe`). MODULNOTIZEN und die neuen Köpfe von `chordDiagramm.js` und
+       `bipartiteFlowMap.js` folgen dem Code.
+     - In `app.js` waren Führungen, Literatur und Über noch als Platzhalter beschrieben.
+     - In `verbindungskarte.js` beschrieb der Kopf vor allem Regler und Linien, die seit dem 28.10.2026 entfallen sind.
+   - **Verweise im Code:** „siehe Dateikopf-Kommentar“ zeigt jetzt in den zehn Dateien auf `docs/MODULNOTIZEN.md`, nur in
+     Kommentarzeilen.
+     - Vier Verweise stehen in Kommentaren innerhalb von CSS-Zeichenketten (`bipartiteFlowMap.js` 2, `karte.js` 1,
+       `verbindungskarte.js` 1).
+     - Sie bleiben, weil eine Änderung dort den Syntaxbaum verändert hätte.
+   - **Nachweis:** Der Syntaxbaum ohne Kommentare ist in allen 28 Dateien mit Kopf über 40 Zeilen gleich
+     (`ast_vergleich.mjs`, acorn, gegen Kopien vor Teil 1).
+     - Tabelle der Köpfe: `a18/koepfe.csv` (Datei, Zeilen vorher und nachher, wohin die Inhalte gingen).
+   - **Noch nicht gekürzt:** 18 Köpfe mit 41–92 Zeilen (Liste in `a18/koepfe.csv`), Entscheidung beim Autor.
+3. **Teil 2, offene axe-Fälle („incomplete“), nur gemessen:**
+   - **Werkzeug:** `a18_axe_incomplete.mjs` geht dieselben 161 Zustände wie `b_axe.mjs` durch. Die Ursache je Fall ist die
+     Angabe von axe (`messageKey`), zusammengefasst in Gruppen.
+     - In diesem Lauf waren es 8 466 Fälle, in der Regression 8 464 (8 462 Farbkontrast, 2 Zielgröße). Die Abweichung kommt
+       vom Zeitpunkt, zu dem ein Zustand gemessen wird.
+   - **Gruppen (Fälle):**
+     - überdeckt, in SVG 2 300; Hintergrundbild, in SVG 1 533; Hintergrundbild 1 367; Verlauf 1 229;
+     - Sonderzeichen 1 134; überdeckt 451; zu wenig Text 382;
+     - auf der Karte 68 (Verlauf, Sonderzeichen, Bild); Zielgröße 2.
+     - Zahlen je Ansicht: `a18/axe_incomplete_gruppen.csv`.
+   - **Stichprobe, geschichtet:**
+     - Je Zustand und Ursache ein Element, je Ansicht möglichst jedes Mal ein anderes.
+     - 450 Proben; gewertet 321 in 34 Ansichten (213 verschiedene Elemente, 150 mit Modus, 171 ohne).
+     - **313 bestanden (97,5 %), 8 nicht bestanden.**
+     - Nicht messbar 126: außerhalb des Bildes oder unsichtbar 106, Schrift im Bild nicht zu unterscheiden 12, nicht gefunden
+       7, Größe änderte sich 1.
+     - Nicht gewertet 3, weil verdeckt: zweimal von einem modalen Dialog, einmal von einem Ort der Bilderwand.
+   - **Messung** (Selbsttest an bekannten Farben trifft 4,48 / 4,54 / 9,08 / 2,31 genau):
+     - Es gibt zwei Bilder des Elements, mit Schrift und mit durchsichtiger Schrift. Hintergrund und Rahmen bleiben dabei.
+     - Gewertet werden nur die Stellen, an denen Schrift steht. Die Textfarbe ist die berechnete Farbe mit wirksamer
+       Deckkraft.
+     - Wert ist der Kontrast gegen die häufigste Grundfarbe an diesen Stellen, wenn sie mindestens die Hälfte ausmacht.
+       Sonst gilt das 5-%-Quantil.
+     - Bei Schrift mit Saum (paint-order stroke) und bei Unterelementen anderer Farbe zählt das Bild selbst.
+   - **Mängel** (keine Änderung in diesem Auftrag):
+     1. **Altes Abdunkeln (σ ohne „Licht aus“)** dimmt auch Text in SVG auf Deckkraft 0,28. Achsenbeschriftung der Zeitachse
+        und des Streamgraphs 1,78, Gruppenname im Chord-Diagramm 1,58 (Ziel 4,5). Ursache: `css/components.css`, Zeile 881
+        (`text` in der Liste der gedimmten Elemente), Wert in Zeile 880. Dagegen ist `--lichtaus-gedimmt` laut
+        `css/base.css` nie für Text gedacht.
+     2. **Wortwolke:** Wörter mit `fill-opacity` 0,8–1 (`js/viz/wortwolke.js`, Zeile 292) erreichen bei 17–19 px nur
+        2,80–4,41.
+     3. **Grenzwert:** σ-Zeichen in unsicheren Zeilen der Personenliste 4,49 (`js/viz/personenliste.js`, Zeile 586, Farbe
+        `--fuehrung-unsicher`).
+     4. **Grenzwert:** Verweis „Leaflet“ in der Kartenquelle im Modus 4,49 (`css/components.css`, Zeile 967, `--accent` auf
+        `--surface`).
+   - **Zielgröße**, beide Fälle: der Aufklapper „Hinweise zur Methode“ im Modus (Bestandsgalerie und Baum).
+     - Er ist 185,8 × 21 px groß und damit unter 24 px hoch.
+     - Der nächste Nachbar ist aber 14,5 px von seiner Mitte entfernt. Damit greift die Abstandsausnahme von WCAG 2.5.8:
+       bestanden.
+4. **Teil 3, Repo-Prüfung:** `a18/REPO_PRUEFUNG.md` (Ampel und Pfade, ohne Auszüge).
+5. **Regression nach Teil 0 und 1:**
+   - Tests 62/62. axe: 161 Zustände, 0 Verstöße; offen unverändert 8 462 Farbkontrast und 2 Zielgröße.
+   - Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 mit und ohne Modus OK; Auswahl beim Umschalten von σ und Verbindungskarte
+     Wien OK.
+   - Zahlen unverändert: Regesten 687, Karte 98 (von 222 Punkten), Stammbaum 26, Strahl 53 mit Typ und 35 Balken, Baum und
+     Sonne 53; Ortsliste 252, Verbindungskarte 169.
+
 ## 2026-11-19 (100) – Auftrag 17: Strahl, Baum und Sonne im Modus „Licht aus“, Datenentscheidungen
 
 Belege: `Unsicherheitstypen_2026-11/a17/` (Bilder und `ergebnis.json` je Ansicht und Fenstergröße, Kontrastmessungen in
