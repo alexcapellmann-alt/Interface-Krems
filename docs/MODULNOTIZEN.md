@@ -12,6 +12,15 @@ Fehler beim Bau gefunden wurden (damit sie nicht wiederkehren).
 - **Gemeinsame Schnittstelle aller Ansichten** (`render`, `resize`, `destroy`, Optionen `showUncertainty` und `lichtAus`):
   `docs/SCHEMA.md` und `js/config/archivalienRegistry.js`.
 
+**Bekannte Abweichung (Auftrag 19 gefunden, Auftrag 20 vermerkt):** Fünf Kommentare verweisen noch auf den alten
+Dateikopf („siehe Dateikopf-Kommentar“). Sie stehen in CSS-Kommentaren innerhalb von JavaScript-Zeichenketten. Eine
+Änderung würde die Zeichenkette und damit den Syntaxbaum ändern, darum bleiben sie stehen. Gemeint ist jeweils der
+Abschnitt des Moduls in dieser Datei.
+- `js/viz/bipartiteFlowMap.js`, zwei Stellen (Punkt 2 und Punkt 6, CSS-Block in `fuegeStyleEin()`)
+- `js/viz/karte.js`, eine Stelle (Punkt 1/3)
+- `js/viz/verbindungskarte.js`, eine Stelle (Punkt 2)
+- `js/core/bereichsLeiste.js`, eine Stelle (Punkt 4)
+
 ---
 
 ## js/viz/bipartiteFlowMap.js – Karte Soziale Gruppen
@@ -117,6 +126,18 @@ werden.
   - `instanz.spaltenAbstand` folgt der Kästchenbreite plus `ZWEIG_LUECKE_BASIS`.
 - **Regierungszeit:** Hat eine Person `herrschaft_von` und `herrschaft_bis` (heute 17 Personen), liegt über dem Kästchen in
   Familienfarbe ein Abschnitt in `GOLD_FARBE`. Das ist einfacher als drei Teilstücke.
+- **Namen auf Gold (Auftrag 20):** Die Schriftfarbe folgt der Familienfarbe (`passendeTextfarbe()`). Bei 7 Herrschern
+  liegt der Name aber auf dem goldenen Abschnitt; Weiß auf Gold hält dort nur 2,42:1.
+  - `faerbeNamenAufGold()` setzt einen ganz auf Gold liegenden Namen dunkel (7,19:1).
+  - Reicht das Gold nur über einen Teil des Namens (Joseph II., Karl VI.), liegt über dem Namen eine dunkle Kopie
+    (`familienbaum-name-gold`, `aria-hidden`), beschnitten auf den goldenen Abschnitt. Der Teil auf der Familienfarbe
+    bleibt weiß. Ein einfarbiger Name wäre auf einer der beiden Flächen zu schwach (dunkel auf Bordeaux 1,71:1).
+  - Kästchen, Gold und alle übrigen Namen bleiben unverändert. Die verworfene Alternative, eine Unterlage in
+    Familienfarbe unter dem Namen, hätte einen Teil des Goldes verdeckt.
+- **Gedimmte Namen im Modus (Auftrag 20):** Der Name liegt auf seinem gedimmten Kästchen, nicht auf dem Grund des Modus.
+  `#8f9aa5` erreichte dort nur 2,75–3,48:1; der Stammbaum nutzt darum `#bfc5cc` (mindestens 4,53:1 auf jeder gedimmten
+  Füllung). Durch die gedimmten Kästchen scheint der Stadtplan; ein Saum in `--lichtaus-bg` (6 Baum-Einheiten,
+  `paint-order: stroke`) hält Straßenlinien und Beschriftungen von der Schrift fern.
 - **Durch Heirat:** Kaiserinnen und Königinnen durch Heirat (19, ohne Regierungsdaten) haben das ganze Kästchen in
   `HEIRAT_FARBE`, einem helleren Gold. So bleibt „aus eigenem Recht“ von „durch Heirat“ auch ohne Krone unterscheidbar.
   Die Kronen sitzen am Beginn des gefärbten Abschnitts.
@@ -895,7 +916,11 @@ Mindestwinkel, Beschriftung und Zoom wie in der Treemap.
 
 ---
 
-## js/utils/vizPlatzhalter.js – Fabrik für Ansichten ohne Inhalt (derzeit ungenutzt)
+## js/utils/vizPlatzhalter.js – Fabrik für Ansichten ohne Inhalt (entfernt in Auftrag 20)
+
+Die Datei ist seit Auftrag 20 (PROJEKTLOG 103) gelöscht. Vor dem Löschen wurde geprüft, dass sie nirgends mehr referenziert
+wird (Imports, dynamische `import()`-Pfade, `index.html`, Tests, Registry-Zeichenketten). Der letzte Stand liegt in der
+Versionsgeschichte: `git show 9326106:js/utils/vizPlatzhalter.js`. Die Notiz unten beschreibt diesen letzten Stand.
 
 - **Zweck:** `baueVizPlatzhalterModul()` erzeugt ein Modul mit vollständiger Schnittstelle (`render`, `resize`, `destroy`),
   aber ohne Inhalt. Es entstand für die damals neuen Bereiche Bürgerbuch, Verlassenschaften und Personen.
@@ -905,8 +930,8 @@ Mindestwinkel, Beschriftung und Zoom wie in der Treemap.
     Datensätzen.
 - **Bewusst nicht eingebunden:** `bildschirmHinweis.js`. Ohne dichten Inhalt wäre der Hinweis „größerer Bildschirm“ eine
   Attrappe.
-- **Stand 19.11.2026:** Keine Datei importiert dieses Modul mehr, weil alle Bereiche echte Ansichten haben. Ob es entfernt
-  wird, entscheidet Alexander (PROJEKTLOG 102).
+- **Stand 19.11.2026:** Keine Datei importierte dieses Modul mehr, weil alle Bereiche echte Ansichten haben. Entfernt mit
+  Auftrag 20 (PROJEKTLOG 103).
 
 ---
 

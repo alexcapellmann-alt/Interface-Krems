@@ -7,6 +7,15 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-19 (252) – Auftrag 20: Namen im Stammbaum, tote Datei, Dokumentationskorrekturen
+
+- `js/viz/familienbaum.js` (`faerbeNamenAufGold()`): Namen auf dem goldenen Abschnitt der Regierungszeit dunkel (7,19:1 statt 2,42:1); bei teilweiser Überdeckung eine dunkle, auf den Abschnitt beschnittene Kopie. Flächen und Farben unverändert.
+- `css/components.css`: gedimmte Namen im Stammbaum (Modus „Licht aus“) `#bfc5cc` statt `--lichtaus-gedimmt-text` mit Saum in `--lichtaus-bg` (vorher 2,75–3,48:1 gegen die gedimmte Füllung, durch den Stadtplan an einzelnen Glyphen bis 2,43:1).
+- **Gelöscht:** `js/utils/vizPlatzhalter.js` (von keiner Datei mehr referenziert).
+- `docs/MODULNOTIZEN.md`: Namensfarben im Stammbaum; Löschung; fünf Verweise in CSS-Zeichenketten als bekannte Abweichung. `docs/KAPITEL7_MATERIAL.md`: Korrekturen zur Stichprobe (106 Elemente) und zur Fundstelle „Leaflet“, Aussage über die Stichprobe eingegrenzt. Tests unverändert 62 (PROJEKTLOG 103).
+
+---
+
 ## 2026-11-19 (251) – Auftrag 19: Kontrastmängel, Kurztext im Strahl, restliche Dateiköpfe
 
 - `css/components.css`: altes Abdunkeln bei σ dimmt keinen Text mehr über die Deckkraft; nicht betroffener SVG-Text bekommt die Farbstufe `--abgedunkelt-text` (#58544c, 5,4:1), Säume die Grundfarbe; `--fuehrung-unsicher` #8a6d1f → #886b1f; Linkfarbe der Leaflet-Kartenquelle #005b7f.

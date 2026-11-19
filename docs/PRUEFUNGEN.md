@@ -158,6 +158,21 @@ Punkt 3).
 - `a19_stammbaum_namen.mjs`: Namen im Stammbaum gegen die Füllung ihres Kästchens.
 - `a19_leaflet.mjs`, `a19_selektoren.mjs`: Farben der Kartenquelle; Eindeutigkeit der Selektoren.
 
+**Auftrag 20 (19.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a20/werkzeuge/`:
+- `a20_namen.mjs`: jeder Name im Stammbaum gegen jeden Grund, den er überdeckt (Kästchen, goldener Abschnitt, Grund der
+  Seite; Deckkraft eingerechnet), ohne Modus und im Modus „Licht aus“, bei 1366 × 768 und 1280 × 720 (300 Messungen).
+  Dazu die Layoutmessung aus Auftrag 9 (Personen, leuchtend, Zeichenfläche, Ersatztext).
+- `a20_pixel.mjs`, `a20_pixel.py`: Gegenprobe am Bild für dieselben 300 Namen. Jeder Name wird dazu in die Mitte der
+  Zeichenfläche geschoben (Maßstab unverändert); Wert ist das 5-%-Quantil der Glyphpixel.
+- `a20_bilder.mjs`, `a20_vergleich.py`: Bilder der 7 Herrscher (vorher, zwei Varianten, nachher). Bilder mit Ausschnitt
+  nehmen Puppeteer-Fotos mit `captureBeyondViewport: false` auf; sonst ändert das Foto die Fenstergröße, und der Stammbaum
+  zeichnet sich neu.
+- `a20_ehesymbol.mjs`: Namen, die ein Ehe-Symbol überdeckt.
+
+Ergebnis: Alle 300 geometrischen Messungen erreichen ihr Ziel (vorher 78 darunter). Am Bild liegen 296 von 300 über
+4,5:1. Die übrigen 4 betreffen Namen, über denen ein Ehe-Symbol liegt (Leopold IV., Margareta Theresia); das ist eine
+Frage des Layouts (PROJEKTLOG 103, Punkt 1).
+
 Ergebnis der Wiederholung: Die 8 Mängel aus Auftrag 18 sind behoben, nach dem neuen Stand fällt keine Probe durch. Neu
 gefunden: Namen auf dem goldenen Abschnitt im Stammbaum, 2,42:1 (PROJEKTLOG 102, Punkt 5).
 
@@ -183,6 +198,8 @@ gefunden: Namen auf dem goldenen Abschnitt im Stammbaum, 2,42:1 (PROJEKTLOG 102,
     Zweifeln am Element nachgerechnet (Füllung gegen Schrift).
   - Die Kartenkacheln lädt die Prüfung nicht (keine Anfragen nach außen). Text über der Karte wurde darum gegen den leeren
     Kartengrund gemessen, nicht gegen die Kacheln.
+  - Geometrische Messungen (Schrift gegen Füllfarbe) übersehen, was durch halbtransparente Flächen scheint. Im Stammbaum
+    zeigte erst die Gegenprobe am Bild den Stadtplan unter gedimmten Kästchen (Auftrag 20, PROJEKTLOG 103).
   - Nur zwei Fensterhöhen (768, 900) bei 1366 px Breite.
 - **Kontraste in SVG:** axe meldet viele Texte über Karte und SVG als „incomplete“. Nachbesserung 6 hat sie am Element
   nachgerechnet (227 Texte, 225 bestanden; PROJEKTLOG 87). Die Kontraste der Muster und Linien im Modus „Licht aus“

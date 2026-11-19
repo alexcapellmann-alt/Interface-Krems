@@ -317,6 +317,72 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-19 (103) – Auftrag 20: Namen im Stammbaum, tote Datei, Dokumentationskorrekturen
+
+Belege: `Unsicherheitstypen_2026-11/a20/` (Werkzeuge in `werkzeuge/`; Tabellen `namen_vorher.csv`, `namen_nachher.csv`,
+`pixel_nachher.csv`, `layout_*.json`, `ehesymbol_ueberdeckung.txt`; Bilder `vergleich_herrscher_*.png`,
+`vergleich_varianten_*.png`, `bilder/`; Regression in `regression/`).
+Vorab committet und gepusht: der Stand nach Auftrag 19 in drei Commits (b5325cc, 8e8aa00, 9326106).
+
+1. **Teil 1, Namen im Stammbaum:**
+   - **Messung vorher:** Alle 75 Namen, ohne Modus und im Modus „Licht aus“, bei 1366 × 768 und 1280 × 720 (300
+     Messungen, `a20_namen.mjs`). Jeder Name wird gegen jeden Grund gemessen, den er überdeckt; Deckkraft eingerechnet.
+     78 Messungen lagen unter 4,5:1 (alle Namen 5,0–5,4 px, Ziel 4,5:1):
+     - ohne Modus: die 7 bekannten Herrscher, Weiß auf Gold 2,42:1;
+     - im Modus: gedimmte Namen (`#8f9aa5`) auf ihrem gedimmten Kästchen, 2,75:1 (Heirat), 3,03–3,11:1 (Gold),
+       3,48:1 (andere Familie). Diesen Befund kannte bisher keine Prüfung: Der Wert von `#8f9aa5` galt gegen den Grund des
+       Modus, der Name liegt aber auf dem halbtransparenten Kästchen.
+   - **Zwei Möglichkeiten für Gold**, als Vorschau im Browser gebaut und an Bildern verglichen
+     (`vergleich_varianten_*.png`):
+     - A, dunkle Schrift auf Gold: 7,19:1. Joseph II. und Karl VI. liegen nur teilweise auf Gold; dunkle Schrift auf
+       Bordeaux hätte 1,71:1. Darum bekommt nur der goldene Teil die dunkle Farbe (Kopie, beschnitten auf den Abschnitt).
+     - B, Unterlage in der Familienfarbe unter dem Namen: Weiß bleibt (10,18:1), verdeckt aber einen Teil des Goldes.
+     - **Umgesetzt: A** (`faerbeNamenAufGold()` in `js/viz/familienbaum.js`). Sie verändert keine Fläche; die Farbe Gold
+       für die Regierungszeit bleibt. Entscheidung über die Farbwirkung beim Autor.
+   - **Gedimmte Namen:** `#bfc5cc`, derselbe Farbton wie `#8f9aa5`, so weit aufgehellt, dass er auf jeder gedimmten
+     Füllung 4,5:1 hält (kleinster Wert 4,53:1).
+   - **Gegenprobe am Bild** (`a20_pixel.mjs`, alle 300 Namen, dazu je Name in die Mitte geschoben): Durch die gedimmten
+     Kästchen scheint der Stadtplan; an einzelnen Glyphen sanken die Werte auf 2,43–3,72:1. Darum bekommen gedimmte Namen
+     einen Saum in `--lichtaus-bg` (6 Baum-Einheiten, wächst mit dem Zoom; wie die Wortwolke in Auftrag 19).
+   - **Ergebnis:** geometrisch 300 von 300 am Ziel (kleinste Werte: ohne Modus 6,19, leuchtend 6,19, gedimmt 4,53). Am
+     Bild 296 von 300 über 4,5:1; leuchtende Namen ab 4,95:1, gedimmte ab 4,38:1.
+     - Die vier übrigen Werte stammen von Ehe-Symbolen, die über dem Namen liegen: Leopold IV. (2,80:1, das Symbol deckt
+       35–37 % der Namensfläche) und Margareta Theresia (4,38:1, 3–5 %). Das ist eine Frage des Layouts und war schon
+       vorher so (`a20_ehesymbol.mjs`); nicht geändert, weil der Auftrag das Layout ausschließt.
+     - Leuchtende Herrscher kamen im Ausgangszustand des Modus nicht vor. Für leuchtende Namen gilt keine eigene Regel;
+       sie haben dieselbe Farbe wie ohne Modus, also auch auf Gold 7,19:1.
+   - **Unverändert:** Stammbaum 26 von 75 leuchtend; Layoutmessung aus Auftrag 9 gleich (1366 × 768: Zeichenfläche
+     1334 × 357 ab y = 357; 1280 × 720: 1248 × 320 ab y = 357, ganz im Fenster, kein Ersatztext; ohne Modus 1334 × 519
+     bzw. 1248 × 471 ab y = 260).
+   - Bilder der 7 Herrscher vorher und nachher: `vergleich_herrscher_ohne.png`, `vergleich_herrscher_licht_aus.png`.
+2. **Teil 2, `js/utils/vizPlatzhalter.js`:**
+   - Geprüft: keine Imports, kein dynamischer `import()`-Pfad, keine Registry-Zeichenkette (`modulPfad`), nichts in
+     `index.html`, in den Tests oder in Daten; einen Service Worker gibt es nicht. Nennungen nur in der Dokumentation
+     (CHANGELOG, PROJEKTLOG, MODULNOTIZEN, als Geschichte).
+   - **Gelöscht.** Der letzte Stand bleibt in der Versionsgeschichte (`git show 9326106:js/utils/vizPlatzhalter.js`).
+   - Die fünf Verweise auf alte Köpfe in CSS-Zeichenketten bleiben; in `docs/MODULNOTIZEN.md` als bekannte Abweichung
+     vermerkt.
+3. **Entscheidungen des Autors zu Auftrag 19 (19.11.2026):**
+   - Die Farbwirkung der Wortwolke bleibt wie umgesetzt (deckende, vorgemischte Farben mit Saum; PROJEKTLOG 102, Punkt 2).
+   - Beim Kurztext im Strahl gilt das Umdrehen: Passt er rechts nicht, steht er links vor dem Balkenanfang
+     (PROJEKTLOG 102, Punkt 4).
+4. **Teil 3, Dokumentationskorrekturen** (`docs/KAPITEL7_MATERIAL.md`):
+   - Abschnitt 4: Die Aussage aus Auftrag 18, 106 Elemente lägen außerhalb des sichtbaren Bereichs, ist berichtigt. Das
+     Werkzeug hatte Fehler beim Foto verschluckt; 34 sind gemessen und bestanden, 72 nicht trennbar (PROJEKTLOG 102,
+     Punkt 5).
+   - Abschnitt 4: Die Fundstelle beim Verweis „Leaflet“ ist berichtigt. Es war nicht `components.css`, Zeile 967 (gilt
+     nur im Modus), sondern Leaflets eigene Linkfarbe (PROJEKTLOG 102, Punkt 3).
+   - Abschnitt 1: Die Aussage über die Stichprobe geht nicht mehr über sie hinaus. Sie nennt die Auswahl (geschichtet,
+     nicht zufällig), die 72 nicht trennbaren Elemente, die Messung ohne Kartenkacheln und die offenen axe-Fälle als
+     Gruppen. Der frühere Anteil „97,5 %“ ist entfernt; er ließ sich als Anteil der Gesamtheit lesen.
+   - Abschnitt 1, neu: Geometrische Nachrechnung übersieht, was durch halbtransparente Flächen scheint (Punkt 1).
+5. **Regression:** Tests 62/62; axe in 161 Zuständen 0 Verstöße (unvollständig: Farbkontrast 8082 statt 8081,
+   vermutlich eine dunkle Namenskopie, nicht einzeln geprüft; Zielgröße 2); Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 mit und ohne Modus OK, Auswahl
+   beim Umschalten von σ und Verbindungskarte Wien OK. Zahlen im Modus unverändert: Regesten 687, Karte 98, Stammbaum
+   26 von 75, Strahl 53 mit Typ und 35 Balken, Baum und Sonne 53. Jede Commit-Gruppe besteht die Tests auch allein.
+
+---
+
 ## 2026-11-19 (102) – Auftrag 19: Kontrastmängel aus der Stichprobe, Kurztext im Strahl, restliche Dateiköpfe
 
 Belege: `Unsicherheitstypen_2026-11/a19/` (Werkzeuge in `werkzeuge/`; Tabellen `teil1_vorher_nachher.csv`,
