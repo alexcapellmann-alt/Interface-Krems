@@ -1,109 +1,14 @@
-// js/core/visualisierungsTabs.js
-// AUFTRAG "Permanente Tab-Leiste statt dynamischer Multi-Tabs (Pilot:
-// Urkunden)" (CHANGELOG 42): ersetzte die zuvor gebaute Multi-Tab-Funktion
-// durch eine PERMANENTE Tab-Leiste, die immer ALLE Visualisierungen des
-// Bereichs zeigt und dauerhaft vertikalen Platz belegte (eigene Grid-Zeile).
-//
-// FOLGEAUFTRAG "Visualisierungs-Tab-Leiste als Hover/Klick-Flyout + Galerie-
-// Muster für Bestand" (CHANGELOG 44): die Tab-Leiste wurde ein Hover/Klick-
-// FLYOUT, verankert am aktiven Bereichs-Leiste-Eintrag bzw. dem "Bestand"-
-// Hauptnav-Link. `position: fixed` statt einer Grid-Zeile.
-//
-// FOLGEAUFTRAG "Hover-Flyouts in der Hauptnavigation" (AKTUELLER STAND):
-// erweitert das Flyout-Muster auf zwei weitere Stellen (Details siehe
-// app.js/bereichsLeiste.js) - dafür ist die bisherige, monolithische
-// verankereFlyout()-Implementierung in einen gemeinsamen Kern
-// (erzeugeFlyoutPanel(), EXPORTIERT, neu) und drei darauf aufbauende
-// Varianten aufgeteilt:
-//   - verankereFlyout() (UNVERÄNDERTE Signatur/Verhalten): Klick auf den
-//     Auslöser TOGGLET den Flyout (kein preventDefault-Nebeneffekt nötig, da
-//     der Auslöser ohnehin ein reiner "#"-Anker ohne echtes Sprungziel ist) -
-//     weiterhin für den jeweils AKTIVEN Bereichs-/Bestand-Kontext, dessen
-//     aktiverId sich per .aktualisiere() live mitändert (unverändert aus (44)).
-//   - verankereVorschauFlyout() (NEU): reiner Hover-Flyout OHNE eigene
-//     Klick-Verdrahtung am Auslöser - der Auslöser hat hier immer schon eine
-//     ANDERE, eigene Klick-Funktion (z.B. bereichsLeiste.js' eigener
-//     Navigations-Klick auf einen INAKTIVEN Bereichs-Tab, Punkt 3), die
-//     dieser Flyout nicht stören/doppelt behandeln darf - ein zusätzlicher
-//     Klick-Handler mit eigenem preventDefault() hätte hier genau das
-//     Doppel-Listener-Problem verursacht, das (44)s app.js-seitiger Klick-
-//     Guard für den AKTIVEN Fall extra löste.
-//   - verankereIconFlyout() (NEU): wie verankereVorschauFlyout(), aber mit
-//     Icon+Name-Kacheln statt Text-Pillen (Punkt 2: "Bestand"-Hauptnav-Hover)
-//     UND einer eigenen Klick-Behandlung, die den Flyout nur SCHLIESST, ohne
-//     preventDefault - der Auslöser ("Bestand") ist hier ein ECHTER Anker
-//     (href="#bestand"), dessen normale Navigation beim Klick ausdrücklich
-//     weiterlaufen soll (Punkt 2: "Klick auf 'Bestand' selbst... führt
-//     weiterhin zur Galerie-Seite").
-//
-// UX-ENTSCHEIDUNG "Flyout nach Tab-Klick schließen ja/nein" (aus (44)
-// übernommen, gilt unverändert für alle vier Varianten): JA, schließt
-// sofort nach Klick auf einen Eintrag. Begründung: der Flyout überlappt
-// genau die Fläche, auf der das Klick-Ergebnis erscheint - bliebe er offen,
-// würde er die eigene Auswahl des Nutzers verdecken. Ein Klick ist ein
-// abgeschlossener Entscheidungsakt (anders als Hover), sofortiges Schließen
-// liefert unmittelbares Feedback.
-//
-// FOLGEAUFTRAG "Flyout-Kette bleibt offen bis Klick, einheitliche
-// Positionierung auf allen Ebenen" (CHANGELOG 47): ersetzt das bisherige
-// mouseleave+200ms-Debounce-Schließen (aus (44)/(45)) durch einen
-// GLOBALEN, EINMALIGEN Klick-außerhalb-Listener (siehe
-// stelleGlobalenKlickListenerSicher() unten). Grund für die Ablösung: bei
-// verschachtelten Ketten (Visualisierungen → Bereichs-Leiste-Vorschau →
-// Bereichs-Tab-Flyout) liegen die Panels der einzelnen Ebenen als
-// GESCHWISTER direkt in <body> (siehe erzeugeFlyoutPanel()s
-// Baustein-Kommentar), nicht ineinander verschachtelt - die Maus verlässt
-// beim Wandern von einer Ebene zur nächsten also zwangsläufig kurzzeitig
-// sowohl Auslöser als auch Panel der ÄUSSEREN Ebene, was das alte
-// mouseleave-Timing unabhängig von der Debounce-Dauer irgendwann als
-// "Nutzer verlässt das Menü" fehlinterpretierte (genau das vom Auftrag
-// beschriebene Problem). Die neue Lösung macht das TIMING komplett
-// irrelevant: Hover ÖFFNET weiterhin (unverändert), aber NICHTS schließt
-// mehr automatisch durch Mausbewegung - nur ein Klick auf einen Eintrag
-// (bestehende, unveränderte Klick-Handler s.u.) oder ein Klick außerhalb
-// der gesamten offenen Kette (neu, global) schließt. Praktischer Zusatz-
-// Effekt: der globale Schließen-Check schließt dabei auch ÄUSSERE Ebenen
-// korrekt mit, wenn auf einen Eintrag in einer verschachtelten, aber DOM-
-// weit getrennten inneren Ebene geklickt wird (Klick-Ziel liegt dann
-// außerhalb des äußeren Panels/Auslösers) - ergänzt/überschneidet sich mit
-// app.js' bereits bestehendem, expliziten `zusaetzlichSchliessen`-Mechanismus,
-// der deshalb unverändert bleiben kann (beide Wege sind idempotent, siehe
-// schliesse()s eigene offen-Prüfung).
-//
-// Gemeinsame Positionierungs-Funktion (Punkt 2 desselben Folgeauftrags):
-// erzeugeFlyoutPanel()s positioniere() war schon VOR diesem Auftrag die
-// einzige Stelle, die die Position irgendeines der vier Flyout-Typen
-// berechnet (alle vier Varianten bauen auf demselben Kern auf) - die
-// Korrektur (X-Position jetzt am Auslöser statt an #app-content
-// ausgerichtet, siehe dortiger Kommentar) musste deshalb nur an dieser
-// EINEN Stelle vorgenommen werden, keine neue Hilfsfunktion nötig.
-//
-// FOLGEAUFTRAG "Flyouts schließen sich nicht mehr gegenseitig - Stapel-Bug
-// beheben" (AKTUELLER STAND): (47) löste das Schließen-durch-Wegbewegen-
-// Problem, öffnete damit aber eine neue Lücke - da NICHTS mehr automatisch
-// schließt, blieben beim NACHEINANDER-Hovern mehrerer UNVERWANDTER
-// Auslöser (z.B. mehrere Bereichs-Tabs der Reihe nach) alle dabei
-// geöffneten Panels gleichzeitig sichtbar/überlappend liegen. Fix: JEDE
-// oeffne() prüft jetzt zuerst, welche anderen aktuell offenen Instanzen
-// NICHT zur selben Kette gehören (= deren Panel den eigenen Auslöser nicht
-// enthält) und schließt genau diese (schliesseGeschwister(), s.u.) - echte
-// Vorfahren (verschachtelte Ketten wie "Visualisierungen" → "Bürgerbuch")
-// bleiben davon unberührt, siehe dortiger Kommentar für die genaue
-// Containment-Logik. BEWUSST in oeffne() selbst statt einer zweiten,
-// parallelen Implementierung (z.B. nur für einen der vier Flyout-Typen) -
-// dieselbe EINE Funktion bedient dadurch weiterhin alle vier Varianten UND
-// sowohl Hover- als auch Klick-ausgelöstes Öffnen einheitlich.
-//
-// Baustein-Muster (Abschnitt 5): kennt selbst weder router.js noch die
-// echten Visualisierungsmodule. Jede verankereXyz()-Funktion baut sich ein
-// eigenes <div> in <body> (nicht im Container des Auslösers - braucht
-// `position:fixed` unabhängig von dessen Stapelkontext) und meldet Klicks
-// über options.onAktivieren(id) zurück - app.js/bereichsLeiste.js
-// entscheiden die eigentliche Navigation.
-//
-// Punkt 3 (Hover-Tooltip mit Icon, verankereFlyout()/verankereVorschauFlyout()):
-// unverändert aus (41)/(42)/(44) übernommen - nutzt weiter js/utils/tooltip.js
-// (Node-Inhalt-Erweiterung aus (41)).
+// js/core/visualisierungsTabs.js – Flyouts für die Auswahl der Visualisierungen
+// Zweck: Tab-Leiste der Ansichten eines Bereichs als Flyout (position: fixed) über der Ansicht, dazu Vorschau-Flyouts
+//   der Hauptnavigation (Bereichs-Leiste, Kacheln des Bestands).
+// Eingabe: Auslöser-Element und Optionen (tabs bzw. eintraege, aktiverId, onAktivieren); keine Daten-CSV.
+// Schnittstelle: erzeugeFlyoutPanel() (gemeinsamer Kern), verankereFlyout() (Klick schaltet um), verankereVorschauFlyout()
+//   (nur Hover), verankereIconFlyout() (Kacheln mit Symbol), fuegeFlyoutStyleEin().
+// Abhängigkeiten: utils/vizIcons.js, utils/tooltip.js. Kennt weder router.js noch die Ansichtsmodule; Klicks gehen über
+//   onAktivieren(id) an app.js bzw. bereichsLeiste.js.
+// Verhalten: Hover öffnet; ein Klick auf einen Eintrag oder außerhalb der offenen Kette schließt (ein globaler Listener);
+//   Öffnen schließt fremde Ketten, Vorfahren bleiben offen. Vorschau-Flyouts schließen zusätzlich beim Wegbewegen.
+// Hintergrund: docs/MODULNOTIZEN.md, Abschnitt visualisierungsTabs.js; Verlauf CHANGELOG 41–47.
 
 import { erzeugeVizIcon } from '../utils/vizIcons.js';
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
@@ -260,7 +165,7 @@ function baueIconListe(eintraege, onAktivieren) {
 // vier Flyout-Varianten - baut Panel/Positionierung/Hover-Öffnen-Schließen/
 // Resize-Neupositionierung, OHNE irgendeine Klick-Semantik am Auslöser
 // festzulegen (das bleibt den vier spezifischen verankereXyz()-Funktionen
-// unten überlassen, siehe Dateikopf-Kommentar für die Begründung der
+// unten überlassen, siehe docs/MODULNOTIZEN.md für die Begründung der
 // Aufteilung). `rendereInhalt(panel)` wird bei JEDEM Öffnen neu aufgerufen
 // (frischer Inhalt statt zwischengespeichertem Zustand, wie schon in (44)).
 //
@@ -487,7 +392,7 @@ export function erzeugeFlyoutPanel(ausloeser, { klasse, rendereInhalt, schliesst
 
 // options.tabs/aktiverId/onAktivieren: siehe baueTabStreifen() oben. Klick
 // auf den Auslöser TOGGLET den Flyout - für den jeweils AKTIVEN Bereichs-/
-// Bestand-Kontext (siehe Dateikopf-Kommentar), dessen aktiverId sich per
+// Bestand-Kontext (siehe docs/MODULNOTIZEN.md), dessen aktiverId sich per
 // .aktualisiere() live mitändert.
 export function verankereFlyout(ausloeser, initialOptionen) {
   let optionen = initialOptionen;
@@ -498,7 +403,7 @@ export function verankereFlyout(ausloeser, initialOptionen) {
       fuegeFlyoutStyleEin(panel);
       panel.appendChild(baueTabStreifen(optionen.tabs, optionen.aktiverId, (id) => {
         optionen.onAktivieren(id);
-        kern.schliesse(); // UX-Entscheidung siehe Dateikopf-Kommentar
+        kern.schliesse(); // UX-Entscheidung siehe docs/MODULNOTIZEN.md
       }));
     }
   });
@@ -525,7 +430,7 @@ export function verankereFlyout(ausloeser, initialOptionen) {
 
 // FOLGEAUFTRAG "Hover-Flyouts in der Hauptnavigation", Punkt 3 (+ Baustein
 // für Punkt 1s verschachtelten Bereichs-Tab-Flyout): reiner Hover-Flyout OHNE
-// eigene Klick-Verdrahtung am Auslöser - siehe Dateikopf-Kommentar für die
+// eigene Klick-Verdrahtung am Auslöser - siehe docs/MODULNOTIZEN.md für die
 // Begründung. `tabs`/`onAktivieren` wie bei verankereFlyout(), aber ohne
 // `aktiverId` (der Auslöser ist hier nie der GERADE aktive Bereich - sonst
 // käme ohnehin verankereFlyout() zum Einsatz, siehe bereichsLeiste.js).
@@ -551,7 +456,7 @@ export function verankereVorschauFlyout(ausloeser, { tabs, onAktivieren }) {
 // Kacheln (baueIconListe()) statt Text-Pillen. Klick auf den Auslöser
 // SCHLIESST den Flyout, verhindert aber NICHT dessen Standard-Aktion (der
 // Auslöser ist ein echter Anker, dessen normale Navigation weiterlaufen
-// soll - siehe Dateikopf-Kommentar).
+// soll - siehe docs/MODULNOTIZEN.md).
 export function verankereIconFlyout(ausloeser, { eintraege, onAktivieren }) {
   const kern = erzeugeFlyoutPanel(ausloeser, {
     klasse: 'visualisierungs-tabs-flyout',
@@ -571,7 +476,7 @@ export function verankereIconFlyout(ausloeser, { eintraege, onAktivieren }) {
   });
 
   function beiKlick() {
-    kern.schliesse(); // bewusst KEIN preventDefault(), siehe Dateikopf-Kommentar
+    kern.schliesse(); // bewusst KEIN preventDefault(), siehe docs/MODULNOTIZEN.md
   }
   ausloeser.addEventListener('click', beiKlick);
 

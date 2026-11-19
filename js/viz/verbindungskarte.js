@@ -1,112 +1,14 @@
-// js/viz/verbindungskarte.js
-// Verbindungskarte der Urkunden: Linien zwischen Orten, die in derselben Urkunde
-// gemeinsam genannt werden (Ko-Nennung), Liniendicke nach Häufigkeit dieser
-// Orts-Kombination. Modul-Interface siehe Abschnitt 5. Voraussetzung: Leaflet 1.9
-// global geladen.
-//
-// Kartengrundlage über js/utils/statischeKarte.js.
-//
-// SEIT 2026-10-28 (Wunsch des Autors): Darstellung nach dem Prinzip der Karte hinter der Bilderwand - in Ruhe
-// nur die Orte, Verbindungen erst als Bögen des Ortes unter dem Mauszeiger bzw. des angeklickten Ortes,
-// gedämpfte Kartenkacheln. Der Regler „Verbindungsstärke“ und die stets sichtbaren geraden Linien (beide in
-// den Aufträgen unten beschrieben) sind entfallen; siehe Kommentar in zeichneVerbindungskarte().
-//
-// KORREKTUR (Auftrag "SVG-Overlay z-index setzen", siehe CHANGELOG): das
-// SVG-Overlay wird jetzt über js/utils/statischeKarte.js' neue
-// erzeugeUeberlagerungsSvg() gebaut statt selbst per `d3.select(mapDiv)
-// .append('svg')...` - Root-Cause-Fund aus dem vorigen Diagnoseauftrag: ohne
-// explizites z-index lag das Overlay dauerhaft UNTER Leaflets Kachel-Ebene
-// (`.leaflet-map-pane`, z-index:400), sobald deren Kacheln tatsächlich
-// geladen waren - die Linien verschwanden dadurch, sobald die Kacheln
-// nachluden. Siehe dortiger Kommentar für die volle Herleitung.
-//
-// ERGÄNZUNGSAUFTRAG "Karten navigierbar machen, 'Nicht verortet'-Knoten
-// entfernen":
-//
-// Punkt 1 (Zoom/Pan): js/utils/statischeKarte.js' baueStatischeKarte()
-// liefert jetzt Standard-interaktives Leaflet (siehe dortiger Kommentar).
-// Die Bildschirm-Positionen der Linien/Knoten (projiziere(), s.o.) gelten
-// deshalb nur bis zur nächsten Kartenbewegung - aktualisierePositionen()
-// (neu, unten) berechnet sie neu und wird über `karte.on('zoom move', ...)`
-// bei JEDER Kartenbewegung erneut aufgerufen (nicht nur 'zoomend'/'moveend' -
-// Auftrag wörtlich: "map.on('zoom'/'move', ...)-Events nutzen" - dadurch
-// folgen die Linien der Karte flüssig, nicht erst nach Abschluss der Geste).
-//
-// Punkt 2 ("Nicht verortet"-Knoten entfernt): der frühere Sammelknoten für
-// Urkunden mit nicht auflösbarem Ortsnamen ist ERSATZLOS entfernt (kein
-// Platzhalter, keine Erwähnung, Auftrag wörtlich) - dieselbe Konvention wie
-// karte.js' baueOrtsAggregation() ("nicht auflösbare Records werden direkt
-// verworfen, nicht mehr gesammelt", siehe dortiger Kommentar). ermittleKnoten()
-// nimmt jetzt NUR NOCH tatsächlich auflösbare Ortsnamen auf; eine Urkunde mit
-// weniger als zwei auflösbaren Orten bildet dadurch (wie zuvor bei weniger
-// als zwei GENANNTEN Orten) einfach keine Verbindung - ohne eigene Zählung
-// dafür (die frühere `ohneVerbindungMoeglich`-Zählung hing ausschließlich am
-// jetzt entfernten Knoten-Tooltip und ist mangels Anzeigeort mitentfernt,
-// dieselbe Datenehrlichkeit-vs-Anzeigeort-Abwägung wie bei karte.js oben).
-//
-// AUFTRAG "Stärke-Regler (Verbindungskarte) + Node-Klick-Sidebar (beide
-// Module)":
-//
-// Punkt 0 (Vorab-Diagnose, siehe Selbstauskunft im Chat): die Verbindungs-
-// stärke (Anzahl gemeinsamer Urkunden je Linie) wurde bereits VOR diesem
-// Auftrag über die LINIENSTÄRKE kodiert (`dickeSkala`/`stroke-width`, s.u.,
-// unverändert) - Opazität ist fix (0.5), Farbe ist fix (LINIEN_FARBE). Der
-// neue Stärke-Regler (Punkt 1) filtert zusätzlich zu dieser bestehenden
-// Kodierung, ersetzt sie nicht.
-//
-// Punkt 1 (Stärke-Regler, NUR Verbindungskarte): staerkeSchwelle (lokaler
-// Zustand je Redraw, wie der Zoom-/Pan-Stand bewusst nicht redraw-übergreifend
-// gemerkt) blendet Linien mit `p.anzahl < staerkeSchwelle` per
-// `style('display', 'none')` aus (nicht `remove()` - die D3-Datenbindung
-// bleibt intakt, kein erneutes `.join()` bei jeder Reglerbewegung nötig) -
-// aktualisiereSichtbarkeit() (neu, unten) macht das UND aktualisiert den
-// Status-Text ("X von Y Verbindungen").
-//
-// Punkt 2 (Node-Klick-Sidebar, beide Module): Klick auf einen Orts-Knoten
-// öffnet jetzt sidebar.js' etabliertes zeigeUrkundenSidebar() mit den
-// tatsächlich zu diesem Ort beitragenden Urkunden (baueOrtRecordsMap(), neu,
-// unten - ALLE Records, deren `orte`-Feld diesen Namen auflösbar enthält,
-// nicht nur die, die zusätzlich eine Verbindung bilden) - dasselbe Muster
-// wie karte.js' Marker-Klick (Kleinauftrag "Karte – Klick auf Ort-Marker
-// öffnet Sidebar"). Die Sidebar wird jetzt IMMER aufgebaut (geschlossen,
-// öffnet sich erst durch Klick) - da Leaflets eigene Steuerelemente
-// (Zoom-Buttons/Attribution) seit dem vorigen Ergänzungsauftrag AKTIV sind
-// (Punkt 1 dort), gilt dieselbe, dort bereits diagnostizierte
-// Überlappungs-Problematik (Werkzeugleiste/Attribution liegen bei
-// z-index:900 bzw. Leaflet-intern über der Sidebar, z-index:500) jetzt AUCH
-// hier - dieselbe `:has()`-Ausblendung wie in karte.js proaktiv übernommen
-// (s.u.), statt denselben, bereits einmal behobenen Fehler hier neu
-// einzuführen.
-//
-// AUFTRAG "Verbindungskarte – verwaiste Orte ausblenden, Mindestschwelle 2,
-// breitere Hover-Trefferfläche":
-//
-// Punkt 1 (verwaiste Orte ausblenden): aktualisiereSichtbarkeit() (s.u.)
-// ermittelt zusätzlich zur Linien-Sichtbarkeit die Menge der Ortsnamen, die
-// bei der aktuellen Schwelle noch an MINDESTENS EINER sichtbaren Linie
-// beteiligt sind, und blendet `ortsKnoten` entsprechend mit aus.
-//
-// Punkt 2 (Mindestschwelle 2): Regler-`min`/Startwert jetzt 2 statt 1 -
-// Einzelverbindungen (Stärke 1) werden dadurch NIE angezeigt, auch nicht im
-// Ausgangszustand (Nicht-Ziel: die Datengrundlage/Paar-Berechnung selbst
-// bleibt unverändert, nur die Anzeige-Schwelle).
-//
-// Punkt 3 (breitere Hover-Trefferfläche): eine zusätzliche, unsichtbare
-// `line.verbindung-trefferflaeche` (transparent, stroke-width:14, KEINE
-// Stärke-Kodierung) liegt direkt über jeder sichtbaren, dünnen Linie - sie
-// trägt jetzt Tooltip-Listener/tabindex/Klick-Filterung, die sichtbare Linie
-// selbst ist rein dekorativ (`pointer-events:none`, keine eigenen Listener
-// mehr). Beide Selektionen werden aus DENSELBEN `paare`-Daten gebaut und bei
-// jeder Positions-/Sichtbarkeits-Aktualisierung gemeinsam mitgeführt.
-//
-// KORREKTURAUFTRAG "Vier unabhängige Korrekturen", Punkt 2: Regler-
-// Beschriftung "Mindeststärke:" -> "Verbindungsstärke" (Auftrag wörtlich).
-// `reglerMin`/Startwert 2 bereits seit obigem Auftrag korrekt, unverändert.
-// Der Status-Text ("X von Y Verbindungen", s. Punkt 1 oben) entfällt
-// ersatzlos - Y (`paare.length`) zählte auch die seit `reglerMin=2` nie
-// mehr erreichbaren Einzelverbindungen (Stärke 1) mit und war dadurch
-// irreführend (Auftrag wörtlich). `reglerStatus`-Element samt CSS-Klasse
-// entfernt, `aktualisiereSichtbarkeit()` setzt ihn nicht mehr.
+// js/viz/verbindungskarte.js – Ansicht „Verbindungskarte“
+// Zweck: Orte, die in derselben Urkunde gemeinsam genannt werden (Ko-Nennung). In Ruhe nur die Orte (Größe nach Zahl
+//   der Urkunden); Hover, Fokus oder Klick zeigt die Verbindungen dieses einen Ortes als Bögen.
+// Eingabe: `data` = urkunden.csv (orte, signatur); Orte namensbasiert über utils/urkundenOrte.js (orte.csv mit lat/lon).
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md).
+// Abhängigkeiten: Leaflet 1.9 (global), D3 v7, utils/statischeKarte.js (Karte und SVG-Ebene), utils/urkundenOrte.js,
+//   utils/sidebar.js, utils/tooltip.js, utils/infoButton.js.
+// Bedienung: Orte per Tab erreichbar; Klick hält die Hervorhebung fest und öffnet die Urkunden des Ortes in der
+//   Seitenleiste, ein zweiter Klick oder Klick auf die Karte löst sie. Bei offener Seitenleiste sind Werkzeugleiste und
+//   Attribution ausgeblendet. Das SVG trägt eine Beschreibung aus dem Infotext.
+// Hintergrund (frühere Formen, Lehren zur Stapelung): docs/MODULNOTIZEN.md, Abschnitt verbindungskarte.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis } from '../utils/urkundenOrte.js';
@@ -125,7 +27,7 @@ const LINIEN_FARBE = '#2c4a6e'; // Tintenblau der Seite (seit 2026-10-28, vorher
 let instanz = null; // { container, records, options, karte } – eine aktive Verbindungskarte pro Modul-Ladung
 
 // Ermittelt für eine Urkunde die eindeutigen, TATSÄCHLICH AUFLÖSBAREN
-// Knoten-Namen (Punkt 2, siehe Dateikopf-Kommentar: nicht auflösbare Namen
+// Knoten-Namen (Punkt 2, siehe docs/MODULNOTIZEN.md: nicht auflösbare Namen
 // werden verworfen, nicht durch einen Sammelknoten ersetzt).
 function ermittleKnoten(record, ortsVerzeichnis) {
   const orteListe = Array.isArray(record.orte) ? record.orte : (record.orte ? [record.orte] : []);
@@ -158,7 +60,7 @@ function baueVerbindungen(records, ortsVerzeichnis) {
   return Array.from(paare.values());
 }
 
-// Punkt 2 (siehe Dateikopf-Kommentar): Name -> alle Urkunden-Records, deren
+// Punkt 2 (siehe docs/MODULNOTIZEN.md): Name -> alle Urkunden-Records, deren
 // `orte`-Feld diesen Ort auflösbar enthält (dieselbe ermittleKnoten()-
 // Auflösung wie baueVerbindungen() oben, hier aber unabhängig davon, ob die
 // Urkunde tatsächlich eine Verbindung bildet - "die Urkunden, die zu diesem
@@ -243,7 +145,7 @@ async function zeichneVerbindungskarte() {
   mapDiv.style.position = 'relative';
   container.appendChild(mapDiv);
 
-  // Punkt 2 (siehe Dateikopf-Kommentar): Sidebar IMMER aufgebaut (wie
+  // Punkt 2 (siehe docs/MODULNOTIZEN.md): Sidebar IMMER aufgebaut (wie
   // karte.js' Marker-Klick-Sidebar), geschlossen bis zum ersten Node-Klick.
   fuegeSidebarStyleEin(container);
   instanz.sidebar = baueSidebarGeruest(container);
@@ -423,7 +325,7 @@ export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
-  // Punkt 2 (siehe Dateikopf-Kommentar): stabile Klasse auf `container`
+  // Punkt 2 (siehe docs/MODULNOTIZEN.md): stabile Klasse auf `container`
   // selbst (übersteht container.innerHTML=''), Anker für die
   // `:has()`-Sichtbarkeitsregel in fuegeStyleEin() - dasselbe Muster wie
   // karte.js' `karte-viz-container`.

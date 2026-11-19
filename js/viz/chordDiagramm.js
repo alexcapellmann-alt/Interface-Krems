@@ -1,147 +1,15 @@
-// js/viz/chordDiagramm.js
-// AUFTRAG "Chord-Diagramm – soziale Gruppen (Dynastie/Adel/Klerus/Bürger),
-// Umzug nach Personen": Rekonstruktion der Alpha-Funktionalität - komplette
-// inhaltliche Neukonzeption (nicht nur Registry-Umzug wie beim Personen-/
-// Bürgerbuch-Vorläufer-Präzedenzfall): statt eines Chord-Diagramms der
-// Top-20-EINZELPERSONEN (bisherige Fassung, siehe Git-Historie) zeigt dieses
-// Modul jetzt vier SOZIALE GRUPPEN als Segmente - Dynastie/Adel/Klerus/
-// Bürgertum. Datenquelle bleibt urkunden.csv PLUS familien.csv (nur für den
-// Dynastie-Abgleich, siehe Punkt 1) - der Umzug nach `personen.ansichten`
-// betrifft daher nur die REGISTRY-Zuordnung, nicht die Datenquelle selbst
-// (siehe archivalienRegistry.js' Kommentar zu `datenDatei`/fehlendem
-// `datenSchluessel`: dieses Modul bekommt das komplette geladene
-// `{familien, personenliste, urkunden}`-Objekt und wählt sich `urkunden`/
-// `familien` selbst heraus, `personenliste` bleibt ungenutzt).
-//
-// KORREKTURAUFTRAG "Chord-Diagramm – Zählung pro Urkunde statt pro
-// Personenpaar": Sehnenstärke = Anzahl gemeinsamer Nennungen zwischen
-// PERSONEN(-PAAREN) zweier Gruppen (ursprüngliche Fassung, siehe Git-
-// Historie) ERSETZT durch: Sehnenstärke = Anzahl URKUNDEN, die mindestens
-// eine Person aus Gruppe i UND mindestens eine Person aus Gruppe j
-// enthalten (Diagonale: mindestens ZWEI Personen aus derselben Gruppe) -
-// JEDE Urkunde trägt dadurch HÖCHSTENS EINMAL zu jeder Gruppen-Gruppen-
-// Zelle bei, unabhängig davon, wie viele Personen/Personenpaare der
-// jeweiligen Gruppen tatsächlich darin vorkommen (Root Cause der vorherigen
-// Verzerrung: eine Urkunde mit k gemeinsam genannten Personen erzeugt
-// kombinatorisch C(k,2) Personenpaare, jedes davon zählte einzeln - eine
-// einzelne vielpersonige Urkunde trug dadurch überproportional viele
-// "Verbindungen" bei, siehe Diagnose im Chat). Umgesetzt in
-// baueGruppenMatrixProUrkunde() unten - ersetzt sowohl die alte
-// baueGruppenMatrix() (arbeitete auf urkundenPersonen.js'
-// PERSONENPAAR-Liste `paare`) als auch die zugehörige
-// ermittleGruppeProKnoten()-Hilfsfunktion (beide entfallen ersatzlos,
-// urkundenPersonen.js' baueKoNennungsNetzwerk() wird hierfür nicht mehr
-// gebraucht - stattdessen direkt `ermittlePersonenDerUrkunde()` pro Urkunde).
-// Nicht-Ziel (Auftrag, wörtlich): KEINE Änderung an der
-// Gruppenzuordnungs-Logik selbst (ermittleGruppe() unverändert).
-//
-// Plausibilitätsgrenze (Akzeptanzkriterium): JEDE Matrixzelle matrix[i][j]
-// ist durch die neue Zählweise BAUARTBEDINGT durch 1069 (Gesamtzahl der
-// Urkunden) begrenzt - jede Urkunde erhöht eine gegebene Zelle um höchstens
-// 1. Die ZEILENSUMME (d.value, bestimmt die Segment-Winkelgröße) ist
-// dagegen NICHT automatisch auf 1069 begrenzt: eine einzelne Urkunde mit
-// Personen aus 3 oder 4 verschiedenen Gruppen trägt zu MEHREREN Zellen
-// DERSELBEN Zeile gleichzeitig bei (z. B. Dynastie+Adel+Bürger in einer
-// Urkunde erhöht sowohl matrix[dynastie][adel] als auch
-// matrix[dynastie][buerger] um je 1 - macht 2 Beiträge zur Dynastie-Zeile
-// aus EINER Urkunde). Live geprüft (siehe Selbstauskunft im Chat): nur 13
-// von 1069 Urkunden betreffen 3 oder mehr Gruppen gleichzeitig (12 mit drei,
-// 1 mit allen vier) - dieser Effekt bleibt dadurch klein, alle vier
-// Zeilensummen liegen in der Praxis deutlich unter 1069 (live bestätigt).
-//
-// Punkt 1 (Gruppenzuordnungs-Regel, EXAKT in der vorgegebenen Priorität):
-// 1. Dynastie: `personen_id` kommt in familien.csv' `id`-Spalte vor (beide
-//    nutzen dieselbe Slug-Konvention, z. B. "albrecht_ii" - live gegen die
-//    CSV geprüft: 448 von 2277 Personennennungen in urkunden.csv treffen
-//    exakt eine von 80 familien.csv-IDs, deckt sich exakt mit dem im Auftrag
-//    vorab ermittelten Wert, siehe Selbstauskunft im Chat).
-// 2. Klerus: GANZES WORT (nicht Teilstring - Auftrag, wörtlich: "nicht als
-//    Teilstring von 'Priorin' fälschlich 'Prior' zusätzlich zählen") aus
-//    KLERUS_WOERTER, Position im Namen beliebig.
-// 3. Adel: GANZES WORT aus ADEL_TITEL_WOERTER ODER eine der recherchierten
-//    Adelsfamiliennamen-Varianten (ADEL_FAMILIEN_VARIANTEN) als Teilstring
-//    des Namens (bewusst KEIN Wortgrenzen-Zwang hier, anders als bei den
-//    Titelwörtern: das sind seltene, unverwechselbare Eigennamen mit
-//    mehreren Schreibvarianten - eine Wortgrenzen-Prüfung würde bei
-//    abweichenden Flexionsformen/Zusammensetzungen eher Treffer verpassen
-//    als fälschlich welche erzeugen, anders als bei den generischen
-//    Klerus-/Adelstitel-WÖRTERN, die echte Teilstrings anderer Wörter sein
-//    können).
-// 4. Bürger: alles Übrige (Standardfall, inkl. aller "von X"-Namen ohne
-//    Titel/Familienzuordnung).
-// WICHTIG (Punkt 1, wörtlich): eine eigene, NICHT-quellenbasierte Heuristik,
-// keine belegte historische Klassifikation - im Info-Text unmissverständlich
-// benannt (Infotext seit AUFTRAG "Archivspezifische Texte..." aus
-// data/infotexte.csv, modul_id "chordDiagramm").
-//
-// ermittleGruppenGroessen() (unten) klassifiziert JEDE EINZELNE
-// Personennennung roh aus den Records (Auftrag Punkt 1, wörtlich: "Für JEDE
-// Personennennung") - liefert die für das Akzeptanzkriterium/die
-// Selbstauskunft maßgebliche Gruppengröße (448/64/120/1645 Nennungen). Diese
-// Funktion bleibt vom KORREKTURAUFTRAG oben UNBERÜHRT (betrifft nur die
-// Matrix-Zählweise, nicht die Gruppenzuordnung/-größe selbst) - wird aber
-// weiterhin nirgends aufgerufen (bereits in der vorherigen Diagnose im Chat
-// als toter Code geflaggt; hier bewusst NICHT verdrahtet, da das außerhalb
-// des Korrekturauftrags-Scopes läge, siehe Selbstauskunft).
-//
-// Punkt 3 (Interaktion): Hover/Klick-Hervorhebung nach demselben etablierten
-// Muster wie in sankey.js/bumpChart.js/streamgraph.js (hoverGruppe temporär,
-// frozenGruppe per Klick eingefroren, aktualisiereHighlight() zentral, Klick
-// auf freie Fläche/Escape setzt zurück) - hier auf die vier Gruppen-Segmente
-// angewendet: Hover/Freeze eines Segments hebt alle davon ausgehenden Sehnen
-// hervor (inkl. der Selbstschleife bei Hover des eigenen Segments), übrige
-// Sehnen blenden ab. Klick auf eine SEHNE (unabhängig vom Segment-
-// Hervorhebungszustand) öffnet die bereits bestehende, Urkunden-spezifische
-// Sidebar (js/utils/sidebar.js' zeigeUrkundenSidebar()/baueUrkundenDetailInhalt()
-// - hier bewusst VOLL wiederverwendet, nicht wie in vermoegensschichtung.js
-// nur das generische Gerüst: die zugrundeliegenden Datensätze SIND echte
-// Urkunden-Records mit Signatur/Regest/Personen-Feld, die Urkunden-
-// spezifischen Bausteine passen deshalb 1:1, ohne eigene Listendarstellung
-// nachzubauen).
-//
-// KLEINAUFTRAG "Chord-Diagramm – Fokus-Rahmen entfernen, horizontale
-// Beschriftung":
-//
-// Punkt 1 (Fokus-Rahmen bei Klick entfernen): dieselbe Lösung wie bereits
-// in bipartiteFlowMap.js umgesetzt (siehe dortiger Dateikopf-Kommentar) -
-// `:focus:not(:focus-visible) { outline: none; }` auf `.chord-gruppe`/
-// `.chord-sehne` (in fuegeStyleEin() der Werkzeugleiste, unten) ergänzt.
-// Die bereits bestehende `:focus-visible`-Regel (eigener 3px-Rahmen,
-// unverändert) bleibt für Tastatur-Fokus (Tab-Navigation) erhalten - nur
-// der zusätzliche Browser-Standard-Rahmen bei reinem Mausklick verschwindet.
-//
-// Punkt 2 (horizontale Beschriftung statt radial gedrehter Labels): die
-// Text-Transformation `rotate(...) translate(...) rotate(180)` (drehte das
-// Label MIT der Kreiskrümmung, dadurch bei den meisten Winkeln schräg/
-// senkrecht lesbar) entfällt ersatzlos - das `<text>`-Element bekommt jetzt
-// nur noch eine reine Positions-Translation (KEINE Rotation) auf einen
-// Punkt bei `radiusAussen + LABEL_ABSTAND` entlang desselben Mittelwinkels
-// wie zuvor, `text-anchor` weiterhin nach Kreishälfte (links/rechts)
-// gewählt, damit der Text vom Segment WEG statt IN es hinein wächst -
-// exakt wie eine Legende neben dem Diagramm, nicht mehr an die
-// Kreisform gebunden. Zusätzlich eine kurze, segmentfarbene
-// Verbindungslinie vom äußeren Bogenrand zum Label-Ansatzpunkt (Auftrag:
-// "mit kurzer Verbindungslinie falls nötig") - bei vier unterschiedlich
-// großen Segmenten (Bürgertum dominiert die Fläche, die anderen drei sind
-// vergleichsweise schmal) macht das JEDERZEIT eindeutig sichtbar, welches
-// Label zu welchem Segment gehört, auch wenn der Label-Ansatzpunkt durch
-// den größeren Label-Abstand nicht mehr unmittelbar am Bogenrand klebt.
-// Beschriftungstext GEKÜRZT auf den reinen Gruppennamen (die zuvor
-// ergänzte "(X Urkunden-Verbindungen)"-Zahl, siehe Korrekturauftrag "damit
-// klar ist, was gezählt wird" oben, entfällt NUR aus dem On-Chart-Label -
-// die Information bleibt vollständig über den bestehenden Hover-Tooltip
-// erhalten, der ohnehin bereits mehr Detail zeigt, gesamt UND intern
-// aufgeschlüsselt): ein horizontales Label mit der vollen, langen
-// Zahlformulierung hätte bei den Bild-Rändern deutlich mehr Platz gebraucht
-// als eine radiale Schräglage - Kürzung auf den Gruppennamen hält den
-// Platzbedarf überschaubar (Auftrag deutet mit "ähnlich einer Legende"
-// ohnehin auf kurze Legenden-Beschriftungen hin, nicht auf lange
-// Datenlabels). `radiusAussen`-Randmarge (`breite`/`hoehe` abzüglich
-// Durchmesser) von 90 auf 170px erhöht, damit auch das längste Label
-// ("Dynastie (Habsburger)") bei 13px/fett vollständig innerhalb des
-// SVG-Viewports Platz findet (das äußere `<svg>` selbst clippt am eigenen
-// Viewport, `overflow: visible` auf dem umschließenden Div-Container reicht
-// dafür NICHT aus).
+// js/viz/chordDiagramm.js – Ansicht „Soziale Gruppen“ (Chord-Diagramm)
+// Zweck: vier soziale Gruppen (Dynastie, Adel, Klerus, Bürgertum) als Segmente; eine Sehne zählt die Urkunden, die
+//   Personen beider Gruppen nennen (jede Urkunde höchstens einmal je Zelle).
+// Eingabe: `data.urkunden` (urkunden.csv: personen, personen_id), `data.personenliste` (personenliste.csv:
+//   soziale_gruppe) und `data.familien` (familien.csv: id, Rückfall für Dynastie). Die Einteilung ist eine eigene
+//   Faustregel, keine belegte historische Klassifikation (so im Infotext).
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   exportiert GRUPPEN, ermittleGruppe() und uebernehmePersonenGruppen() (genutzt von bipartiteFlowMap.js).
+// Abhängigkeiten: D3 v7, utils/urkundenPersonen.js, utils/sidebar.js, utils/tooltip.js, utils/infoButton.js.
+// Bedienung: Hover und Klick auf ein Segment heben seine Sehnen hervor (Escape oder Klick ins Leere setzt zurück);
+//   Klick auf eine Sehne öffnet die Urkunden. Tastaturfokus sichtbar, nach Mausklick kein Fokusrahmen.
+// Hintergrund (Zählung, Zuordnungsregel, Beschriftung): docs/MODULNOTIZEN.md, Abschnitt chordDiagramm.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { erzeugeInfoButton } from '../utils/infoButton.js';
@@ -193,7 +61,7 @@ export const GRUPPEN = [
 
 let instanz = null; // { container, wurzel, chartContainer, familienRecords, urkundenRecords, options, infoButton, sidebar, hoverGruppe, frozenGruppe, gruppenAuswahl, sehnenAuswahl, ausgewaehlteSehne } – eine aktive Ansicht pro Modul-Ladung
 
-// Punkt 1, EXAKT in der vorgegebenen Priorität (siehe Dateikopf-Kommentar).
+// Punkt 1, EXAKT in der vorgegebenen Priorität (siehe docs/MODULNOTIZEN.md).
 // Exportiert (siehe Auftrag "Bipartite Flow Map – ..." oben) - Wiederver-
 // wendung statt Neuimplementierung in bipartiteFlowMap.js.
 // Seit 2026-10-27: die Gruppe steht in personenliste.csv; ohne Eintrag dort zählt eine Person der
@@ -206,7 +74,7 @@ export function ermittleGruppe(name, personenId, familienIds) {
   return 'buerger';
 }
 
-// Ebene (a) - siehe Dateikopf-Kommentar: klassifiziert JEDE Personennennung
+// Ebene (a) - siehe docs/MODULNOTIZEN.md: klassifiziert JEDE Personennennung
 // einzeln, direkt aus den rohen `personen`/`personen_id`-Listen jeder
 // Urkunde (index-parallel, siehe urkundenPersonen.js). Liefert die
 // maßgebliche Gruppengröße für Akzeptanzkriterium/Selbstauskunft.
@@ -224,7 +92,7 @@ function ermittleGruppenGroessen(urkundenRecords, familienIds) {
 }
 
 // KORREKTURAUFTRAG "Zählung pro Urkunde statt pro Personenpaar" (siehe
-// Dateikopf-Kommentar): ermittelt je Urkunde, wie viele EINDEUTIGE Personen
+// docs/MODULNOTIZEN.md): ermittelt je Urkunde, wie viele EINDEUTIGE Personen
 // jeder Gruppe darin vorkommen (nicht NUR die Menge der vorkommenden
 // Gruppen - die Diagonale braucht zusätzlich die Information "kommen
 // MINDESTENS ZWEI Personen derselben Gruppe vor", Auftrag Punkt 1-2,
@@ -243,7 +111,7 @@ function ermittleGruppenAnzahlProUrkunde(record, familienIds) {
 }
 
 // Baut die 4x4-Matrix NEU nach der korrigierten Zählweise (siehe
-// Dateikopf-Kommentar "KORREKTURAUFTRAG"): jede Urkunde erhöht JEDE
+// docs/MODULNOTIZEN.md "KORREKTURAUFTRAG"): jede Urkunde erhöht JEDE
 // Gruppen-Gruppen-Zelle, die sie berührt, um GENAU 1 - unabhängig von der
 // Personenzahl dahinter. Off-Diagonale: Zelle [i][j] +1, wenn die Urkunde
 // mindestens eine Person aus Gruppe i UND mindestens eine aus Gruppe j
@@ -306,7 +174,7 @@ function aktualisiereHighlight() {
 }
 
 // "X Urkunde(n)" statt vormals "X gemeinsame Nennung(en)" (Korrekturauftrag,
-// siehe Dateikopf-Kommentar) - `d.source.value` zählt jetzt Urkunden, keine
+// siehe docs/MODULNOTIZEN.md) - `d.source.value` zählt jetzt Urkunden, keine
 // Personenpaare mehr, der Text muss das widerspiegeln.
 function baueSehnenTooltip(d) {
   const gi = GRUPPEN[d.source.index];
@@ -339,11 +207,11 @@ function zeichneChordDiagramm() {
   const familienIds = new Set(familienRecords.map((r) => r.id));
   const { matrix, recordsProZelle, unsicherProZelle } = baueGruppenMatrixProUrkunde(urkundenRecords, familienIds);
 
-  // Akzeptanzkriterium (KORREKTURAUFTRAG, siehe Dateikopf-Kommentar): aktive
+  // Akzeptanzkriterium (KORREKTURAUFTRAG, siehe docs/MODULNOTIZEN.md): aktive
   // Plausibilitätsprüfung statt bloßer Behauptung - jede EINZELNE Zelle ist
   // bauartbedingt durch die Gesamtzahl der Urkunden begrenzt (eine Urkunde
   // erhöht eine Zelle höchstens um 1); die ZEILENSUMME ist das nicht
-  // zwangsläufig (Mehrgruppen-Urkunden, siehe Dateikopf-Kommentar). Reine
+  // zwangsläufig (Mehrgruppen-Urkunden, siehe docs/MODULNOTIZEN.md). Reine
   // console.warn()-Diagnose, kein Rendering-Abbruch - macht eine künftige
   // Regression sofort sichtbar, ohne die Darstellung zu gefährden.
   const gesamtUrkunden = urkundenRecords.length;
@@ -449,12 +317,12 @@ function zeichneChordDiagramm() {
     .attr('d', bogen)
     .attr('fill', (d) => GRUPPEN[d.index].farbe);
 
-  // Punkt 2 (siehe Dateikopf-Kommentar): horizontales Label ("ähnlich einer
+  // Punkt 2 (siehe docs/MODULNOTIZEN.md): horizontales Label ("ähnlich einer
   // Legende") statt radial gedrehtem Text - Positions-Punkt weiterhin am
   // Segment-Mittelwinkel, aber KEINE Rotation mehr auf dem `<text>` selbst.
   // Die vorherige Zahlen-Ergänzung "(X Urkunden-Verbindungen)" bleibt aus
-  // Platzgründen auf den Hover-Tooltip beschränkt (siehe Dateikopf-
-  // Kommentar) - der On-Chart-Text zeigt nur noch den Gruppennamen.
+  // Platzgründen auf den Hover-Tooltip beschränkt (siehe docs/MODULNOTIZEN.md
+  //) - der On-Chart-Text zeigt nur noch den Gruppennamen.
   const LABEL_ABSTAND = 26;
   const labelPunkt = (d) => {
     const winkel = (d.startAngle + d.endAngle) / 2;
@@ -549,7 +417,7 @@ export function render(container, data, options = {}) {
   chartContainer.className = 'chord-chart-bereich';
   wurzel.appendChild(chartContainer);
 
-  // Punkt 1 (Dateikopf-Kommentar): dieses Modul bekommt bewusst OHNE
+  // Punkt 1 (docs/MODULNOTIZEN.md): dieses Modul bekommt bewusst OHNE
   // `datenSchluessel` das gesamte geladene `{familien, personenliste,
   // urkunden}`-Objekt (siehe archivalienRegistry.js) und wählt sich hier
   // selbst die zwei benötigten Teile heraus. `personenliste` bleibt

@@ -1,139 +1,16 @@
-// js/core/app.js
-// Teil C: verdrahtet die drei Bauteile aus Abschnitt 5 (kachelauswahl.js,
-// ansichtWechseln.js, unsicherheitsButton.js) mit router.js/state.js und den
-// echten Visualisierungsmodulen zu den fünf Haupttabs aus Abschnitt 4.
-//
-// AUFTRAG "Navigation – Permanente Bereichs-Leiste & Visualisierungs-Galerie
-// (Pilot: Urkunden)": kachelauswahl.js (einmalige "Kachel wählen, dann
-// verschwindet sie"-Landingpage) wird hier nicht mehr aufgerufen - ersetzt
-// durch bereichsLeiste.js (dieselbe "Bereich wählen"-Aufgabe, aber dauerhaft
-// sichtbar, siehe dortiger Dateikopf-Kommentar) und, für Bereiche mit
-// `hatGalerie:true` (aktuell nur `urkunden`, Pilot), visualisierungsGalerie.js
-// statt eines automatischen Sprungs zur Primäransicht + ansichtWechseln.js'
-// Dropdown (Auftrag, wörtlich: "Die bisherige 'Ansicht'-Dropdown-Leiste
-// entfällt vollständig, die Galerie übernimmt ihre Funktion" - gilt bewusst
-// nur für `hatGalerie`-Bereiche, siehe renderVisualisierungenTab()).
-// kachelauswahl.js selbst war dadurch von nirgends mehr erreichbar (genuin
-// toter Code) und wurde gelöscht.
-//
-// FOLGEAUFTRAG "Visualisierungs-Tab-Leiste statt 'Zurück zur Übersicht'-Link
-// (Pilot: Urkunden)" (CHANGELOG 41): eine aus der Galerie geöffnete
-// Visualisierung öffnete zunächst einen Tab in einer neuen Zeile unterhalb
-// der Bereichs-Leiste, mehrere Tabs blieben dabei gleichzeitig offen (wie
-// Browser-Tabs) - siehe CHANGELOG für die damalige Begründung.
-//
-// FOLGEAUFTRAG "Permanente Tab-Leiste statt dynamischer Multi-Tabs (Pilot:
-// Urkunden)" (CHANGELOG 42): ersetzte diese Multi-Tab-Funktion durch eine
-// PERMANENTE Tab-Leiste, die immer ALLE Visualisierungen des Bereichs zeigt -
-// klassisches Single-Select-Tab-Menü, genau ein Tab aktiv, kein Offenhalten/
-// Schließen mehr. Dadurch entfiel die in (41) eingeführte Ausnahme vom
-// LEICHTGEWICHTIGER-ANSICHTSWECHSEL-vs-VOLLSTÄNDIGER-TAB-NEUAUFBAU-Prinzip
-// weiter unten wieder GRÖSSTENTEILS: ein Tab-Wechsel funktioniert seitdem
-// fast wie ansichtWechseln.js' wechsleZu() (destroy() des alten, render()
-// des neuen Moduls).
-//
-// FOLGEAUFTRAG "Visualisierungs-Tab-Leiste als Hover/Klick-Flyout + Galerie-
-// Muster für Bestand" (AKTUELLER STAND, CHANGELOG 44): zwei Änderungen.
-// (1) Die permanente Tab-Leiste aus (42) nahm dauerhaft eine eigene Grid-
-// Zeile ein (Visualisierung dadurch kleiner als nötig) - jetzt ein Hover/
-// Klick-FLYOUT (visualisierungsTabs.js' verankereFlyout()), `position:fixed`,
-// überlappt die Visualisierung statt ihr Platz wegzunehmen (siehe layout.css:
-// die dafür eingeführte Grid-Zeile ist wieder entfernt). Verankert am
-// jeweiligen "Auslöser" (Urkunden: der aktive Bereichs-Leiste-Eintrag;
-// Bestand: der "Bestand"-Hauptnav-Link).
-// (2) Bestand bekommt DASSELBE Galerie+Flyout-Muster wie Urkunden, obwohl es
-// ein TOP-LEVEL-Tab ist (kein Archivalientyp, keine Bereichs-Leiste
-// darunter) - deshalb sind ab hier alle vormals urkunden/hatGalerie-
-// spezifischen Funktionen (zeigeGalerie(), stelleVizFlyoutSicher(),
-// wechsleZuAnsicht(), aktualisiereGalerieFlyoutAnsicht() - ehemals
-// aktualisiereHatGalerieAnsicht()) VERALLGEMEINERT: sie arbeiten auf einem
-// generischen `kontext.bereich` ({label, ansichten, datenDatei} - bei
-// Urkunden der echte `archivalientyp`, bei Bestand ein dafür gebautes
-// gleichförmiges Objekt) statt fest auf `kontext.archivalientyp`, plus
-// `kontext.routeSegmente(id)`/`kontext.ermittleAnsichtId(route)` (wie sich
-// die Route für diesen Bereich zusammensetzt - bei Urkunden ein 2./3.
-// Segment unter 'visualisierungen', bei Bestand das 1. Segment direkt unter
-// 'bestand') und `kontext.ausloeser` (das Flyout-Trigger-Element). Sowohl
-// renderVisualisierungenTab()s hatGalerie-Zweig als auch das neue
-// renderBestandTab() bauen nur noch ihren jeweiligen kontext und rufen
-// danach dieselben gemeinsamen Funktionen auf - keine zweite, fast
-// identische Kopie der ganzen Galerie/Flyout-Logik für Bestand.
-//
-// FOLGEAUFTRAG "Hover-Flyouts in der Hauptnavigation" (AKTUELLER STAND,
-// CHANGELOG 46): drei Erweiterungen des Flyout-Musters, alle über
-// verankereHauptnavFlyouts() UNTEN einmalig beim App-Start verankert (nicht
-// an den render*Tab()-Lebenszyklus gebunden - anders als die bisherigen
-// Flyouts sollen diese von JEDER Stelle der App aus per Hover erreichbar
-// sein, auch bevor "Visualisierungen"/"Bestand" je angeklickt wurden):
-// (1) "Visualisierungen" bekommt bei Hover einen Flyout mit einer
-//     Vorschau-Kopie der Bereichs-Leiste (bereichsLeiste.js'
-//     erzeugeBereichsLeistenVorschau()) - Klick auf "Visualisierungen"
-//     selbst bleibt unverändert eine normale Navigation (kein Toggle, siehe
-//     visualisierungsTabs.js' verankereIconFlyout()-artige Klick-
-//     Behandlung, hier direkt in verankereHauptnavFlyouts() nachgebaut).
-// (2) "Bestand" bekommt bei Hover einen Flyout mit seinen 5 Visualisierungen
-//     als Icon+Name-Kacheln (visualisierungsTabs.js' verankereIconFlyout()),
-//     Klick darin springt DIREKT zur Visualisierung (nicht zur Galerie).
-// (3) JEDER Bereichs-Leiste-Eintrag (nicht mehr nur der aktive) bekommt
-//     einen eigenen Visualisierungs-Tab-Flyout (bereichsLeiste.js'
-//     baueBereichsPillen()-Erweiterung, siehe dortiger Kommentar) - dieselbe
-//     erzeugeVizVorschauFlyout()-Hilfsfunktion unten wird sowohl von der
-//     PERMANENTEN Bereichs-Leiste (erzeugeBereichsLeisteFuerTab()) als auch
-//     von der VERSCHACHTELTEN Vorschau innerhalb des "Visualisierungen"-
-//     Hover-Flyouts aus (1) wiederverwendet - dadurch funktioniert Punkt 3
-//     ("von jeder beliebigen Stelle in der App aus") automatisch auch dort:
-//     Hover "Visualisierungen" (von z.B. Bestand aus) -> Vorschau-Bereichs-
-//     Leiste erscheint -> Hover eines ihrer Einträge -> dessen Visualisierungs-
-//     Tab-Flyout erscheint verschachtelt darunter.
-//
-// Fünf Tabs: Bestand (Galerie -> Flyout-Tab-Leiste, siehe oben - kein
-// automatischer Sprung zur Primäransicht mehr), Visualisierungen
-// (Bereichs-Leiste -> Archivalientyp -> bei `hatGalerie` dasselbe
-// Galerie/Flyout-Muster, sonst weiterhin Primäransicht + Ansicht wechseln),
-// Führungen/Literatur/Über (Abschnitt 4.3-4.5) sind vorerst klar gekennzeichnete
-// Platzhalterseiten, siehe renderPlatzhalterTab() - explizit so vereinbart
-// (Führungen: keine Datentabelle vorhanden; Literatur: Datentabelle vorhanden,
-// aber noch kein Anzeige-Modul, Abschnitt 2 "Content-driven, mit Einschränkung";
-// Über: Inhalt noch nicht verfasst).
-//
-// LAZY LOADING (Abschnitt 2): jedes Visualisierungsmodul wird erst per
-// dynamischem import() geladen, wenn seine Ansicht erstmals aufgerufen wird -
-// nie beim Start. Die Modul-Pfade aus archivalienRegistry.js sind relativ zu
-// js/config/ notiert; da js/core/ und js/config/ Geschwisterordner auf
-// derselben Ebene unter js/ sind, lösen sich dieselben "../viz/xxx.js"-Pfade
-// von hier aus identisch auf - keine gesonderte Pfadauflösung nötig.
-//
-// WETTLAUF-SCHUTZ (wichtig für den Speicherleck-Test bei schnellem Wechsel,
-// z.B. mehrfach zwischen Personennetzwerk und anderen Ansichten): ein
-// generation-Zähler wird bei jedem vollständigen Tab-Neuaufbau erhöht. Jede
-// asynchrone Ladefunktion merkt sich ihre eigene Generation beim Start und
-// bricht nach jedem await ab, falls zwischenzeitlich ein neuerer Tab-Aufbau
-// begonnen hat - so wird nie in einen bereits abgebauten Container gerendert
-// und nie eine Visualisierung (inkl. laufender Force-Simulation) an einer
-// bereits verworfenen Stelle neu erzeugt, ohne dass ihr destroy() je aufgerufen
-// werden könnte.
-//
-// LEICHTGEWICHTIGER ANSICHTSWECHSEL vs. VOLLSTÄNDIGER TAB-NEUAUFBAU: wechselt
-// nur die Ansicht innerhalb desselben Tabs/Archivalientyps (Dropdown, Browser-
-// Zurück/Vor auf eine Nachbar-Route), wird NICHT der ganze Tab abgebaut,
-// sondern nur ansichtWechseln.wechsleZu() erneut aufgerufen (dieselbe
-// Bauteil-Instanz bleibt bestehen). Das ist nicht nur eine Optimierung, sondern
-// notwendig: ohne diese Unterscheidung würde navigiereZu() innerhalb von
-// ladeModulUndRender() einen hashchange auslösen, der wiederum denselben
-// Ansichtswechsel ein zweites Mal anstößt (jeder Wechsel würde doppelt rendern).
-//
-// RESIZE-VERDRAHTUNG (Abschnitt 5: resize() "passt die Darstellung an eine
-// veränderte Bildschirmgröße an"): ein einziger, debounced window-resize-
-// Listener ruft resize() ohne Argumente auf dem gerade aktiven Modul auf - jedes
-// Modul liest dabei intern frisch container.clientWidth (bzw. bei karte.js/
-// verbindungskarte.js/bipartiteFlowMap.js speziell Leaflets invalidateSize()),
-// app.js muss keine expliziten Maße kennen. Debounce (200ms) verhindert, dass
-// beim Ziehen am Fensterrand bei jedem einzelnen resize-Ereignis neu gerendert
-// wird. Derselbe generation-Zähler wie beim Lade-Wettlauf schützt davor, nach
-// einem Tab-Wechsel während der Debounce-Pause noch in ein bereits verlassenes
-// Modul hinein zu resizen: die Generation wird beim jeweils LETZTEN rohen
-// resize-Ereignis vor der Pause festgehalten und beim tatsächlichen Aufruf
-// (nach der Pause) gegen den dann aktuellen Stand geprüft.
+// js/core/app.js – Einstieg der Anwendung
+// Zweck: verbindet Router (router.js), Zustand (state.js) und Registry (config/archivalienRegistry.js) mit den Tabs
+//   Startseite, Bestand, Visualisierungen, Führungen, Literatur, Über; lädt Ansichten nach, steuert Galerie, Flyouts,
+//   Unsicherheitsknopf und den Modus „Licht aus“.
+// Eingabe: Archiv-Konfiguration (core/archivKonfiguration.js), Ansichten-Liste und die Bereichsdaten laut Registry
+//   (ladeArchivalienDaten über core/dataLoader.js und core/datenCache.js).
+// Schnittstelle: kein Export; startet beim Laden (handleRouteChange bei jedem hashchange).
+// Abhängigkeiten: core/router.js, core/state.js, core/bereichsLeiste.js, core/visualisierungsTabs.js,
+//   core/visualisierungsGalerie.js, core/lichtAusModus.js, core/typenLeiste.js, utils/lichtAus.js u. a. (Importe unten).
+// Grundsätze: Module werden erst beim ersten Aufruf per import() geladen; ein Generationszähler verhindert, dass ein
+//   überholter Ladevorgang in einen abgebauten Container zeichnet; Ansichtswechsel im selben Tab bauen den Tab nicht
+//   neu auf; ein entprellter resize-Listener ruft resize() des aktiven Moduls.
+// Hintergrund: docs/MODULNOTIZEN.md, Abschnitt app.js.
 
 import { starteRouter, navigiereZu, aktuelleRoute } from './router.js';
 import { getZustand, setUnsicherheitModus, setAktiverTab, setAktiveAnsicht, istLichtAus, setAktiveAnsichtLichtAus, getLichtAusAuswahl, setLichtAusAuswahl } from './state.js';
@@ -396,7 +273,7 @@ function ermittleVisualisierungenAnsichtId(archivalientyp) {
 }
 
 // FOLGEAUFTRAG "...Galerie-Muster für Bestand", Punkt 2: Bestand bekommt
-// dasselbe Galerie+Flyout-Muster wie Urkunden (siehe Dateikopf-Kommentar) -
+// dasselbe Galerie+Flyout-Muster wie Urkunden (siehe docs/MODULNOTIZEN.md) -
 // baut nur noch den generischen kontext und übergibt ihn an dieselben
 // gemeinsamen Funktionen weiter unten (erzeugeGalerieFlyoutKontext() etc.),
 // die vormals nur für den `hatGalerie`-Zweig von renderVisualisierungenTab()
@@ -423,7 +300,7 @@ function renderBestandTab() {
   return aktualisiereGalerieFlyoutAnsicht(kontext);
 }
 
-// Punkt 1 (siehe Dateikopf-Kommentar): die Bereichs-Leiste wird IMMER
+// Punkt 1 (siehe docs/MODULNOTIZEN.md): die Bereichs-Leiste wird IMMER
 // erzeugt, sobald renderVisualisierungenTab() läuft - unabhängig davon, ob
 // bereits ein Archivalientyp gewählt ist (Akzeptanzkriterium: "bleibt beim
 // Navigieren... durchgehend sichtbar"). Eigene kleine Hilfsfunktion, weil sie
@@ -447,7 +324,7 @@ function baueVizRoute(archivalientyp, id) {
 
 // Verankert einen reinen Hover-Flyout (visualisierungsTabs.js'
 // verankereVorschauFlyout(), kein Klick-Toggle am Auslöser - siehe dortiger
-// Dateikopf-Kommentar) an `link` für `archivalientyp`. Punkt 3: wird für
+// docs/MODULNOTIZEN.md) an `link` für `archivalientyp`. Punkt 3: wird für
 // JEDEN NICHT-aktiven Bereichs-Leiste-Eintrag aufgerufen (siehe
 // bereichsLeiste.js' baueBereichsPillen()) - sowohl von der PERMANENTEN
 // Bereichs-Leiste (erzeugeBereichsLeisteFuerTab() unten) als auch von deren
@@ -485,7 +362,7 @@ function erzeugeBereichsLeisteFuerTab(aktiverTyp) {
       if (typ.hatGalerie && typ.typ === aktiverTyp) return;
       navigiereZu(typ.hatGalerie ? ['visualisierungen', typ.typ] : ['visualisierungen', typ.typ, typ.primaeransicht]);
     },
-    // Punkt 3 (siehe Dateikopf-Kommentar): jeder NICHT-aktive Eintrag bekommt
+    // Punkt 3 (siehe docs/MODULNOTIZEN.md): jeder NICHT-aktive Eintrag bekommt
     // einen eigenen Visualisierungs-Tab-Flyout - bereichsLeiste.js selbst
     // entscheidet, den aktiven Link dabei auszusparen (siehe dortiger
     // Kommentar), hier wird nur noch übergeben, WIE so ein Flyout gebaut wird.
@@ -534,7 +411,7 @@ async function renderVisualisierungenTab() {
     return;
   }
 
-  // FOLGEAUFTRAG "...Galerie-Muster für Bestand" (siehe Dateikopf-Kommentar):
+  // FOLGEAUFTRAG "...Galerie-Muster für Bestand" (siehe docs/MODULNOTIZEN.md):
   // `hatGalerie`-Archivalientypen (aktuell nur `urkunden`) bekommen ab hier
   // einen eigenen, dauerhaften Kontext über dieselbe erzeugeGalerieFlyoutKontext()/
   // aktualisiereGalerieFlyoutAnsicht()-Maschinerie wie Bestand weiter unten.
@@ -626,7 +503,7 @@ async function renderVisualisierungenTab() {
 
 // ---------------------------------------------------------------------------
 // FOLGEAUFTRAG "Visualisierungs-Tab-Leiste als Hover/Klick-Flyout + Galerie-
-// Muster für Bestand" (siehe Dateikopf-Kommentar für die Verallgemeinerung):
+// Muster für Bestand" (siehe docs/MODULNOTIZEN.md für die Verallgemeinerung):
 // alles unterhalb bedient sowohl Urkunden (renderVisualisierungenTab()s
 // hatGalerie-Zweig) als auch Bestand (renderBestandTab()) über denselben
 // generischen `kontext` (kontext.bereich/routeSegmente/ermittleAnsichtId/
@@ -1141,7 +1018,7 @@ async function aktualisiereGalerieFlyoutAnsicht(kontext) {
   await wechsleZuAnsicht(kontext, eintrag);
   // AUFTRAG "Fuehrungen, Teil 2b", Punkt 4: einziger Aufrufort fuer JEDE
   // Route zu einer Galerie/Flyout-Ansicht (Bestand UND alle hatGalerie-
-  // Archivalientypen, siehe Dateikopf-Kommentar) - deckt damit sowohl den
+  // Archivalientypen, siehe docs/MODULNOTIZEN.md) - deckt damit sowohl den
   // Erstaufbau als auch einen Wechsel INNERHALB derselben Ansicht ab (bei
   // dem wechsleZuAnsicht() oben wegen `kontext.ansichtId === eintrag.id`
   // frueh zurueckkehrt, kontext.aktuellesVizModul aber unveraendert auf dem
@@ -1215,7 +1092,7 @@ async function aktualisiereFuehrungenAnsicht(kontext) {
 
   // Lazy Loading (Punkt 1, Auftrag wörtlich): dynamischer import() statt
   // statischem Top-of-File-Import - dieselbe Konvention wie bei jedem
-  // Visualisierungsmodul (siehe Dateikopf-Kommentar "LAZY LOADING"), hier nur
+  // Visualisierungsmodul (siehe docs/MODULNOTIZEN.md "LAZY LOADING"), hier nur
   // manuell nachgebaut, weil Führungen (anders als die Visualisierungen)
   // nicht über archivalienRegistry.js/ladeModulUndRender() läuft.
   const [{ ladeFuehrungenDaten, BELEG_QUELLEN }, galerieModul, stationModul, abschlussModul, pm] = await Promise.all([
@@ -1514,8 +1391,8 @@ function handleRouteChange() {
   return aufbau; // AUFTRAG B2: fuer pruefeDatenImHintergrund() ("nach dem ersten Bildaufbau")
 }
 
-// FOLGEAUFTRAG "Hover-Flyouts in der Hauptnavigation" (siehe Dateikopf-
-// Kommentar): einmalig, unabhängig vom aktuellen Tab/Kontext - die beiden
+// FOLGEAUFTRAG "Hover-Flyouts in der Hauptnavigation" (siehe docs/MODULNOTIZEN.md
+//): einmalig, unabhängig vom aktuellen Tab/Kontext - die beiden
 // Hauptnav-Links selbst werden nie entfernt/neu erzeugt (index.html), daher
 // kein destroy()/keine Wiederholung bei jedem render*Tab() nötig, anders als
 // alle bisherigen Flyout-Verankerungen dieses Projekts.
@@ -1553,7 +1430,7 @@ function verankereHauptnavFlyouts() {
           navigiereZu(typ.hatGalerie ? ['visualisierungen', typ.typ] : ['visualisierungen', typ.typ, typ.primaeransicht]);
           vizFlyout.schliesse();
         },
-        // Punkt 3 auch HIER (verschachtelt): siehe Dateikopf-Kommentar -
+        // Punkt 3 auch HIER (verschachtelt): siehe docs/MODULNOTIZEN.md -
         // schließt zusätzlich diesen äußeren Flyout, wenn ein Klick in der
         // verschachtelten Vorschau navigiert.
         verankereVizFlyout: (link, typ) => erzeugeVizVorschauFlyout(link, typ, () => vizFlyout.schliesse()),
@@ -1570,7 +1447,7 @@ function verankereHauptnavFlyouts() {
   // Punkt 2: "Bestand" bekommt einen Icon+Name-Flyout mit allen 5
   // Visualisierungen - Klick darin springt DIREKT dorthin (nicht zur
   // Galerie); Klick auf "Bestand" selbst bleibt unverändert (siehe
-  // visualisierungsTabs.js' verankereIconFlyout()-Dateikopf-Kommentar).
+  // docs/MODULNOTIZEN.md, Abschnitt visualisierungsTabs.js).
   setzeBestandFlyout(true);
 }
 
@@ -1669,7 +1546,7 @@ function wendeFaviconAn() {
 
 // Punkt 2.1, Ausfallverhalten "ueber.csv fehlt": Navigationspunkt "Über"
 // wird ausgeblendet. Prüft das im Hintergrund (nicht blockierend fürs
-// erste Rendern, siehe Dateikopf-Kommentar "erst bei Bedarf" in
+// erste Rendern, siehe docs/MODULNOTIZEN.md "erst bei Bedarf" in
 // archivKonfiguration.js) - ladeSeitenBloecke() cacht das Ergebnis, ein
 // späterer echter Aufruf der Über-Seite lädt die Datei dadurch nicht
 // erneut. Nur eine leere Blockliste bei vorhandener, aber inhaltsleerer
@@ -1743,7 +1620,7 @@ starteRouter((route) => {
 
 // AUFTRAG "Fuehrungen, Teil 2c", Punkt 1: einmalig app-weit verankert (nicht
 // an einen einzelnen Tab-Kontext gebunden), siehe fuehrungFortsetzen.js'
-// Dateikopf-Kommentar - bleibt dadurch ueber jeden Tab-/Ansichtswechsel
+// docs/MODULNOTIZEN.md - bleibt dadurch ueber jeden Tab-/Ansichtswechsel
 // bestehen.
 initialisiereFortsetzenButton();
 window.addEventListener('hashchange', handleRouteChange);

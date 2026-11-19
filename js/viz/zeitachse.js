@@ -1,105 +1,14 @@
-// js/viz/zeitachse.js
-// Zeitachse der Urkunden: ein Punkt pro Urkunde, positioniert nach Jahr (Abschnitt 9).
-// Modul-Interface siehe Abschnitt 5. Undatierte Urkunden (kein auswertbares Jahr)
-// erscheinen sichtbar in einem eigenen Bereich (Abschnitt 12), nicht ausgeblendet.
-//
-// NEUAUFBAU (Auftrag "Zeitachse – Neuaufbau nach Alpha-Vorbild"): ersetzt das
-// bisherige vertikale Stapel-Layout ("Stalaktiten": Punkte eines Jahres
-// wurden per stapelIndex stur nach unten gereiht) durch ein echtes
-// Beeswarm-Layout (d3-force), ergänzt Zoom/Pan sowie Klick-zu-Sidebar. Die
-// Farbkodierung nach Kategorie (CAT_COLORS) war bereits vorher vorhanden und
-// bleibt inhaltlich unverändert - siehe farbeFuerKategorie()/ersteKategorie().
-//
-// Unsicherheits-Filter (Punkt 5, siehe Auftrag): anders als vorher (wo der
-// Toggle nur die Stroke-Farbe eines Punktes umschaltete, aber nie einen
-// Punkt wirklich verbarg) filtert options.showUncertainty jetzt ECHT - nicht
-// zutreffende Urkunden verschwinden komplett aus records/Beeswarm/Undatiert-
-// Bereich, nicht nur optisch ausgegraut. Kriterien identisch zu
-// regestenKachelraster.js' istRecordUnsicher() (dort nicht exportiert, daher
-// hier als eigene, bewusst inhaltsgleiche Kopie - siehe dortiger Nicht-Ziel:
-// keine Änderung an regestenKachelraster.js).
-//
-// FOLGEAUFTRAG "Größe & Kategorie-Mehrfachauswahl": zwei Nachbesserungen an
-// diesem bereits abgenommenen Modul, OHNE Beeswarm-Algorithmus/Zoom-Pan-
-// Mechanik/Sidebar-Klick-Logik anzufassen (Nicht-Ziel, wörtlich):
-// (A) die verfügbare Bildschirmhöhe wird jetzt zur Laufzeit gemessen
-//     (ermittleVerfuegbareHoehe()) und fließt als Ziel-/Mindesthöhe in
-//     berechneBeeswarm() ein, statt dass die SVG-Höhe rein aus der
-//     natürlichen Ausdehnung der Simulation entsteht - dieselbe volle
-//     Neuberechnung bei jedem resize() wie zuvor, nur zusätzlich
-//     höhen-bewusst; zusätzlich passt sich die Zoom-Obergrenze der jeweils
-//     aktuellen Breite an (ermittleZoomSkalenExtent()).
-// (B) die bisherige reine Anzeige-Legende (baueLegende(), horizontal
-//     scrollbare Leiste) weicht einem Mehrfachauswahl-Menü
-//     (baueKategorieFilter()), das gleichzeitig als echter, mit dem
-//     Unsicherheiten-Filter UND-verknüpfter Kategorie-Filter dient -
-//     Neutralzustand (keine Auswahl) zeigt alle Punkte einheitlich in
-//     NEUTRALE_PUNKTFARBE statt nach Kategorie eingefärbt.
-//
-// FOLGEAUFTRAG "Achsenbeschriftung & Kontrast": drei weitere Nachbesserungen,
-// wieder OHNE Beeswarm-Algorithmus/Zoom-Pan/Sidebar/Kategorie-Filter/
-// responsive Größenberechnung anzufassen (Nicht-Ziel):
-// (A) X-Achse bekommt den Titel "Ausstellungsjahr" (Y-Achse hatte laut
-//     Rückfrage im Auftrag ohnehin noch keinen - siehe SELBSTAUSKUNFT unten),
-//     Y-Achse den Titel "Anzahl der Urkunden" (rotiert, Standard-D3-Muster).
-//     SELBSTAUSKUNFT: im gesamten Projekt (alle 31 Viz-Module durchsucht)
-//     existiert AKTUELL KEIN einziges Beispiel einer D3-Achsentitel-Rotation/
-//     -Positionierung (weder bei den "Bestandsvisualisierungen" noch sonst
-//     wo) - der Auftrag verweist auf eine Konvention, die es so nicht gibt.
-//     Die Positionierung unten wurde daher neu, aber konsistent mit den im
-//     Projekt bereits verwendeten Typografie-/Farb-Tokens (var(--fs-sm)/
-//     var(--text-muted)) entworfen.
-// (B) Tick-Schriftgröße 10px -> 14px (= var(--fs-sm), Faktor 1,4x, siehe
-//     TICK_SCHRIFTGROESSE) - Tick-ANZAHL wird zusätzlich adaptiv an die
-//     verfügbare Breite gekoppelt (ermittleTickAnzahl()), damit die größere
-//     Schrift bei keiner Breite/Zoomstufe zu Überlappungen führt.
-// (C) SELBSTAUSKUNFT (nach Rückfrage beim Nutzer): eine EINZELNE globale
-//     Hintergrundfläche kann rechnerisch NICHT gegen alle 16 Kategorie-Farben
-//     + Neutralfarbe + Standardfarbe (18 Farben) gleichzeitig 3:1 erreichen
-//     (bewiesen per Erschöpfungssuche über den gesamten Grauwertebereich -
-//     die hellsten ~6 Kategorie-Farben brauchen einen dunkleren Hintergrund,
-//     die dunkelsten brauchen einen helleren; keine einzelne Fläche kann
-//     beides gleichzeitig, ohne CAT_COLORS zu ändern, was laut Nicht-Ziel
-//     ausgeschlossen ist). Auf Nutzerwunsch daher STATT einer globalen
-//     Fläche: ein individuell pro Punkt berechneter Kontrast-Rand
-//     (ermittleRandfarbe(), wiederverwendet passendeTextfarbe() aus
-//     kategorieFarben.js - exakt dieselbe Schwarz/Weiß-Wahl-Logik, die dort
-//     bereits für Badge-Text genutzt wird) - siehe Kontrast-Dokumentation
-//     direkt bei ermittleRandfarbe().
-//
-// FOLGEAUFTRAG "Geteilte Viewport-Utilities": die lokale
-// ermittleVerfuegbareHoehe() (Folgeauftrag "Größe & Kategorie-Mehrfachauswahl")
-// ist jetzt in js/utils/viewportGroesse.js ausgelagert (Punkt 1) - identische
-// Formel, nur containerunabhängig statt hier lokal dupliziert, damit künftige
-// Urkunden-Module sie mitnutzen können. Zusätzlich neuer Mindestgrößen-
-// Platzhalter (Punkt 2, js/utils/bildschirmHinweis.js): unterhalb von 900×500px
-// (window.innerWidth/-Height) ersetzt ein einheitlicher Hinweistext die
-// gesamte Visualisierung, geprüft bei jedem zeichneZeitachse()-Aufruf (also
-// sowohl render() als auch jedes resize()-Ereignis, da zeichneZeitachse()
-// von beiden unconditional aufgerufen wird - keine Strukturänderung an
-// render()/resize() nötig). Beeswarm-Algorithmus/Zoom-Pan/Sidebar/Kategorie-
-// Filter selbst unangetastet (Nicht-Ziel).
-//
-// AUFTRAG "Geteilter Info-Button mit Erklär-Popover": der feste
-// Bedienhinweistext "Scrollen = Zoom · Ziehen = Verschieben" entfällt,
-// ersetzt durch den geteilten Info-Button (js/utils/infoButton.js) mit
-// ausführlicherem Erklärtext (seit AUFTRAG "Archivspezifische Texte..."
-// aus data/infotexte.csv, modul_id "zeitachse"). Anders als das
-// Kategorie-Menü (das bei jedem zeichneZeitachse()-Neuaufbau innerhalb von
-// `wurzel` mit-entsteht) wird der Info-Button bewusst NUR EINMAL in
-// render() erzeugt, in einem eigenen, von zeichneZeitachse() nie
-// angetasteten Geschwister-Container (analog zur Sidebar) - er registriert
-// eigene document-Listener (Außerhalb-Klick/Escape), die sonst bei jedem
-// Neuaufbau erneut angehängt würden (Listener-Leck), und sein Text ändert
-// sich ohnehin nie zur Laufzeit.
-//
-// AUFTRAG "Sidebar-Lightbox & app-weite Vereinheitlichung": die bis dahin
-// hier lokal gehaltene Urkunden-Sidebar-Detailansicht (Datum/Orte/Personen/
-// Kategorien/Regest/Unsicher-Hinweis, OHNE Fotogalerie) ist auf die
-// inzwischen geteilte js/utils/sidebar.js' zeigeUrkundenDetail()/
-// baueUrkundenDetailInhalt() umgestellt - Klick auf einen Punkt zeigt
-// dadurch jetzt zusätzlich die Fotogalerie samt Lightbox (siehe
-// oeffneSidebar() weiter unten für die Migrations-Details).
+// js/viz/zeitachse.js – Ansicht „Zeitachse“ der Urkunden
+// Zweck: ein Punkt je Urkunde nach Jahr (Beeswarm mit d3-force), Farbe nach erster Kategorie; undatierte Urkunden
+//   sichtbar in einem eigenen Bereich.
+// Eingabe: `data` = urkunden.csv (datum, kategorien, signatur, Unsicherheitsfelder wie in regestenKachelraster.js).
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   options.showUncertainty filtert auf unsichere Urkunden (die Kategorieauswahl bleibt dabei erhalten).
+// Abhängigkeiten: D3 v7, utils/urkundenZeit.js, utils/urkundenKategorieFarben.js, utils/kategorieFarben.js,
+//   utils/viewportGroesse.js, utils/bildschirmHinweis.js, utils/sidebar.js, utils/infoButton.js, utils/tooltip.js.
+// Bedienung: Mausrad zoomt, Ziehen verschiebt; Kategorie-Menü mit Mehrfachauswahl (Filter und Legende); Klick auf einen
+//   Punkt öffnet die Urkunde. Jeder Punkt hat einen eigenen Kontrastrand; unter 900 × 500 px erscheint ein Hinweis.
+// Hintergrund: docs/MODULNOTIZEN.md, Abschnitt zeitachse.js.
 
 import { farbeFuerUrkundenKategorie, alleUrkundenKategorien } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { passendeTextfarbe } from '../utils/kategorieFarben.js';
@@ -146,8 +55,8 @@ const PUNKT_RADIUS = 4;
 // ermittelt (siehe Screenshots im Auftrag).
 const RAND = { unten: 58, links: 55, rechts: 20 };
 
-// Punkt B: 10px -> 14px (= var(--fs-sm), Faktor 1,4x - siehe Dateikopf-
-// Kommentar). TICK_MIN_PIXELABSTAND steuert die adaptive Tick-Anzahl
+// Punkt B: 10px -> 14px (= var(--fs-sm), Faktor 1,4x - siehe docs/MODULNOTIZEN.md
+//). TICK_MIN_PIXELABSTAND steuert die adaptive Tick-Anzahl
 // (ermittleTickAnzahl()): 90px pro Tick reicht bei 14px-Schrift sicher für
 // vierstellige Jahreszahlen samt Abstand zueinander.
 const TICK_SCHRIFTGROESSE = 14;
@@ -219,7 +128,7 @@ function farbeFuerKategorie(kategorie) {
 }
 
 // Punkt 5, Kriterien wörtlich aus dem Auftrag - identisch zu
-// regestenKachelraster.js' istRecordUnsicher() (siehe Dateikopf-Kommentar:
+// regestenKachelraster.js' istRecordUnsicher() (siehe docs/MODULNOTIZEN.md:
 // bewusste, inhaltsgleiche Kopie statt Import, da dort nicht exportiert und
 // eine Änderung an regestenKachelraster.js außerhalb des Auftragsrahmens
 // läge).
@@ -471,8 +380,8 @@ function ermittleAnzeigeFarbe(record) {
 // FOLGEAUFTRAG "Achsenbeschriftung & Kontrast", Punkt C: individueller
 // Kontrast-Rand statt globaler Hintergrundfläche (nach Rückfrage beim
 // Nutzer - eine einzelne Fläche kann rechnerisch NICHT 3:1 gegen alle 18
-// verwendeten Punktfarben gleichzeitig erreichen, siehe Dateikopf-
-// Kommentar). Wiederverwendet passendeTextfarbe() aus kategorieFarben.js
+// verwendeten Punktfarben gleichzeitig erreichen, siehe docs/MODULNOTIZEN.md
+//). Wiederverwendet passendeTextfarbe() aus kategorieFarben.js
 // UNVERÄNDERT (dieselbe Schwarz/Weiß-Wahl per echter WCAG-Formel, die auch
 // für die Sidebar-Badge-Textfarbe genutzt wird, siehe js/utils/sidebar.js'
 // baueUrkundenDetailInhalt()) - keine neue Kontrastlogik, nur ein neuer
@@ -816,8 +725,8 @@ function zeichneZeitachse() {
     .text(X_ACHSEN_TITEL);
 
   // Y-Achsen-Titel: Standard-D3-Muster (um -90° rotiert, links außerhalb der
-  // Tick-Beschriftungen zentriert auf die Plot-Höhe) - siehe Dateikopf-
-  // Kommentar zur Selbstauskunft (kein bestehendes Projekt-Vorbild dafür
+  // Tick-Beschriftungen zentriert auf die Plot-Höhe) - siehe docs/MODULNOTIZEN.md
+  // zur Selbstauskunft (kein bestehendes Projekt-Vorbild dafür
   // gefunden, daher neu nach diesem verbreiteten D3-Standardmuster
   // entworfen).
   svg.append('text')
@@ -950,7 +859,7 @@ export function render(container, data, options = {}) {
 
   // Auftrag "Geteilter Info-Button": eigener, von zeichneZeitachse() nie
   // angetasteter Geschwister-Container (wie die Sidebar) - siehe
-  // Dateikopf-Kommentar zur Begründung (Listener-Leck vermeiden).
+  // docs/MODULNOTIZEN.md zur Begründung (Listener-Leck vermeiden).
   const infoButtonContainer = document.createElement('div');
   infoButtonContainer.className = 'zeitachse-info-button-anker';
   container.appendChild(infoButtonContainer);

@@ -1,228 +1,17 @@
-// js/viz/karte.js
-// Karte der Urkunden: ein Marker je Ort, Radius nach Häufigkeit (Abschnitt 9:
-// "räumliche Muster und Häufungen"). Modul-Interface siehe Abschnitt 5.
-// Voraussetzung: Leaflet 1.9 global geladen (<script>/<link> in index.html, wie D3),
-// Orts-Auflösung über js/utils/urkundenOrte.js (Abschnitt 8: namensbasiert).
-//
-// Farbe: ein einzelner technischer Marker-Ton (kein Kategorie-Bezug, die Karte zeigt
-// räumliche Häufung, nicht Kategorie-Zusammensetzung) - Größe ist der informations-
-// tragende Kanal, nicht Farbe (Abschnitt 10).
-//
-// AUFTRAG "Karte – Unsicherheiten-Sidebar, Zeitregler, unverortbare Urkunden
-// ausblenden" + KORREKTURAUFTRAG "Karte – Sidebar-Filter, Live-Zeitregler,
-// Rubrik 'völlig unklare Orte'":
-//
-// Punkt 1 (unverortbare Urkunden nicht mehr anzeigen): die bisherige
-// baueNichtVerortbarPanel()-Liste unterhalb der Karte ist ERSATZLOS entfernt.
-// `baueOrtsAggregation()` verwirft nicht auflösbare Records direkt.
-//
-// KORREKTUR Punkt 1 (Sidebar-Filter, ROOT CAUSE): die ERSTE Fassung dieses
-// Moduls interpretierte "unsicherer Ort" fälschlich über urkunden.csv'
-// ZEILENWEISES `orte_unsicher`-Feld (Ko-Vorkommen von "Ort X in dieser
-// Zeile genannt" UND "diese Zeile hat irgendein unsicheres Ortsdetail") -
-// das lieferte 86 Orte, aber mit KOMPLETT FALSCHER Zusammensetzung
-// (alle 86 hatten zufällig Koordinaten, 0 ohne). Live-Diagnose (siehe
-// Selbstauskunft im Chat): die tatsächlich korrekte, vom Auftrag gemeinte
-// Quelle ist orte.csv' EIGENES `orte_unsicher`-Feld (eine Eigenschaft des
-// ORTES selbst, nicht der einzelnen Urkunde-Zeile) - DAS liefert exakt
-// 86 Orte (63 mit, 23 ohne Koordinaten), deckungsgleich mit den vorab
-// verifizierten Zahlen. orte.csv' `unsicherheit_anmerkung` ist ein
-// automatisch generierter Text der Form "Ortsidentifikation in N Urkunde(n)
-// als unsicher markiert (Signatur(en): SIG1|SIG2)." - JEDE gelistete
-// Signatur wird per Textabgleich gegen die echten urkunden.csv-Signaturen
-// herausgefiltert (ermittleUnsichereUrkunden() unten, wortgrenzen-sicher
-// gegen Präfix-Kollisionen wie "StaAKr-0001" vs "StaAKr-0001b" - live
-// geprüft). 4 von 86 Orten benennen keine (auflösbare) Signatur in ihrer
-// Anmerkung (freier Text wie "Koordinaten noch nicht ermittelt") - diese
-// zeigen dann eine leere Urkundenliste, aber weiterhin die Anmerkung als
-// Begründung (Datenehrlichkeit statt erfundener Verknüpfung). Klick auf
-// eine Signatur ruft sidebar.js' bereits etablierte zeigeUrkundenDetail()
-// auf (volle Detailansicht inkl. Fotogalerie/Lightbox, wiederverwendet statt
-// neu gebaut) - ein zusätzlicher, selbst verdrahteter "← Zurück"-Handler auf
-// demselben zurueckBtn (sidebar.js' eigener Handler bleibt als No-Op
-// bestehen, da dessen `_urkundenListe`-Zustand hier nie gesetzt wird) führt
-// zurück zur Orte-Übersicht, da die generische zeigeUrkundenListe()/
-// `_urkundenListe`-Maschinerie eine FLACHE Liste erwartet, nicht die hier
-// nötige, nach Ort gruppierte Struktur.
-//
-// KORREKTUR Punkt 2 (Live-Zeitregler ohne "Anwenden"): der "Anwenden"-Button
-// entfällt, beide Slider lösen bei JEDEM 'input'-Ereignis (Ziehen, nicht nur
-// Loslassen) eine leicht entprellte (80ms, siehe DEBOUNCE_MS) Kartenaktuali-
-// sierung aus. Root-Cause-Überlegung: ein voller zeichneKarte()-Aufruf pro
-// Debounce-Tick würde container.innerHTML='' auslösen und damit AUCH den
-// gerade per Maus/Touch gezogenen Slider selbst zerstören - ein natives
-// <input type="range"> verliert die laufende Ziehgeste, sobald das Element
-// durch ein NEUES ersetzt wird (Browser-Drag-Tracking hängt am konkreten
-// DOM-Knoten). Deshalb Trennung in zwei Funktionen: zeichneKarte() baut die
-// Werkzeugleiste/Karte EINMAL auf, aktualisiereMarker() (neu) leert und
-// befüllt NUR die Leaflet-Marker-Ebene (instanz.markerLayer) - Letztere ist
-// die einzige Funktion, die während des Ziehens läuft, Regler/Karte-DOM
-// bleiben dabei unangetastet.
-//
-// Punkt 3 (Zeitregler-Granularität/-Aufbau): weiterhin 1:1 nach
-// kalenderHeatmap.js' Dual-Handle-Muster (zwei überlappende native
-// <input type="range">, 10-Jahres-Schritte) - bewusst lokal dupliziert
-// (Nicht-Ziel: keine Änderung an kalenderHeatmap.js, dessen Regler-Bau ist
-// nicht exportiert).
-//
-// KORREKTUR Punkt 3 ("Völlig unklare Orte"): die 23 Orte ohne Koordinaten
-// (in orte.csv' `orte_unsicher=ja`-Zeilen, aber ohne auswertbares lat/lon)
-// erscheinen als EIGENER, ERSTER Abschnitt in der Sidebar - sie sind
-// strukturell nie Teil von `ortsVerzeichnis` (js/utils/urkundenOrte.js'
-// ladeOrtsVerzeichnis() verwirft Zeilen ohne Koordinaten bereits beim Laden,
-// siehe dortiger Kommentar "kein Rateweise-Platzhalterwert für fehlende
-// Koordinaten") und bekommen deshalb konsequent auch KEINEN Kartenmarker -
-// dieselbe Datenehrlichkeit, hier nur zusätzlich SICHTBAR gemacht statt
-// stillschweigend zu fehlen. Da orte.csv (Betroffene Dateien: nur karte.js)
-// hierfür zusätzliche, von js/utils/urkundenOrte.js nicht exportierte Felder
-// braucht (das dortige `ladeOrtsVerzeichnis()` gibt nur `orteUnsicher`
-// zurück, nicht `unsicherheit_anmerkung`, UND verwirft koordinatenlose
-// Zeilen komplett), lädt dieses Modul orte.csv für den Unsicherheiten-Modus
-// EIGENSTÄNDIG über core/dataLoader.js' bereits geteilte ladeCSV() - parallel
-// zu, nicht anstelle von urkundenOrte.js' ladeOrtsVerzeichnis() (die bleibt
-// für den normalen/Zeitregler-Modus unverändert im Einsatz).
-//
-// Punkt 4 (gegenseitiger Ausschluss) - unverändert seit der ersten Fassung:
-// der "Unsicherheiten anzeigen"-Button lebt in app.js' eigenem, von diesem
-// Modul nicht erreichbaren Container - der Ausschluss bleibt deshalb
-// PRÄVENTIV (Zeitregler disabled + zurückgesetzt, sobald der Unsicherheiten-
-// Modus aktiv ist), siehe Selbstauskunft im Chat für die volle Herleitung.
-//
-// KORREKTURAUFTRAG "Karte – vier Fixes":
-//
-// Punkt 1 (Info-Button/Attribution hinter der Sidebar): Live-Diagnose per
-// `document.elementFromPoint()` ergab den ROOT CAUSE für BEIDE Punkt 1 UND
-// Punkt 3 zugleich: `.karte-werkzeugleiste` trägt `position:relative;
-// z-index:900` (s.o., wegen des Info-Popovers über Leaflets Panes nötig) -
-// das liegt automatisch ÜBER der Sidebar (z-index 500, js/utils/sidebar.js),
-// unabhängig davon, ob der Info-Button selbst getroffen wird. Ebenso liegt
-// Leaflets EIGENER `.leaflet-control-container` (eigene, von Leaflet intern
-// verwaltete Stapel-Reihenfolge, unten rechts die Attribution) über der
-// Sidebar. Fix: eine reine CSS-Regel mit `:has()` (bereits etabliertes
-// Muster im Projekt, siehe js/utils/zoomSteuerung.js) blendet BEIDE
-// (`.karte-werkzeugleiste` komplett UND nur die rechte untere Leaflet-Ecke,
-// NICHT die linke obere mit den Zoom-Buttons - die überlappt die
-// rechtsseitige Sidebar nie) per `visibility:hidden` aus, sobald die
-// Sidebar tatsächlich `.offen` ist (nicht bloß, solange
-// `options.showUncertainty` aktiv ist - die Sidebar kann davon unabhängig
-// per Schließen-Button geschlossen werden, siehe render() unten, JEDE
-// Sichtbarkeitslogik reagiert daher rein auf `.bestand-sidebar.offen`
-// selbst, nicht auf den Modus). `visibility:hidden` statt `display:none`,
-// damit die Karte selbst nicht neu positioniert wird (Leaflets interne
-// Pixel-Koordinaten cachen die Container-Position - ein Reflow durch
-// wegfallende Werkzeugleisten-Höhe würde ohne invalidateSize() zu
-// Tile-Versatz führen). Die Werkzeugleiste ist ohnehin nur bei geöffneter
-// Sidebar betroffen, also GENAU dann, wenn ihr einziger interaktiver Teil
-// (der Zeitregler) bereits deaktiviert ist (Punkt 4 oben) - kein
-// Funktionsverlust durchs Ausblenden.
-//
-// Punkt 3 (Klickfläche der Signatur-Buttons): war KEIN eigenständiger Bug,
-// sondern dieselbe Ursache wie Punkt 1 - die deaktivierte Regler-Gruppe
-// samt Hinweistext "(deaktiviert, solange ...)" wächst durch Flex-Wrap in
-// der Höhe und reicht dadurch bis in den Bereich der Sidebar-Körper hinein;
-// da `.karte-werkzeugleiste` bei z-index:900 über der Sidebar liegt, fängt
-// sie dort Klicks ab - reproduzierbar exakt beim ERSTEN Sidebar-Eintrag
-// (räumlich am nächsten am unteren Rand der Werkzeugleiste), live per
-// `elementFromPoint()` an mehreren Punkten der ersten Signatur-Schaltfläche
-// bestätigt (oberste ~3px trafen den Button, der Rest traf
-// `.karte-regler-gruppe.deaktiviert`). Der Punkt-1-Fix (Werkzeugleiste
-// komplett ausgeblendet, sobald die Sidebar offen ist) behebt dies
-// automatisch mit, keine zusätzliche Änderung nötig.
-//
-// Punkt 4 (robustere Signatur-Zuordnung): ermittleUrkundenNachOrtsname()
-// (neu, unten) ergänzt die reine Anmerkungs-Textsuche (ermittleUnsichere-
-// Urkunden(), s.o., unverändert) um eine direkte, namensbasierte Suche in
-// urkunden.csv (dieselbe "namensbasiert", nicht orte_id-basiert"-Konvention
-// wie js/utils/urkundenOrte.js' loeseOrteAuf(), Abschnitt 8) - Ergänzung,
-// keine Ersetzung (Auftrag, wörtlich), Ergebnis-Dedublizierung per
-// Objekt-Referenz (beide Quellen filtern denselben `records`-Array, ein
-// `Set` reicht). Live-Diagnose ergab: die beiden im Auftrag genannten Orte
-// zeigen ein ECHTES Datenqualitäts-Problem, nicht bloß eine
-// "andere Formulierung" - Markt Ascha zitiert in seiner Anmerkung die
-// Signatur "StaAKr-0914", die in urkunden.csv NIRGENDS existiert (per
-// Volltextsuche verifiziert - dieselbe Erkenntnis wie in der vorigen
-// Korrektur), kann also nie auflösbar sein; die neue namensbasierte Suche
-// findet trotzdem die tatsächlich zu "Markt Ascha" gehörende Urkunde
-// (StaAKr-0792, orte-Feld exakt "Markt Ascha"). Neunkirchen zitiert
-// "StaAKr-0765" - diese Signatur EXISTIERT zwar (daher fand die reine
-// Textsuche sie bereits vorher, live bestätigt), gehört aber laut ihrem
-// EIGENEN orte-Feld zu "Wien", nicht zu Neunkirchen (mutmaßlich ein
-// Signatur-Zahlendreher im Anmerkungstext selbst) - die neue namensbasierte
-// Suche ergänzt daher zusätzlich StaAKr-0673b (orte-Feld exakt
-// "Neunkirchen"), Neunkirchen zeigt am Ende BEIDE Signaturen, nicht nur die
-// im Auftrag genannte eine (siehe Selbstauskunft im Chat für die volle
-// Herleitung und die Abweichung vom wörtlichen Akzeptanzkriterium).
-//
-// KORREKTURAUFTRAG "Karte – Klick auf Ort-Marker öffnet Sidebar
-// (kontextabhängig)":
-//
-// Punkt 1 (Normalmodus, Marker-Klick öffnet Urkunden-Sidebar): die Sidebar
-// (baueSidebarGeruest()) wird jetzt IMMER aufgebaut, nicht mehr nur im
-// Unsicherheiten-Modus - im Normalmodus bleibt sie beim Aufbau geschlossen
-// (Ausgangszustand von baueSidebarGeruest(), kein `.offen`) und öffnet sich
-// erst durch einen Marker-Klick, über sidebar.js' bereits etablierten,
-// generischen Einstiegspunkt zeigeUrkundenSidebar() (genau 1 Urkunde -> volle
-// Detailansicht, mehrere -> kompakte Liste mit Weiterklick zur Detailansicht
-// - exakt das im Auftrag geforderte, bereits vorhandene Muster, unverändert
-// wiederverwendet, keine eigene Liste/Detail-Logik nötig). Die zugehörigen
-// Urkunden kommen aus `ortsEintrag.eintraege` (baueOrtsAggregation() oben,
-// bereits vorhanden).
-//
-// Punkt 2 (Unsicherheiten-Modus, Marker-Klick springt statt zu wechseln):
-// springeZuOrtsAbschnitt() (neu, unten) ruft zuerst oeffneUnsichereOrteSidebar()
-// auf (baut IMMER die Übersicht, nie die Detailansicht - idempotent, holt
-// die Sidebar auch aus einer offenen Urkunden-Detailansicht zurück zur
-// Übersicht) und scrollt/hervorhebt danach zum passenden `.karte-sidebar-ort`-
-// Block (per Namensvergleich gegen `.karte-sidebar-ort-titel`, kein
-// zusätzliches ID-Attribut nötig - derselbe Textvergleichs-Ansatz wie
-// oeffneUnsichereOrteSidebar() selbst). Kurze, per CSS-Transition
-// ausblendende Hervorhebung (`.karte-sidebar-ort-hervorgehoben`, s.u.).
-//
-// Beide Punkte teilen sich denselben Marker-Klick-Einstiegspunkt in
-// zeichneMarkerFuerOrte() (neu: `aktiviere()`, an Klick UND Enter/Leertaste
-// gekoppelt - dieselbe Tastatur-Äquivalenz wie sidebar.js'
-// baueUrkundenListeInhalt(), konsequent zu Ende geführt, da Marker bereits
-// zuvor `tabindex="0"` für den Tooltip trugen, aber noch keine Tastatur-
-// Aktivierung hatten) - verzweigt per `istUnsicherModus`, demselben Flag,
-// das zeichneMarkerFuerOrte() ohnehin schon für Farbe/Tooltip nutzt.
-//
-// Nebeneffekt (bewusst in Kauf genommen, siehe Selbstauskunft im Chat): die
-// Punkt-1/3-CSS-Regel von weiter oben (Werkzeugleiste/Attribution
-// ausgeblendet, sobald `.bestand-sidebar.offen`) greift jetzt auch im
-// Normalmodus, sobald ein Marker-Klick die Sidebar öffnet - verhindert dort
-// denselben Überlappungs-/Klickflächen-Fehler, den Punkt 1/3 der vorigen
-// Korrektur für den Unsicherheiten-Modus behoben hat, auch für den (dort
-// nicht deaktivierten) Zeitregler.
-//
-// KLEINAUFTRAG "Karte – deutlichere Hervorhebung & längerer Zeitregler":
-//
-// Punkt 1 (deutlichere Hervorhebung): die vorige Fassung entfernte die
-// Hervorhebung bereits nach 200ms (siehe HERVORHEBUNG_DAUER_MS, vorher
-// hartcodiert) - zu kurz, um sie zuverlässig wahrzunehmen. Jetzt
-// HERVORHEBUNG_DAUER_MS = 2500 (Auftrag: "2-3 Sekunden") UND ein deutlich
-// kräftigerer Effekt statt der reinen Hintergrundfarbe: ein farbiger Rahmen
-// (`outline`, nicht `border` - ändert die Bo­x-Größe nicht, kein Reflow der
-// Nachbar-Blöcke) in Orange (`#e07820`/`#fce6cc`) - bewusst dieselbe
-// Farbkombination wie ganttDiagramm.js' bereits etabliertes
-// `.gantt-hervorgehoben` (Wiederverwendung statt neuer Farbe), UND bewusst
-// NICHT Rot/Blau: Rot kollidiert mit der bestehenden Unsicherheits-
-// Kennzeichnung (`--unsicher`/Markerfarbe `#c0392b`), Blau mit der
-// Marker-Füllfarbe (`MARKER_FARBE`) und dem App-Akzent (`--accent`) - Orange
-// ist im gesamten Sidebar-Kontext sonst ungenutzt und hebt sich klar ab.
-// `outline`/`background-color` als Übergang auf der BASIS-Regel
-// `.karte-sidebar-ort` definiert (nicht nur auf der `.hervorgehoben`-
-// Variante) - Grund: eine CSS-Transition greift nur, wenn die Eigenschaft in
-// BEIDEN Zuständen existiert UND dieselbe Regel während des ganzen
-// Übergangs matcht; da die Klasse per JS wieder ENTFERNT wird (nicht nur ihr
-// Style geändert), müsste die Transition sonst auf der Basis-Regel liegen,
-// damit auch das Ausblenden sanft (nicht abrupt) erfolgt.
-//
-// Punkt 2 (längerer Zeitregler): `.karte-slider-wrapper`s Breite von 200px
-// auf 320px erhöht (Auftrag: "spürbar breiter", einzelne Jahrzehnt-Schritte
-// leichter präzise treffbar) - die Werkzeugleiste selbst bleibt dank
-// `flex-wrap:wrap` (bereits vorhanden) unverzerrt, bricht bei schmalen
-// Containern lediglich in eine zweite Zeile um statt zu überlaufen, live
-// geprüft.
+// js/viz/karte.js – Ansicht „Karte“ der Urkunden
+// Zweck: räumliche Häufung; ein Marker je Ort, Radius nach Zahl der Urkunden, ein einziger Markerton (Größe trägt die
+//   Information, nicht die Farbe); Zeitregler über zwei Griffe.
+// Eingabe: `data` = urkunden.csv (orte, ausstellungsort, datum, signatur, orte_unsicher, unsicherheit_typ); Orte
+//   namensbasiert über utils/urkundenOrte.js (orte.csv mit lat/lon); für unsichere Orte zusätzlich orte.csv (orte_unsicher,
+//   unsicherheit_anmerkung) über core/dataLoader.js.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   Modus „Licht aus“ über options.lichtAus (seit Auftrag 13).
+// Abhängigkeiten: Leaflet 1.9 (global), D3 v7, utils/urkundenOrte.js, utils/sidebar.js, utils/tooltip.js,
+//   utils/infoButton.js, utils/lichtAus.js, utils/lichtAusDarstellung.js.
+// Bedienung: Marker mit Tab erreichbar, Enter/Leertaste wie Klick (öffnet die Urkunden des Ortes in der Seitenleiste);
+//   Regler ohne „Anwenden“, die Karte folgt beim Ziehen. Bei offener Seitenleiste sind Werkzeugleiste und Attribution
+//   ausgeblendet (sie lägen sonst darüber).
+// Hintergrund (Zeitregler, unsichere Orte, Stapelung): docs/MODULNOTIZEN.md, Abschnitt karte.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { ladeOrtsVerzeichnis, loeseOrteAuf } from '../utils/urkundenOrte.js';
@@ -279,7 +68,7 @@ const HERVORHEBUNG_DAUER_MS = 2500;
 
 let instanz = null; // { container, records, options, karte, markerLayer, infoButton, sidebar, aktiverZeitraum, ortsVerzeichnis, unsichereOrteDaten, debounceTimer } – eine aktive Karte pro Modul-Ladung
 
-// Punkt 1 (siehe Dateikopf-Kommentar): nicht auflösbare Records werden
+// Punkt 1 (siehe docs/MODULNOTIZEN.md): nicht auflösbare Records werden
 // direkt verworfen, nicht mehr gesammelt.
 function baueOrtsAggregation(records, ortsVerzeichnis) {
   const aggregation = new Map();
@@ -323,7 +112,7 @@ function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// KORREKTUR Punkt 1 (siehe Dateikopf-Kommentar): extrahiert aus einer
+// KORREKTUR Punkt 1 (siehe docs/MODULNOTIZEN.md): extrahiert aus einer
 // orte.csv-Anmerkung wie "... (Signatur(en): StaAKr-0425|StaAKr-0428)." die
 // tatsächlich referenzierten Urkunden-Records - per Textabgleich gegen ALLE
 // echten Signaturen (nicht per Regex-Muster auf die Anmerkungs-Syntax
@@ -342,7 +131,7 @@ function ermittleUnsichereUrkunden(anmerkung, alleSignaturenAbsteigend, signatur
   return gefunden;
 }
 
-// KORREKTUR Punkt 4 (siehe Dateikopf-Kommentar): direkte, namensbasierte
+// KORREKTUR Punkt 4 (siehe docs/MODULNOTIZEN.md): direkte, namensbasierte
 // Ergänzung zur reinen Anmerkungs-Textsuche oben - jede urkunden.csv-Zeile,
 // deren `orte`-Feld diesen Ortsnamen exakt enthält (dieselbe
 // Normalisierungs-Konvention wie js/utils/urkundenOrte.js' loeseOrteAuf()).
@@ -353,7 +142,7 @@ function ermittleUrkundenNachOrtsname(ortName, records) {
   });
 }
 
-// KORREKTUR Punkt 1/3 (siehe Dateikopf-Kommentar): lädt orte.csv
+// KORREKTUR Punkt 1/3 (siehe docs/MODULNOTIZEN.md): lädt orte.csv
 // EIGENSTÄNDIG (nicht über urkundenOrte.js' ladeOrtsVerzeichnis(), die
 // koordinatenlose Zeilen verwirft und `unsicherheit_anmerkung` nicht
 // durchreicht) und liefert die nach Koordinaten-Vorhandensein getrennten,
@@ -392,7 +181,7 @@ async function ladeUnsichereOrteDaten(records) {
   return { voelligUnklar, kartiert };
 }
 
-// KORREKTUR Punkt 1 (siehe Dateikopf-Kommentar): ein Ort-Abschnitt - Name,
+// KORREKTUR Punkt 1 (siehe docs/MODULNOTIZEN.md): ein Ort-Abschnitt - Name,
 // die ortsbezogene Anmerkung (Begründung, gilt für alle darunter gelisteten
 // Urkunden) und die tatsächlich betroffenen Urkunden als anklickbare
 // Signatur-Schaltflächen (öffnen die volle Detailansicht).
@@ -437,7 +226,7 @@ function baueOrtAbschnitt(ort) {
       knopf.textContent = `${record.signatur || '(ohne Signatur)'} – ${record.datum || '(kein Datum)'}`;
       knopf.addEventListener('click', () => {
         zeigeUrkundenDetail(instanz.sidebar, record);
-        // Punkt 1 (siehe Dateikopf-Kommentar): eigener "Zurück"-Weg zur
+        // Punkt 1 (siehe docs/MODULNOTIZEN.md): eigener "Zurück"-Weg zur
         // Orte-Übersicht, da sidebar.js' generische zeigeUrkundenListe()/
         // `_urkundenListe` eine FLACHE Liste erwartet, nicht unsere nach Ort
         // gruppierte Struktur - der zurueckBtn selbst und sein Klick-
@@ -466,7 +255,7 @@ function baueOrteAbschnittsListe(titelText, orte) {
   return abschnitt;
 }
 
-// KORREKTUR Punkt 3 (siehe Dateikopf-Kommentar): "Völlig unklare Orte" ZUERST,
+// KORREKTUR Punkt 3 (siehe docs/MODULNOTIZEN.md): "Völlig unklare Orte" ZUERST,
 // danach die kartierten, aber unsicheren Orte.
 function oeffneUnsichereOrteSidebar() {
   const { voelligUnklar, kartiert } = instanz.unsichereOrteDaten;
@@ -482,7 +271,7 @@ function oeffneUnsichereOrteSidebar() {
 }
 
 // KORREKTURAUFTRAG "Karte – Klick auf Ort-Marker öffnet Sidebar", Punkt 2
-// (siehe Dateikopf-Kommentar): baut IMMER zuerst die Übersicht auf (holt die
+// (siehe docs/MODULNOTIZEN.md): baut IMMER zuerst die Übersicht auf (holt die
 // Sidebar auch aus einer offenen Detailansicht zurück), springt danach zum
 // passenden Ortsabschnitt und hebt ihn kurz hervor.
 function springeZuOrtsAbschnitt(ortName) {
@@ -577,7 +366,7 @@ function fuegeStyleEin(container) {
   container.appendChild(style);
 }
 
-// KORREKTUR Punkt 2 (siehe Dateikopf-Kommentar): Dual-Handle-Regler OHNE
+// KORREKTUR Punkt 2 (siehe docs/MODULNOTIZEN.md): Dual-Handle-Regler OHNE
 // "Anwenden"-Button - jedes 'input'-Ereignis plant über planeLiveUpdate()
 // eine entprellte aktualisiereMarker()-Aktualisierung. `deaktiviert`
 // (Punkt 4): true während `options.showUncertainty` aktiv ist.
@@ -629,7 +418,7 @@ function baueReglerGruppe(jahresSpanneVoll, deaktiviert) {
   }
   aktualisiereReglerAnzeige();
 
-  // KORREKTUR Punkt 2 (siehe Dateikopf-Kommentar): entprellte Live-
+  // KORREKTUR Punkt 2 (siehe docs/MODULNOTIZEN.md): entprellte Live-
   // Aktualisierung statt "Anwenden"-Klick - aktualisiereMarker() (nicht
   // zeichneKarte()!) hält Werkzeugleiste/Slider-DOM unangetastet, damit die
   // laufende Ziehgeste nicht abbricht.
@@ -836,7 +625,7 @@ function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
     }).addTo(instanz.markerLayer);
 
     // KORREKTURAUFTRAG "Karte – Klick auf Ort-Marker öffnet Sidebar" (siehe
-    // Dateikopf-Kommentar): Punkt 1 (Normalmodus) öffnet die Urkunden-Sidebar
+    // docs/MODULNOTIZEN.md): Punkt 1 (Normalmodus) öffnet die Urkunden-Sidebar
     // über sidebar.js' etabliertes zeigeUrkundenSidebar(), Punkt 2
     // (Unsicherheiten-Modus) springt stattdessen innerhalb der bereits
     // offenen Übersicht zum passenden Ortsabschnitt.
@@ -888,7 +677,7 @@ function zeichneMarkerFuerOrte(orteListe, radiusFn, istUnsicherModus) {
   });
 }
 
-// KORREKTUR Punkt 2 (siehe Dateikopf-Kommentar): aktualisiert NUR die
+// KORREKTUR Punkt 2 (siehe docs/MODULNOTIZEN.md): aktualisiert NUR die
 // Leaflet-Marker-Ebene (instanz.markerLayer) anhand des aktuellen Filter-
 // Zustands - rührt Werkzeugleiste/Slider/Karte selbst nicht an, sicher
 // während einer laufenden Zieh-Geste aufrufbar. Wird sowohl vom entprellten
@@ -939,9 +728,9 @@ async function zeichneKarte() {
   const werkzeugleiste = document.createElement('div');
   werkzeugleiste.className = 'karte-werkzeugleiste';
 
-  // Punkt 3/4 (siehe Dateikopf-Kommentar): Regler LINKS, Info-Button bleibt
+  // Punkt 3/4 (siehe docs/MODULNOTIZEN.md): Regler LINKS, Info-Button bleibt
   // rechts - "neben dem Unsicherheiten-Button" wörtlich nicht erreichbar
-  // (Container-Trennung, siehe Dateikopf-Kommentar), hier die nächstliegende
+  // (Container-Trennung, siehe docs/MODULNOTIZEN.md), hier die nächstliegende
   // erreichbare Platzierung in der eigenen Werkzeugleiste.
   const jahresSpanneVoll = ermittleJahresSpanneGerundet(records);
   const reglerGruppe = baueReglerGruppe(jahresSpanneVoll, zeigeUnsicherheit);
@@ -992,7 +781,7 @@ async function zeichneKarte() {
 
   aktualisiereMarker();
 
-  // Punkt 1/3 (siehe Dateikopf-Kommentar) + KORREKTURAUFTRAG "Karte – Klick
+  // Punkt 1/3 (siehe docs/MODULNOTIZEN.md) + KORREKTURAUFTRAG "Karte – Klick
   // auf Ort-Marker öffnet Sidebar", Punkt 1: die Sidebar wird bei jedem
   // vollen Redraw neu aufgebaut (container.innerHTML='' oben hat eine ggf.
   // vorherige Sidebar bereits entfernt) - jetzt IMMER, nicht mehr nur im
@@ -1003,7 +792,7 @@ async function zeichneKarte() {
   fuegeSidebarStyleEin(container);
   instanz.sidebar = baueSidebarGeruest(container);
   instanz.sidebar.schliessenBtn.addEventListener('click', () => schliesseSidebar(instanz.sidebar, mapDiv));
-  // Punkt 1 (siehe Dateikopf-Kommentar): eigener "Zurück zur Übersicht"-Weg
+  // Punkt 1 (siehe docs/MODULNOTIZEN.md): eigener "Zurück zur Übersicht"-Weg
   // (zusätzlich zu sidebar.js' eigenem, hier wirkungslosem Handler, da
   // `_urkundenListe` nie gesetzt wird) - führt von der Detailansicht einer
   // Urkunde zurück zur nach Ort gruppierten Übersicht. NUR im
@@ -1040,7 +829,7 @@ export function render(container, data, options = {}) {
   if (instanz) {
     destroy();
   }
-  // KORREKTUR Punkt 1 (siehe Dateikopf-Kommentar): eigene, stabile Klasse
+  // KORREKTUR Punkt 1 (siehe docs/MODULNOTIZEN.md): eigene, stabile Klasse
   // auf `container` selbst (NICHT von zeichneKarte()s container.innerHTML=''
   // betroffen, da das nur den INHALT leert) - Anker für die
   // `:has()`-Sichtbarkeitsregel in fuegeStyleEin().

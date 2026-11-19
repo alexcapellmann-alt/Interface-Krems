@@ -1,336 +1,15 @@
-// js/viz/familienbaum.js
-// Habsburg-Zeitleistenbaum: EINE Ansicht (ersetzt die vier bisherigen
-// Modi vollständig) - Balken je Person, Position/Länge = tatsächliche
-// Lebensspanne (echte Kalenderjahre), keine Generationseinteilung mehr.
-// Modul-Interface siehe Abschnitt 5.
-//
-// AUFTRAG "Familienbaum → Habsburg-Zeitleistenbaum (kompletter Ersatz)"
-// (2026-09-11, siehe CHANGELOG/PROJEKTLOG für die volle Selbstauskunft):
-//
-// Personenkreis (Punkt 2, Vorab-Datenarbeit "1:1 übernehmen"): ALLE
-// familien.csv-Einträge mit familie in {habsburg, spanische_habsburger,
-// habsburg_tirol, habsburg_lothringen} (39 Personen) PLUS alle über
-// ehepartner_id verknüpften Personen, die nicht bereits darin sind -
-// NICHT hartcodiert, sondern bei jedem render() aus den geladenen Daten
-// live ermittelt (Abschnitt 2 "content-driven") - live geprüft: ergibt
-// exakt 75 Personen (39 Kern + 36 zusätzliche Ehepartner, siehe
-// Selbstauskunft im Chat für die vollständige Liste). Der Kreis wird EINMAL
-// bei render() gefiltert (`data.filter(...)`) - jede weitere Funktion
-// (byId, kinderIndex, Farben, Baumaufbau, Steiner-Graph) arbeitet danach
-// bereits auf dieser 75er-Teilmenge, genau wie zuvor auf allen 80 - kein
-// separates "sichtbareIds"-Fädeln mehr nötig (das war im VORHERIGEN
-// Quellenbaum-Modus noch die Fehlerquelle, siehe damaliger Bugfix-Kommentar
-// im CHANGELOG - hier durch die Vorab-Filterung strukturell ausgeschlossen).
-//
-// Y-Achse (Punkt 2): lineare Jahres-Skala (d3.scaleLinear), Domain aus dem
-// TATSÄCHLICHEN Minimum/Maximum der Geburts-/Sterbejahre im 75er-Kreis
-// berechnet (nicht hartcodiert "1218-1790", auch wenn das Ergebnis exakt
-// dem entspricht, siehe Selbstauskunft) - jede Person bekommt einen
-// vertikalen Balken von yJahr(geburtsjahr) bis yJahr(sterbejahr). Die
-// bisherige generationsbasierte Y-Berechnung (Union-Find/längste Kette)
-// entfällt dadurch vollständig - nicht mehr nötig, da jetzt echte
-// Kalenderjahre statt einer abgeleiteten Ebene verwendet werden.
-//
-// X-Achse: UNVERÄNDERT das bewährte d3.tree()-Verfahren aus den vorherigen
-// Aufträgen für die horizontale Anordnung nach Familienzweig (Kollisions-
-// vermeidung zwischen Teilbäumen) - liefert nur noch die X-Position, Y
-// kommt vollständig aus der Jahres-Skala.
-//
-// Ehepaar-Anker/Kinder-Linien (Punkt 2, "bestehendes Muster beibehalten"):
-// dieselbe Satelliten-Mechanik wie zuvor (Ehepartner NICHT Teil der
-// d3.hierarchy, sondern nach dem Layout seitlich versetzt) - NEU ist nur,
-// WELCHER Y-Wert als "Paar-Mitte" gilt, da beide Partner jetzt einen
-// Balken (Zeitspanne) statt eines einzelnen Punkts haben: die Mitte der
-// zeitlichen ÜBERLAPPUNG beider Balken (ermittleVerbindungsY()) - fällt
-// bei fehlender Überlappung (z.B. Datenlücke) auf die Mitte des
-// Anker-Balkens zurück. Kinder-Linien enden am oberen Rand (Geburtsjahr)
-// des Kind-Balkens, wie zuvor am "oberen Rand des Kind-Knotens".
-//
-// Teil-Einfärbung (Punkt 2, Kernstück dieses Auftrags): für die 17
-// Personen mit befülltem herrschaft_von/herrschaft_bis (neue Spalten,
-// siehe familien.csv-Änderung) wird der GESAMTE Balken zunächst in der
-// Familienfarbe gezeichnet, darüber ein zweites, schmaleres Rechteck NUR
-// für den Regierungsabschnitt in Gold (GOLD_FARBE, dieselbe Farbe wie die
-// bisherige Kaiser/König-Kronensymbolik) gelegt - einfacher und robuster
-// als eine 3-Segment-Aufteilung (vor/während/nach der Regierungszeit)
-// manuell zu berechnen, das Overlay deckt exakt den relevanten Abschnitt
-// ab, der Rest bleibt automatisch sichtbar. Die 19 Kaiserinnen/Königinnen
-// durch Heirat haben KEINE Regierungsdaten (Nicht-Ziel, keine Herleitung)
-// - bekommen stattdessen den GANZEN Balken in einer eigenen, helleren
-// Gold-Variante (HEIRAT_FARBE) gefüllt ("vollständige Einfärbung ohne
-// Teilbalken", Auftrag wörtlich) - bewusst EIN eigener, hellerer Ton statt
-// exakt GOLD_FARBE, damit "aus eigenem Recht" (kräftiges Gold, nur
-// Teilabschnitt) und "durch Heirat" (helles Gold, ganzer Balken) auch ohne
-// die zusätzliche Kronen-Symbolik unterscheidbar bleiben - dieselbe
-// "zwei klar unterscheidbare Kennzeichnungen"-Idee wie die frühere
-// gefüllte/hohle Krone, hier auf die Flächenfarbe übertragen. Die Kronen-
-// Symbolik selbst bleibt UNVERÄNDERT bestehen (Auftrag erlaubt das explizit
-// - "kann hier zusätzlich am gefüllten Abschnitt sitzen") und sitzt jetzt
-// am oberen Rand des jeweils gefärbten Abschnitts (Regierungsbeginn bzw.
-// Balkenanfang).
-//
-// Entfernt gegenüber der vorherigen Fassung (bewusste Vereinfachung im
-// Rahmen des "kompletten Ersatzes", nicht Teil jenes Auftrags): der
-// Vier-Wege-Modus-Umschalter, die Personenauswahl (kein "Wurzelperson"-
-// Konzept mehr, es gibt nur noch die eine Gesamtansicht), der Quellenbaum-
-// Modus samt Brücken-Personen-Kennzeichnung und die Urkunden-Nennungszahl-
-// Badges (setzten beide auf dem alten 34-Personen-Quellenbaum-Kreis auf,
-// der mit dem neuen 75-Personen-Habsburg-Kreis nichts mehr zu tun hat).
-// Ebenso beibehalten (unverändert): Unsicherheits-Kennzeichnung
-// (gestrichelter roter Rand), lokales Detail-Popover, Zoom/Pan-Grundmuster,
-// Bildschirm-zu-klein-Fallback, Info-Button.
-//
-// AUFTRAG "Habsburg-Zeitleistenbaum – Breite, Beschriftung, Filterleiste
-// entfernen" (2026-09-11, Folgeauftrag):
-//
-// Punkt 1 - der im ERSTEN Zeitleisten-Auftrag noch beibehaltene
-// Politische-Stellung-Umschalter (Alle/Kaiser/Könige samt Steiner-Baum-
-// Verbindungspersonen-Berechnung) entfällt jetzt VOLLSTÄNDIG und
-// ERSATZLOS (Begründung des Auftrags: die Teil-Einfärbung der Balken
-// selbst zeigt Kaiser/König bereits, ein zusätzlicher Filter ist
-// redundant) - nicht nur die Buttons, sondern auch die komplette
-// dahinterliegende Berechnung (`baueVollGraph()`, die BFS-/Steiner-Baum-
-// Funktionen, `opazitaetFuerPolitischeStellung()`) wurde entfernt, nicht
-// nur versteckt (Auftrag verlangt das ausdrücklich, siehe grep-
-// Verifikation in der Selbstauskunft) - tote Berechnung ohne sichtbaren
-// Effekt wäre reine Code-Leiche gewesen.
-//
-// Punkt 2 - BAR_BREITE 16→36 (mehr als verdoppelt), BAR_ABSTAND_X
-// 140→190 proportional mitvergrößert, damit der zusätzliche Balken-Platz
-// nicht auf Kosten des Zwischenraums geht.
-//
-// Punkt 3 - Label-Kollisionsvermeidung (`loeseLabelKollisionen()`): nach
-// dem Bau des Render-Modells werden alle Namens-Etiketten nach ihrer
-// X-Position sortiert, dann paarweise auf zu geringen Y-Abstand bei
-// ÜBERLAPPENDER X-Ausdehnung geprüft (nur Etiketten, deren geschätzte
-// Textbreite sich tatsächlich horizontal überschneiden, können optisch
-// kollidieren) - ein zu nah stehendes Etikett wird nach unten verschoben,
-// bis der Mindestabstand (LABEL_MINDESTABSTAND_Y) eingehalten ist. Bei
-// spürbarer Verschiebung (>1px gegenüber der ursprünglichen Balkenanfang-
-// Position) zeichnet `zeichneBaum()` zusätzlich eine dünne graue
-// Führungslinie vom Balkenanfang zum verschobenen Etikett (Auftrag,
-// wörtlich als Option genannt).
-//
-// Zoom/Pan (Punkt 2, "bestehendes Zoom-Verhalten aus der Zeitachse als
-// Vorbild"): UNVERÄNDERT das bereits im vorherigen Familienbaum-Auftrag
-// etablierte 2D-Transform-Muster (Mausrad zoomt ohne Zusatztaste, Ziehen
-// verschiebt, `zoomInhalt.attr('transform', event.transform)`) - jenes
-// Muster zitierte bereits DAMALS zeitachse.js als Vorbild ("gleiches
-// Verhalten: Mausrad zoomt, Ziehen verschiebt", siehe damaliger
-// Dateikopf-Kommentar) und wurde dort bewusst 2D statt zeitachses reinem
-// 1D-rescaleX() umgesetzt, weil ein Baum - anders als eine reine
-// Zeitachse - horizontale Verschiebung zwischen Familienzweigen UND
-// vertikales Zoomen entlang der Zeit gleichzeitig braucht. Exakt dasselbe
-// gilt hier unverändert, nur dass die Zeitachse jetzt vertikal statt
-// horizontal verläuft ("Scrollen = Zoom (vertikal entlang der
-// Zeitleiste)", Auftrag wörtlich) - keine neue Herleitung nötig. Die
-// linke Jahres-Achse wird bei jedem Zoom-Schritt aus der aktuellen
-// Transform neu berechnet (analog zu zeitachse.js' Achsen-Neuaufbau).
-//
-// Punkt 3 (Info-Text) - wörtlich wie im Auftrag übernommen.
-//
-// AUFTRAG "Habsburg-Zeitleistenbaum – Kästchen als beschriftete Boxen, mehr
-// Abstand" (2026-09-11, zweiter Folgeauftrag):
-//
-// Punkt 1 - Namen stehen jetzt INNERHALB des Kästchens (kein separates
-// Außen-Label mehr, siehe `loeseLabelKollisionen()` aus dem vorherigen
-// Folgeauftrag entfällt dadurch komplett). Kästchenbreite wird bei jedem
-// render() aus den tatsächlichen Daten berechnet: `ermittleTextbreite()`
-// misst jeden der 75 Kurznamen per echter Canvas-`measureText()` (nicht
-// nur eine Zeichenanzahl-Heuristik, Auftrag wörtlich) bei der verwendeten
-// Schriftgröße/-familie, `berechneKastenbreite()` nimmt den längsten
-// gemessenen Wert + Innenabstand als EINHEITLICHE Breite für alle 75
-// Kästchen. RÜCKFRAGE GEKLÄRT (Auftrag verlangte das ausdrücklich, bevor
-// eigenmächtig entschieden wird): eine einheitliche Breite nach dem
-// LÄNGSTEN VOLLSTÄNDIGEN Namen (bis 55 Zeichen inkl. Beinamen-Klammern,
-// z.B. "Albrecht VI. (\"der Verschwenderische\"/\"der Freigebige\")") hätte
-// ca. 330-375px breite Kästchen für ALLE 75 Personen bedeutet, auch für
-// kurze Namen wie "Rudolf I." - als unpraktikabel zurückgemeldet, drei
-// Alternativen zur Wahl gestellt. Antwort: Kurzname verwenden (wie schon
-// bisher als Beschriftung gezeigt: Vorname + römische Ordnungszahl, max.
-// 14 Zeichen) - Kästchen bleiben dadurch ca. 100-130px breit, der
-// vollständige Name bleibt weiterhin über Tooltip/Popover erreichbar.
-//
-// Punkt 2 - `instanz.spaltenAbstand` (ersetzt die vorherige feste
-// BAR_ABSTAND_X-Konstante) wird aus `instanz.kastenBreite` + einer festen
-// Mindestlücke (ZWEIG_LUECKE) berechnet, statt umgekehrt eine feste
-// Kästchenbreite an einen festen Abstand anzupassen - die Kästchenbreite
-// ist jetzt die primäre, datengetriebene Größe (Punkt 1), der
-// Zweig-Abstand folgt ihr. Die Gesamtvisualisierung wird dadurch bewusst
-// breiter (Auftrag erlaubt das ausdrücklich, Zoom/Pan bereits vorhanden).
-//
-// Punkt 3 - ERSTER Ansatz (`BOX_Y_INSET` allein, siehe frühere Fassung
-// dieses Kommentars) ging von "nahtlos aneinander anschließenden"
-// Lebenszeiten aus (Balkenende ≈ Balkenanfang, 0px Lücke) - eigene
-// Live-Verifikation nach der Umsetzung zeigte aber: d3.tree() stellt bei
-// Einzelerben-Ketten (ein Kind, kein Geschwister) Elternteil UND Kind
-// strukturell exakt in dieselbe Spalte (dieselbe X-Position) - das ist bei
-// 20 der 75 Personen im Kreis der Fall, betrifft also die komplette
-// Haupt-Erbfolgelinie (z.B. Rudolf I./Albrecht I., Friedrich III./
-// Maximilian I., Karl VI./Maria Theresia/Joseph II.). Da ein Kind
-// üblicherweise zu Lebzeiten des Elternteils geboren wird (nicht erst nach
-// dessen Tod), ÜBERLAPPEN sich die echten Lebensspannen dieser Paare in
-// aller Regel erheblich (gemessene Überlappung bis zu 281px = >56 Jahre),
-// nicht nur "nahtlos anschließend" wie im Auftrag angenommen - ein reiner
-// Rand-Einzug (`BOX_Y_INSET`) kann eine echte Überlappung von >100px nicht
-// zu einer sichtbaren Lücke machen, beide Kästchen würden weiterhin als
-// ein durchgehender Balken erscheinen. Da die Y-Achse (echte Kalenderjahre)
-// nicht angetastet werden darf/soll (Kernstück dieser gesamten Ansicht,
-// siehe Abschnitt weiter oben), musste der ursprünglich gewählte Verzicht
-// auf jede Positionsverschiebung revidiert werden.
-//
-// ZWEITER SELBST GEFUNDENER FEHLER (vor der eigentlichen Lösung): ein erster
-// Versuch gruppierte Personen nur nach IDENTISCHER X-Position (Spalte) und
-// verteilte sie dort auf Spuren. Live-Nachverifikation zeigte zwei
-// unabhängige Lücken darin: (a) `d3.tree()`s `nodeSize` garantiert NUR den
-// Abstand zwischen direkten Geschwistern, nicht zwischen beliebigen Spalten
-// - bei tiefen Einzelerben-Ketten liegen manche Nachbarspalten nur 45px
-// auseinander, deutlich weniger als die 85px breiten Kästchen (Punkt 1),
-// was zu echten Rechteck-Überlappungen zwischen völlig UNVERWANDTEN
-// Personen führte, ganz ohne jede Eltern-Kind-Beziehung; (b) Ehepartner-
-// Satelliten (deren X sich erst aus der fertigen Anker-Position ergibt)
-// wurden von der reinen Spalten-Gruppierung gar nicht erfasst und konnten
-// unabhängig davon auf einem fremden Anker landen.
-//
-// TATSÄCHLICHE LÖSUNG (`loeseUeberlappungGlobal()`): ein Sweep-Line-
-// Verfahren über ALLE 75 Personen gemeinsam (Anker UND Satelliten, dank
-// zweigeteiltem `baueRenderModell()` - Durchlauf A sammelt jede
-// Ausgangsposition, Durchlauf B baut Boxen/Linien erst danach mit der
-// finalen Position, siehe dortiger Kommentar) - sortiert nach Geburtsjahr,
-// mit einer Liste "aktiver" bereits platzierter Kästchen, deren Zeitspanne
-// (+ `SPALTEN_MIN_LUECKE` Mindestlücke) den aktuellen Knoten noch
-// überlappt. Jede Person bleibt nach Möglichkeit an ihrer bevorzugten
-// (Baum-/Satelliten-)Position; kollidiert diese mit einer noch aktiven
-// Person (Mittenabstand < `spaltenLaneAbstand`), wird abwechselnd nach
-// rechts/links um ein Vielfaches von `spaltenLaneAbstand` verschoben, bis
-// eine freie Position gefunden ist. Das prüft - anders als die reine
-// Spalten-Gruppierung zuvor - JEDES Paar zeitlich aktiver Kästchen
-// unabhängig von ihrer ursprünglichen Spalte und löst dadurch beide oben
-// genannten Fehler zugleich. Per Skript exhaustiv gegen ALLE 75×74
-// Kästchen-Paare auf echte Rechteck-Überlappung verifiziert (nicht nur
-// spaltenintern): siehe Selbstauskunft im Chat.
-// `BOX_Y_INSET` bleibt zusätzlich als winziger kosmetischer Rand bestehen
-// (schadet nicht, da `SPALTEN_MIN_LUECKE` die eigentliche Garantie liefert).
-
-// AUFTRAG "Habsburg-Zeitleistenbaum – Größe, Zoom-Granularität,
-// Verbindungs-Hervorhebung, Legende" (2026-09-11, dritter Folgeauftrag):
-//
-// Punkt 1 (Größe) - `PIXEL_PRO_JAHR` 5→20 (vervierfacht, "deutlich erhöht"
-// wörtlich). `ermittleVerfuegbareHoehe()`/`ermittleVerfuegbareBreite()` aus
-// viewportGroesse.js waren bereits vorher im Einsatz (Punkt-1-Teil "bereits
-// etablierte Utility nutzen" war also schon erfüllt) - das eigentliche
-// "künstliche Höhenlimit" steckte stattdessen im initialen Zoom-Fit
-// (`wireZoom()`): `skala = Math.min(1, breite/baumBreite, hoehe/baumHoehe)`
-// staucht bei jedem Neuaufbau die GESAMTE Baumhöhe auf die sichtbare Fläche
-// zusammen - jede Erhöhung von PIXEL_PRO_JAHR wäre dadurch beim Start sofort
-// wieder herausgerechnet worden (größerer Baum → proportional kleinere
-// Skala → optisch UNVERÄNDERTE Größe). Der `hoehe/baumHoehe`-Faktor entfällt
-// daher ersatzlos - nur noch breiten-begrenzt (verhindert weiterhin, dass
-// der Baum auf einem schmalen Fenster seitlich abgeschnitten startet), die
-// Höhe darf jetzt über die sichtbare Fläche hinausragen und wird wie bei
-// Zeitachse/Kalender-Heatmap durch Scrollen/Zoomen erschlossen (hier: durch
-// das bereits bestehende Pan/Zoom, siehe unten).
-//
-// Punkt 2 (Adaptive Jahres-Beschriftung) - `ermittleJahresTickSchritt()`
-// nach demselben Prinzip wie zeitachse.js' `ermittleTickAnzahl()`/
-// kalenderHeatmap.js' `ermittleLabelSchritt()` (Ziel-Tick-Anzahl aus
-// verfügbarem Pixel-Platz ÷ Mindestabstand), hier aber bewusst als feste
-// Schrittweiten-Liste (200/100/50/25/10/5/2/1 Jahre) statt d3s eigenem
-// `scale.ticks(n)` - Letzteres kann bei linearen Skalen krumme
-// Zwischenwerte (z.B. alle 2,5 Jahre) erzeugen, was mit `d3.format('d')`
-// gerundete, teils identisch aussehende Doppel-Beschriftungen ergäbe. Die
-// jeweils gröbste Schrittweite, die mit maximal `hoehe/TICK_MIN_PIXELABSTAND_Y`
-// Ticks über die AKTUELL SICHTBARE Jahresspanne (aus `neueYSkala.domain()`,
-// nicht der vollen Baum-Spanne) auskommt, wird bei jedem Zoom-Schritt neu
-// gewählt und liefert damit automatisch Jahrhundert-Marken beim
-// Herauszoomen bis hin zu einzelnen Jahren beim Hineinzoomen - dieselbe
-// Grundidee wie die beiden genannten Vorbilder, nur auf eine Y-Achse und
-// echtes Zoom (statt Container-Breite) angewandt. `d3.zoom()`s
-// `scaleExtent` wurde von `[0.2, 4]` auf `[0.2, 24]` angehoben (reine
-// Parameteränderung, keine Änderung der Zoom/Pan-MECHANIK selbst) - bei der
-// alten Obergrenze 4 wäre selbst mit dem größeren PIXEL_PRO_JAHR kein
-// Zoomstand erreichbar gewesen, der weniger als ca. 30 Jahre sichtbar
-// macht, das Akzeptanzkriterium "einzelne Jahre ablesbar" wäre unerreichbar
-// geblieben.
-//
-// Punkt 3 (Verbindungs-Hervorhebung) - `ermittleDirekteBeziehungen()` liest
-// AUSSCHLIESSLICH `vater_id`/`mutter_id`/`ehepartner_id` der gehoverten
-// Person plus `kinderIndex` (bereits bestehender Index) - bewusst NICHT
-// über die d3.hierarchy-Baumstruktur (`d.parent`/`d.children`), da der Baum
-// aus Layout-Gründen (Satelliten-Mechanik, Einzelerben-Ketten) nicht 1:1
-// den echten Verwandtschaftsbeziehungen entspricht und Geschwister dort
-// zudem gar nicht direkt erreichbar wären. Jede Eltern-Kind- bzw.
-// Ehe-Verbindungslinie trägt jetzt zusätzlich die beteiligten IDs
-// (`kindId`/`elternIds` bzw. `aId`/`bId`, siehe `baueRenderModell()`) -
-// vorher nur x1/y1/x2/y2 ohne Personenbezug, für die Hervorhebung aber
-// nötig, um genau die Linien zu finden, die die gehoverte Person direkt
-// berühren. Hover setzt `instanz.hoverFokusId` (temporär), Klick zusätzlich
-// `instanz.eingefrorenerFokusId` (bleibt nach Mouseleave bestehen) - der
-// Klick-Handler ruft weiterhin UNVERÄNDERT auch `zeigePersonenPopover()`
-// auf (Nicht-Ziel: bestehendes Popover bleibt), beides schließt sich nicht
-// aus. Effektiver Fokus = `hoverFokusId ?? eingefrorenerFokusId` (Hovern
-// einer ANDEREN Person während eine Auswahl eingefroren ist, zeigt
-// währenddessen testweise deren Beziehungen, fällt beim Verlassen zurück
-// auf die eingefrorene Auswahl statt in den Normalzustand). Klick auf freie
-// Fläche (neuer `svg.on('click', ...)`-Handler, nur erreichbar wenn der
-// Klick NICHT auf einer Personen-Gruppe war - dort verhindert
-// `event.stopPropagation()` das Durchbubbeln) setzt `eingefrorenerFokusId`
-// zurück auf `null`.
-//
-// Punkt 4 (Farblegende) - `baueFarblegende()` liest die tatsächlich im
-// Code verwendeten Fill-Konstanten (`HABSBURG_BASIS_FARBE`,
-// `GRAU_EHEPARTNERFAMILIE`, `GOLD_FARBE`, `HEIRAT_FARBE`) plus die
-// Unsicherheits-Randdarstellung (`#c0392b` gestrichelt, siehe `zeichneBaum()`s
-// `unsicher()`-Fall) - bewusst KEINE weiteren/erfundenen Kategorien (Auftrag
-// wörtlich: "nicht eigenmächtig neue Farbkategorien erfinden"). Die vier
-// Habsburg-Farbvarianten (`HABSBURG_VARIANTEN`) werden NICHT einzeln
-// gelistet (Auftrag: "kompakte" Legende) - ein Eintrag mit
-// `HABSBURG_BASIS_FARBE` plus erklärendem Text deckt sie zusammenfassend ab,
-// da alle vier optisch nur geringfügig variierende Töne DERSELBEN Kategorie
-// "Familienfarbe" sind. Kronen-Symbole (gefüllt/hohl) bleiben AUSSERHALB der
-// Legende (Auftrag-Scope ist wörtlich "Farblegende"/"was die Kästchenfarben
-// bedeuten", die Kronen kodieren denselben Status bereits redundant über die
-// Füllfarbe mit). `js/utils/infoButton.js` bekommt dafür einen neuen,
-// optionalen `zusatzInhalt`-Parameter (beliebiger DOM-Node, nach den
-// Text-Absätzen angehängt) - rückwärtskompatibel (Default `undefined`,
-// alle anderen bisherigen Aufrufer unverändert), da erzeugeInfoButton()
-// bisher nur reinen Text kannte, eine Farblegende aber echte Swatch-Elemente
-// braucht.
-//
-// AUFTRAG "Habsburg-Zeitleistenbaum – Klick-Popup verschiebt Ansicht,
-// größere Beschriftung" (2026-09-11, vierter Folgeauftrag):
-//
-// Punkt 1 - konkrete Root-Cause-Analyse siehe Dateikopf-Kommentar direkt
-// bei `zeigePersonenPopover()`/`popoverElement` weiter unten (Abschnitt
-// "Lokales Detail-Popover") - hier nur die Kurzfassung: `getBoundingClientRect()`
-// des Ankers lieferte bei langlebigen Personen ein weit über den Viewport
-// hinausragendes Kästchen, das Popup wurde entsprechend weit außerhalb
-// positioniert, `popover.focus()` (ohne preventScroll) scrollte die Seite
-// dorthin. Zwei unabhängige Fixes: Anker-Kante auf den sichtbaren Viewport
-// geklemmt UND `{ preventScroll: true }` bei jedem `.focus()`-Aufruf.
-//
-// Punkt 2 - `SCHRIFTGROESSE` 11→24 (mehr als verdoppelt). Keine weitere
-// Logikänderung nötig: `berechneKastenbreite()` (2. Folgeauftrag) misst
-// bereits mit dieser Konstante, die Kästchenbreite wächst automatisch mit.
-
-// AUFTRAG "Kästchen-Größe, Regierungsbeginn, Namenskorrektur" (2026-09-11,
-// fünfter Folgeauftrag):
-//
-// Punkt 1 (Größe) - `SCHRIFTGROESSE` 24→34, `PIXEL_PRO_JAHR` 20→13 als
-// Gegengewicht (visuell getestet, siehe Selbstauskunft im Chat für den
-// begründeten Endwert innerhalb der vorgeschlagenen Spanne 12-14) -
-// `berechneKastenbreite()` misst weiterhin mit derselben, jetzt größeren
-// Konstante, keine separate Anpassung nötig (identisch zur Begründung im
-// 4. Folgeauftrag).
-//
-// Punkt 2 (HRR-König-Datum) - reine Datenkorrektur in familien.csv
-// (`herrschaft_von` bei friedrich_iii/maximilian_i/karl_v, siehe dortige
-// Änderungs-Historie/CHANGELOG) - `ermittleRegierungszeit()` liest
-// unverändert aus `herrschaft_von`/`herrschaft_bis`, keine Code-Änderung an
-// der Einfärbungslogik selbst nötig (Auftrag, wörtlich zutreffend).
-//
-// Punkt 3 (Namenskorrektur) - `ermittleKurzname()` siehe dortiger
-// Dateikopf-Kommentar für die vollständige Herleitung/Verifikation.
+// js/viz/familienbaum.js – Ansicht „Stammbaum“ (Zeitleistenbaum der Habsburger)
+// Zweck: je Person ein senkrechtes Kästchen über die echte Lebensspanne (Jahresachse), angeordnet nach Familienzweig;
+//   Regierungszeit und Rang durch Heirat farbig, Eltern-, Kinder- und Ehelinien.
+// Eingabe: `data` = familien.csv (id, name, titel, familie, vater_id, mutter_id, ehepartner_id, geburtsjahr, sterbejahr,
+//   herrschaft_von, herrschaft_bis, unsicherheit_typ). Personenkreis wird bei jedem render() aus den Daten ermittelt.
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   Modus „Licht aus“ über options.lichtAus (abdunkeln, nicht filtern).
+// Abhängigkeiten: D3 v7, utils/tooltip.js, utils/uncertainty.js, utils/lichtAus.js, utils/lichtAusDarstellung.js,
+//   utils/infoButton.js (Farblegende über `zusatzInhalt`), utils/viewportGroesse.js.
+// Bedienung: Mausrad zoomt, Ziehen verschiebt; Hover und Klick heben direkte Verwandte hervor, Klick öffnet das Popover
+//   (Fokus ohne Scrollen). Unter einer Mindestgröße des Fensters erscheint ein Hinweis statt des Baums.
+// Hintergrund (Personenkreis, Überlappungslösung, Farben, Zoom): docs/MODULNOTIZEN.md, Abschnitt familienbaum.js.
 
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
 import { filtereErklaerungFuerFeld } from '../utils/uncertainty.js';
@@ -357,8 +36,8 @@ import { mitTextfeldern } from '../utils/textwert.js';
 // sonst brach das Modul an ermittleKurzname() (name.split) ab.
 const TEXTFELDER = ['name', 'titel'];
 
-// Punkt 1 (4. Folgeauftrag): 20→13 (moderat verringert, siehe Dateikopf-
-// Kommentar - Gegengewicht zur nochmals größeren Schrift, Kästchen wirken
+// Punkt 1 (4. Folgeauftrag): 20→13 (moderat verringert, siehe docs/MODULNOTIZEN.md
+// - Gegengewicht zur nochmals größeren Schrift, Kästchen wirken
 // dadurch gedrungener statt extrem in die Höhe gezogen). War zuvor 5→20
 // (3. Folgeauftrag).
 const PIXEL_PRO_JAHR = 13;
@@ -373,7 +52,7 @@ const MAX_TIEFE = 25; // Sicherheitsgrenze gegen Datenfehler-Zyklen (Kreis hat 7
 // 2. Folgeauftrag, UNVERÄNDERTE Logik) wächst dadurch automatisch mit,
 // keine separate Anpassung nötig.
 // Punkt 1 (4. Folgeauftrag): 24→34 (nochmals deutlich vergrößert, siehe
-// Dateikopf-Kommentar). War zuvor 11→24 (3. Folgeauftrag).
+// docs/MODULNOTIZEN.md). War zuvor 11→24 (3. Folgeauftrag).
 const SCHRIFTGROESSE = 34;
 const SCHRIFTGEWICHT = 600;
 const SCHRIFTFAMILIE = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"; // dieselbe --font-ui-Deklaration wie css/base.css, siehe ermittleTextbreite()
@@ -384,22 +63,22 @@ const KASTEN_PADDING_X = 14;
 // Punkt 2 (2. Folgeauftrag): fester Mindest-Leerraum zwischen zwei
 // benachbarten Kästchen-Spalten, zusätzlich zur (datengetriebenen)
 // Kästchenbreite selbst - siehe instanz.spaltenAbstand. Basiswert, wird in
-// render() ggf. durch den Spuren-Bedarf (siehe Dateikopf-Kommentar Punkt 3)
+// render() ggf. durch den Spuren-Bedarf (siehe docs/MODULNOTIZEN.md Punkt 3)
 // nach oben überschrieben.
 const ZWEIG_LUECKE_BASIS = 56;
 // Punkt 3 (2. Folgeauftrag): feste Einrückung oben/unten je Kästchen -
-// siehe Dateikopf-Kommentar (nur noch kosmetisch, SPALTEN_MIN_LUECKE liefert
+// siehe docs/MODULNOTIZEN.md (nur noch kosmetisch, SPALTEN_MIN_LUECKE liefert
 // die eigentliche Garantie).
 const BOX_Y_INSET = 2;
 // Punkt 3 (2. Folgeauftrag): Mindestabstand zwischen zwei Kästchen derselben
 // Spur (echte Pixel, unabhängig vom zeitlichen Abstand) und seitlicher
 // Zusatzabstand zwischen zwei Spuren derselben Spalte - siehe
-// loeseUeberlappungGlobal() und Dateikopf-Kommentar.
+// loeseUeberlappungGlobal() und docs/MODULNOTIZEN.md.
 const SPALTEN_MIN_LUECKE = 8;
 const SPALTEN_LANE_PADDING = 10;
 
 // Punkt 2 (3. Folgeauftrag): adaptive Jahres-Tick-Schrittweite, siehe
-// Dateikopf-Kommentar und ermittleJahresTickSchritt().
+// docs/MODULNOTIZEN.md und ermittleJahresTickSchritt().
 const JAHRES_TICK_SCHRITTE = [200, 100, 50, 25, 10, 5, 2, 1];
 const TICK_MIN_PIXELABSTAND_Y = 40;
 
@@ -437,9 +116,9 @@ const ZWEIG_ABSTUFUNGEN = [0, 0.8, -0.5, 0.4];
 const GRAU_EHEPARTNERFAMILIE = '#9a9a9a';
 
 // Politische Stellung - Rand/Symbol UND jetzt zusätzlich die
-// Teil-/Vollbalken-Füllfarbe (siehe Dateikopf-Kommentar).
+// Teil-/Vollbalken-Füllfarbe (siehe docs/MODULNOTIZEN.md).
 const GOLD_FARBE = '#c9a227';
-const HEIRAT_FARBE = '#e8cf8a'; // helle Gold-Variante, siehe Dateikopf-Kommentar
+const HEIRAT_FARBE = '#e8cf8a'; // helle Gold-Variante, siehe docs/MODULNOTIZEN.md
 const KRONE_PFAD = 'M-5,4 L-5,-1 L-2.5,1.5 L0,-3.5 L2.5,1.5 L5,-1 L5,4 Z';
 
 // Wunsch des Autors (2026-10-28): Ehen als liegende Acht (Lemniskate) statt Verbindungslinie. Breite in
@@ -478,7 +157,7 @@ function istPersonUnsicher(record) {
 // Punkt 3 (3. Folgeauftrag): direkte Familienbeziehungen (Eltern,
 // Ehepartner, Kinder) EINER Person - bewusst über die echten
 // Datenfelder/kinderIndex ermittelt, nicht über die d3.hierarchy-
-// Baumstruktur (siehe Dateikopf-Kommentar). Geschwister sind hier bewusst
+// Baumstruktur (siehe docs/MODULNOTIZEN.md). Geschwister sind hier bewusst
 // NICHT enthalten (Auftrag, wörtlich).
 function ermittleDirekteBeziehungen(person, byId, kinderIndex) {
   const ids = new Set();
@@ -508,11 +187,11 @@ function baueDatenIndex(records) {
   return { byId, kinderIndex };
 }
 
-// --- Personenkreis (Vorab-Datenarbeit, siehe Dateikopf-Kommentar) --------
+// --- Personenkreis (Vorab-Datenarbeit, siehe docs/MODULNOTIZEN.md) --------
 
 // Habsburg-Kernfamilien PLUS alle über ehepartner_id verknüpften Personen,
 // die nicht bereits im Kern sind - live aus den geladenen Daten ermittelt,
-// nicht hartcodiert (siehe Dateikopf-Kommentar).
+// nicht hartcodiert (siehe docs/MODULNOTIZEN.md).
 function ermittleHabsburgKreis(records) {
   const byId = new Map(records.map((r) => [r.id, r]));
   const familien = dynastieFamilien();
@@ -621,7 +300,7 @@ function ermittleJahr(datumText) {
   return treffer ? Number(treffer[0]) : null;
 }
 
-// Domain aus dem tatsächlichen Kreis berechnet (siehe Dateikopf-Kommentar) -
+// Domain aus dem tatsächlichen Kreis berechnet (siehe docs/MODULNOTIZEN.md) -
 // ergibt bei den aktuellen Daten exakt 1218-1790.
 function ermittleJahresSpanne(records) {
   let min = Infinity;
@@ -661,7 +340,7 @@ function vergleicheKinderReihenfolge(kindA, kindB, elternPerson) {
 }
 
 // --- Baumaufbau (auf den bereits auf den Habsburg-Kreis gefilterten
-// byId/kinderIndex bezogen - siehe Dateikopf-Kommentar, kein separates
+// byId/kinderIndex bezogen - siehe docs/MODULNOTIZEN.md, kein separates
 // "sichtbareIds" mehr nötig). ----------------------------------------------
 
 function baueWurzeln(byId, kinderIndex) {
@@ -709,7 +388,7 @@ function baueWurzeln(byId, kinderIndex) {
 }
 
 // --- Layout: d3.tree() liefert weiterhin nur die X-Position (siehe
-// Dateikopf-Kommentar) - Y kommt vollständig aus der Jahres-Skala. --------
+// docs/MODULNOTIZEN.md) - Y kommt vollständig aus der Jahres-Skala. --------
 
 function baueForstLayout(wurzelKnotenListe) {
   const root = d3.hierarchy({ id: '__forst__', person: null, children: wurzelKnotenListe });
@@ -775,8 +454,8 @@ function loeseUeberlappungGlobal(positionVonId) {
   return finaleX;
 }
 
-// Mitte der zeitlichen Überlappung zweier Balken (siehe Dateikopf-
-// Kommentar "Ehepaar-Anker") - Fallback: Mitte des ersten Balkens, falls
+// Mitte der zeitlichen Überlappung zweier Balken (siehe docs/MODULNOTIZEN.md
+// "Ehepaar-Anker") - Fallback: Mitte des ersten Balkens, falls
 // keine Überlappung besteht (z.B. bei einer Datenlücke).
 function ermittleVerbindungsY(barA, barB) {
   const overlapStart = Math.max(barA.yTop, barB.yTop);
@@ -887,8 +566,8 @@ function baueRenderModell(wurzeln, byId) {
         const start = paarMitte || { x: finaleX.get(d.parent.data.id), y: elternBar ? (elternBar.yTop + elternBar.yBottom) / 2 : 0 };
         // Punkt 3 (3. Folgeauftrag): elternIds trägt IMMER beide echten
         // Eltern-IDs (vater_id/mutter_id), unabhängig davon, welcher
-        // Elternteil strukturell der Baum-Anker ist (siehe Dateikopf-
-        // Kommentar) - für die Hover-Hervorhebung zählt die echte
+        // Elternteil strukturell der Baum-Anker ist (siehe docs/MODULNOTIZEN.md
+        //) - für die Hover-Hervorhebung zählt die echte
         // Verwandtschaft, nicht die Baum-Struktur.
         const elternIds = [kindPerson.vater_id, kindPerson.mutter_id].filter((eid) => eid && byId.has(eid));
         elternKindLinien.push({ x1: start.x, y1: start.y, x2: x, y2: ankerBar.yTop, kindId: id, elternIds });
@@ -971,14 +650,14 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
   const kastenBreite = instanz.kastenBreite;
 
   // Punkt 3 (2. Folgeauftrag): feste Einrückung oben/unten (BOX_Y_INSET) -
-  // siehe Dateikopf-Kommentar. Bodenfall (Math.max(...,2)) verhindert eine
+  // siehe docs/MODULNOTIZEN.md. Bodenfall (Math.max(...,2)) verhindert eine
   // unsichtbare/negative Höhe bei extrem kurzen Lebensspannen.
   const boxYTop = (d) => d.yTop + BOX_Y_INSET;
   const boxHoehe = (d) => Math.max((d.yBottom - d.yTop) - BOX_Y_INSET * 2, 2);
 
   // Basis-Kästchen: ganze Lebensspanne (abzüglich der festen Einrückung),
   // Familienfarbe - bzw. bei "durch Heirat"-Status die volle Kästchen-
-  // fläche bereits in HEIRAT_FARBE (siehe Dateikopf-Kommentar
+  // fläche bereits in HEIRAT_FARBE (siehe docs/MODULNOTIZEN.md
   // "Teil-Einfärbung").
   knotenGruppen.append('rect')
     .attr('class', 'familienbaum-balken')
@@ -993,7 +672,7 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
 
   // Regierungs-Overlay: nur für die 17 Personen mit herrschaft_von/bis -
   // deckt ausschließlich den Regierungsabschnitt in Gold ab (siehe
-  // Dateikopf-Kommentar). An die Einrückung des Basis-Kästchens geklemmt
+  // docs/MODULNOTIZEN.md). An die Einrückung des Basis-Kästchens geklemmt
   // (Math.max/min), damit das Overlay nie über dessen sichtbaren Rand
   // hinausragt, selbst wenn herrschaft_von/bis exakt mit Geburt/Tod
   // zusammenfällt.
@@ -1068,7 +747,7 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
   // Punkt 3 (3. Folgeauftrag): Referenzen auf die drei Selektionen, die
   // aktualisiereHervorhebung() bei Hover/Klick per .style('opacity', ...)
   // aktualisiert, OHNE einen kompletten Neuaufbau auszulösen - siehe
-  // Dateikopf-Kommentar.
+  // docs/MODULNOTIZEN.md.
   instanz.selektionen = { knoten: knotenGruppen, elternKindLinien: elternKindLinienSel, eheLinien: eheLinienSel, eheSymbole: eheSymbolSel };
 
   // AUFTRAG "Teil 2f", Punkt 2: eine waehrend eines noch laufenden Aufbaus
@@ -1122,7 +801,7 @@ function zeichneBaum(svg, modell, container, zeigeUnsicherheit) {
 
 // Punkt 3 (3. Folgeauftrag): effektiver Fokus = temporärer Hover, sonst die
 // eingefrorene (per Klick gesetzte) Auswahl, sonst kein Fokus (Normalzustand)
-// - siehe Dateikopf-Kommentar. Setzt/entfernt nur .style('opacity', ...),
+// - siehe docs/MODULNOTIZEN.md. Setzt/entfernt nur .style('opacity', ...),
 // baut nichts neu auf.
 function aktualisiereHervorhebung() {
   const sel = instanz?.selektionen;
@@ -1171,7 +850,7 @@ function aktualisiereHervorhebung() {
 // `getBoundingClientRect()` die Bounding-Box des GESAMTEN Lebensspanne-
 // Kästchens liefert - NICHT nur die tatsächlich angeklickte Stelle. Seit
 // dem vorigen Folgeauftrag (PIXEL_PRO_JAHR 5→20 plus Wegfall des Auto-Fit-
-// auf Viewport-Höhe, siehe dortiger Dateikopf-Kommentar) können einzelne
+// auf Viewport-Höhe, siehe docs/MODULNOTIZEN.md) können einzelne
 // Kästchen weit höher als der Viewport sein (per Test: Rudolf I., 73 Lebens-
 // jahre, ergab bei Zoom-Skala 0,61 ein 892px hohes Kästchen auf einer
 // 705px hohen Ansicht) - `rect.bottom` lag dadurch bei y≈1126, WEIT
@@ -1259,7 +938,7 @@ function zeigePersonenPopover(person, ankerElement) {
   popover.appendChild(schliessenBtn);
 
   document.body.appendChild(popover);
-  // Punkt 1 (4. Folgeauftrag, siehe Dateikopf-Kommentar): Ober-/Unterkante
+  // Punkt 1 (4. Folgeauftrag, siehe docs/MODULNOTIZEN.md): Ober-/Unterkante
   // des Ankers auf den AKTUELL SICHTBAREN Viewport-Bereich geklemmt, statt
   // die volle (bei langlebigen Personen ggf. weit über den Viewport
   // hinausragende) Kästchenhöhe zu verwenden.
@@ -1281,7 +960,7 @@ function zeigePersonenPopover(person, ankerElement) {
   popoverElement = popover;
   // Punkt 1 (4. Folgeauftrag): { preventScroll: true } als zweite,
   // unabhängige Absicherung gegen ungewolltes Scrollen (siehe
-  // Dateikopf-Kommentar) - ohne Klammerzusatz scrollt der Browser
+  // docs/MODULNOTIZEN.md) - ohne Klammerzusatz scrollt der Browser
   // standardmäßig das fokussierte Element in den sichtbaren Bereich.
   popover.focus({ preventScroll: true });
 
@@ -1300,7 +979,7 @@ function zeigePersonenPopover(person, ankerElement) {
 // Punkt 2 (3. Folgeauftrag): gröbste Schrittweite aus JAHRES_TICK_SCHRITTE,
 // die mit höchstens `hoehePixel / TICK_MIN_PIXELABSTAND_Y` Ticks über die
 // AKTUELL SICHTBARE Jahresspanne (nicht die volle Baum-Spanne) auskommt -
-// siehe Dateikopf-Kommentar zur Begründung gegenüber scale.ticks(n).
+// siehe docs/MODULNOTIZEN.md zur Begründung gegenüber scale.ticks(n).
 function ermittleJahresTickSchritt(sichtbareJahresSpanne, hoehePixel) {
   const maxTicks = Math.max(2, Math.floor(hoehePixel / TICK_MIN_PIXELABSTAND_Y));
   // Von FEIN nach GROB durchgehen (JAHRES_TICK_SCHRITTE ist grob→fein
@@ -1323,12 +1002,12 @@ function baueJahresTickWerte(minJahr, maxJahr, schritt) {
 }
 
 // --- Zoom/Pan (Grundmuster unverändert aus den vorherigen Aufträgen, siehe
-// Dateikopf-Kommentar zur Zeitachse-Herleitung; Punkt 1/2 des 3.
+// docs/MODULNOTIZEN.md zur Zeitachse-Herleitung; Punkt 1/2 des 3.
 // Folgeauftrags ändern nur den initialen Fit sowie die Tick-Berechnung,
-// siehe dortiger Dateikopf-Kommentar). --------------------------------------
+// siehe docs/MODULNOTIZEN.md). -----------------------------------------------
 function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
   // WICHTIG (Punkt 2, 3. Folgeauftrag - per Live-Test gefunden, siehe
-  // Dateikopf-Kommentar): transform.rescaleY() geht davon aus, dass die
+  // docs/MODULNOTIZEN.md): transform.rescaleY() geht davon aus, dass die
   // RANGE der Basis-Skala bereits dem sichtbaren Viewport entspricht (so
   // wie bei zeitachse.js' xSkalaBasis, deren Range = [RAND.links,
   // breite-RAND.rechts] ist) - hier ist die RANGE von ySkalaBasis aber der
@@ -1357,7 +1036,7 @@ function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
   }
 
   const zoomVerhalten = d3.zoom()
-    // Punkt 2 (3. Folgeauftrag): Obergrenze 4→24, siehe Dateikopf-Kommentar -
+    // Punkt 2 (3. Folgeauftrag): Obergrenze 4→24, siehe docs/MODULNOTIZEN.md -
     // reine Parameteränderung, dieselbe Zoom/Pan-Mechanik (Mausrad zoomt,
     // Ziehen verschiebt) bleibt unverändert.
     .scaleExtent([0.2, 24])
@@ -1379,7 +1058,7 @@ function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
     const baumBreite = Math.max(ausdehnung.maxX - ausdehnung.minX, 1);
     // Punkt 1 (3. Folgeauftrag): NUR noch breiten-begrenzt (verhindert
     // seitliches Abschneiden auf schmalen Fenstern), NICHT mehr
-    // höhen-begrenzt - siehe Dateikopf-Kommentar ("künstliches Höhenlimit").
+    // höhen-begrenzt - siehe docs/MODULNOTIZEN.md ("künstliches Höhenlimit").
     const skala = Math.min(1, breite / baumBreite);
     const startX = RAND.links + breite / 2 - ((ausdehnung.minX + ausdehnung.maxX) / 2) * skala;
     const startY = RAND.oben - ausdehnung.minY * skala;
@@ -1389,7 +1068,7 @@ function wireZoom(svg, zoomInhalt, achseGruppe, breite, hoehe, ausdehnung) {
 }
 
 // Punkt 4 (3. Folgeauftrag): liest die tatsächlich im Code verwendeten
-// Fill-Konstanten aus, siehe Dateikopf-Kommentar - keine erfundenen
+// Fill-Konstanten aus, siehe docs/MODULNOTIZEN.md - keine erfundenen
 // Kategorien. Modul-Funktion statt Inline im Aufrufer, damit die Zuordnung
 // Konstante->Legenden-Text an einer Stelle steht.
 // Wunsch des Autors (2026-10-28): die Legende steht nicht mehr im Infotext, sondern kompakt in der Zeile
@@ -1607,8 +1286,8 @@ export function render(container, data, options = {}) {
   const { byId, kinderIndex } = baueDatenIndex(kreisRecords);
   const { jahrMin, jahrMax } = ermittleJahresSpanne(kreisRecords);
   // Punkt 1/2 (2. Folgeauftrag): Kästchenbreite aus den tatsächlichen
-  // Namen berechnet, Spaltenabstand folgt daraus (siehe Dateikopf-
-  // Kommentar) - beide vor der Instanz-Erzeugung, da baueForstLayout()/
+  // Namen berechnet, Spaltenabstand folgt daraus (siehe docs/MODULNOTIZEN.md
+  //) - beide vor der Instanz-Erzeugung, da baueForstLayout()/
   // baueRenderModell() bereits beim ersten zeichneFamilienbaum()-Aufruf
   // auf instanz.spaltenAbstand zugreifen.
   const kastenBreite = berechneKastenbreite(kreisRecords);
@@ -1625,14 +1304,14 @@ export function render(container, data, options = {}) {
     kastenBreite,
     spaltenAbstand: kastenBreite + ZWEIG_LUECKE_BASIS,
     // Mindest-Mittenabstand, den loeseUeberlappungGlobal() zwischen zwei
-    // zeitlich aktiven Kästchen erzwingt (siehe Dateikopf-Kommentar Punkt 3) -
+    // zeitlich aktiven Kästchen erzwingt (siehe docs/MODULNOTIZEN.md Punkt 3) -
     // unabhängig von spaltenAbstand, das nur die BEVORZUGTE (nicht
     // garantierte) Baum-Spaltenbreite ist.
     spaltenLaneAbstand: kastenBreite + SPALTEN_LANE_PADDING,
     zoomVerhalten: null,
     zoomTransform: null,
     infoButton: null,
-    // Punkt 3 (3. Folgeauftrag): siehe Dateikopf-Kommentar/aktualisiereHervorhebung().
+    // Punkt 3 (3. Folgeauftrag): siehe docs/MODULNOTIZEN.md/aktualisiereHervorhebung().
     hoverFokusId: null,
     eingefrorenerFokusId: null,
     selektionen: null,

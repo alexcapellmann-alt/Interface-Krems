@@ -1,150 +1,14 @@
-// js/viz/kalenderHeatmap.js
-// Kalender-Heatmap der Urkunden.
-//
-// AUSLEGUNGSENTSCHEIDUNG (bitte prüfen, keine im Masterprompt/SCHEMA.md festgelegte
-// Vorgabe): Die Urkunden verteilen sich über ~700 Jahre (1108-1844) und haben nur bei
-// exakter Tagesgenauigkeit ein auswertbares Monat/Tag-Datum. Ein klassisches
-// Kalenderraster (Monat x Tag, 12x31 Zellen) macht daher nur Sinn, wenn man über ALLE
-// Jahre hinweg aggregiert - eine Zelle zeigt "wie oft wurde eine Urkunde auf diesen
-// Kalendertag datiert, unabhängig vom Jahr". Das ist inhaltlich interessant (mittel-
-// alterliche Urkunden wurden oft an Feiertagen ausgestellt), aber eine andere Frage
-// als "ein Kalenderjahr im Detail". Alternative wäre eine Jahres-x-Kategorie-Matrix
-// gewesen (siehe swimlanes.js) - dafür gibt es aber bereits ein eigenes Modul.
-//
-// Nur Urkunden mit Tagesgenauigkeit (siehe datePrecision.js: 'exact') lassen sich
-// überhaupt auf einem Kalendertag platzieren. Alle anderen (nur Jahr, nur Monat,
-// ungefähre Angabe, undatiert) erscheinen sichtbar im "Nicht im Kalender darstellbar"-
-// Bereich (Abschnitt 12: nie stillschweigend ausblenden).
-//
-// Modul-Interface siehe Abschnitt 5.
-//
-// AUFTRAG "Kalender-Heatmap – Farbdiagnose, Zeitraum-Regler, Achsen, Info-Button":
-// fünf Nachbesserungen an diesem bereits bestehenden Modul, siehe jeweiliger
-// Kommentar an Ort und Stelle:
-//
-// Punkt 1 (Root-Cause-Diagnose "durchgehend graue Felder"): live gegen die echten
-// Daten geprüft (Root-Cause-Check, Schritt 1, siehe CHANGELOG für die genauen
-// Messwerte) - die Frequenz-Aggregation UND die Opazitäts-Skala funktionierten
-// bereits korrekt (Opazität variierte real zwischen 0,04 und 1,0 über 342 von 372
-// Zellen), das war NICHT der Fehler. Ursache war die Farbwahl selbst: jede Zelle
-// erhielt unconditional `CAT_COLORS.default` (`#888888`, ein neutrales Grau) als
-// Füllfarbe - exakt dieselbe Art Fallback-Grauwert wie beim bereits bekannten
-// CAT_COLORS-Vorfall bei ganttDiagramm.js, hier aber von Anfang an so entworfen
-// (siehe vorheriger Dateikopf-Kommentar "Farben ausschließlich aus CAT_COLORS"),
-// nicht durch eine fehlende Key-Zuordnung ausgelöst. Da nur die Opazität einer
-// EINZIGEN Grundfarbe variierte, blieb das Ergebnis immer "irgendein Grauton" statt
-// "hell bis dunkel Blau" wie im Alpha-Vorbild. Fix: `farbSkala()` (echte
-// d3.scaleSequential(d3.interpolateBlues)) ersetzt CAT_COLORS.default+Opazität
-// vollständig für die Zellenfarbe - CAT_COLORS wird weiterhin für die
-// Kategorie-Badges in der neuen Urkunden-Liste (Punkt 5/Klick-Verhalten) benutzt,
-// aber nicht mehr für die Zellenfläche selbst.
-//
-// Punkt 2 (Zeitraum-Regler): ersetzt eine laut Auftrag beschriebene, tatsächlich in
-// diesem Modul nie vorhandene Zwei-Zahlenfelder-Version (siehe CHANGELOG,
-// Root-Cause-Diagnose-Abschnitt) - es gab keine bestehende Zeitraum-Eingrenzung zu
-// ersetzen, der beidseitige Regler ist komplett neu. Baut auf `parseJahr()` aus
-// urkundenZeit.js auf (dieselbe Jahres-Parsing-Logik wie alle anderen
-// Urkunden-Module). `aktiverZeitraum.bis` ist bewusst der START-Jahr der zuletzt
-// eingeschlossenen Dekade (nicht deren Ende) - `zeichnePlot()` rechnet dafür
-// konsistent mit `bis + 9`.
-//
-// Punkt 5b (Klick-auf-Zelle-öffnet-Liste sowie der Monat×Tag/Jahrzehnt×Monat-Toggle):
-// beides existierte vor diesem Auftrag ebenfalls nicht (siehe CHANGELOG) - auf
-// Rückfrage vom Auftraggeber ausdrücklich als neue Funktionalität freigegeben,
-// nicht nur als Textanpassung. Sidebar-Gerüst/Fokus-Mechanik/CSS werden dafür
-// UNVERÄNDERT aus js/utils/sidebar.js wiederverwendet (identisches Muster zu
-// zeitachse.js: dortiger Dateikopf-Kommentar erklärt, warum baueSidebarInhalt()/
-// oeffneSidebar() selbst NICHT wiederverwendet werden - Bestand-Schema-spezifisch,
-// Urkunden haben andere Felder).
-//
-// FOLGEAUFTRAG "Kalender-Heatmap-Korrekturen, Sidebar-Umbau, Kategorie-
-// Umbenennung" (siehe CHANGELOG für Details/Live-Verifikation):
-// Punkt 1: Bugfix - Modus-Umschalter-Button zeigte den aktiven Zustand beim
-//   ersten Laden nicht visuell an (aria-pressed korrekt, .kal-modus-aktiv
-//   fehlte), siehe aktualisiereModusButtons()-Aufruf in baueWerkzeugleiste().
-// Punkt 2 (KORRIGIERT, siehe unten): "Unsicherheiten anzeigen" öffnete
-//   damals die Liste der nicht darstellbaren Urkunden als Sidebar.
-// Punkt 3 (KORRIGIERT, siehe unten): Legende war damals kein sichtbares
-//   Seitenelement mehr, sondern Teil des Info-Popover-Texts.
-// Punkt 4: Sidebar-Listen (Zellklick, Unsicherheiten-Liste) sind jetzt
-//   schlank (nur Signatur+Kategorie) und navigieren per Klick zum Regesten-
-//   Kachelraster - die eigentliche Listendarstellung wurde dafür nach
-//   js/utils/sidebar.js ausgelagert (baueUrkundenListeInhalt(), betrifft
-//   künftig alle Module mit Mehrfach-Urkunden-Listen), Navigation über
-//   state.js' zielSignatur + router.js' navigiereZu(), siehe
-//   navigiereZuKachel() (WIE die Ziel-Urkunde im Kachelraster isoliert wird,
-//   hat sich seither geändert - siehe regestenKachelraster.js' eigener
-//   Dateikopf-Kommentar, Punkt 3 des unten genannten Folgeauftrags).
-//
-// FOLGEAUFTRAG "Kalender-Legende zurück, Sidebar-Navigation isolieren,
-// Expand-Umrandung" (siehe CHANGELOG) - macht die beiden obigen Punkte
-// bewusst rückgängig:
-// Punkt 1 (ZWISCHENSTAND, siehe unten weiter korrigiert): Legende wieder als
-//   sichtbares Seitenelement statt Absatz im Info-Popover - der damals noch
-//   lokale Info-Text war nie geändert worden (der Legenden-Satz wurde ausschließlich in
-//   aktualisiereInfoButton() angehängt, jetzt umbenannt in
-//   aktualisiereLegende()), daher hier keine Textänderung nötig. Da der
-//   Info-Button-Text dadurch wieder vollständig STATISCH ist, entfällt auch
-//   das bisherige destroy()-und-Neubau-Muster für den Info-Button bei jedem
-//   Redraw - er bleibt ab render() unverändert bestehen (siehe dortiger
-//   Bugfix-Kommentar zur unconditional Erzeugung).
-// Punkt 2: "Unsicherheiten anzeigen" blendet jetzt die bereits vorhandene
-//   "Nicht im Kalender darstellbar"-Tabelle (zeichneUnbekanntBereich() aus
-//   urkundenZeit.js) direkt ein/aus (Standard: versteckt), statt eine
-//   Sidebar zu öffnen - siehe zeichneTagModus()/zeichneJahrzehntModus(),
-//   Bedingung `zeigeUnsicherheit`. Keine Änderung an der Berechnung der
-//   nicht darstellbaren Menge selbst (weiterhin `nichtDarstellbar` aus
-//   teileNachTagesgenauigkeit()/teileNachJahrzehntMonat()), nur an ihrer
-//   Sichtbarkeits-Steuerung.
-//
-// KLEINAUFTRAG "Kalender-Legende auf ursprüngliches Erscheinungsbild
-// zurücksetzen" (siehe CHANGELOG) - korrigiert Punkt 1 oben ein zweites Mal:
-// der Zwischenstand (ein reiner Beschreibungssatz als <span> IN der
-// Werkzeugleiste, rechtsbündig) entsprach nicht dem Alpha-Vorbild. Jetzt (ZWI-
-// SCHENSTAND, siehe KLEINAUFTRAG "Legenden-Position anpassen" unten): eigene
-// Zeile UNTERHALB der Werkzeugleiste, linksbündig, mit mehrstufigem
-// Farbverlauf (LEGENDE_SCHRITTE echte <span>-Quadrate, eingefärbt mit
-// derselben farbSkala-Funktion wie die Zellen selbst) statt reinem Text -
-// siehe aktualisiereLegende() weiter unten.
-//
-// KLEINAUFTRAG "Legenden-Position anpassen" (siehe CHANGELOG) - korrigiert
-// nur die POSITION aus dem vorigen Kleinauftrag, nicht die optische
-// Gestaltung (Farbmuster-Quadrate bleiben wie dort beschrieben): die Legende
-// ist wieder Teil derselben Zeile wie die Werkzeugleiste (.kal-legende-
-// gruppe, direkt nach reglerGruppe in baueWerkzeugleiste() - also unmittelbar
-// nach "Anwenden"/"Alle"), keine eigene Zeile mehr darunter. Bewusst als
-// eigenständige Flex-Gruppe (nicht einzelne lose Kind-Elemente direkt in
-// .kal-werkzeugleiste) - dasselbe Muster wie modusGruppe/reglerGruppe -,
-// damit .kal-werkzeugleiste's bestehendes flex-wrap sie bei wenig Platz als
-// GANZES in eine neue Zeile umbricht, ohne dass Quadrate einzeln abgeschnitten
-// werden könnten. Keine margin-left:auto (das hatte die Legende im ersten
-// Zwischenstand isoliert an den rechten Rand geschoben, siehe oben) - die
-// Gruppe fügt sich stattdessen normal in den Zeilenfluss ein.
-//
-// AUFTRAG "Sidebar-Liste – Regest-Vorschauzeile & Inline-Detailansicht"
-// (siehe CHANGELOG/PROJEKTLOG): macht den obigen Punkt 4 ("navigiert per
-// Klick zum Regesten-Kachelraster") bewusst rückgängig - Klick auf einen
-// Listeneintrag öffnet stattdessen die volle Detailansicht (inkl.
-// Fotogalerie) INNERHALB derselben Sidebar. Die vormalige navigiereZuKachel()
-// (state.js' setZielSignatur() + router.js' navigiereZu()) entfällt
-// ersatzlos - dieser Pfad ruft filterleiste.js' setzeSuchbegriff() dadurch
-// nicht mehr auf (Nicht-Ziel des Auftrags: setzeSuchbegriff() selbst bleibt
-// unverändert bestehen, wird aber aus diesem Pfad nicht mehr erreicht).
-// state.js'/regestenKachelraster.js' zielSignatur-Mechanismus bleibt
-// unangetastet (Nicht-Ziel: keine Änderung an anderen Modulen) - er wird
-// von hier aus schlicht nicht mehr befüllt, bleibt für einen möglichen
-// künftigen Aufrufer aber funktionsfähig.
-//
-// AUFTRAG "Sidebar-Lightbox & app-weite Vereinheitlichung": die zuvor HIER
-// lokal gehaltene Öffnen-Orchestrierung (oeffneUrkundenListe()/
-// oeffneUrkundenDetail()/zurueckZurUrkundenListe(), Liste-vs-Detail-
-// Umschaltung, Zurück-Button-Verdrahtung) ist jetzt komplett Teil von
-// js/utils/sidebar.js selbst (zeigeUrkundenSidebar()/zeigeUrkundenDetail())
-// - dieses Modul ruft nur noch zeigeUrkundenSidebar(sidebar, titel, records)
-// auf und bekommt "1 Ergebnis -> Detail, mehrere -> Liste" automatisch
-// (bisher öffnete jede Zelle IMMER die Liste, auch bei genau einem Treffer -
-// siehe Akzeptanzkriterium des neuen Auftrags). Kein eigener Zurück-Button-
-// Handler mehr nötig (sidebar.js verdrahtet ihn selbst).
+// js/viz/kalenderHeatmap.js – Ansicht „Kalender-Heatmap“ der Urkunden
+// Zweck: Häufigkeit nach Kalendertag über alle Jahre (Monat × Tag) oder nach Jahrzehnt × Monat; Farbe aus einer
+//   blauen Folge-Skala mit Legende. Nur tagesgenau datierte Urkunden haben einen Platz im Kalender.
+// Eingabe: `data` = urkunden.csv (datum, Genauigkeit über utils/datePrecision.js, kategorien, signatur).
+// Schnittstelle: render(container, data, options), resize(neueOptionen), destroy() wie alle Ansichten (docs/SCHEMA.md);
+//   options.showUncertainty blendet die Tabelle „Nicht im Kalender darstellbar“ ein.
+// Abhängigkeiten: D3 v7, utils/urkundenZeit.js (parseJahr, zeichneUnbekanntBereich), utils/datePrecision.js,
+//   utils/sidebar.js (zeigeUrkundenSidebar), utils/infoButton.js, utils/urkundenKategorieFarben.js.
+// Bedienung: Zeitraum-Regler mit zwei Griffen, Umschalter der Darstellung (aria-pressed); Klick auf eine Zelle öffnet
+//   die Urkunden in der Seitenleiste (eine Urkunde: Detail, mehrere: Liste).
+// Hintergrund (Auslegung, Farbe, Legende): docs/MODULNOTIZEN.md, Abschnitt kalenderHeatmap.js.
 
 import { farbeFuerUrkundenKategorie } from '../utils/urkundenKategorieFarben.js'; // AUFTRAG C2
 import { zeigeTooltip, versteckeTooltip } from '../utils/tooltip.js';
@@ -174,11 +38,11 @@ import { infotextFuerModul } from '../core/archivKonfiguration.js';
 // Punkt 5 (Info-Button) - erste zwei Absätze wörtlich wie im Auftrag
 // übernommen (Akzeptanzkriterium: keine eigenmächtige Umformulierung). Beide
 // zuvor unklaren Sätze (Modus-Umschaltung, Klick öffnet Liste) sind
-// tatsächlich vorhandene Funktionalität (siehe Dateikopf-Kommentar).
+// tatsächlich vorhandene Funktionalität (siehe docs/MODULNOTIZEN.md).
 //
 // Ein zwischenzeitlicher Folgeauftrag hatte die Legende ("Urkunden: hell →
 // dunkel, max. X") testweise als dritten Absatz an diesen Text angehängt -
-// per Auftrag "Kalender-Legende zurück..." (siehe Dateikopf-Kommentar)
+// per Auftrag "Kalender-Legende zurück..." (siehe docs/MODULNOTIZEN.md)
 // rückgängig gemacht: der Info-Text ist wieder rein statisch (nur diese
 // zwei Absätze, seit AUFTRAG "Archivspezifische Texte..." aus
 // data/infotexte.csv), die Legende ist wieder ein eigenes, sichtbares
@@ -196,7 +60,7 @@ const ZELLENGROESSE_MAX = 26;
 const RAND = { oben: 24, unten: 46, links: 60, rechts: 20 };
 
 // Punkt 4: 10px -> 14px (Faktor 1,4x), konsistent mit zeitachse.js'
-// TICK_SCHRIFTGROESSE-Konvention (dortiger Dateikopf-Kommentar, Folgeauftrag
+// TICK_SCHRIFTGROESSE-Konvention (docs/MODULNOTIZEN.md, Abschnitt zeitachse.js; Folgeauftrag
 // "Achsenbeschriftung & Kontrast", Punkt B).
 const TICK_SCHRIFTGROESSE = 14;
 const ACHSENTITEL_SCHRIFTGROESSE = 13;
@@ -274,7 +138,7 @@ function gruppiereNachJahrzehntMonat(auswertbar) {
 // Punkt 2: frühestes/spätestes Jahr über ALLE Records (ungefiltert), auf das
 // jeweilige Jahrzehnt ab-/abgerundet (beide per Math.floor, damit `bis` als
 // Dekaden-START interpretierbar bleibt - siehe zeichnePlot()'s "+9"-Konvention
-// weiter unten und Dateikopf-Kommentar).
+// weiter unten und docs/MODULNOTIZEN.md).
 function ermittleDatenJahresSpanneGerundet(records) {
   const jahre = records.map((r) => parseJahr(r)).filter((j) => j !== null);
   if (jahre.length === 0) return [1000, 2000];
@@ -468,7 +332,7 @@ function baueWerkzeugleiste() {
   // Griffe dürfen sich nicht überkreuzen (Akzeptanzkriterium: "unterer Grenzwert
   // kann den oberen nicht überschreiten und umgekehrt") - Filter wird hier bewusst
   // NICHT angewendet (kein zeichnePlot()-Aufruf), nur die Live-Anzeige aktualisiert
-  // (siehe Dateikopf-Kommentar/Auftrag: "Filter wird erst bei Klick aktiv").
+  // (siehe docs/MODULNOTIZEN.md/Auftrag: "Filter wird erst bei Klick aktiv").
   vonInput.addEventListener('input', () => {
     if (Number(vonInput.value) > Number(bisInput.value) - JAHRZEHNT_SCHRITT) {
       vonInput.value = String(Number(bisInput.value) - JAHRZEHNT_SCHRITT);
@@ -685,7 +549,7 @@ function zeichneTagModus(gefiltert, zeigeUnsicherheit) {
   zeichneZellen(svg, alleZellenDaten, farbSkala, zellenBreite, zellenHoehe, zeigeUnsicherheit, false, plotBereich);
 
   // KORREKTUR (Auftrag "Kalender-Legende zurück, Sidebar-Navigation
-  // isolieren, Expand-Umrandung", Punkt 2, siehe Dateikopf-Kommentar): die
+  // isolieren, Expand-Umrandung", Punkt 2, siehe docs/MODULNOTIZEN.md): die
   // "Nicht darstellbar"-Tabelle wird nur noch gezeichnet, wenn der globale
   // "Unsicherheiten anzeigen"-Button aktiv ist - Standardzustand versteckt
   // (bereichsHoehe 0, kein leerer Freiraum), Klick auf den Button blendet sie
@@ -763,8 +627,8 @@ function zeichneJahrzehntModus(gefiltert, zeigeUnsicherheit) {
   });
 
   // Punkt 3: "Falls die Jahrzehnt × Monat-Ansicht andere Achsdimensionen hat ...
-  // dort passend Jahrzehnt statt Tag verwenden" - hat sie (siehe Dateikopf-
-  // Kommentar/Auftrag Punkt 3).
+  // dort passend Jahrzehnt statt Tag verwenden" - hat sie (siehe docs/MODULNOTIZEN.md
+  ///Auftrag Punkt 3).
   svg.append('text')
     .attr('class', 'kal-achsentitel')
     .attr('x', RAND.links + (anzahlSpalten * zellenBreite) / 2)
@@ -884,7 +748,7 @@ export function render(container, data, options = {}) {
   // wirdGewechselt-Flag dauerhaft blockierte (siehe dortiger Bugfix, Teil B).
   // Fix: der Button wird jetzt HIER, unconditional, aufgebaut - unabhängig
   // vom Bildschirmzustand. Seit Auftrag "Kalender-Legende zurück..." (siehe
-  // Dateikopf-Kommentar) ist der Info-Text wieder vollständig statisch -
+  // docs/MODULNOTIZEN.md) ist der Info-Text wieder vollständig statisch -
   // der Button wird daher NUR noch hier erzeugt und nirgends mehr destroy()/
   // neu gebaut. AUFTRAG "Archivspezifische Texte...": der Text kommt jetzt
   // asynchron aus data/infotexte.csv (infotextFuerModul()), `instanz.
@@ -948,7 +812,7 @@ export function render(container, data, options = {}) {
 }
 
 // KORREKTUR (Auftrag "Kalender-Legende zurück, Sidebar-Navigation isolieren,
-// Expand-Umrandung", Punkt 2, siehe Dateikopf-Kommentar): "Unsicherheiten
+// Expand-Umrandung", Punkt 2, siehe docs/MODULNOTIZEN.md): "Unsicherheiten
 // anzeigen" öffnet/schließt keine Sidebar mehr - options.showUncertainty
 // (hier gesetzt) ist jetzt direkt die Sichtbarkeits-Bedingung für die "Nicht
 // darstellbar"-Tabelle in zeichneTagModus()/zeichneJahrzehntModus(), ein
