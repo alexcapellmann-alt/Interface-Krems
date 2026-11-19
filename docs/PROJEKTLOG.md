@@ -14,6 +14,18 @@ wieder auf, ist unmittelbar nachvollziehbar, warum sie zuvor entfernt
 wurde, statt die Historie erst in den chronologischen Einträgen suchen zu
 müssen. Neueste Korrektur oben.
 
+### 2026-11-19 – Auftrag 17: Leuven und Rappottenstein aus der Ortsliste, Standardtext Bürgen, Methodenhinweis Bürgerbuch
+
+| Datei | Zeile | Spalte | vorher | nachher |
+|---|---|---|---|---|
+| `orte.csv` | `leuven_belgien` | ganze Zeile | Leuven, Belgien (ohne Urkunde seit Auftrag 16) | entfernt |
+| `orte.csv` | `rappottenstein_niederoesterreich` | ganze Zeile | Rappottenstein, Niederösterreich (ohne Urkunde seit Auftrag 16) | entfernt |
+| `unsicherheit_standardtexte.csv` | Buergen/fehlend | `text` | „… Laut Vorlage sind Bürgen nur im besten Fall angegeben.“ | „… Laut Hellerschmids Bearbeitung des Bürgerbuchs sind Bürgen nur im besten Fall angegeben.“ |
+| `methodenhinweise.csv` | `buergerbuch_luecken` | neue Zeile | – | Jahre ohne Eintrag (1570, 1572, 1590, 1591, 1593, 1594, 1598, 1599), Vorlage S. 20 und S. 147 (Entwurf zur Durchsicht) |
+
+Vor dem Entfernen geprüft: Leuven und Rappottenstein kommen in keiner anderen Datei unter `data/` und in keinem Text vor.
+Skript und Protokoll: `Unsicherheitstypen_2026-11/a17/werkzeuge/a17_teil0.py`, `a17/aenderungsprotokoll_teil0.csv`.
+
 ### 2026-11-18 – Auftrag 16: Rappottenstein, Leuven, Bürgerbuch, Personenliste, Bürgen (Entscheidungen des Autors)
 
 | Datei | Zeile | Spalte | vorher | nachher |
@@ -304,6 +316,76 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
   nicht angetastet, nur gemeldet (siehe Eintrag 53).
 
 ---
+
+## 2026-11-19 (100) – Auftrag 17: Strahl, Baum und Sonne im Modus „Licht aus“, Datenentscheidungen
+
+Belege: `Unsicherheitstypen_2026-11/a17/` (Bilder und `ergebnis.json` je Ansicht und Fenstergröße, Kontrastmessungen in
+`*/kontrast/`, Werkzeuge in `werkzeuge/`).
+
+1. **Teil 0, Daten (Datenkorrekturen oben):**
+   - **Leuven und Rappottenstein** aus `orte.csv` entfernt. Ortsliste 254 → 252; Kartenpunkte 222, Karte im Modus 98,
+     Verbindungskarte 169 und Ortswolke 41 unverändert; der Infotext „rund 250 Orte“ stimmt weiter.
+   - **`luecken_hinweise.csv`:** unverändert mit 14 Einträgen. Die Einordnung in Beziehung oder Herkunft (Auftrag 15) gilt
+     für die Typen, nicht für die Hinweise; Auftrag 16, Punkt 0.3 ist zurückgenommen.
+   - **Standardtext Bürgen:** geändert.
+   - **Methodenhinweis zu den Lücken im Bürgerbuch:** als Entwurf zur Durchsicht eingetragen. Jahreszahlen neu gezählt,
+     Seiten gegen die Vorlage geprüft.
+   - **Prüfung von Teil 0:** axe 161 Zustände, 0 Verstöße; Gesamt-Sitzung alle Teile OK.
+2. **Kammeramtsrechnungen (1.2.2.2.1.), Befund geprüft, Daten unverändert:**
+   - **Woher:** Die Spalte `fehlende_jahrgaenge` stammt wörtlich aus dem Bestandsverzeichnis selbst. `form_inhalt`: „Fehlende
+     Jahrgänge ab 1671: … 1773-1781, 1783-1785“, die Laufzeit (`zeitraum_von`/`_bis`, `zeitraum_text`) lautet 1516–1782.
+   - **Einordnung:** Der Widerspruch steht also in der Vorlage. Eine Erklärung, die die Daten selbst nicht belegen: Die Laufzeit
+     nennt die erhaltenen Bände, die Lückenliste die Jahre bis zum Ende des Amts. Darauf deutet die Laufzeit der
+     Oberkammeramtsrechnungen (bis 1785).
+   - **Übrige Bestände:** Bei keinem anderen liegen Lücken außerhalb der Laufzeit (Test in
+     `tests/bestandLichtAus.test.mjs`).
+   - **Darstellung:** Der Strahl zeichnet die Lücke 1783–1785 schon jetzt schraffiert hinter dem Balkenende. Die Lücken liegen
+     auf der gemeinsamen Zeitachse, nicht relativ zum Balken; gemessen bei 1280 × 720: Balkenende x = 742, Lücke ab x = 743,
+     3,2 px breit. Nötig wäre nichts weiter.
+   - Entscheidung über Daten oder `strittig` beim Autor.
+3. **Strahl** (freigegebener Entwurf aus Auftrag 16):
+   - **Umgesetzt:** Registry `lichtAus`; Typenleiste mit Zahlen; Filtern; Zeile „53 von 315 Beständen betroffen“; zugeklappte
+     Randliste „Ohne Laufzeit (18)“.
+   - **Lücken:** als Schraffur an ihrer Stelle, Kurztext daneben (bis drei Lücken mit Jahren, sonst zusammengefasst), volle
+     Liste in der Beschriftung der Zeile und im Hinweis beim Fokus. Die 3 Bestände ohne Jahresangabe sind ganz schraffiert,
+     mit „Umfang nicht angegeben“.
+   - **Zahlen wie im Entwurf:** 53 mit Typ, 35 Balken, 18 ohne Laufzeit, 109 Lücken in 28 Beständen.
+   - **Neu:** `js/utils/jahrgaenge.js` (Zerlegen, Kurz- und Volltext) und `js/utils/bestandLichtAus.js` (Felder, Einheit,
+     Schraffur; gemeinsam mit Baum und Sonne). Lesbare Feldnamen für die Bestandsfelder in `js/utils/uncertainty.js`.
+   - **Behoben während der Prüfung:** Kontrast der hervorgehobenen Namenszeile im dunklen Thema.
+4. **Baum:** abdunkeln statt filtern. Betroffene Kacheln mit Bernstein-Rahmen (Muster der Ausprägung), bei „fehlt“ eine lichte
+   Schraffur; mit Rolle und eigener Beschriftung für Hilfsmittel.
+   - **Gemessen:** Die weiße Schrift auf der Schraffur hielt im ungünstigsten Pixel nur 2,4:1. Behoben mit einer dunklen
+     Unterlage hinter der Beschriftung leuchtender Kacheln, danach mindestens 9,42:1.
+5. **Sonne:** wie der Baum.
+   - Innere Ringe treten nur zurück, wenn darunter kein betroffener Bestand liegt.
+   - Feste Farben auf Variablen umgestellt (Trennlinie, Linie der alten Schraffur, Punkte „ohne Kategorie“).
+   - **Behoben:** Die Zahl in der Mitte („315 Bestände“) hatte keine Farbe, war also schwarz auf dunklem Grund. Jetzt
+     `var(--text)`, gemessen 12,55:1 im Modus, 17,4:1 ohne.
+   - **Grenze:** In der Übersicht sind die schmalsten leuchtenden Segmente nur 1,3 px breit. Der Rahmen ist sichtbar (9:1),
+     das Muster nicht erkennbar (Eignungsmatrix).
+6. **Kontrastmessung am Bild (`a17/werkzeuge/a17_*kontrast*`, `a17_textgrund.mjs`):**
+   - **Ergebnisse:**
+     - Strahl: Lücken und Texte mindestens 6,47:1 (1366 × 768) bzw. 6,64:1 (1280 × 720).
+     - Baum: Rahmen mindestens 6,88:1, Schrift auf der Unterlage mindestens 9,42:1.
+     - Sonne: Rahmen mindestens 7,19:1, Schrift 13,17:1.
+   - **Gerätefehler, die geklärt und belegt sind:**
+     - Die Werte 1,0 im Fokuszustand des Strahls bei 1280 × 720 lagen unter dem hellen Hinweis-Kasten
+       (`rgb(244, 242, 236)`, Überschneidung mit 6 Messbereichen).
+     - In der Sonne lagen bei 1280 × 720 Messpunkte unterhalb des Fensters (7 Segmente).
+     - Erste Messpunkte trafen Strichlücken, den dunklen Trennstrich oder die Kantenglättung.
+   - Die Werkzeuge werten verdeckte und außerhalb liegende Bereiche nicht mehr und nennen sie.
+7. **Wechsel der Ansicht (`js/core/app.js`, `handleRouteChange`):**
+   - **Befund der Gesamt-Sitzung:** Bisher endete der Modus nur außerhalb der Visualisierungen. Seit der Strahl den Modus
+     hat, blieb er beim Sprung vom Strahl auf die Übersicht `#visualisierungen` an (ohne Ansicht, ohne Knopf).
+   - **Jetzt:** Der Modus endet auch beim Wechsel zwischen Bestand und Visualisierungen und auf Seiten ohne Ansicht
+     (Übersicht, Bestandsgalerie).
+   - **Zwischen Strahl, Baum und Sonne** bleibt er, wie zwischen den drei Pilotansichten (Regel aus Auftrag 13).
+     Geprüft mit `a17/werkzeuge/a17_wechsel.mjs`.
+   - Das Werkzeug `a15/werkzeuge/sitzung_modus.mjs` kennt die drei Bestandsansichten jetzt als freigegeben.
+   - **Esc:** Im Baum und in der Sonne beendet Esc den Modus, wenn keine Seitenleiste offen ist, wie seit Auftrag 13
+     vorgesehen. Ein Klick auf eine Kategorie öffnet dort keine Seitenleiste, sondern zoomt hinein.
+8. **Regression:** axe in 161 Zuständen 0 Verstöße (unvollständig wie bisher: Farbkontrast 8462, Zielgröße 2); Modus-Zustände von Strahl, Baum und Sonne bei 1366 × 768 und 1280 × 720 ohne axe-Befund und ohne Fehler; Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 mit und ohne Modus OK (mit Modus 0 Regelverstöße, Modus bei Ankunft nur von Pilot zu Pilot), Auswahl beim Umschalten von σ und Verbindungskarte Wien OK; Tests 62/62.
 
 ## 2026-11-18 (99) – Auftrag 16: Nachträge aus Auftrag 15, Zeitachse, Bürgen, Entwurf des Strahls (Stufe A)
 

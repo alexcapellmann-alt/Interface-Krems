@@ -21,6 +21,17 @@ Ort, aber die Daten liefern nichts dafür (nichts wird erfunden).
 | **Filtern** (seit 16.11.2026 immer an, ohne eigenen Schalter) | **geeignet** – **filtert**: 687 von 1067 Urkunden bleiben, die Voreinstellung blendet gut ein Drittel aus (Abgleich PROJEKTLOG 95). | **geeignet** – **filtert**: 100 von 224 Orten; Zeitregler wirkt weiter; Markergröße seit 18.11.2026 aus allen Orten des Zeitraums, also in „Licht an“ und im Modus gleich. | **ungeeignet** – **dimmt nur**: herausgefilterte Personen ließen Lücken; Eltern-, Kind- und Ehelinien verlören ihren Bezug. Der Unterschied ist ein Ergebnis, kein Mangel. |
 | **Typenleiste mit Zählern** | **geeignet** – fünf Typen (seit 18.11.2026 auch Zuordnung 14, Einzelangabe 1); „Ausstellungsort fehlt“ (571, 54 %) zählt seit 16.11.2026 bei „Alle“ mit (687), vorher eigener Schalter (213). | **geeignet** – zwei Typen (Ortsangabe 62, Datierung 45). | **bedingt** – nur ein Typ befüllt (Datierung), „Alle“ = „Datierung“. |
 
+## 1b. Technik × Bestandsansicht (Auftrag 17)
+
+| Technik | Strahl | Baum | Sonne |
+|---|---|---|---|
+| **Filtern / Abdunkeln** | **geeignet: filtern** – 35 Balken statt 297, die Zeitachse behält die Spanne aller Bestände; feste Zeile „53 von 315 Beständen betroffen“ hält den Kontext. | **ungeeignet: filtern** (Flächen aller übrigen würden sich ändern) – **abdunkeln**: 53 leuchten, 262 treten zurück. | wie Baum (Winkel würden sich ändern) – abdunkeln: 53 leuchten. Innere Ringe treten nur zurück, wenn darunter kein betroffener Bestand liegt. |
+| **Geisterelement für Fehlendes** | **geeignet** – fehlende Jahrgänge als Schraffur an ihrer Stelle auf der Achse (109 Lücken in 28 Beständen), auch hinter dem Balkenende, wenn die Daten es so angeben (Kammeramtsrechnungen 1783–1785). Bestände ohne Jahresangabe der Lücken (3): ganzer Balken schraffiert, „Umfang nicht angegeben“. | **bedingt** – keine Zeitachse; „fehlt“ als lichte Schraffur der ganzen Kachel, die Jahre nur in Beschriftung und Hinweis. | wie Baum. |
+| **Randliste** | **geeignet** – „Ohne Laufzeit (18)“, zugeklappt; heute stehen diese Bestände sonst 7 500 px tiefer. | nicht nötig (jeder Bestand hat eine Fläche) | nicht nötig |
+| **Muster je Ausprägung** | **geeignet** am Rahmen um den Balken (gestrichelt bei „ungenau“). | **geeignet** am Rahmen der Kachel; kleinste leuchtende Kacheln 12–15 px breit: Rahmen und Schraffur sichtbar, Beschriftung entfällt. | **bedingt** – in der Übersicht sind die schmalsten leuchtenden Segmente 1,3 px breit: Rahmen sichtbar (9:1), Muster nicht erkennbar. In der Kategorie-Ansicht (Mindestbogen 24 px) trägt das Muster. |
+| **Beschriftung auf Schraffur** | Text neben dem Balken, nicht auf der Schraffur (mind. 6,47:1). | **bedingt** – ohne Unterlage nur 2,4:1 im ungünstigsten Pixel; mit dunkler Unterlage mind. 9,42:1. | wie Baum (mit Unterlage 13,17:1). |
+| **Textalternative** | volle Liste der Lücken in der Beschriftung der Zeile und im Hinweis beim Fokus. | Beschriftung je leuchtender Kachel (Rolle „button“) mit Typ und Ausprägung; die Jahre nur in der Seitenleiste. | wie Baum. |
+
 ## 2. Typ × Ansicht (welche Typen der Pilot zeigt)
 
 Zahlen = Elemente der Ansicht mit diesem Typ (Kachel = Urkunde, Marker = Ort, Balken = Person), Daten nach Auftrag 12.
@@ -64,8 +75,11 @@ mit der Begründung „In der Ansicht … gibt es keine Angaben dieser Art.“
 - **Massentypen außerhalb der Pilotansichten (18.11.2026):** Im Bürgerbuch tragen 2461 von 2791 Einträgen
   „Beziehung, fehlt“ (fehlende Bürgen). Wird eine Bürgerbuch-Ansicht umgestellt, beträfe der Typ bei „Alle“ 88 % der
   Einträge. Die Typenauswahl muss das abfangen (Typ abschaltbar, Hinweis in der Leiste), sonst sagt „Alle“ nichts mehr.
-- **Strahl (Entwurf, Auftrag 16):** Fehlende Jahrgänge lassen sich an ihrer Stelle auf der Zeitachse als schraffierte
+- **Strahl (Entwurf Auftrag 16, umgesetzt in Auftrag 17, siehe Abschnitt 1b):** Fehlende Jahrgänge lassen sich an ihrer Stelle auf der Zeitachse als schraffierte
   Lücken zeigen (109 Lücken in 28 Beständen). Grenze: Viele kurze Lücken in einem Balken verschmelzen bei kleinem Zoom
   (Mindestbreite 2 px); die Beschriftung fasst ab vier Lücken zusammen, die volle Liste steht nur in der Beschriftung
   der Zeile und in der Seitenleiste. Bestände ohne Jahresangabe der Lücken (3) und ohne Laufzeit (18) haben keinen Ort
-  auf der Achse (ganzer Balken schraffiert bzw. Randliste). Umsetzung nach Freigabe, dann Eintrag in Abschnitt 1.
+  auf der Achse (ganzer Balken schraffiert bzw. Randliste).
+- **Kleine Flächen (Auftrag 17):** In der Übersicht der Sonne sind betroffene Bestände bis 1,3 px schmal. Dort trägt nur noch
+  der Bernstein-Rahmen, nicht das Muster der Ausprägung; welche Ausprägung vorliegt, erfahren Nutzende erst in der
+  Kategorie-Ansicht, in der Beschriftung für Hilfsmittel oder in der Seitenleiste.

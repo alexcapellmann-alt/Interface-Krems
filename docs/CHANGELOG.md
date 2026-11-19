@@ -7,6 +7,18 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-19 (249) – Auftrag 17: Strahl, Baum und Sonne im Modus „Licht aus“
+
+- `js/core/app.js`: Der Modus endet auch beim Wechsel zwischen Bestand und Visualisierungen und auf Seiten ohne Ansicht; zwischen Strahl, Baum und Sonne bleibt er.
+- `js/config/archivalienRegistry.js`: `lichtAus` bei `ganttDiagramm`, `treemap`, `sunburst`.
+- `js/viz/ganttDiagramm.js`: Modus mit Filtern, Lücken als Schraffur an ihrer Stelle (auch hinter dem Balkenende), Kurztext und volle Beschriftung, Zeile „N von M Beständen betroffen“, zugeklappte Randliste „Ohne Laufzeit (N)“, Kategoriefarben im dunklen Thema aufgehellt.
+- `js/viz/treemap.js`, `js/viz/sunburst.js`: Modus mit Abdunkeln, Bernstein-Rahmen mit Muster, Schraffur bei „fehlt“, dunkle Unterlage hinter Beschriftungen leuchtender Flächen; Sonne: feste Farben auf Variablen, Zahl in der Mitte mit Textfarbe.
+- Neu `js/utils/jahrgaenge.js`, `js/utils/bestandLichtAus.js`; `js/utils/uncertainty.js` (Feldnamen der Bestände); `css/components.css` (Abschnitte Strahl, Baum und Sonne).
+- `data/orte.csv` (Leuven, Rappottenstein entfernt), `data/unsicherheit_standardtexte.csv` (Bürgen), `data/methodenhinweise.csv` (Lücken im Bürgerbuch, Entwurf).
+- Tests 60 → 62 (`tests/bestandLichtAus.test.mjs`; `tests/uncertainty.test.mjs` angepasst). PROJEKTLOG 100.
+
+---
+
 ## 2026-11-18 (248) – Auftrag 16 (Teil 0, Punkte 3–5): Datennachträge, Zeitachse, fehlende Bürgen
 
 - `data/urkunden.csv`: Rappottenstein aus StaAKr-0258; Leuven aus StaAKr-0521 und -0564; Ausstellungsort von StaAKr-0564 „Ernberg“ (ungenau). `data/buergerbuch.csv`: fünf Einträge `Name: identifikation/mehrdeutig`, 2461 Einträge `Buergen: beziehung/fehlend`. `data/personenliste.csv`: zwei Zeilen `identifikation/mehrdeutig`. `data/unsicherheit_standardtexte.csv` (Name/mehrdeutig, Buergen/fehlend), `data/methodenhinweise.csv` (`buergschaften`). Entscheidungen des Autors; Skripte und Protokolle in `Unsicherheitstypen_2026-11/a16/`.

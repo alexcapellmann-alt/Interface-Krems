@@ -18,6 +18,8 @@ außerhalb des Repositorys in den Arbeitsordnern (`Nachbesserung_2026-11-15/`, `
 | Kartenkacheln werden in den Prüfskripten nicht aus dem Netz geladen (Anfragen an fremde Server werden abgebrochen); geprüft wird ohne Kartenbild. Die Kacheln kommen auf der veröffentlichten Seite von OpenStreetMap. | Prüfskripte, z. B. `Unsicherheitstypen_2026-11/a13/werkzeuge/b_rundgang.mjs` (Schalter `MIT_KACHELN`); externe Domains: PL 45. Dass die Prüfungen ohne Kacheln laufen, ist im Repository sonst **nicht dokumentiert**. |
 | Tastaturdurchgang: alle Bedienelemente erreichbar außer den Links im zugeklappten Impressum; im Modus σ, Leistenknöpfe, Leertaste, Aufklapper und Esc geprüft. | PR (Stand 15.11.2026); PL 87; PL 95 (Regression) |
 | Die Wirkung des σ-Knopfs wurde in Auftrag 13 nur über eine Art der Kennzeichnung (hell markiert) gezählt. Kennzeichnungen durch Einblenden oder Stricheln entgingen der Zählung. | PL 96, Punkt 5; PR |
+| Messungen am Bildschirmfoto treffen leicht Fremdes: einen beim Fokus erscheinenden Hinweis-Kasten, Bereiche außerhalb des Fensters, die Kantenglättung von Buchstaben, Strichlücken eines gestrichelten Rahmens. Auffällige Werte (1,0 im Strahl, 1,11 in der Sonne) waren so entstanden und wurden am Bild belegt, nicht angenommen. | PL 100, Punkt 6; PR (Grenzen der Prüfmethode) |
+| Kontraste von Schrift auf Schraffur: Ohne Unterlage hielt die Beschriftung im Baum im ungünstigsten Pixel nur 2,4:1; erst die Messung am Bild zeigte das. | PL 100, Punkt 4 |
 
 ## 2. Entscheidungen mit Begründung und Folgen
 
@@ -33,6 +35,8 @@ außerhalb des Repositorys in den Arbeitsordnern (`Nachbesserung_2026-11-15/`, `
 | σ-Knopf bleibt in Kategoriefluss und Verbindungskarte | Er blendet im Kategoriefluss die Knoten „(ohne Kategorie)“ und „(kein Ort)“ ein und strichelt in der Verbindungskarte Verbindungen mit unsicherer Ortsangabe. Ausblenden hätte Urkunden ohne Kategorie oder Ort unsichtbar gemacht. | PL 96, Punkt 5 (Entscheidung des Autors) |
 | `unsicherheit_anmerkung` auch für Hinweise ohne Unsicherheit | Schemamangel: Bei StaAKr-0007, -0008, -0876 (und 6 Zeilen in Personenliste und Inventaren) stehen Vermerke wie „Doppelt erfasst“ in der Spalte für Unsicherheit; der alte σ-Filter zählt sie mit. Nicht behoben, Vorschlag im Prüfblatt. | PL 95, Nachtrag 18.11.2026; `a15/pruefblatt_daten.csv`, Fall 4 |
 | Standardtexte statt gleichlautender Anmerkungen | Erklärungen für Felder ohne eigene Anmerkung stehen einmal je Datei, Feld und Ausprägung in `data/unsicherheit_standardtexte.csv`. | SCH 13.11; CL 244 |
+| Kleine Segmente der Sonne: Betroffene Bestände sind in der Übersicht bis 1,3 px schmal; dort trägt nur der Rahmen, nicht das Muster der Ausprägung. | PL 100, Punkt 5; EM, Abschnitt 1b |
+| Filtern im Strahl, Abdunkeln in Baum und Sonne: Filtern würde dort die Flächen bzw. Winkel aller übrigen Bestände ändern. | PL 100, Punkte 3–5; EM, Abschnitt 1b |
 
 ## 3. Datenqualität und Herkunft
 
@@ -46,6 +50,9 @@ außerhalb des Repositorys in den Arbeitsordnern (`Nachbesserung_2026-11-15/`, `
 | Bürgerbuch: Bei 11 Einträgen liegt das Datum bei „Erstmalig vorstellig am“ laut Vorlage nach dem Aufnahmedatum; als Befund der Vorlage vermerkt, nicht korrigiert. | PL 93 (A6) |
 | Ausstellungsort: 496 Werte aus dem Regest (427 direkt, 65 über eine Zuordnungstabelle, 4 Feldlager als Text), 571 leer. Fünf Zuordnungen als prüfbedürftig gemeldet. | PL 94; `Unsicherheitstypen_2026-11/a12/BERICHT_STUFE_A.md`; `a15/pruefblatt_daten.csv`, Fall 3 |
 | StaAKr-0258 hängt an Rappottenstein, das Regest nennt den Ort nicht; Herkunft der Zuordnung **nicht dokumentiert** (seit dem ersten Datenstand). | PL 93 (B1); `a15/pruefblatt_daten.csv`, Fall 2 |
+| Lücken im Bürgerbuch: In den Daten haben die Jahre 1570, 1572, 1590, 1591, 1593, 1594, 1598 und 1599 keinen Eintrag. Die Vorlage nennt Lücken allgemein (S. 20) und eine Datumslücke 1619 (S. 147); ob Aufnahmen fehlen oder die Überlieferung, sagt sie nicht. | PL 100, Punkt 1; `data/methodenhinweise.csv` (`buergerbuch_luecken`) |
+| Kammeramtsrechnungen (1.2.2.2.1.): Das Bestandsverzeichnis nennt fehlende Jahrgänge bis 1785, die Laufzeit endet 1782; der Widerspruch steht in der Vorlage. Kein anderer Bestand nennt Lücken außerhalb der Laufzeit. | PL 100, Punkt 2; `tests/bestandLichtAus.test.mjs` |
+| Fehlende Bürgen: 330 von 2791 Einträgen nennen einen Bürgen (1541–1621); laut Vorlage sind Bürgen nur im besten Fall angegeben. Die Einträge ohne Bürgen sind trotzdem markiert, mit dieser Einschränkung im Standardtext. | PL 99, Punkt 4; `data/methodenhinweise.csv` (`buergschaften`) |
 
 ## 4. Korrigierte Fehlannahmen
 

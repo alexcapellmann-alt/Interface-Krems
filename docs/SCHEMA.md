@@ -131,6 +131,13 @@ Eintrag in `unsicherheit_typ` leuchten. Die Daten bleiben unverändert; das Zusa
   Feld einer Massengruppe steht an deren Schalter.
 - **Detailansicht:** Der Aufklapper „σ Angaben unsicher“ nennt zusätzlich „Art der Unsicherheit: <Feld>: <Typ>, <Ausprägung>“.
 
+**Modus „Licht aus“ in den Bestandsansichten (seit 19.11.2026, PROJEKTLOG 100):** Strahl, Baum und Sonne lesen die Typen der
+Felder `zeitraum_von`, `zeitraum_bis`, `fehlende_jahrgaenge`, `umfang`, `form_inhalt` und `bestandsgeschichte`
+(`js/utils/bestandLichtAus.js`). `fehlende_jahrgaenge` wird in Einzeljahre und Spannen zerlegt (`js/utils/jahrgaenge.js`;
+Schreibweise `1519-1526|1620`). Nicht lesbare Teile werden übergangen und von der Datenprüfung gemeldet. Lücken außerhalb
+der Laufzeit zeichnet der Strahl an ihrer Stelle; heute ein Fall (Kammeramtsrechnungen 1.2.2.2.1., 1783–1785).
+Methodenhinweis `buergerbuch_luecken` (Entwurf) gilt für `buergerbuch.csv/Datum`.
+
 **Fehlende Bürgen im Bürgerbuch (seit 18.11.2026, PROJEKTLOG 99):** Einträge ohne Wert in `Buergen` tragen
 `Buergen: beziehung/fehlend` in `unsicherheit_typ` (2461 von 2791). Eine Spalte `Buergen_unsicher` gibt es bewusst nicht:
 Sie würde die σ-Zahlen aller Ansichten ändern, die das Bürgerbuch lesen. Der Datentest meldet deshalb keinen Widerspruch

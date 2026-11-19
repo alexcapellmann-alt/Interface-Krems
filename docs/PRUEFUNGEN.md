@@ -122,12 +122,29 @@ Die Gesamt-Sitzung wertet eine Auswahl jetzt als verloren, wenn sie nach σ ein 
 Ausnahme für die Zeitachse ist entfallen. Zuletzt (18.11.2026): 60 Tests, axe 161 Zustände 0 Verstöße, Gesamt-Sitzung
 alle Teile OK; Attrappe Strahl 0 Verstöße in 10 Zuständen, Kontrast mindestens 6,48:1.
 
+**Auftrag 17 (19.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a17/werkzeuge/`:
+- `a17_strahl.mjs`: Modus-Zustände einer Bestandsansicht (`PRUEF_ANSICHT`, `PRUEF_FENSTER`), mit axe. Notiert den sichtbaren
+  Hinweis-Kasten und die Kammeramtsrechnungen.
+- `a17_flaechen_kontrast.mjs`/`.py`: Rahmen der Baum-Kacheln am Bild, entlang des ganzen Randes.
+- `a17_sonne_kontrast.mjs`/`.py`: Rahmen der Sonnen-Segmente an Punkten aus der Segmentgeometrie; Punkte außerhalb des
+  Fensters werden nicht gewertet.
+- `a17_textgrund.mjs`: Schrift gegen ihre Unterlage, Punkte in der Mitte jeder Kante, auch bei gedrehter Schrift.
+- `a17_zentrum.mjs`: Zahl in der Mitte der Sonne.
+
+`a16/werkzeuge/a16_kontrast.py` wertet Bereiche unter einem sichtbaren Hinweis-Kasten nicht mehr.
+
+axe in 161 Zuständen 0 Verstöße (unvollständig wie bisher: Farbkontrast 8462, Zielgröße 2); Modus-Zustände von Strahl, Baum und Sonne bei 1366 × 768 und 1280 × 720 ohne axe-Befund und ohne Fehler; Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 mit und ohne Modus OK (mit Modus 0 Regelverstöße, Modus bei Ankunft nur von Pilot zu Pilot), Auswahl beim Umschalten von σ und Verbindungskarte Wien OK; Tests 62/62.
+
 **Grenzen der Prüfmethode (für Kapitel 7):**
 - **Feste Fenstergrößen:** Geprüft wird bei festen Fenstergrößen, meist 1366 × 900, 1366 × 768 und 1280 × 720.
   Befunde, die nur bei anderen Höhen oder Breiten auftreten, bleiben unentdeckt; so war es beim Bilderwand-Kopf, den erst
   768 px Höhe zeigte.
 - **Regelsätze von axe:** Die Ergebnisse hängen vom gewählten Regelsatz ab. Die Regel `target-size` gehört zu WCAG 2.2
   und läuft nur mit dem Schlagwort `wcag22aa`. „axe 0 Verstöße“ gilt jeweils für die genannten Größen und Regeln.
+- **Messpunkte am Bild:** Messungen an Bildschirmfotos treffen leicht Fremdes: einen Hinweis-Kasten, der beim Fokus
+  erscheint; Bereiche außerhalb des Fensters; die Kantenglättung von Buchstaben und Rahmen; Strichlücken. Die Werkzeuge
+  (Auftrag 17) prüfen das und werten solche Punkte nicht. Ein auffälliger Wert wird am Bild belegt, nicht als Messfehler
+  angenommen.
 - **Kontraste in SVG:** axe meldet viele Texte über Karte und SVG als „incomplete“. Nachbesserung 6 hat sie am Element
   nachgerechnet (227 Texte, 225 bestanden; PROJEKTLOG 87). Die Kontraste der Muster und Linien im Modus „Licht aus“
   sind aus den Farbwerten berechnet, die Farbfehlsicht an Bildern simuliert; gemessen am Bildschirm wurde nichts.
