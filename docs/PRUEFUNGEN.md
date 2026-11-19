@@ -148,6 +148,19 @@ axe in 161 Zuständen 0 Verstöße (unvollständig wie bisher: Farbkontrast 8462
 Ergebnis der Stichprobe: 321 gewertete Proben in 34 Ansichten, 313 bestanden (97,5 %), 8 nicht bestanden (PROJEKTLOG 101,
 Punkt 3).
 
+**Auftrag 19 (19.11.2026):** Werkzeuge in `Unsicherheitstypen_2026-11/a19/werkzeuge/`:
+- `a19_abdunkeln_liste.mjs`: alle Texte, die das alte Abdunkeln über die Deckkraft dimmt, je Ansicht.
+- `a19_bilder.mjs`: Vorher-nachher-Bilder (altes Abdunkeln mit und ohne Schrift, Wortwolke, Kurztexte im Strahl bei drei
+  Fenstergrößen, gemessen am Textrahmen gegen die Zeichenfläche).
+- `a19_stichprobe.mjs`, `a19_auswertung.py`, `a19_vergleich.py`: Wiederholung der Stichprobe aus Auftrag 18 an denselben
+  Elementen, mit Fotofehlern und Ersatzausschnitt, Vergleich je Element.
+  - Schrift mit Saum ab 2 px wird gegen ihren Saum gewertet.
+- `a19_stammbaum_namen.mjs`: Namen im Stammbaum gegen die Füllung ihres Kästchens.
+- `a19_leaflet.mjs`, `a19_selektoren.mjs`: Farben der Kartenquelle; Eindeutigkeit der Selektoren.
+
+Ergebnis der Wiederholung: Die 8 Mängel aus Auftrag 18 sind behoben, nach dem neuen Stand fällt keine Probe durch. Neu
+gefunden: Namen auf dem goldenen Abschnitt im Stammbaum, 2,42:1 (PROJEKTLOG 102, Punkt 5).
+
 **Grenzen der Prüfmethode (für Kapitel 7):**
 - **Feste Fenstergrößen:** Geprüft wird bei festen Fenstergrößen, meist 1366 × 900, 1366 × 768 und 1280 × 720.
   Befunde, die nur bei anderen Höhen oder Breiten auftreten, bleiben unentdeckt; so war es beim Bilderwand-Kopf, den erst
@@ -161,7 +174,13 @@ Punkt 3).
 - **Stichprobe der offenen axe-Fälle (Auftrag 18)** sagt nichts über die Gesamtheit aus.
   - Gemessen wurde je Zustand und Ursache ein Element, nicht zufällig über alle Fälle. Häufige Elemente (Achsen,
     Beschriftungen) kommen in mehreren Zuständen vor.
-  - Elemente außerhalb des Bildes (106 Proben, meist Beschriftungen in gescrollten Grafiken) blieben ungemessen.
+  - 106 Proben blieben in Auftrag 18 ohne Wert. Sie wurden dort als „außerhalb des Bildes“ bezeichnet; tatsächlich war
+    ihr Elementbild fehlgeschlagen (Auftrag 19).
+    - Nach der Wiederholung sind 34 davon gemessen.
+    - 72 lassen sich mit dem Verfahren nicht trennen: Gruppen, Symbole, sehr kleine Schrift.
+  - Selektoren aus einem Lauf treffen im nächsten nicht immer dasselbe Element, etwa bei neu verwurzelten Ansichten oder
+    Zeilen, die beim Bildlauf neu gezeichnet werden. Werte solcher Elemente schwanken zwischen Läufen; darum wird bei
+    Zweifeln am Element nachgerechnet (Füllung gegen Schrift).
   - Die Kartenkacheln lädt die Prüfung nicht (keine Anfragen nach außen). Text über der Karte wurde darum gegen den leeren
     Kartengrund gemessen, nicht gegen die Kacheln.
   - Nur zwei Fensterhöhen (768, 900) bei 1366 px Breite.

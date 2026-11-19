@@ -52,6 +52,12 @@ mit der Begründung „In der Ansicht … gibt es keine Angaben dieser Art.“
 
 ## 3. Grenzen aus der Erprobung
 
+- **Text wird nicht über die Deckkraft gedimmt** (Regel 1 aus Auftrag 13, seit Auftrag 19 auch für das alte σ-Abdunkeln).
+  - Deckkraft senkt den Kontrast von Schrift unter 4,5:1: Achsen und Namen lagen bei 0,28 nur bei 1,1 bis 1,9:1.
+  - Text, der als nicht betroffen zurücktreten soll, bekommt eine eigene Farbstufe mit mindestens 4,5:1 gegen den Grund:
+    `--lichtaus-gedimmt-text` im Modus „Licht aus“, `--abgedunkelt-text` im alten Abdunkeln.
+  - Flächen, Linien und Symbole dürfen über die Deckkraft zurücktreten.
+
 - **Massentypen:** Eine Gruppe, die mindestens 30 % der Elemente einer Ansicht betrifft, macht „Alle“ wertlos (im
   Kachelraster 64 % leuchtend). Sie zählt deshalb erst mit, wenn sie gezielt eingeschaltet wird. Die Schwelle ist ein
   benannter Parameter (`js/config/lichtAus.js`); bei 20 % kippte die Ortsangabe der Karte (23 %), bei 25 % das

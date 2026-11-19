@@ -7,6 +7,17 @@ dieser Eintrag ist die Kurzfassung "was, wann, wo".
 
 ---
 
+## 2026-11-19 (251) – Auftrag 19: Kontrastmängel, Kurztext im Strahl, restliche Dateiköpfe
+
+- `css/components.css`: altes Abdunkeln bei σ dimmt keinen Text mehr über die Deckkraft; nicht betroffener SVG-Text bekommt die Farbstufe `--abgedunkelt-text` (#58544c, 5,4:1), Säume die Grundfarbe; `--fuehrung-unsicher` #8a6d1f → #886b1f; Linkfarbe der Leaflet-Kartenquelle #005b7f.
+- `js/viz/wortwolke.js`: deckende, vorgemischte Wortfarben je Ziel (4,5:1, ab 24 px 3:1) und Saum in Grundfarbe statt `fill-opacity`.
+- `js/viz/personenliste.js`, `js/viz/ortsliste.js`: Ersatzwert der σ-Farbe angepasst.
+- `js/viz/ganttDiagramm.js`: Kurztext steht links vor dem Balken, wenn er rechts nicht passt; sonst gekürzt mit „…“.
+- Dateiköpfe gekürzt (nur Kommentare, Syntaxbaum unverändert): 18 Dateien, Inhalte in `docs/MODULNOTIZEN.md`.
+- Tests unverändert 62. Messungen und Stichprobe außerhalb des Repositorys (PROJEKTLOG 102).
+
+---
+
 ## 2026-11-19 (250) – Auftrag 18: Aufräumen vor dem Einfrieren
 
 - `js/utils/jahrgaenge.js` (`textAusserhalb()`), `js/viz/ganttDiagramm.js`: Lücken vor oder nach der Laufzeit werden in Kurztext, Beschriftung und Hinweis genannt („1783–1785 nach Ende“); nur Text, keine neue Darstellung.

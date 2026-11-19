@@ -317,6 +317,109 @@ versehentlich mit den beiden obigen verwechselt werden): `StaAKr-0008`
 
 ---
 
+## 2026-11-19 (102) – Auftrag 19: Kontrastmängel aus der Stichprobe, Kurztext im Strahl, restliche Dateiköpfe
+
+Belege: `Unsicherheitstypen_2026-11/a19/` (Werkzeuge in `werkzeuge/`; Tabellen `teil1_vorher_nachher.csv`,
+`wortwolke_vorher_nachher.csv`, `stichprobe_vergleich.csv`, `koepfe.csv`; Bilder `vergleich_*.png`, `bilder_*/`).
+Vorab committet und gepusht: der Stand nach Auftrag 18 in drei Commits (0f75d53, d1ce571, 1e37fe1).
+
+1. **Altes Abdunkeln bei σ (Ansichten ohne „Licht aus“):**
+   - **Liste vorab, alle Ansichten mit altem Abdunkeln** (`a19_abdunkeln_liste.mjs`): Über die Deckkraft 0,28 gedimmt waren
+     - Zeitachse: Achse 1,78:1, Achsentitel 1,45:1;
+     - Dot Plot: Kategorienamen 1,94:1, Achse 1,78:1;
+     - Streamgraph: Achse 1,78:1;
+     - Urkunden-Netzwerk: 109 Personennamen, 1,10:1;
+     - Chord-Diagramm: Gruppennamen, 1,39:1.
+     - Sankey, Verbindungskarte und Karte Soziale Gruppen: kein Text betroffen.
+     - Die halbtransparenten Blätter-Knöpfe in Personen- und Ortsliste sind deaktivierte Knöpfe (`:disabled`, Deckkraft 0,5)
+       und nach WCAG ausgenommen.
+   - **Geändert** (`css/components.css`, Regeln zu `.unsicherheit-abgedunkelt`):
+     - `text` ist aus der Liste der über Deckkraft gedimmten Elemente entfernt.
+     - Nicht betroffener Text in SVG tritt über eine eigene Farbstufe zurück: `--abgedunkelt-text` `#58544c`, 5,40:1 auf dem
+       Grund `#dedad1`, wie der gedimmte Text in Auftrag 13.
+     - Ein Saum (`paint-order`, Netzwerknamen) nimmt die Grundfarbe an.
+   - **Flächen und Linien** dimmen unverändert. Die Bilder nur der Datenflächen (Schrift ausgeblendet) sind bei Streamgraph,
+     Netzwerk und Chord pixelgleich.
+     - Bei der Zeitachse unterscheiden sich schon zwei Läufe mit demselben Code, weil der Beeswarm streut.
+     - Bilder: `vergleich_abdunkeln.png`, `bilder_abdunkeln/`.
+2. **Wortwolke** (`js/viz/wortwolke.js`):
+   - **Ohne Transparenz:** Die Abstufung nach Häufigkeit (früher `fill-opacity` 0,8–1) ist in deckende Farben vorgemischt
+     (`deckendeWortfarbe()`). Danach wird nur so weit abgedunkelt, bis das Wort sein Ziel erreicht: 4,5:1, ab 24 px Schrift
+     3:1.
+   - **Saum:** Jedes Wort hat einen 3-px-Saum in der Grundfarbe (`paint-order: stroke`). Grund: Die Wolke liegt auf der
+     Hintergrundkarte. Gegen deren Linien und Namen erreichte ein Wort trotz deckender Farbe nur 3,79:1.
+     - Die Alternative wäre, alle kleinen Wörter gegen den dunkelsten Kartenpunkt zu rechnen. Das hätte sie deutlich
+       dunkler gemacht.
+   - **Ergebnis:** Vorher lagen 46 von 90 Wörtern unter ihrem Ziel (kleine Wörter mindestens 3,21:1), nachher keines (4,51:1,
+     große Wörter mindestens 3,30:1).
+   - **Farbwirkung:** Im Median weicht die Farbe um 3 Stufen je Kanal ab, 44 Wörter bleiben gleich. Bild:
+     `vergleich_wortwolke.png`.
+   - **Entscheidung beim Autor:** Farbwirkung und Saum.
+3. **Grenzwerte:**
+   - **σ-Zeichen** in Personen- und Ortsliste: `--fuehrung-unsicher` `#8a6d1f` → `#886b1f`. Auf `--bg` waren es 4,49:1, jetzt
+     4,62:1. Das ist der kleinste Schritt, und er gilt überall, wo die Variable steht.
+   - **Verweis „Leaflet“** in der Kartenquelle:
+     - Die Fundstelle aus Auftrag 18 (`components.css`, Zeile 967) betrifft den Modus „Licht aus“; dort ist der Wert
+       gesichert.
+     - Der Mangel liegt in Leaflets eigener Linkfarbe `#0078a8` auf dem halbdurchsichtigen Kasten, über der Karte im alten
+       Abdunkeln 4,51:1. Über dunklen Kacheln wären es bis zu 3,08:1.
+     - Neu: `#005b7f`. Das ist der kleinste Schritt, der auch über schwarzem Grund 4,5:1 hält (4,67:1), über dem Grund der
+       Verbindungskarte 6,84:1.
+   - Tabelle vorher und nachher: `teil1_vorher_nachher.csv`.
+4. **Kurztext im Strahl** (`js/viz/ganttDiagramm.js`, `setzeKurztext()`):
+   - **Regel:**
+     - Der Text steht rechts neben dem Balken.
+     - Reicht der Platz bis zum Rand nicht, steht er rechtsbündig links vor dem Balkenanfang. Dort ist die Zeile frei; der
+       Zeitraum steht im Balken.
+     - Reicht auch das nicht, wird gekürzt: erst auf den Teil vor dem ersten Trenner, dann zeichenweise, jeweils mit „…“.
+       Gemessen wird am Textrahmen gegen die Zeichenfläche.
+   - **Begründung:** Umdrehen erhält den vollen Text, Kürzen verliert ihn auf der Fläche. Links von der Balkenmitte, also
+     über dem Balken, läge der Text auf Schraffur und Kategoriefarbe.
+   - **Ergebnis:** Kein Kurztext über dem Rand bei 1280 × 720, 1366 × 768 und 1920 × 1080, in allen 35 Balken.
+     - Vorher waren es 5, 4 und 4 Fälle.
+     - Die fünf Fälle stehen jetzt links vor dem Balken; Plakatsammlung passt bei 1366 und 1920 rechts.
+     - Gekürzt werden musste keiner.
+     - Bilder: `vergleich_strahl_1280x720.png`, `bilder_strahl/`.
+   - **Entscheidung beim Autor:** Umdrehen oder Kürzen.
+5. **Wiederholung der Stichprobe** (`a19_stichprobe.mjs`, dieselben Ansichten, Zustände und Selektoren wie Auftrag 18,
+   dieselbe Auswertung):
+   - **Gegen Auftrag 18** (321 gewertete Elemente):
+     - Alle 8 Mängel behoben: Zeitachse und Streamgraph 1,78 → 5,40, Chord 1,58 → 5,40, Wortwolke 3,25 / 4,41 / 2,80 → 4,74 /
+       4,56 / 4,59, σ-Zeichen 4,49 → 4,62, Leaflet 4,49 → 6,82.
+     - 284 weiter bestanden, 29 diesmal nicht messbar (siehe Grenzen).
+     - Schlechter (Wert um mehr als 0,1 gesunken): nur der Hinweis-Kasten im Strahl, 17,4 → 16,09, Messrauschen.
+   - **Gegen den Stand vor Auftrag 19 mit demselben Werkzeug** (alle 450 Proben): 0 Durchfälle nachher.
+     - Gesunken sind die Netzwerknamen im alten Abdunkeln (13,67 → 5,40, gewollte Farbstufe) und die Legende des
+       Streamgraphs (17,4 → 15,97).
+   - **Korrektur zu Auftrag 18:** Die „106 Elemente außerhalb des Bildes“ waren sichtbar. Ihr Elementbild war still
+     fehlgeschlagen; das Werkzeug hatte den Fehler verschluckt.
+     - Jetzt werden Bildfehler festgehalten und ersatzweise als Seitenausschnitt aufgenommen; das Element wird vor jedem Bild
+       neu gesucht.
+     - Ergebnis: 34 der 106 gemessen, alle bestanden.
+     - 72 bleiben ohne Wert, weil sich Schrift und Grund mit dem Verfahren nicht trennen lassen: Gruppen (`g`), Symbole und
+       Pfeile, Namen im ausgezoomten Stammbaum mit 6 px Höhe.
+   - **Gegenprobe ohne Bild:**
+     - Namen im Stammbaum gegen die Füllung ihres Kästchens: 68 von 75 bestehen (z. B. Beatrix 6,19, Elisabeth 11,37).
+     - Die Pixelwerte von 1,2 bis 2,0 dort waren Messfehler.
+   - **Neu gefunden, nicht behoben** (außerhalb der beauftragten Mängel):
+     - Bei 7 Herrschern (Friedrich III., Maximilian I., Karl V., Rudolf II., Leopold I., Karl VI., Joseph II.) steht der weiße
+       Name auf dem goldenen Abschnitt der Regierungszeit (`#c9a227`), 2,42:1.
+     - Ursache: Die Schriftfarbe richtet sich nach der Familienfarbe (`js/viz/familienbaum.js`, Zeile 731).
+6. **Teil 4, restliche Dateiköpfe:**
+   - **Gekürzt:** 18 Köpfe von 41–92 auf 5–12 Zeilen, Inhalte in `docs/MODULNOTIZEN.md`. Tabelle `a19/koepfe.csv`.
+   - **Nachweis:** Der Syntaxbaum ohne Kommentare ist in allen 18 Dateien gleich (`ast_vergleich.mjs` gegen Kopien vor
+     Teil 4). Kein Kopf ist mehr länger als 40 Zeilen.
+   - **Gegen den Code geprüft:**
+     - Die Personenliste löst seit 27.10.2026 auch Inventar-Nennungen auf und gibt Bausteine an `buergerinnen.js` und
+       `ortsliste.js` weiter.
+     - Die Führungsstation navigiert über Verweise, nicht über `navigiereZu()`.
+   - **Gemeldet, nicht geändert:**
+     - `js/utils/vizPlatzhalter.js` wird von keiner Datei mehr importiert (toter Code; Entscheidung beim Autor).
+     - Fünf Verweise auf alte Köpfe stehen in Kommentaren innerhalb von CSS-Zeichenketten: `bipartiteFlowMap.js` (2),
+       `karte.js`, `verbindungskarte.js`, `bereichsLeiste.js`. Eine Änderung dort ändert eine Zeichenkette und damit den
+       Syntaxbaum. Empfehlung: mit einem Vergleich, der CSS-Kommentare in Zeichenketten ausnimmt, in einem eigenen Schritt.
+7. **Regression:** Tests 62/62; axe in 161 Zuständen 0 Verstöße (unvollständig: Farbkontrast 8081 statt 8462, Zielgröße 2); Gesamt-Sitzung bei 1366 × 768 und 1280 × 720 mit und ohne Modus OK, Auswahl beim Umschalten von σ und Verbindungskarte Wien OK. Zahlen unverändert: Regesten 687, Karte 98 von 222 Punkten, Stammbaum 26, Strahl 53 mit Typ und 35 Balken, Baum und Sonne 53, Ortsliste 252, Verbindungskarte 169.
+
 ## 2026-11-19 (101) – Auftrag 18: Aufräumen vor dem Einfrieren
 
 Belege: `Unsicherheitstypen_2026-11/a18/` (Werkzeuge in `werkzeuge/`, Tabellen `koepfe.csv`,
